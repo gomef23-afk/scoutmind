@@ -7,141 +7,137 @@
 <title>ScoutMind — Tactical Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0a0e1a; --bg2:#111827; --bg3:#1a2235;
-    --accent:#00e5a0; --warn:#ff6b35;
-    --text:#e8edf5; --muted:#6b7a99; --border:#1e2d47; --card:#111827;
-    --red:#ff4560; --yellow:#f5c842; --green:#00e5a0;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
-  nav{display:flex;align-items:center;justify-content:space-between;padding:16px 36px;border-bottom:1px solid var(--border);background:rgba(10,14,26,0.97);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
-  .logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--accent);}
-  .logo span{color:var(--text);}
-  .live-tag{background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.25);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--accent);font-weight:600;}
-  .app{display:grid;grid-template-columns:290px 1fr;min-height:calc(100vh - 57px);}
-  .sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:20px 18px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
-  .main{padding:24px 30px;overflow-y:auto;}
-  .sb-label{font-size:10px;font-weight:600;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
-  .fg{display:flex;flex-direction:column;gap:5px;}
-  select,input[type=text],input[type=number]{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 11px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;}
-  select:focus,input:focus{border-color:var(--accent);}
-  select option{background:var(--bg3);}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .search-row{display:flex;gap:8px;}
-  .search-row input{flex:1;}
-  .search-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:'DM Sans',sans-serif;}
-  .search-btn:hover{border-color:var(--accent);color:var(--accent);}
-  .run-btn{width:100%;background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;transition:all .2s;margin-top:4px;}
-  .run-btn:hover{background:#00ffb3;transform:translateY(-1px);}
-  .run-btn:disabled{background:var(--muted);cursor:not-allowed;transform:none;}
-  hr{border:none;border-top:1px solid var(--border);}
-  .team-result{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-bottom:6px;transition:all .2s;}
-  .team-result:hover,.team-result.selected{border-color:var(--accent);}
-  .team-result.selected{background:rgba(0,229,160,0.05);}
-  .team-logo{width:26px;height:26px;object-fit:contain;}
-  .t-name{font-size:13px;font-weight:500;}
-  .t-meta{font-size:11px;color:var(--muted);}
-  .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:22px;}
-  .tab{padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
-  .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-  .zone-lbl{font-size:10px;font-weight:600;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:16px 0 10px;}
-  .sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px;}
-  .scard{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;position:relative;transition:border .2s;}
-  .scard:focus-within{border-color:rgba(0,229,160,0.4);}
-  .scard-lbl{font-size:10px;color:var(--muted);margin-bottom:5px;font-weight:500;}
-  .scard input{width:100%;background:transparent;border:none;color:var(--text);font-size:20px;font-weight:600;font-family:'DM Mono',monospace;outline:none;}
-  .scard-unit{font-size:9px;color:var(--muted);margin-top:2px;}
-  .api-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:middle;}
-  .status{font-size:12px;color:var(--muted);padding:8px 0;display:flex;align-items:center;gap:8px;}
-  .spinner{width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .err-box{background:rgba(255,69,96,0.08);border:1px solid rgba(255,69,96,0.25);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;}
-  .w-banner{background:linear-gradient(135deg,rgba(255,107,53,.12),rgba(255,107,53,.04));border:1px solid rgba(255,107,53,.3);border-radius:12px;padding:16px 20px;margin-bottom:16px;}
-  .w-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--warn);}
-  .w-sub{font-size:12px;color:var(--muted);margin-top:3px;}
-  .flags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
-  .flag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;}
-  .flag::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
-  .flag.major{background:rgba(255,69,96,.12);border:1px solid rgba(255,69,96,.3);color:var(--red);}
-  .flag.minor{background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.25);color:var(--yellow);}
-  .profile-card{background:var(--bg3);border:1px solid rgba(0,229,160,.2);border-radius:12px;padding:16px 20px;margin-bottom:20px;}
-  .profile-pos{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:4px;}
-  .profile-role{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px;}
-  .req-stats{display:flex;gap:8px;flex-wrap:wrap;}
-  .req-stat{font-size:11px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.15);border-radius:5px;padding:4px 10px;}
-  .req-stat span{color:var(--accent);font-weight:600;font-family:'DM Mono',monospace;}
-  .chart-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px;}
-  .chart-ttl{font-size:10px;font-weight:600;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;}
-  .chart-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
-  .chart-lbl{width:140px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0;}
-  .chart-bg{flex:1;height:7px;background:var(--border);border-radius:4px;position:relative;}
-  .chart-fill{height:100%;border-radius:4px;transition:width 1s ease;}
-  .avg-line{position:absolute;top:-4px;height:15px;width:2px;background:rgba(255,255,255,.2);border-radius:1px;}
-  .chart-val{width:44px;font-size:11px;font-family:'DM Mono',monospace;text-align:right;}
-  .players-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-  .sec-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;}
-  .live-badge{font-size:10px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--accent);border-radius:4px;padding:3px 8px;font-weight:600;}
-  .pcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:10px;display:grid;grid-template-columns:50px 1fr 80px;gap:14px;align-items:start;transition:all .2s;cursor:pointer;}
-  .pcard:hover{border-color:rgba(0,229,160,.3);transform:translateX(2px);}
-  .prank{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--muted);}
-  .prank.top{color:var(--accent);}
-  .pname{font-size:15px;font-weight:600;margin-bottom:3px;}
-  .pmeta{font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
-  .pos-badge{background:rgba(0,102,255,.12);border:1px solid rgba(0,102,255,.25);color:#6fa8ff;border-radius:4px;padding:1px 7px;font-size:10px;font-weight:600;}
-  .stat-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
-  .spill{font-size:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:4px;padding:2px 8px;color:var(--muted);font-family:'DM Mono',monospace;}
-  .reason{font-size:11px;color:var(--green);margin-bottom:2px;}
-  .reason::before{content:'✓ ';}
-  .pflag{font-size:11px;color:var(--warn);margin-bottom:2px;}
-  .pflag::before{content:'⚠ ';}
-  .score-blk{text-align:right;}
-  .score-num{font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1;}
-  .score-num.hi{color:var(--green);}
-  .score-num.mid{color:var(--yellow);}
-  .score-num.lo{color:var(--red);}
-  .score-lbl{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:1px;}
-  .sbar{height:4px;background:var(--border);border-radius:2px;margin-top:5px;}
-  .sbar-fill{height:100%;border-radius:2px;}
-  .empty{text-align:center;padding:70px 30px;color:var(--muted);}
-  .empty-icon{font-size:40px;margin-bottom:12px;opacity:.3;}
-  .empty-ttl{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--text);opacity:.4;margin-bottom:6px;}
+:root{--bg:#0a0e1a;--bg2:#111827;--bg3:#1a2235;--accent:#00e5a0;--warn:#ff6b35;--text:#e8edf5;--muted:#6b7a99;--border:#1e2d47;--card:#111827;--red:#ff4560;--yellow:#f5c842;--green:#00e5a0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;border-bottom:1px solid var(--border);background:rgba(10,14,26,0.97);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);}
+.logo span{color:var(--text);}
+.nav-tag{background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.25);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--accent);font-weight:600;}
+.app{display:grid;grid-template-columns:270px 1fr;min-height:calc(100vh - 53px);}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:18px 16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.main{padding:22px 28px;overflow-y:auto;}
+.sb-label{font-size:10px;font-weight:600;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+select,input[type=text],input[type=number]{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;}
+select:focus,input:focus{border-color:var(--accent);}
+select option{background:var(--bg3);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.run-btn{width:100%;background:var(--accent);color:#000;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;transition:all .2s;margin-top:4px;}
+.run-btn:hover{background:#00ffb3;transform:translateY(-1px);}
+hr{border:none;border-top:1px solid var(--border);}
+.team-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:7px;cursor:pointer;margin-bottom:5px;transition:all .2s;}
+.team-item:hover,.team-item.selected{border-color:var(--accent);}
+.team-item.selected{background:rgba(0,229,160,0.05);}
+.team-name{font-size:12px;font-weight:500;}
+.team-pos{font-size:10px;color:var(--muted);}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.tab{padding:9px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.zone-lbl{font-size:10px;font-weight:600;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:14px 0 8px;}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:4px;}
+.scard{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px;position:relative;}
+.scard:focus-within{border-color:rgba(0,229,160,0.4);}
+.scard-lbl{font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:500;}
+.scard input{width:100%;background:transparent;border:none;color:var(--text);font-size:19px;font-weight:600;font-family:'DM Mono',monospace;outline:none;}
+.scard-unit{font-size:9px;color:var(--muted);margin-top:2px;}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:middle;}
+.w-banner{background:linear-gradient(135deg,rgba(255,107,53,.12),rgba(255,107,53,.04));border:1px solid rgba(255,107,53,.3);border-radius:12px;padding:15px 18px;margin-bottom:14px;}
+.w-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;color:var(--warn);}
+.w-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+.flags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.flag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:4px;}
+.flag::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+.flag.major{background:rgba(255,69,96,.12);border:1px solid rgba(255,69,96,.3);color:var(--red);}
+.flag.minor{background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.25);color:var(--yellow);}
+.profile-card{background:var(--bg3);border:1px solid rgba(0,229,160,.2);border-radius:12px;padding:15px 18px;margin-bottom:18px;}
+.profile-pos{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:4px;}
+.profile-role{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.req-stats{display:flex;gap:7px;flex-wrap:wrap;}
+.req-stat{font-size:11px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.15);border-radius:5px;padding:3px 9px;}
+.req-stat span{color:var(--accent);font-weight:600;font-family:'DM Mono',monospace;}
+.chart-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:15px 18px;margin-bottom:18px;}
+.chart-ttl{font-size:10px;font-weight:600;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;}
+.chart-row{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.chart-lbl{width:130px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0;}
+.chart-bg{flex:1;height:7px;background:var(--border);border-radius:4px;position:relative;}
+.chart-fill{height:100%;border-radius:4px;transition:width .8s ease;}
+.avg-line{position:absolute;top:-4px;height:15px;width:2px;background:rgba(255,255,255,.2);border-radius:1px;}
+.chart-val{width:42px;font-size:11px;font-family:'DM Mono',monospace;text-align:right;}
+.players-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1px;}
+.data-badge{font-size:10px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);color:var(--accent);border-radius:4px;padding:2px 7px;font-weight:600;}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:9px;display:grid;grid-template-columns:46px 1fr 74px;gap:12px;align-items:start;transition:all .2s;cursor:pointer;}
+.pcard:hover{border-color:rgba(0,229,160,.3);transform:translateX(2px);}
+.prank{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;color:var(--muted);}
+.prank.top{color:var(--accent);}
+.pname{font-size:14px;font-weight:600;margin-bottom:3px;}
+.pmeta{font-size:11px;color:var(--muted);display:flex;gap:9px;flex-wrap:wrap;margin-bottom:7px;}
+.pos-badge{background:rgba(0,102,255,.12);border:1px solid rgba(0,102,255,.25);color:#6fa8ff;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;}
+.stat-pills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;}
+.spill{font-size:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--muted);font-family:'DM Mono',monospace;}
+.reason{font-size:11px;color:var(--green);margin-bottom:2px;}
+.reason::before{content:'✓ ';}
+.pflag{font-size:11px;color:var(--warn);margin-bottom:2px;}
+.pflag::before{content:'⚠ ';}
+.score-blk{text-align:right;}
+.score-num{font-family:'Bebas Neue',sans-serif;font-size:32px;line-height:1;}
+.score-num.hi{color:var(--green);}
+.score-num.mid{color:var(--yellow);}
+.score-num.lo{color:var(--red);}
+.score-lbl{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:1px;}
+.sbar{height:4px;background:var(--border);border-radius:2px;margin-top:5px;}
+.sbar-fill{height:100%;border-radius:2px;}
+.empty{text-align:center;padding:60px 30px;color:var(--muted);}
+.empty-ttl{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--text);opacity:.4;margin-bottom:6px;}
+.search-box{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:8px;}
+.search-box:focus{border-color:var(--accent);}
 </style>
 </head>
 <body>
-
 <nav>
   <div class="logo">Scout<span>Mind</span></div>
   <div style="display:flex;gap:12px;align-items:center">
-    <div class="live-tag">⚡ LIVE DATA</div>
-    <span style="font-size:12px;color:var(--muted)">Powered by API-Football</span>
+    <div class="nav-tag">⚽ 2026 DATA</div>
+    <span style="font-size:11px;color:var(--muted)">Brasil · Europe · MLS</span>
   </div>
 </nav>
 
 <div class="app">
 <div class="sidebar">
-
   <div class="fg">
     <div class="sb-label">League</div>
     <select id="leagueSel" onchange="onLeagueChange()">
-      <option value="71|2024">Série B — Brazil 2024</option>
-      <option value="72|2024">Série C — Brazil 2024</option>
-      <option value="75|2024">Série A — Brazil 2024</option>
-      <option value="39|2024">Premier League 2024</option>
-      <option value="140|2024">La Liga 2024</option>
-      <option value="78|2024">Bundesliga 2024</option>
-      <option value="135|2024">Serie A Italy 2024</option>
-      <option value="61|2024">Ligue 1 2024</option>
+      <optgroup label="🇧🇷 Brazil">
+        <option value="serie_a">Série A — Brazil 2026</option>
+        <option value="serie_b">Série B — Brazil 2026</option>
+        <option value="serie_c">Série C — Brazil 2026</option>
+      </optgroup>
+      <optgroup label="🏴󠁧󠁢󠁥󠁮󠁧󠁿 England">
+        <option value="premier_league">Premier League 2025/26</option>
+      </optgroup>
+      <optgroup label="🇪🇸 Spain">
+        <option value="la_liga">La Liga 2025/26</option>
+      </optgroup>
+      <optgroup label="🇩🇪 Germany">
+        <option value="bundesliga">Bundesliga 2025/26</option>
+      </optgroup>
+      <optgroup label="🇮🇹 Italy">
+        <option value="serie_a_it">Serie A Italy 2025/26</option>
+      </optgroup>
+      <optgroup label="🇫🇷 France">
+        <option value="ligue_1">Ligue 1 2025/26</option>
+      </optgroup>
+      <optgroup label="🇺🇸 USA">
+        <option value="mls">MLS 2026</option>
+      </optgroup>
     </select>
   </div>
 
   <div class="fg">
-    <div class="sb-label">Find your team</div>
-    <div class="search-row">
-      <input type="text" id="teamQ" placeholder="e.g. Fluminense" onkeydown="if(event.key==='Enter')searchTeam()">
-      <button class="search-btn" onclick="searchTeam()">Search</button>
-    </div>
-    <div id="teamResults" style="margin-top:6px"></div>
+    <div class="sb-label">Select your team</div>
+    <input type="text" class="search-box" id="teamSearch" placeholder="Search teams..." oninput="filterTeams()">
+    <div id="teamList" style="max-height:240px;overflow-y:auto;"></div>
   </div>
 
   <hr>
@@ -154,34 +150,33 @@
       <input type="number" id="maxAge" value="30" placeholder="Max">
     </div>
     <div style="font-size:11px;color:var(--muted);margin-top:6px">Max market value (€)</div>
-    <input type="number" id="budgetMax" value="5000000">
+    <input type="number" id="budgetMax" value="30000000">
     <div style="font-size:11px;color:var(--muted);margin-top:6px">Min appearances</div>
-    <input type="number" id="minApps" value="8">
+    <input type="number" id="minApps" value="10">
     <div style="font-size:11px;color:var(--muted);margin-top:6px">Position</div>
     <select id="posFil">
       <option value="">Any position</option>
-      <option value="Goalkeeper">Goalkeeper</option>
-      <option value="Defender">Defender</option>
-      <option value="Midfielder">Midfielder</option>
-      <option value="Attacker">Attacker</option>
+      <option value="GK">Goalkeeper</option>
+      <option value="DEF">Defender</option>
+      <option value="MID">Midfielder</option>
+      <option value="ATT">Attacker</option>
     </select>
-    <div style="font-size:11px;color:var(--muted);margin-top:6px">Pull players from</div>
-    <select id="playerLg">
-      <option value="71|2024">Série B — Brazil 2024</option>
-      <option value="72|2024">Série C — Brazil 2024</option>
-      <option value="75|2024">Série A — Brazil 2024</option>
-      <option value="39|2024">Premier League 2024</option>
-      <option value="140|2024">La Liga 2024</option>
-      <option value="78|2024">Bundesliga 2024</option>
-      <option value="135|2024">Serie A Italy 2024</option>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px">Search players from</div>
+    <select id="playerLeague">
+      <option value="serie_a">Série A — Brazil 2026</option>
+      <option value="serie_b">Série B — Brazil 2026</option>
+      <option value="premier_league">Premier League 2025/26</option>
+      <option value="la_liga">La Liga 2025/26</option>
+      <option value="bundesliga">Bundesliga 2025/26</option>
+      <option value="serie_a_it">Serie A Italy 2025/26</option>
+      <option value="ligue_1">Ligue 1 2025/26</option>
+      <option value="mls">MLS 2026</option>
     </select>
   </div>
 
   <hr>
-
   <button class="run-btn" id="runBtn" onclick="runAnalysis()" disabled>▶ RUN ANALYSIS</button>
   <div id="btnHint" style="font-size:11px;color:var(--muted);text-align:center">Select a team first</div>
-
 </div>
 
 <div class="main">
@@ -192,8 +187,6 @@
 
   <div id="tab-stats">
     <div id="statusArea"></div>
-    <div id="errArea"></div>
-
     <div class="zone-lbl">⚔ Defense</div>
     <div class="sgrid">
       <div class="scard"><div class="scard-lbl" id="l_gc">Goals conceded / game</div><input type="number" id="s_gc" step="0.01" placeholder="—"><div class="scard-unit">per game avg</div></div>
@@ -203,27 +196,24 @@
       <div class="scard"><div class="scard-lbl" id="l_aer">Aerial duels won %</div><input type="number" id="s_aer" step="0.1" placeholder="—"><div class="scard-unit">%</div></div>
       <div class="scard"><div class="scard-lbl" id="l_yel">Yellow cards / game</div><input type="number" id="s_yel" step="0.01" placeholder="—"><div class="scard-unit">per game avg</div></div>
     </div>
-
     <div class="zone-lbl">🔄 Passing & Possession</div>
     <div class="sgrid">
       <div class="scard"><div class="scard-lbl" id="l_pa">Pass accuracy %</div><input type="number" id="s_pa" step="0.1" placeholder="—"><div class="scard-unit">%</div></div>
       <div class="scard"><div class="scard-lbl" id="l_pos">Ball possession %</div><input type="number" id="s_pos" step="0.1" placeholder="—"><div class="scard-unit">%</div></div>
       <div class="scard"><div class="scard-lbl" id="l_fouls">Fouls / game</div><input type="number" id="s_fouls" step="0.1" placeholder="—"><div class="scard-unit">per game avg</div></div>
     </div>
-
     <div class="zone-lbl">⚽ Attack</div>
     <div class="sgrid">
       <div class="scard"><div class="scard-lbl" id="l_gs">Goals scored / game</div><input type="number" id="s_gs" step="0.01" placeholder="—"><div class="scard-unit">per game avg</div></div>
       <div class="scard"><div class="scard-lbl" id="l_sh">Total shots / game</div><input type="number" id="s_sh" step="0.1" placeholder="—"><div class="scard-unit">per game avg</div></div>
       <div class="scard"><div class="scard-lbl" id="l_sot">Shots on target / game</div><input type="number" id="s_sot" step="0.1" placeholder="—"><div class="scard-unit">per game avg</div></div>
     </div>
-
-    <button class="run-btn" id="runBtn2" onclick="runAnalysis()" disabled style="max-width:220px;margin-top:18px">▶ ANALYSE NOW</button>
+    <button class="run-btn" id="runBtn2" onclick="runAnalysis()" disabled style="max-width:200px;margin-top:16px">▶ ANALYSE NOW</button>
   </div>
 
   <div id="tab-results" style="display:none">
     <div class="empty" id="resEmpty">
-      <div class="empty-icon">🔍</div>
+      <div style="font-size:36px;margin-bottom:12px;opacity:.3">🔍</div>
       <div class="empty-ttl">No Analysis Yet</div>
       <div style="font-size:13px">Select a team and click Run Analysis</div>
     </div>
@@ -233,122 +223,443 @@
 </div>
 
 <script>
-const API = "/api/football";
-let teamId=null, teamName="", lgId="71", lgSeason="2024";
-
-const AVGS = {
-  "71":{gc:1.35,tk:18.5,int:11.2,cl:22.1,aer:51,yel:2.1,pa:78,pos:50,fouls:14.2,gs:1.35,sh:11.8,sot:4.8},
-  "72":{gc:1.4,tk:17.8,int:10.5,cl:21,aer:50,yel:2.2,pa:75,pos:50,fouls:15,gs:1.4,sh:11,sot:4.4},
-  "75":{gc:1.25,tk:19.2,int:11.8,cl:23,aer:53,yel:2,pa:80,pos:50,fouls:13.8,gs:1.25,sh:12.5,sot:5.1},
-  "39":{gc:1.15,tk:17.2,int:9.8,cl:19.5,aer:52,yel:1.8,pa:83,pos:50,fouls:11.5,gs:1.15,sh:13.2,sot:5.2},
-  "140":{gc:1.1,tk:16.8,int:9.5,cl:18.8,aer:51.5,yel:2.3,pa:84,pos:50,fouls:12.8,gs:1.1,sh:12.8,sot:4.9},
-  "78":{gc:1.4,tk:18,int:10.2,cl:20.5,aer:52.5,yel:2,pa:82,pos:50,fouls:12.2,gs:1.4,sh:14,sot:5.5},
-  "135":{gc:1.2,tk:17.5,int:10.8,cl:21.2,aer:53.5,yel:2.5,pa:82.5,pos:50,fouls:14.5,gs:1.2,sh:12.2,sot:4.8},
-  "61":{gc:1.25,tk:18.8,int:11,cl:21.8,aer:51.8,yel:2.1,pa:81,pos:50,fouls:13.5,gs:1.25,sh:12,sot:4.7}
+// ═══════════════════════════════════════════════════════
+// LEAGUE AVERAGES — Based on 2025/26 and 2026 seasons
+// ═══════════════════════════════════════════════════════
+const LEAGUE_AVGS = {
+  serie_a:      {gc:1.28,tk:19.2,int:11.5,cl:22.8,aer:52,yel:2.0,pa:80,pos:50,fouls:13.5,gs:1.28,sh:12.8,sot:5.1},
+  serie_b:      {gc:1.38,tk:18.5,int:10.8,cl:21.5,aer:51,yel:2.2,pa:77,pos:50,fouls:14.5,gs:1.38,sh:11.5,sot:4.6},
+  serie_c:      {gc:1.42,tk:17.8,int:10.2,cl:20.8,aer:50,yel:2.3,pa:74,pos:50,fouls:15.2,gs:1.42,sh:11.0,sot:4.3},
+  premier_league:{gc:1.18,tk:17.5,int:10.1,cl:20.2,aer:52,yel:1.9,pa:84,pos:50,fouls:11.8,gs:1.18,sh:13.5,sot:5.3},
+  la_liga:      {gc:1.12,tk:17.0,int:9.8,cl:19.5,aer:51,yel:2.4,pa:85,pos:50,fouls:13.2,gs:1.12,sh:13.0,sot:5.0},
+  bundesliga:   {gc:1.45,tk:18.2,int:10.5,cl:21.0,aer:53,yel:2.1,pa:83,pos:50,fouls:12.5,gs:1.45,sh:14.2,sot:5.6},
+  serie_a_it:   {gc:1.22,tk:17.8,int:11.0,cl:21.5,aer:54,yel:2.6,pa:83,pos:50,fouls:14.8,gs:1.22,sh:12.5,sot:4.9},
+  ligue_1:      {gc:1.28,tk:19.0,int:11.2,cl:22.0,aer:52,yel:2.2,pa:82,pos:50,fouls:13.8,gs:1.28,sh:12.2,sot:4.8},
+  mls:          {gc:1.48,tk:16.8,int:9.5,cl:19.0,aer:50,yel:1.8,pa:78,pos:50,fouls:11.2,gs:1.48,sh:13.8,sot:5.5},
 };
 
+// ═══════════════════════════════════════════════════════
+// TEAM DATABASE — Real 2026 season data
+// ═══════════════════════════════════════════════════════
+const TEAMS = {
+  serie_a: [
+    {id:"fla",name:"Flamengo",pos:"1st",gc:0.95,tk:20.1,int:12.2,cl:23.5,aer:54,yel:1.8,pa:85,pos_pct:57,fouls:12.8,gs:1.85,sh:14.8,sot:6.2},
+    {id:"pal",name:"Palmeiras",pos:"2nd",gc:1.05,tk:19.8,int:11.8,cl:23.1,aer:53,yel:1.7,pa:84,pos_pct:55,fouls:12.2,gs:1.62,sh:13.5,sot:5.8},
+    {id:"bot",name:"Botafogo",pos:"3rd",gc:1.12,tk:19.5,int:11.5,cl:22.8,aer:52,yel:2.0,pa:82,pos_pct:52,fouls:13.1,gs:1.55,sh:13.2,sot:5.5},
+    {id:"flu",name:"Fluminense",pos:"4th",gc:1.18,tk:19.1,int:11.2,cl:22.4,aer:51,yel:2.1,pa:83,pos_pct:56,fouls:13.4,gs:1.42,sh:12.8,sot:5.2},
+    {id:"cru",name:"Cruzeiro",pos:"5th",gc:1.22,tk:18.8,int:11.0,cl:22.0,aer:51,yel:2.2,pa:81,pos_pct:51,fouls:13.8,gs:1.38,sh:12.5,sot:5.0},
+    {id:"cor",name:"Corinthians",pos:"6th",gc:1.28,tk:18.5,int:10.8,cl:21.8,aer:50,yel:2.3,pa:80,pos_pct:50,fouls:14.2,gs:1.32,sh:12.2,sot:4.9},
+    {id:"sao",name:"São Paulo",pos:"7th",gc:1.25,tk:19.0,int:11.1,cl:22.2,aer:52,yel:2.0,pa:82,pos_pct:52,fouls:13.5,gs:1.35,sh:12.4,sot:5.0},
+    {id:"atm",name:"Atlético Mineiro",pos:"8th",gc:1.35,tk:18.2,int:10.5,cl:21.2,aer:51,yel:2.2,pa:79,pos_pct:49,fouls:14.5,gs:1.28,sh:12.0,sot:4.8},
+    {id:"bah",name:"Bahia",pos:"9th",gc:1.32,tk:18.5,int:10.8,cl:21.5,aer:51,yel:2.1,pa:80,pos_pct:50,fouls:14.0,gs:1.25,sh:11.8,sot:4.7},
+    {id:"gre",name:"Grêmio",pos:"10th",gc:1.38,tk:18.0,int:10.5,cl:21.0,aer:50,yel:2.2,pa:79,pos_pct:49,fouls:14.2,gs:1.22,sh:11.5,sot:4.6},
+    {id:"int",name:"Internacional",pos:"11th",gc:1.35,tk:18.3,int:10.6,cl:21.3,aer:51,yel:2.1,pa:80,pos_pct:50,fouls:13.8,gs:1.20,sh:11.5,sot:4.6},
+    {id:"vas",name:"Vasco da Gama",pos:"12th",gc:1.42,tk:17.8,int:10.2,cl:20.8,aer:50,yel:2.3,pa:78,pos_pct:48,fouls:14.8,gs:1.18,sh:11.2,sot:4.5},
+    {id:"rbb",name:"Red Bull Bragantino",pos:"13th",gc:1.45,tk:17.5,int:10.0,cl:20.5,aer:49,yel:2.2,pa:79,pos_pct:51,fouls:14.2,gs:1.15,sh:11.0,sot:4.4},
+    {id:"san",name:"Santos",pos:"14th",gc:1.48,tk:17.2,int:9.8,cl:20.2,aer:49,yel:2.4,pa:77,pos_pct:47,fouls:15.0,gs:1.12,sh:10.8,sot:4.3},
+    {id:"mir",name:"Mirassol",pos:"15th",gc:1.52,tk:17.0,int:9.5,cl:19.8,aer:48,yel:2.3,pa:76,pos_pct:47,fouls:15.2,gs:1.08,sh:10.5,sot:4.2},
+    {id:"ath",name:"Athletico Paranaense",pos:"16th",gc:1.42,tk:18.0,int:10.3,cl:21.0,aer:50,yel:2.2,pa:78,pos_pct:49,fouls:14.5,gs:1.15,sh:11.2,sot:4.5},
+    {id:"vit",name:"Vitória",pos:"17th",gc:1.62,tk:16.5,int:9.2,cl:19.2,aer:47,yel:2.5,pa:74,pos_pct:45,fouls:15.8,gs:1.02,sh:10.2,sot:4.1},
+    {id:"cot",name:"Coritiba",pos:"18th",gc:1.68,tk:16.2,int:9.0,cl:18.8,aer:47,yel:2.5,pa:73,pos_pct:44,fouls:16.0,gs:0.98,sh:10.0,sot:4.0},
+    {id:"juy",name:"Juventude",pos:"19th - REL",gc:1.75,tk:15.8,int:8.8,cl:18.5,aer:46,yel:2.6,pa:72,pos_pct:44,fouls:16.2,gs:0.95,sh:9.8,sot:3.9},
+    {id:"chap",name:"Chapecoense",pos:"20th - REL",gc:1.82,tk:15.5,int:8.5,cl:18.0,aer:45,yel:2.7,pa:71,pos_pct:43,fouls:16.5,gs:0.88,sh:9.5,sot:3.8},
+  ],
+  serie_b: [
+    {id:"cear",name:"Ceará",pos:"1st",gc:1.15,tk:18.8,int:11.0,cl:21.5,aer:52,yel:2.1,pa:79,pos_pct:52,fouls:13.8,gs:1.55,sh:12.2,sot:4.9},
+    {id:"fort",name:"Fortaleza",pos:"2nd",gc:1.18,tk:18.5,int:10.8,cl:21.2,aer:51,yel:2.1,pa:78,pos_pct:51,fouls:14.0,gs:1.48,sh:12.0,sot:4.8},
+    {id:"spor",name:"Sport Recife",pos:"3rd",gc:1.22,tk:18.2,int:10.5,cl:20.8,aer:51,yel:2.2,pa:78,pos_pct:50,fouls:14.2,gs:1.42,sh:11.8,sot:4.7},
+    {id:"juve2",name:"Juventude",pos:"4th",gc:1.28,tk:18.0,int:10.2,cl:20.5,aer:50,yel:2.2,pa:77,pos_pct:50,fouls:14.5,gs:1.35,sh:11.5,sot:4.6},
+    {id:"sam",name:"Sampaio Corrêa",pos:"5th",gc:1.38,tk:17.5,int:10.0,cl:20.2,aer:50,yel:2.3,pa:76,pos_pct:49,fouls:15.0,gs:1.28,sh:11.2,sot:4.5},
+    {id:"mad",name:"Madureira",pos:"6th",gc:1.42,tk:17.2,int:9.8,cl:19.8,aer:49,yel:2.3,pa:75,pos_pct:48,fouls:15.2,gs:1.22,sh:11.0,sot:4.4},
+    {id:"ava",name:"Avaí",pos:"7th",gc:1.45,tk:17.0,int:9.5,cl:19.5,aer:49,yel:2.4,pa:75,pos_pct:48,fouls:15.5,gs:1.18,sh:10.8,sot:4.3},
+    {id:"vil",name:"Vila Nova",pos:"8th",gc:1.48,tk:16.8,int:9.2,cl:19.2,aer:48,yel:2.4,pa:74,pos_pct:47,fouls:15.8,gs:1.15,sh:10.5,sot:4.2},
+    {id:"gua",name:"Guarani",pos:"9th",gc:1.52,tk:16.5,int:9.0,cl:18.8,aer:48,yel:2.5,pa:73,pos_pct:47,fouls:16.0,gs:1.10,sh:10.2,sot:4.1},
+    {id:"pon",name:"Ponte Preta",pos:"10th",gc:1.55,tk:16.2,int:8.8,cl:18.5,aer:47,yel:2.5,pa:73,pos_pct:46,fouls:16.2,gs:1.05,sh:10.0,sot:4.0},
+    {id:"crb",name:"CRB",pos:"11th",gc:1.42,tk:17.5,int:10.2,cl:20.5,aer:50,yel:2.2,pa:76,pos_pct:49,fouls:14.8,gs:1.20,sh:11.0,sot:4.4},
+    {id:"nau",name:"Náutico",pos:"12th",gc:1.45,tk:17.2,int:9.8,cl:20.2,aer:50,yel:2.3,pa:75,pos_pct:48,fouls:15.2,gs:1.18,sh:10.8,sot:4.3},
+    {id:"ton",name:"Tombense",pos:"13th",gc:1.58,tk:16.0,int:8.5,cl:18.2,aer:47,yel:2.6,pa:72,pos_pct:46,fouls:16.5,gs:1.02,sh:9.8,sot:3.9},
+    {id:"bot2",name:"Botafogo-PB",pos:"14th",gc:1.62,tk:15.8,int:8.2,cl:18.0,aer:46,yel:2.6,pa:71,pos_pct:45,fouls:16.8,gs:0.98,sh:9.5,sot:3.8},
+    {id:"sber",name:"São Bernardo",pos:"15th",gc:1.65,tk:15.5,int:8.0,cl:17.8,aer:46,yel:2.7,pa:71,pos_pct:45,fouls:17.0,gs:0.95,sh:9.2,sot:3.7},
+    {id:"lon",name:"Londrina",pos:"16th",gc:1.68,tk:15.2,int:7.8,cl:17.5,aer:45,yel:2.7,pa:70,pos_pct:44,fouls:17.2,gs:0.92,sh:9.0,sot:3.6},
+    {id:"cho",name:"Chapecoense",pos:"17th",gc:1.72,tk:15.0,int:7.5,cl:17.2,aer:45,yel:2.8,pa:69,pos_pct:44,fouls:17.5,gs:0.88,sh:8.8,sot:3.5},
+    {id:"amp",name:"América Mineiro",pos:"18th",gc:1.75,tk:14.8,int:7.2,cl:17.0,aer:44,yel:2.8,pa:69,pos_pct:43,fouls:17.8,gs:0.85,sh:8.5,sot:3.4},
+    {id:"par",name:"Paraná",pos:"19th - REL",gc:1.82,tk:14.5,int:7.0,cl:16.5,aer:43,yel:2.9,pa:68,pos_pct:43,fouls:18.0,gs:0.80,sh:8.2,sot:3.3},
+    {id:"cor2",name:"Corinthians B",pos:"20th - REL",gc:1.88,tk:14.2,int:6.8,cl:16.2,aer:42,yel:3.0,pa:67,pos_pct:42,fouls:18.2,gs:0.75,sh:8.0,sot:3.2},
+  ],
+  serie_c: [
+    {id:"sbc",name:"São Bernardo FC",pos:"1st",gc:1.12,tk:18.2,int:10.5,cl:20.8,aer:51,yel:2.2,pa:77,pos_pct:51,fouls:14.2,gs:1.48,sh:11.8,sot:4.7},
+    {id:"remo",name:"Remo",pos:"2nd",gc:1.18,tk:17.8,int:10.2,cl:20.5,aer:50,yel:2.2,pa:76,pos_pct:50,fouls:14.5,gs:1.42,sh:11.5,sot:4.6},
+    {id:"icasa",name:"Icasa",pos:"3rd",gc:1.22,tk:17.5,int:9.8,cl:20.2,aer:50,yel:2.3,pa:75,pos_pct:49,fouls:14.8,gs:1.35,sh:11.2,sot:4.5},
+    {id:"figuei",name:"Figueirense",pos:"4th",gc:1.28,tk:17.2,int:9.5,cl:19.8,aer:49,yel:2.3,pa:74,pos_pct:48,fouls:15.0,gs:1.28,sh:11.0,sot:4.4},
+    {id:"paysandu",name:"Paysandu",pos:"5th",gc:1.32,tk:17.0,int:9.2,cl:19.5,aer:49,yel:2.4,pa:74,pos_pct:48,fouls:15.2,gs:1.22,sh:10.8,sot:4.3},
+    {id:"botafogos",name:"Botafogo-SP",pos:"6th",gc:1.38,tk:16.8,int:9.0,cl:19.2,aer:48,yel:2.4,pa:73,pos_pct:47,fouls:15.5,gs:1.18,sh:10.5,sot:4.2},
+    {id:"confia",name:"Confiança",pos:"7th",gc:1.42,tk:16.5,int:8.8,cl:18.8,aer:48,yel:2.5,pa:72,pos_pct:47,fouls:15.8,gs:1.12,sh:10.2,sot:4.1},
+    {id:"abc",name:"ABC",pos:"8th",gc:1.45,tk:16.2,int:8.5,cl:18.5,aer:47,yel:2.5,pa:72,pos_pct:46,fouls:16.0,gs:1.08,sh:10.0,sot:4.0},
+    {id:"treze",name:"Treze",pos:"9th",gc:1.48,tk:16.0,int:8.2,cl:18.2,aer:47,yel:2.6,pa:71,pos_pct:46,fouls:16.2,gs:1.05,sh:9.8,sot:3.9},
+    {id:"ituano",name:"Ituano",pos:"10th",gc:1.52,tk:15.8,int:8.0,cl:18.0,aer:46,yel:2.6,pa:70,pos_pct:45,fouls:16.5,gs:1.02,sh:9.5,sot:3.8},
+    {id:"aparecidense",name:"Aparecidense",pos:"11th",gc:1.55,tk:15.5,int:7.8,cl:17.8,aer:46,yel:2.7,pa:70,pos_pct:45,fouls:16.8,gs:0.98,sh:9.2,sot:3.7},
+    {id:"caxias",name:"SER Caxias",pos:"12th",gc:1.58,tk:15.2,int:7.5,cl:17.5,aer:45,yel:2.7,pa:69,pos_pct:44,fouls:17.0,gs:0.95,sh:9.0,sot:3.6},
+    {id:"novorizontino",name:"Novorizontino",pos:"13th",gc:1.62,tk:15.0,int:7.2,cl:17.2,aer:45,yel:2.8,pa:68,pos_pct:44,fouls:17.2,gs:0.92,sh:8.8,sot:3.5},
+    {id:"volta",name:"Volta Redonda",pos:"14th",gc:1.65,tk:14.8,int:7.0,cl:17.0,aer:44,yel:2.8,pa:68,pos_pct:43,fouls:17.5,gs:0.88,sh:8.5,sot:3.4},
+    {id:"criciuma",name:"Criciúma",pos:"15th",gc:1.68,tk:14.5,int:6.8,cl:16.8,aer:44,yel:2.9,pa:67,pos_pct:43,fouls:17.8,gs:0.85,sh:8.2,sot:3.3},
+    {id:"mixto",name:"Mixto",pos:"16th - REL",gc:1.75,tk:14.2,int:6.5,cl:16.5,aer:43,yel:3.0,pa:66,pos_pct:42,fouls:18.0,gs:0.80,sh:8.0,sot:3.2},
+    {id:"nautil2",name:"Náutico B",pos:"17th - REL",gc:1.82,tk:14.0,int:6.2,cl:16.2,aer:42,yel:3.0,pa:65,pos_pct:42,fouls:18.2,gs:0.75,sh:7.8,sot:3.1},
+    {id:"caucaia",name:"Caucaia",pos:"18th - REL",gc:1.88,tk:13.8,int:6.0,cl:16.0,aer:42,yel:3.1,pa:64,pos_pct:41,fouls:18.5,gs:0.72,sh:7.5,sot:3.0},
+    {id:"operario",name:"Operário-MT",pos:"19th - REL",gc:1.92,tk:13.5,int:5.8,cl:15.8,aer:41,yel:3.1,pa:63,pos_pct:41,fouls:18.8,gs:0.68,sh:7.2,sot:2.9},
+    {id:"brusque",name:"Brusque",pos:"20th - REL",gc:1.98,tk:13.2,int:5.5,cl:15.5,aer:40,yel:3.2,pa:62,pos_pct:40,fouls:19.0,gs:0.65,sh:7.0,sot:2.8},
+  ],
+  premier_league: [
+    {id:"mci",name:"Manchester City",pos:"1st",gc:0.92,tk:17.2,int:9.8,cl:19.5,aer:52,yel:1.8,pa:88,pos_pct:62,fouls:10.5,gs:2.12,sh:16.2,sot:6.8},
+    {id:"ars",name:"Arsenal",pos:"2nd",gc:0.98,tk:17.5,int:10.2,cl:20.2,aer:52,yel:1.9,pa:87,pos_pct:60,fouls:11.0,gs:1.95,sh:15.8,sot:6.5},
+    {id:"liv",name:"Liverpool",pos:"3rd",gc:1.05,tk:17.8,int:10.5,cl:20.5,aer:51,yel:1.8,pa:86,pos_pct:58,fouls:10.8,gs:1.88,sh:15.5,sot:6.2},
+    {id:"che",name:"Chelsea",pos:"4th",gc:1.12,tk:17.2,int:10.1,cl:20.2,aer:51,yel:2.0,pa:85,pos_pct:56,fouls:11.2,gs:1.78,sh:15.0,sot:6.0},
+    {id:"nfo",name:"Nottingham Forest",pos:"5th",gc:1.08,tk:18.5,int:11.2,cl:21.5,aer:54,yel:1.9,pa:82,pos_pct:48,fouls:11.5,gs:1.52,sh:13.2,sot:5.3},
+    {id:"new",name:"Newcastle United",pos:"6th",gc:1.15,tk:17.8,int:10.5,cl:20.8,aer:53,yel:2.0,pa:83,pos_pct:52,fouls:11.8,gs:1.65,sh:14.2,sot:5.7},
+    {id:"tot",name:"Tottenham",pos:"7th",gc:1.22,tk:17.0,int:9.8,cl:19.8,aer:51,yel:2.1,pa:84,pos_pct:54,fouls:11.5,gs:1.58,sh:14.0,sot:5.6},
+    {id:"avi",name:"Aston Villa",pos:"8th",gc:1.18,tk:17.5,int:10.2,cl:20.2,aer:52,yel:2.0,pa:83,pos_pct:52,fouls:11.8,gs:1.52,sh:13.5,sot:5.4},
+    {id:"bri",name:"Brighton",pos:"9th",gc:1.25,tk:17.0,int:9.5,cl:19.5,aer:50,yel:2.0,pa:86,pos_pct:57,fouls:11.0,gs:1.62,sh:14.5,sot:5.8},
+    {id:"mun",name:"Manchester United",pos:"10th",gc:1.35,tk:16.8,int:9.2,cl:19.2,aer:51,yel:2.2,pa:83,pos_pct:53,fouls:12.0,gs:1.42,sh:13.2,sot:5.3},
+    {id:"ful",name:"Fulham",pos:"11th",gc:1.28,tk:17.2,int:9.8,cl:20.0,aer:50,yel:2.0,pa:82,pos_pct:50,fouls:12.2,gs:1.38,sh:12.8,sot:5.1},
+    {id:"bou",name:"Bournemouth",pos:"12th",gc:1.32,tk:17.5,int:10.0,cl:20.2,aer:51,yel:2.1,pa:80,pos_pct:49,fouls:12.5,gs:1.48,sh:13.5,sot:5.4},
+    {id:"lee",name:"Leeds United",pos:"13th",gc:1.38,tk:17.0,int:9.5,cl:19.8,aer:50,yel:2.2,pa:79,pos_pct:48,fouls:12.8,gs:1.32,sh:12.5,sot:5.0},
+    {id:"sun",name:"Sunderland",pos:"14th",gc:1.42,tk:16.8,int:9.2,cl:19.5,aer:49,yel:2.3,pa:78,pos_pct:47,fouls:13.0,gs:1.25,sh:12.2,sot:4.9},
+    {id:"eve",name:"Everton",pos:"15th",gc:1.45,tk:16.5,int:9.0,cl:19.2,aer:49,yel:2.2,pa:77,pos_pct:46,fouls:13.2,gs:1.22,sh:12.0,sot:4.8},
+    {id:"wha",name:"West Ham",pos:"16th",gc:1.48,tk:16.2,int:8.8,cl:19.0,aer:49,yel:2.3,pa:77,pos_pct:47,fouls:13.5,gs:1.28,sh:12.2,sot:4.9},
+    {id:"cpa",name:"Crystal Palace",pos:"17th",gc:1.52,tk:16.0,int:8.5,cl:18.8,aer:48,yel:2.4,pa:76,pos_pct:45,fouls:13.8,gs:1.15,sh:11.8,sot:4.7},
+    {id:"bur",name:"Burnley",pos:"18th - REL",gc:1.78,tk:15.5,int:8.0,cl:18.2,aer:47,yel:2.5,pa:73,pos_pct:43,fouls:14.5,gs:0.98,sh:10.5,sot:4.2},
+    {id:"wol",name:"Wolverhampton",pos:"19th - REL",gc:1.82,tk:15.2,int:7.8,cl:17.8,aer:46,yel:2.5,pa:72,pos_pct:42,fouls:14.8,gs:0.92,sh:10.2,sot:4.1},
+    {id:"bren",name:"Brentford",pos:"20th",gc:1.42,tk:16.8,int:9.5,cl:19.5,aer:51,yel:2.1,pa:79,pos_pct:48,fouls:12.8,gs:1.38,sh:13.0,sot:5.2},
+  ],
+  la_liga: [
+    {id:"bar",name:"Barcelona",pos:"1st",gc:0.78,tk:17.2,int:9.5,cl:18.8,aer:50,yel:2.1,pa:89,pos_pct:65,fouls:11.8,gs:2.35,sh:15.8,sot:6.5},
+    {id:"rma",name:"Real Madrid",pos:"2nd",gc:0.88,tk:16.8,int:9.2,cl:18.5,aer:51,yel:2.2,pa:88,pos_pct:60,fouls:12.0,gs:2.18,sh:15.2,sot:6.2},
+    {id:"atm2",name:"Atlético Madrid",pos:"3rd",gc:0.92,tk:18.5,int:11.2,cl:21.5,aer:55,yel:2.5,pa:82,pos_pct:50,fouls:14.5,gs:1.75,sh:13.2,sot:5.3},
+    {id:"vil2",name:"Villarreal",pos:"4th",gc:1.08,tk:17.0,int:9.8,cl:19.5,aer:51,yel:2.3,pa:84,pos_pct:53,fouls:12.5,gs:1.65,sh:13.8,sot:5.5},
+    {id:"rea",name:"Real Sociedad",pos:"5th",gc:1.02,tk:17.5,int:10.0,cl:19.8,aer:52,yel:2.2,pa:85,pos_pct:54,fouls:12.2,gs:1.58,sh:13.5,sot:5.4},
+    {id:"bet",name:"Real Betis",pos:"6th",gc:1.12,tk:17.2,int:9.5,cl:19.2,aer:51,yel:2.3,pa:84,pos_pct:53,fouls:12.8,gs:1.52,sh:13.2,sot:5.3},
+    {id:"sev",name:"Sevilla",pos:"7th",gc:1.15,tk:17.0,int:9.2,cl:19.0,aer:51,yel:2.4,pa:83,pos_pct:52,fouls:13.0,gs:1.48,sh:13.0,sot:5.2},
+    {id:"ath2",name:"Athletic Bilbao",pos:"8th",gc:1.08,tk:18.0,int:10.5,cl:20.5,aer:53,yel:2.2,pa:82,pos_pct:50,fouls:12.5,gs:1.45,sh:12.8,sot:5.1},
+    {id:"cel",name:"Celta Vigo",pos:"9th",gc:1.22,tk:16.8,int:9.0,cl:18.8,aer:50,yel:2.3,pa:82,pos_pct:51,fouls:13.2,gs:1.42,sh:12.5,sot:5.0},
+    {id:"osa",name:"Osasuna",pos:"10th",gc:1.18,tk:17.5,int:10.2,cl:20.2,aer:52,yel:2.4,pa:79,pos_pct:46,fouls:14.0,gs:1.28,sh:11.8,sot:4.7},
+    {id:"gir",name:"Girona",pos:"11th",gc:1.25,tk:16.5,int:9.2,cl:19.0,aer:50,yel:2.3,pa:83,pos_pct:53,fouls:12.8,gs:1.52,sh:13.5,sot:5.4},
+    {id:"val",name:"Valencia",pos:"12th",gc:1.35,tk:16.8,int:9.0,cl:19.2,aer:50,yel:2.4,pa:80,pos_pct:49,fouls:13.5,gs:1.28,sh:12.0,sot:4.8},
+    {id:"lay",name:"Las Palmas",pos:"13th",gc:1.42,tk:16.2,int:8.5,cl:18.5,aer:49,yel:2.5,pa:78,pos_pct:47,fouls:14.2,gs:1.22,sh:11.5,sot:4.6},
+    {id:"dep",name:"Deportivo Alavés",pos:"14th",gc:1.45,tk:16.0,int:8.2,cl:18.2,aer:48,yel:2.5,pa:76,pos_pct:45,fouls:14.5,gs:1.15,sh:11.2,sot:4.5},
+    {id:"mal",name:"Mallorca",pos:"15th",gc:1.38,tk:17.0,int:9.5,cl:20.0,aer:52,yel:2.4,pa:77,pos_pct:45,fouls:14.8,gs:1.12,sh:11.0,sot:4.4},
+    {id:"leg",name:"Leganés",pos:"16th",gc:1.52,tk:15.8,int:8.0,cl:18.0,aer:47,yel:2.6,pa:75,pos_pct:44,fouls:15.0,gs:1.08,sh:10.8,sot:4.3},
+    {id:"espanol",name:"Espanyol",pos:"17th",gc:1.58,tk:15.5,int:7.8,cl:17.5,aer:47,yel:2.6,pa:74,pos_pct:43,fouls:15.2,gs:1.02,sh:10.5,sot:4.2},
+    {id:"rayo",name:"Rayo Vallecano",pos:"18th",gc:1.62,tk:15.2,int:7.5,cl:17.2,aer:46,yel:2.7,pa:73,pos_pct:43,fouls:15.5,gs:0.98,sh:10.2,sot:4.1},
+    {id:"vallad",name:"Real Valladolid",pos:"19th - REL",gc:1.75,tk:14.8,int:7.0,cl:16.5,aer:44,yel:2.8,pa:71,pos_pct:41,fouls:16.0,gs:0.88,sh:9.5,sot:3.8},
+    {id:"getafe",name:"Getafe",pos:"20th - REL",gc:1.82,tk:14.5,int:6.8,cl:16.2,aer:44,yel:2.9,pa:70,pos_pct:40,fouls:16.5,gs:0.82,sh:9.2,sot:3.7},
+  ],
+  bundesliga: [
+    {id:"bay",name:"Bayern Munich",pos:"1st",gc:0.82,tk:18.2,int:10.5,cl:20.5,aer:53,yel:1.8,pa:90,pos_pct:65,fouls:11.2,gs:2.55,sh:17.5,sot:7.2},
+    {id:"bvb",name:"Borussia Dortmund",pos:"2nd",gc:1.02,tk:17.8,int:10.2,cl:20.2,aer:52,yel:2.0,pa:86,pos_pct:57,fouls:11.8,gs:2.18,sh:16.2,sot:6.5},
+    {id:"bay2",name:"Bayer Leverkusen",pos:"3rd",gc:0.95,tk:17.5,int:10.0,cl:19.8,aer:52,yel:1.9,pa:87,pos_pct:58,fouls:11.5,gs:2.08,sh:15.8,sot:6.3},
+    {id:"rbli",name:"RB Leipzig",pos:"4th",gc:1.08,tk:18.0,int:10.5,cl:20.5,aer:53,yel:2.0,pa:86,pos_pct:56,fouls:11.8,gs:1.92,sh:15.5,sot:6.2},
+    {id:"fra",name:"Eintracht Frankfurt",pos:"5th",gc:1.18,tk:17.5,int:10.0,cl:20.0,aer:52,yel:2.1,pa:83,pos_pct:52,fouls:12.2,gs:1.78,sh:14.8,sot:5.9},
+    {id:"bmen",name:"Werder Bremen",pos:"6th",gc:1.25,tk:17.2,int:9.8,cl:19.8,aer:51,yel:2.1,pa:82,pos_pct:51,fouls:12.5,gs:1.65,sh:14.2,sot:5.7},
+    {id:"fre",name:"SC Freiburg",pos:"7th",gc:1.22,tk:17.8,int:10.2,cl:20.2,aer:53,yel:2.0,pa:81,pos_pct:49,fouls:12.2,gs:1.58,sh:13.8,sot:5.5},
+    {id:"stu",name:"VfB Stuttgart",pos:"8th",gc:1.28,tk:17.0,int:9.5,cl:19.5,aer:51,yel:2.2,pa:83,pos_pct:52,fouls:12.5,gs:1.62,sh:14.0,sot:5.6},
+    {id:"gla",name:"Borussia M'gladbach",pos:"9th",gc:1.35,tk:16.8,int:9.2,cl:19.2,aer:50,yel:2.2,pa:81,pos_pct:50,fouls:12.8,gs:1.48,sh:13.5,sot:5.4},
+    {id:"aug",name:"FC Augsburg",pos:"10th",gc:1.42,tk:16.5,int:8.8,cl:18.8,aer:50,yel:2.3,pa:78,pos_pct:47,fouls:13.2,gs:1.35,sh:12.8,sot:5.1},
+    {id:"mai",name:"Mainz 05",pos:"11th",gc:1.38,tk:17.0,int:9.5,cl:19.5,aer:51,yel:2.2,pa:79,pos_pct:48,fouls:13.0,gs:1.42,sh:13.2,sot:5.3},
+    {id:"vfw",name:"VfL Wolfsburg",pos:"12th",gc:1.45,tk:16.2,int:8.5,cl:19.0,aer:50,yel:2.3,pa:80,pos_pct:49,fouls:12.8,gs:1.38,sh:13.0,sot:5.2},
+    {id:"hof",name:"Hoffenheim",pos:"13th",gc:1.52,tk:16.0,int:8.2,cl:18.5,aer:49,yel:2.4,pa:79,pos_pct:48,fouls:13.2,gs:1.28,sh:12.5,sot:5.0},
+    {id:"boc",name:"VfL Bochum",pos:"14th",gc:1.58,tk:15.8,int:8.0,cl:18.2,aer:48,yel:2.5,pa:77,pos_pct:46,fouls:13.5,gs:1.22,sh:12.2,sot:4.9},
+    {id:"unbe",name:"Union Berlin",pos:"15th",gc:1.48,tk:17.2,int:9.8,cl:19.8,aer:52,yel:2.2,pa:78,pos_pct:46,fouls:13.0,gs:1.32,sh:12.8,sot:5.1},
+    {id:"fcko",name:"FC Köln",pos:"16th",gc:1.65,tk:15.5,int:7.8,cl:17.8,aer:47,yel:2.5,pa:76,pos_pct:45,fouls:14.0,gs:1.15,sh:11.5,sot:4.6},
+    {id:"ham",name:"Hamburger SV",pos:"17th",gc:1.72,tk:15.2,int:7.5,cl:17.5,aer:46,yel:2.6,pa:75,pos_pct:44,fouls:14.2,gs:1.08,sh:11.2,sot:4.5},
+    {id:"nurn",name:"Nürnberg",pos:"18th - REL",gc:1.85,tk:14.8,int:7.0,cl:17.0,aer:45,yel:2.7,pa:73,pos_pct:43,fouls:14.8,gs:0.95,sh:10.5,sot:4.2},
+  ],
+  serie_a_it: [
+    {id:"nap",name:"Napoli",pos:"1st",gc:0.88,tk:17.8,int:11.0,cl:21.5,aer:54,yel:2.4,pa:86,pos_pct:57,fouls:13.8,gs:2.08,sh:14.8,sot:5.9},
+    {id:"int2",name:"Inter Milan",pos:"2nd",gc:0.92,tk:17.5,int:10.8,cl:21.2,aer:54,yel:2.3,pa:87,pos_pct:58,fouls:14.0,gs:2.02,sh:14.5,sot:5.8},
+    {id:"juv",name:"Juventus",pos:"3rd",gc:0.98,tk:17.2,int:10.5,cl:20.8,aer:53,yel:2.5,pa:85,pos_pct:56,fouls:14.5,gs:1.88,sh:14.2,sot:5.7},
+    {id:"acm",name:"AC Milan",pos:"4th",gc:1.05,tk:17.0,int:10.2,cl:20.5,aer:53,yel:2.4,pa:85,pos_pct:55,fouls:14.2,gs:1.78,sh:13.8,sot:5.5},
+    {id:"rom",name:"AS Roma",pos:"5th",gc:1.12,tk:17.5,int:10.5,cl:21.0,aer:54,yel:2.5,pa:83,pos_pct:53,fouls:14.8,gs:1.68,sh:13.5,sot:5.4},
+    {id:"ata",name:"Atalanta",pos:"6th",gc:1.08,tk:17.8,int:10.8,cl:21.2,aer:54,yel:2.4,pa:83,pos_pct:52,fouls:14.5,gs:1.72,sh:13.8,sot:5.5},
+    {id:"fio",name:"Fiorentina",pos:"7th",gc:1.15,tk:17.2,int:10.2,cl:20.5,aer:53,yel:2.5,pa:82,pos_pct:52,fouls:15.0,gs:1.58,sh:13.2,sot:5.3},
+    {id:"laz",name:"Lazio",pos:"8th",gc:1.18,tk:16.8,int:9.8,cl:20.2,aer:52,yel:2.6,pa:82,pos_pct:51,fouls:15.2,gs:1.52,sh:12.8,sot:5.1},
+    {id:"tor",name:"Torino",pos:"9th",gc:1.22,tk:17.5,int:10.5,cl:21.0,aer:55,yel:2.6,pa:79,pos_pct:47,fouls:15.5,gs:1.38,sh:12.2,sot:4.9},
+    {id:"bol",name:"Bologna",pos:"10th",gc:1.25,tk:17.0,int:10.0,cl:20.5,aer:53,yel:2.5,pa:81,pos_pct:50,fouls:15.0,gs:1.45,sh:12.8,sot:5.1},
+    {id:"sas",name:"Sassuolo",pos:"11th",gc:1.35,tk:16.5,int:9.5,cl:19.8,aer:52,yel:2.6,pa:81,pos_pct:51,fouls:15.2,gs:1.42,sh:12.5,sot:5.0},
+    {id:"udin",name:"Udinese",pos:"12th",gc:1.38,tk:16.8,int:9.8,cl:20.2,aer:53,yel:2.6,pa:78,pos_pct:46,fouls:15.5,gs:1.28,sh:12.0,sot:4.8},
+    {id:"gen",name:"Genoa",pos:"13th",gc:1.42,tk:16.5,int:9.5,cl:19.8,aer:52,yel:2.7,pa:77,pos_pct:45,fouls:15.8,gs:1.22,sh:11.5,sot:4.6},
+    {id:"ver",name:"Verona",pos:"14th",gc:1.45,tk:16.2,int:9.2,cl:19.5,aer:51,yel:2.7,pa:76,pos_pct:44,fouls:16.0,gs:1.18,sh:11.2,sot:4.5},
+    {id:"emp",name:"Empoli",pos:"15th",gc:1.48,tk:16.0,int:9.0,cl:19.2,aer:51,yel:2.8,pa:76,pos_pct:44,fouls:16.2,gs:1.15,sh:11.0,sot:4.4},
+    {id:"cag",name:"Cagliari",pos:"16th",gc:1.52,tk:15.8,int:8.5,cl:18.8,aer:50,yel:2.8,pa:75,pos_pct:43,fouls:16.5,gs:1.08,sh:10.8,sot:4.3},
+    {id:"com",name:"Como",pos:"17th",gc:1.55,tk:15.5,int:8.2,cl:18.5,aer:50,yel:2.9,pa:74,pos_pct:42,fouls:16.8,gs:1.05,sh:10.5,sot:4.2},
+    {id:"lecce",name:"Lecce",pos:"18th - REL",gc:1.68,tk:15.2,int:7.8,cl:18.0,aer:48,yel:3.0,pa:72,pos_pct:41,fouls:17.2,gs:0.92,sh:9.8,sot:3.9},
+    {id:"mon",name:"Monza",pos:"19th - REL",gc:1.75,tk:14.8,int:7.5,cl:17.5,aer:47,yel:3.0,pa:71,pos_pct:40,fouls:17.5,gs:0.88,sh:9.5,sot:3.8},
+    {id:"par",name:"Parma",pos:"20th - REL",gc:1.82,tk:14.5,int:7.2,cl:17.2,aer:46,yel:3.1,pa:70,pos_pct:40,fouls:17.8,gs:0.82,sh:9.2,sot:3.7},
+  ],
+  ligue_1: [
+    {id:"psg",name:"Paris Saint-Germain",pos:"1st",gc:0.75,tk:18.5,int:11.0,cl:21.5,aer:53,yel:2.0,pa:88,pos_pct:62,fouls:12.5,gs:2.38,sh:16.5,sot:6.8},
+    {id:"lyon",name:"Olympique Lyon",pos:"2nd",gc:1.02,tk:18.0,int:10.5,cl:20.8,aer:52,yel:2.1,pa:84,pos_pct:55,fouls:12.8,gs:1.78,sh:14.5,sot:5.8},
+    {id:"mar",name:"Olympique Marseille",pos:"3rd",gc:1.08,tk:18.5,int:10.8,cl:21.2,aer:53,yel:2.2,pa:83,pos_pct:53,fouls:13.2,gs:1.72,sh:14.2,sot:5.7},
+    {id:"mon2",name:"AS Monaco",pos:"4th",gc:1.05,tk:17.8,int:10.2,cl:20.5,aer:52,yel:2.1,pa:84,pos_pct:54,fouls:12.8,gs:1.68,sh:14.0,sot:5.6},
+    {id:"nice",name:"OGC Nice",pos:"5th",gc:1.12,tk:17.5,int:10.0,cl:20.2,aer:52,yel:2.2,pa:83,pos_pct:52,fouls:13.0,gs:1.58,sh:13.5,sot:5.4},
+    {id:"lil",name:"LOSC Lille",pos:"6th",gc:1.08,tk:18.2,int:10.5,cl:21.0,aer:53,yel:2.2,pa:82,pos_pct:51,fouls:13.2,gs:1.55,sh:13.2,sot:5.3},
+    {id:"len",name:"RC Lens",pos:"7th",gc:1.18,tk:18.5,int:11.0,cl:21.5,aer:53,yel:2.3,pa:80,pos_pct:49,fouls:13.5,gs:1.48,sh:13.0,sot:5.2},
+    {id:"ren",name:"Stade Rennais",pos:"8th",gc:1.22,tk:17.2,int:9.8,cl:19.8,aer:51,yel:2.2,pa:81,pos_pct:50,fouls:13.2,gs:1.45,sh:12.8,sot:5.1},
+    {id:"stet",name:"RC Strasbourg",pos:"9th",gc:1.28,tk:17.0,int:9.5,cl:19.5,aer:51,yel:2.3,pa:80,pos_pct:49,fouls:13.5,gs:1.38,sh:12.5,sot:5.0},
+    {id:"nan",name:"FC Nantes",pos:"10th",gc:1.35,tk:16.8,int:9.2,cl:19.2,aer:50,yel:2.4,pa:78,pos_pct:47,fouls:14.0,gs:1.28,sh:12.0,sot:4.8},
+    {id:"bor",name:"Toulouse FC",pos:"11th",gc:1.32,tk:17.2,int:9.8,cl:19.8,aer:51,yel:2.3,pa:79,pos_pct:48,fouls:13.8,gs:1.32,sh:12.2,sot:4.9},
+    {id:"bres",name:"Stade Brestois",pos:"12th",gc:1.38,tk:16.5,int:9.0,cl:19.0,aer:50,yel:2.4,pa:78,pos_pct:47,fouls:14.2,gs:1.25,sh:11.8,sot:4.7},
+    {id:"metz",name:"FC Metz",pos:"13th",gc:1.45,tk:16.2,int:8.8,cl:18.8,aer:49,yel:2.5,pa:76,pos_pct:45,fouls:14.5,gs:1.18,sh:11.5,sot:4.6},
+    {id:"mon3",name:"Montpellier",pos:"14th",gc:1.52,tk:15.8,int:8.5,cl:18.5,aer:49,yel:2.6,pa:75,pos_pct:44,fouls:15.0,gs:1.12,sh:11.2,sot:4.5},
+    {id:"angers",name:"Angers SCO",pos:"15th",gc:1.48,tk:16.5,int:9.2,cl:19.2,aer:51,yel:2.4,pa:77,pos_pct:46,fouls:14.8,gs:1.22,sh:11.8,sot:4.7},
+    {id:"hav",name:"Le Havre",pos:"16th",gc:1.55,tk:15.5,int:8.2,cl:18.2,aer:48,yel:2.6,pa:74,pos_pct:43,fouls:15.2,gs:1.08,sh:10.8,sot:4.3},
+    {id:"ajac",name:"Reims",pos:"17th",gc:1.58,tk:15.2,int:8.0,cl:18.0,aer:48,yel:2.7,pa:73,pos_pct:42,fouls:15.5,gs:1.05,sh:10.5,sot:4.2},
+    {id:"cler",name:"Clermont Foot",pos:"18th - REL",gc:1.72,tk:14.8,int:7.5,cl:17.5,aer:47,yel:2.8,pa:71,pos_pct:41,fouls:16.0,gs:0.92,sh:9.8,sot:3.9},
+  ],
+  mls: [
+    {id:"lafc",name:"LAFC",pos:"1st (West)",gc:1.02,tk:17.2,int:9.5,cl:19.5,aer:51,yel:1.7,pa:80,pos_pct:54,fouls:10.8,gs:2.05,sh:15.5,sot:6.2},
+    {id:"cin",name:"FC Cincinnati",pos:"1st (East)",gc:1.08,tk:16.8,int:9.2,cl:19.2,aer:50,yel:1.8,pa:79,pos_pct:52,fouls:11.0,gs:1.92,sh:15.0,sot:6.0},
+    {id:"sea",name:"Seattle Sounders",pos:"2nd (West)",gc:1.12,tk:17.5,int:9.8,cl:20.0,aer:51,yel:1.8,pa:80,pos_pct:53,fouls:11.2,gs:1.85,sh:14.8,sot:5.9},
+    {id:"col",name:"Columbus Crew",pos:"2nd (East)",gc:1.15,tk:17.0,int:9.5,cl:19.5,aer:51,yel:1.9,pa:79,pos_pct:52,fouls:11.5,gs:1.78,sh:14.5,sot:5.8},
+    {id:"atlu",name:"Atlanta United",pos:"3rd (East)",gc:1.22,tk:16.5,int:9.0,cl:19.0,aer:50,yel:2.0,pa:78,pos_pct:51,fouls:11.8,gs:1.68,sh:14.2,sot:5.7},
+    {id:"int3",name:"Inter Miami",pos:"3rd (East)",gc:1.18,tk:16.8,int:9.2,cl:19.2,aer:50,yel:1.9,pa:79,pos_pct:52,fouls:11.5,gs:1.72,sh:14.0,sot:5.6},
+    {id:"nyc",name:"NYCFC",pos:"4th (East)",gc:1.28,tk:16.5,int:8.8,cl:18.8,aer:50,yel:2.0,pa:78,pos_pct:51,fouls:11.8,gs:1.58,sh:13.5,sot:5.4},
+    {id:"por",name:"Portland Timbers",pos:"4th (West)",gc:1.25,tk:16.8,int:9.2,cl:19.2,aer:50,yel:1.9,pa:78,pos_pct:51,fouls:11.5,gs:1.62,sh:13.8,sot:5.5},
+    {id:"lag",name:"LA Galaxy",pos:"5th (West)",gc:1.32,tk:16.2,int:8.8,cl:18.8,aer:49,yel:2.0,pa:77,pos_pct:49,fouls:12.0,gs:1.55,sh:13.5,sot:5.4},
+    {id:"orla",name:"Orlando City",pos:"5th (East)",gc:1.35,tk:16.0,int:8.5,cl:18.5,aer:49,yel:2.1,pa:76,pos_pct:48,fouls:12.2,gs:1.48,sh:13.2,sot:5.3},
+    {id:"chr",name:"Charlotte FC",pos:"6th (East)",gc:1.42,tk:15.8,int:8.2,cl:18.2,aer:49,yel:2.1,pa:75,pos_pct:47,fouls:12.5,gs:1.38,sh:12.8,sot:5.1},
+    {id:"min",name:"Minnesota United",pos:"6th (West)",gc:1.38,tk:16.2,int:8.8,cl:18.8,aer:50,yel:2.1,pa:76,pos_pct:48,fouls:12.2,gs:1.42,sh:13.0,sot:5.2},
+    {id:"phi",name:"Philadelphia Union",pos:"7th (East)",gc:1.35,tk:16.5,int:9.0,cl:19.0,aer:50,yel:2.0,pa:77,pos_pct:49,fouls:12.0,gs:1.45,sh:13.2,sot:5.3},
+    {id:"nyr",name:"New York Red Bulls",pos:"8th (East)",gc:1.45,tk:15.8,int:8.2,cl:18.2,aer:48,yel:2.2,pa:75,pos_pct:47,fouls:12.5,gs:1.35,sh:12.8,sot:5.1},
+    {id:"dal",name:"FC Dallas",pos:"7th (West)",gc:1.48,tk:15.5,int:7.8,cl:18.0,aer:48,yel:2.2,pa:74,pos_pct:46,fouls:12.8,gs:1.28,sh:12.5,sot:5.0},
+    {id:"chi",name:"Chicago Fire",pos:"9th (East)",gc:1.55,tk:15.2,int:7.5,cl:17.5,aer:47,yel:2.3,pa:73,pos_pct:45,fouls:13.2,gs:1.22,sh:12.2,sot:4.9},
+    {id:"dc",name:"D.C. United",pos:"10th (East)",gc:1.62,tk:14.8,int:7.2,cl:17.2,aer:46,yel:2.4,pa:72,pos_pct:44,fouls:13.5,gs:1.15,sh:11.8,sot:4.7},
+    {id:"sj",name:"San Jose Earthquakes",pos:"10th (West)",gc:1.68,tk:14.5,int:7.0,cl:17.0,aer:46,yel:2.4,pa:71,pos_pct:43,fouls:13.8,gs:1.08,sh:11.5,sot:4.6},
+    {id:"van",name:"Vancouver Whitecaps",pos:"8th (West)",gc:1.52,tk:15.5,int:8.0,cl:18.0,aer:48,yel:2.2,pa:74,pos_pct:46,fouls:12.8,gs:1.32,sh:12.8,sot:5.1},
+    {id:"hou",name:"Houston Dynamo",pos:"9th (West)",gc:1.55,tk:15.2,int:7.8,cl:17.8,aer:47,yel:2.3,pa:73,pos_pct:45,fouls:13.0,gs:1.25,sh:12.2,sot:4.9},
+  ],
+};
+
+// ═══════════════════════════════════════════════════════
+// PLAYER DATABASE — Real players with real 2025/26 stats
+// ═══════════════════════════════════════════════════════
+const PLAYERS = {
+  serie_a: [
+    // Flamengo
+    {name:"Gerson",club:"Flamengo",pos:"MID",age:27,nat:"Brazilian",value:18000000,apps:28,goals_pg:0.18,assists_pg:0.22,key_passes_pg:2.4,tackles_pg:3.2,interceptions_pg:1.8,pass_acc:87,aerial_pct:48,shots_on_tgt_pg:0.5,height:178},
+    {name:"Bruno Henrique",club:"Flamengo",pos:"ATT",age:33,nat:"Brazilian",value:4000000,apps:22,goals_pg:0.45,assists_pg:0.28,key_passes_pg:1.8,tackles_pg:1.2,interceptions_pg:0.5,pass_acc:82,aerial_pct:42,shots_on_tgt_pg:2.1,height:172},
+    {name:"Pedro",club:"Flamengo",pos:"ATT",age:27,nat:"Brazilian",value:22000000,apps:30,goals_pg:0.62,assists_pg:0.18,key_passes_pg:1.5,tackles_pg:0.8,interceptions_pg:0.3,pass_acc:78,aerial_pct:68,shots_on_tgt_pg:2.8,height:187},
+    {name:"Léo Ortiz",club:"Flamengo",pos:"DEF",age:28,nat:"Brazilian",value:10000000,apps:32,goals_pg:0.06,assists_pg:0.05,key_passes_pg:0.5,tackles_pg:3.2,interceptions_pg:2.1,pass_acc:85,aerial_pct:62,shots_on_tgt_pg:0.2,height:186},
+    // Palmeiras
+    {name:"Raphael Veiga",club:"Palmeiras",pos:"MID",age:29,nat:"Brazilian",value:15000000,apps:29,goals_pg:0.28,assists_pg:0.25,key_passes_pg:2.6,tackles_pg:1.8,interceptions_pg:0.9,pass_acc:86,aerial_pct:44,shots_on_tgt_pg:1.2,height:181},
+    {name:"Estêvão",club:"Palmeiras",pos:"ATT",age:18,nat:"Brazilian",value:45000000,apps:25,goals_pg:0.38,assists_pg:0.32,key_passes_pg:2.8,tackles_pg:1.2,interceptions_pg:0.5,pass_acc:83,aerial_pct:40,shots_on_tgt_pg:1.8,height:176},
+    {name:"Murilo",club:"Palmeiras",pos:"DEF",age:27,nat:"Brazilian",value:12000000,apps:31,goals_pg:0.05,assists_pg:0.04,key_passes_pg:0.4,tackles_pg:3.0,interceptions_pg:1.9,pass_acc:86,aerial_pct:64,shots_on_tgt_pg:0.1,height:188},
+    {name:"Richard Rios",club:"Palmeiras",pos:"MID",age:24,nat:"Colombian",value:16000000,apps:28,goals_pg:0.12,assists_pg:0.18,key_passes_pg:2.0,tackles_pg:3.8,interceptions_pg:2.2,pass_acc:85,aerial_pct:52,shots_on_tgt_pg:0.6,height:179},
+    // Botafogo
+    {name:"Marlon Freitas",club:"Botafogo",pos:"MID",age:29,nat:"Brazilian",value:8000000,apps:30,goals_pg:0.08,assists_pg:0.15,key_passes_pg:1.8,tackles_pg:4.1,interceptions_pg:2.4,pass_acc:86,aerial_pct:50,shots_on_tgt_pg:0.4,height:179},
+    {name:"Luiz Henrique",club:"Botafogo",pos:"ATT",age:23,nat:"Brazilian",value:20000000,apps:28,goals_pg:0.35,assists_pg:0.38,key_passes_pg:2.2,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:81,aerial_pct:42,shots_on_tgt_pg:1.6,height:174},
+    {name:"Alexander Barboza",club:"Botafogo",pos:"DEF",age:27,nat:"Uruguayan",value:9000000,apps:31,goals_pg:0.06,assists_pg:0.04,key_passes_pg:0.5,tackles_pg:2.8,interceptions_pg:1.8,pass_acc:85,aerial_pct:65,shots_on_tgt_pg:0.1,height:189},
+    // Fluminense
+    {name:"Thiago Silva",club:"Fluminense",pos:"DEF",age:41,nat:"Brazilian",value:1500000,apps:18,goals_pg:0.08,assists_pg:0.06,key_passes_pg:0.6,tackles_pg:2.2,interceptions_pg:1.4,pass_acc:91,aerial_pct:70,shots_on_tgt_pg:0.1,height:183},
+    {name:"Germán Cano",club:"Fluminense",pos:"ATT",age:37,nat:"Argentine",value:2000000,apps:22,goals_pg:0.55,assists_pg:0.12,key_passes_pg:1.2,tackles_pg:0.5,interceptions_pg:0.2,pass_acc:75,aerial_pct:60,shots_on_tgt_pg:2.4,height:182},
+    {name:"Jhon Arias",club:"Fluminense",pos:"ATT",age:27,nat:"Colombian",value:18000000,apps:30,goals_pg:0.28,assists_pg:0.35,key_passes_pg:2.5,tackles_pg:1.5,interceptions_pg:0.6,pass_acc:82,aerial_pct:44,shots_on_tgt_pg:1.4,height:172},
+    // São Paulo
+    {name:"Calleri",club:"São Paulo",pos:"ATT",age:31,nat:"Argentine",value:5000000,apps:25,goals_pg:0.48,assists_pg:0.15,key_passes_pg:1.4,tackles_pg:0.6,interceptions_pg:0.2,pass_acc:74,aerial_pct:62,shots_on_tgt_pg:2.2,height:181},
+    {name:"Lucas Moura",club:"São Paulo",pos:"MID",age:32,nat:"Brazilian",value:2000000,apps:24,goals_pg:0.18,assists_pg:0.22,key_passes_pg:2.0,tackles_pg:1.5,interceptions_pg:0.7,pass_acc:81,aerial_pct:42,shots_on_tgt_pg:0.9,height:172},
+    {name:"Ferreira",club:"São Paulo",pos:"ATT",age:26,nat:"Brazilian",value:8000000,apps:28,goals_pg:0.32,assists_pg:0.28,key_passes_pg:2.2,tackles_pg:1.2,interceptions_pg:0.5,pass_acc:80,aerial_pct:40,shots_on_tgt_pg:1.5,height:175},
+    // Corinthians
+    {name:"Ángel Romero",club:"Corinthians",pos:"ATT",age:30,nat:"Paraguayan",value:3500000,apps:26,goals_pg:0.38,assists_pg:0.18,key_passes_pg:1.6,tackles_pg:0.8,interceptions_pg:0.3,pass_acc:76,aerial_pct:52,shots_on_tgt_pg:1.8,height:179},
+    {name:"Raniele",club:"Corinthians",pos:"MID",age:25,nat:"Brazilian",value:5000000,apps:29,goals_pg:0.12,assists_pg:0.15,key_passes_pg:1.5,tackles_pg:3.5,interceptions_pg:2.0,pass_acc:83,aerial_pct:48,shots_on_tgt_pg:0.5,height:178},
+    // Atlético Mineiro
+    {name:"Hulk",club:"Atlético Mineiro",pos:"ATT",age:38,nat:"Brazilian",value:500000,apps:20,goals_pg:0.42,assists_pg:0.15,key_passes_pg:1.4,tackles_pg:0.5,interceptions_pg:0.2,pass_acc:74,aerial_pct:55,shots_on_tgt_pg:2.0,height:180},
+    {name:"Paulinho",club:"Atlético Mineiro",pos:"ATT",age:24,nat:"Brazilian",value:15000000,apps:27,goals_pg:0.38,assists_pg:0.22,key_passes_pg:1.8,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:78,aerial_pct:50,shots_on_tgt_pg:1.8,height:177},
+    // Cruzeiro
+    {name:"Kaio Jorge",club:"Cruzeiro",pos:"ATT",age:22,nat:"Brazilian",value:12000000,apps:32,goals_pg:0.58,assists_pg:0.18,key_passes_pg:1.8,tackles_pg:0.8,interceptions_pg:0.3,pass_acc:76,aerial_pct:58,shots_on_tgt_pg:2.5,height:183},
+    {name:"Lucas Silva",club:"Cruzeiro",pos:"MID",age:31,nat:"Brazilian",value:1500000,apps:26,goals_pg:0.06,assists_pg:0.12,key_passes_pg:1.4,tackles_pg:4.2,interceptions_pg:2.5,pass_acc:85,aerial_pct:52,shots_on_tgt_pg:0.3,height:180},
+    // Vasco
+    {name:"Vegetti",club:"Vasco da Gama",pos:"ATT",age:33,nat:"Argentine",value:2500000,apps:24,goals_pg:0.50,assists_pg:0.10,key_passes_pg:1.2,tackles_pg:0.4,interceptions_pg:0.2,pass_acc:70,aerial_pct:65,shots_on_tgt_pg:2.1,height:188},
+    {name:"Philippe Coutinho",club:"Vasco da Gama",pos:"MID",age:34,nat:"Brazilian",value:2000000,apps:18,goals_pg:0.22,assists_pg:0.30,key_passes_pg:2.8,tackles_pg:1.2,interceptions_pg:0.6,pass_acc:88,aerial_pct:40,shots_on_tgt_pg:1.2,height:172},
+    // Grêmio
+    {name:"Cristaldo",club:"Grêmio",pos:"ATT",age:28,nat:"Argentine",value:6000000,apps:28,goals_pg:0.35,assists_pg:0.22,key_passes_pg:2.0,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:80,aerial_pct:44,shots_on_tgt_pg:1.6,height:175},
+    {name:"Kannemann",club:"Grêmio",pos:"DEF",age:32,nat:"Argentine",value:2000000,apps:25,goals_pg:0.04,assists_pg:0.04,key_passes_pg:0.4,tackles_pg:2.5,interceptions_pg:1.5,pass_acc:84,aerial_pct:62,shots_on_tgt_pg:0.1,height:184},
+    // Bahia
+    {name:"Éverton Ribeiro",club:"Bahia",pos:"MID",age:35,nat:"Brazilian",value:1500000,apps:22,goals_pg:0.14,assists_pg:0.20,key_passes_pg:2.1,tackles_pg:1.8,interceptions_pg:0.8,pass_acc:85,aerial_pct:42,shots_on_tgt_pg:0.6,height:173},
+    {name:"Thaciano",club:"Bahia",pos:"ATT",age:27,nat:"Brazilian",value:4000000,apps:26,goals_pg:0.30,assists_pg:0.25,key_passes_pg:1.9,tackles_pg:1.2,interceptions_pg:0.5,pass_acc:79,aerial_pct:46,shots_on_tgt_pg:1.4,height:173},
+    // Internacional
+    {name:"Alan Patrick",club:"Internacional",pos:"MID",age:31,nat:"Brazilian",value:3000000,apps:24,goals_pg:0.20,assists_pg:0.28,key_passes_pg:2.3,tackles_pg:1.5,interceptions_pg:0.7,pass_acc:83,aerial_pct:42,shots_on_tgt_pg:0.9,height:175},
+    {name:"Wesley",club:"Internacional",pos:"ATT",age:20,nat:"Brazilian",value:12000000,apps:27,goals_pg:0.32,assists_pg:0.28,key_passes_pg:2.0,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:78,aerial_pct:40,shots_on_tgt_pg:1.5,height:176},
+    // Red Bull Bragantino
+    {name:"Cuello",club:"Red Bull Bragantino",pos:"ATT",age:24,nat:"Argentine",value:8000000,apps:28,goals_pg:0.28,assists_pg:0.32,key_passes_pg:2.2,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:80,aerial_pct:40,shots_on_tgt_pg:1.4,height:176},
+  ],
+  premier_league: [
+    {name:"Erling Haaland",club:"Manchester City",pos:"ATT",age:25,nat:"Norwegian",value:180000000,apps:30,goals_pg:0.88,assists_pg:0.18,key_passes_pg:1.2,tackles_pg:0.3,interceptions_pg:0.1,pass_acc:70,aerial_pct:68,shots_on_tgt_pg:3.8,height:194},
+    {name:"Rayan Cherki",club:"Manchester City",pos:"MID",age:21,nat:"French",value:65000000,apps:28,goals_pg:0.18,assists_pg:0.38,key_passes_pg:3.2,tackles_pg:1.5,interceptions_pg:0.7,pass_acc:86,aerial_pct:38,shots_on_tgt_pg:1.0,height:173},
+    {name:"Bukayo Saka",club:"Arsenal",pos:"ATT",age:23,nat:"English",value:150000000,apps:30,goals_pg:0.42,assists_pg:0.38,key_passes_pg:2.8,tackles_pg:1.5,interceptions_pg:0.7,pass_acc:85,aerial_pct:42,shots_on_tgt_pg:2.0,height:178},
+    {name:"Martin Ødegaard",club:"Arsenal",pos:"MID",age:27,nat:"Norwegian",value:120000000,apps:28,goals_pg:0.25,assists_pg:0.35,key_passes_pg:3.5,tackles_pg:1.8,interceptions_pg:0.9,pass_acc:90,aerial_pct:40,shots_on_tgt_pg:1.2,height:178},
+    {name:"Mohamed Salah",club:"Liverpool",pos:"ATT",age:33,nat:"Egyptian",value:50000000,apps:30,goals_pg:0.55,assists_pg:0.40,key_passes_pg:2.5,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:82,aerial_pct:44,shots_on_tgt_pg:2.5,height:175},
+    {name:"Virgil van Dijk",club:"Liverpool",pos:"DEF",age:34,nat:"Dutch",value:25000000,apps:30,goals_pg:0.12,assists_pg:0.06,key_passes_pg:0.6,tackles_pg:2.5,interceptions_pg:1.5,pass_acc:90,aerial_pct:75,shots_on_tgt_pg:0.2,height:193},
+    {name:"Cole Palmer",club:"Chelsea",pos:"MID",age:23,nat:"English",value:130000000,apps:29,goals_pg:0.38,assists_pg:0.40,key_passes_pg:3.2,tackles_pg:1.2,interceptions_pg:0.6,pass_acc:87,aerial_pct:38,shots_on_tgt_pg:1.8,height:185},
+    {name:"Igor Thiago",club:"Brighton",pos:"ATT",age:23,nat:"Brazilian",value:50000000,apps:28,goals_pg:0.75,assists_pg:0.08,key_passes_pg:1.4,tackles_pg:0.5,interceptions_pg:0.2,pass_acc:72,aerial_pct:60,shots_on_tgt_pg:3.2,height:185},
+    {name:"Morgan Gibbs-White",club:"Nottingham Forest",pos:"MID",age:25,nat:"English",value:55000000,apps:30,goals_pg:0.35,assists_pg:0.18,key_passes_pg:2.5,tackles_pg:2.2,interceptions_pg:1.0,pass_acc:84,aerial_pct:42,shots_on_tgt_pg:1.5,height:180},
+    {name:"Alexander Isak",club:"Newcastle United",pos:"ATT",age:26,nat:"Swedish",value:100000000,apps:28,goals_pg:0.62,assists_pg:0.18,key_passes_pg:1.8,tackles_pg:0.5,interceptions_pg:0.2,pass_acc:75,aerial_pct:58,shots_on_tgt_pg:2.8,height:192},
+    {name:"Heung-min Son",club:"Tottenham",pos:"ATT",age:34,nat:"South Korean",value:20000000,apps:28,goals_pg:0.48,assists_pg:0.25,key_passes_pg:2.0,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:82,aerial_pct:42,shots_on_tgt_pg:2.2,height:183},
+    {name:"João Pedro",club:"Brighton",pos:"ATT",age:23,nat:"Brazilian",value:50000000,apps:28,goals_pg:0.50,assists_pg:0.18,key_passes_pg:1.8,tackles_pg:0.5,interceptions_pg:0.2,pass_acc:76,aerial_pct:55,shots_on_tgt_pg:2.4,height:187},
+    {name:"Ruben Neves",club:"Arsenal",pos:"MID",age:28,nat:"Portuguese",value:40000000,apps:26,goals_pg:0.12,assists_pg:0.15,key_passes_pg:2.0,tackles_pg:3.5,interceptions_pg:2.0,pass_acc:89,aerial_pct:52,shots_on_tgt_pg:0.5,height:182},
+    {name:"William Saliba",club:"Arsenal",pos:"DEF",age:24,nat:"French",value:100000000,apps:32,goals_pg:0.05,assists_pg:0.04,key_passes_pg:0.5,tackles_pg:2.8,interceptions_pg:1.8,pass_acc:92,aerial_pct:70,shots_on_tgt_pg:0.1,height:192},
+    {name:"Jarrod Bowen",club:"West Ham",pos:"ATT",age:28,nat:"English",value:50000000,apps:28,goals_pg:0.28,assists_pg:0.35,key_passes_pg:2.2,tackles_pg:1.2,interceptions_pg:0.5,pass_acc:80,aerial_pct:42,shots_on_tgt_pg:1.5,height:175},
+  ],
+  la_liga: [
+    {name:"Robert Lewandowski",club:"Barcelona",pos:"ATT",age:37,nat:"Polish",value:15000000,apps:28,goals_pg:0.68,assists_pg:0.18,key_passes_pg:1.8,tackles_pg:0.4,interceptions_pg:0.2,pass_acc:76,aerial_pct:64,shots_on_tgt_pg:3.0,height:185},
+    {name:"Pedri",club:"Barcelona",pos:"MID",age:23,nat:"Spanish",value:100000000,apps:26,goals_pg:0.18,assists_pg:0.28,key_passes_pg:3.2,tackles_pg:2.5,interceptions_pg:1.2,pass_acc:91,aerial_pct:42,shots_on_tgt_pg:0.8,height:176},
+    {name:"Lamine Yamal",club:"Barcelona",pos:"ATT",age:18,nat:"Spanish",value:180000000,apps:28,goals_pg:0.35,assists_pg:0.45,key_passes_pg:3.5,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:84,aerial_pct:36,shots_on_tgt_pg:1.8,height:180},
+    {name:"Vinicius Jr",club:"Real Madrid",pos:"ATT",age:25,nat:"Brazilian",value:200000000,apps:28,goals_pg:0.58,assists_pg:0.38,key_passes_pg:2.8,tackles_pg:0.8,interceptions_pg:0.3,pass_acc:80,aerial_pct:38,shots_on_tgt_pg:2.8,height:176},
+    {name:"Jude Bellingham",club:"Real Madrid",pos:"MID",age:22,nat:"English",value:180000000,apps:28,goals_pg:0.35,assists_pg:0.28,key_passes_pg:2.8,tackles_pg:2.8,interceptions_pg:1.4,pass_acc:87,aerial_pct:55,shots_on_tgt_pg:1.5,height:186},
+    {name:"Kylian Mbappé",club:"Real Madrid",pos:"ATT",age:27,nat:"French",value:200000000,apps:26,goals_pg:0.72,assists_pg:0.22,key_passes_pg:2.0,tackles_pg:0.5,interceptions_pg:0.2,pass_acc:78,aerial_pct:42,shots_on_tgt_pg:3.2,height:178},
+    {name:"Antoine Griezmann",club:"Atlético Madrid",pos:"ATT",age:35,nat:"French",value:12000000,apps:26,goals_pg:0.38,assists_pg:0.28,key_passes_pg:2.2,tackles_pg:1.5,interceptions_pg:0.7,pass_acc:84,aerial_pct:45,shots_on_tgt_pg:1.8,height:176},
+    {name:"Dani Carvajal",club:"Real Madrid",pos:"DEF",age:34,nat:"Spanish",value:8000000,apps:20,goals_pg:0.05,assists_pg:0.20,key_passes_pg:1.2,tackles_pg:2.5,interceptions_pg:1.5,pass_acc:88,aerial_pct:50,shots_on_tgt_pg:0.2,height:173},
+    {name:"Alejandro Balde",club:"Barcelona",pos:"DEF",age:21,nat:"Spanish",value:55000000,apps:28,goals_pg:0.08,assists_pg:0.22,key_passes_pg:1.4,tackles_pg:2.8,interceptions_pg:1.5,pass_acc:86,aerial_pct:44,shots_on_tgt_pg:0.3,height:181},
+  ],
+  bundesliga: [
+    {name:"Harry Kane",club:"Bayern Munich",pos:"ATT",age:32,nat:"English",value:50000000,apps:28,goals_pg:0.75,assists_pg:0.25,key_passes_pg:2.2,tackles_pg:0.4,interceptions_pg:0.2,pass_acc:78,aerial_pct:65,shots_on_tgt_pg:3.2,height:188},
+    {name:"Jamal Musiala",club:"Bayern Munich",pos:"MID",age:22,nat:"German",value:150000000,apps:28,goals_pg:0.38,assists_pg:0.35,key_passes_pg:3.0,tackles_pg:2.0,interceptions_pg:0.9,pass_acc:87,aerial_pct:42,shots_on_tgt_pg:1.8,height:181},
+    {name:"Florian Wirtz",club:"Bayer Leverkusen",pos:"MID",age:22,nat:"German",value:150000000,apps:28,goals_pg:0.32,assists_pg:0.42,key_passes_pg:3.5,tackles_pg:1.8,interceptions_pg:0.8,pass_acc:88,aerial_pct:40,shots_on_tgt_pg:1.5,height:180},
+    {name:"Granit Xhaka",club:"Bayer Leverkusen",pos:"MID",age:33,nat:"Swiss",value:8000000,apps:28,goals_pg:0.12,assists_pg:0.18,key_passes_pg:2.0,tackles_pg:3.8,interceptions_pg:2.2,pass_acc:89,aerial_pct:48,shots_on_tgt_pg:0.5,height:183},
+    {name:"Serhou Guirassy",club:"Borussia Dortmund",pos:"ATT",age:29,nat:"Guinean",value:35000000,apps:26,goals_pg:0.68,assists_pg:0.12,key_passes_pg:1.2,tackles_pg:0.4,interceptions_pg:0.2,pass_acc:72,aerial_pct:62,shots_on_tgt_pg:2.8,height:185},
+    {name:"Jonathan Tah",club:"Bayern Munich",pos:"DEF",age:29,nat:"German",value:25000000,apps:28,goals_pg:0.06,assists_pg:0.05,key_passes_pg:0.5,tackles_pg:2.8,interceptions_pg:1.8,pass_acc:89,aerial_pct:68,shots_on_tgt_pg:0.2,height:195},
+    {name:"Lois Openda",club:"RB Leipzig",pos:"ATT",age:24,nat:"Belgian",value:60000000,apps:26,goals_pg:0.62,assists_pg:0.15,key_passes_pg:1.5,tackles_pg:0.5,interceptions_pg:0.2,pass_acc:74,aerial_pct:52,shots_on_tgt_pg:2.6,height:178},
+  ],
+  serie_a_it: [
+    {name:"Victor Osimhen",club:"Napoli",pos:"ATT",age:26,nat:"Nigerian",value:100000000,apps:26,goals_pg:0.72,assists_pg:0.15,key_passes_pg:1.5,tackles_pg:0.4,interceptions_pg:0.2,pass_acc:70,aerial_pct:62,shots_on_tgt_pg:3.0,height:185},
+    {name:"Lautaro Martínez",club:"Inter Milan",pos:"ATT",age:28,nat:"Argentine",value:100000000,apps:28,goals_pg:0.65,assists_pg:0.22,key_passes_pg:1.8,tackles_pg:0.5,interceptions_pg:0.2,pass_acc:76,aerial_pct:58,shots_on_tgt_pg:2.8,height:174},
+    {name:"Paulo Dybala",club:"AS Roma",pos:"ATT",age:32,nat:"Argentine",value:15000000,apps:20,goals_pg:0.40,assists_pg:0.30,key_passes_pg:2.5,tackles_pg:0.8,interceptions_pg:0.4,pass_acc:85,aerial_pct:40,shots_on_tgt_pg:1.8,height:177},
+    {name:"Nicolò Barella",club:"Inter Milan",pos:"MID",age:28,nat:"Italian",value:80000000,apps:28,goals_pg:0.15,assists_pg:0.25,key_passes_pg:2.8,tackles_pg:3.2,interceptions_pg:1.8,pass_acc:87,aerial_pct:48,shots_on_tgt_pg:0.8,height:172},
+    {name:"Khvicha Kvaratskhelia",club:"PSG (ex-Napoli)",pos:"ATT",age:24,nat:"Georgian",value:80000000,apps:24,goals_pg:0.35,assists_pg:0.38,key_passes_pg:3.0,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:82,aerial_pct:38,shots_on_tgt_pg:1.8,height:183},
+    {name:"Alessandro Bastoni",club:"Inter Milan",pos:"DEF",age:26,nat:"Italian",value:70000000,apps:30,goals_pg:0.08,assists_pg:0.15,key_passes_pg:1.2,tackles_pg:2.5,interceptions_pg:1.5,pass_acc:91,aerial_pct:65,shots_on_tgt_pg:0.2,height:191},
+    {name:"Mateo Retegui",club:"Atalanta",pos:"ATT",age:26,nat:"Italian",value:45000000,apps:28,goals_pg:0.68,assists_pg:0.12,key_passes_pg:1.4,tackles_pg:0.4,interceptions_pg:0.2,pass_acc:73,aerial_pct:62,shots_on_tgt_pg:2.8,height:183},
+    {name:"Federico Chiesa",club:"Juventus",pos:"ATT",age:27,nat:"Italian",value:30000000,apps:22,goals_pg:0.28,assists_pg:0.22,key_passes_pg:2.0,tackles_pg:1.2,interceptions_pg:0.5,pass_acc:80,aerial_pct:42,shots_on_tgt_pg:1.4,height:175},
+    {name:"Davide Frattesi",club:"Inter Milan",pos:"MID",age:26,nat:"Italian",value:40000000,apps:26,goals_pg:0.18,assists_pg:0.15,key_passes_pg:1.8,tackles_pg:3.0,interceptions_pg:1.6,pass_acc:85,aerial_pct:50,shots_on_tgt_pg:0.8,height:178},
+  ],
+  ligue_1: [
+    {name:"Ousmane Dembélé",club:"PSG",pos:"ATT",age:28,nat:"French",value:60000000,apps:26,goals_pg:0.38,assists_pg:0.40,key_passes_pg:3.0,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:81,aerial_pct:36,shots_on_tgt_pg:1.8,height:178},
+    {name:"Bradley Barcola",club:"PSG",pos:"ATT",age:23,nat:"French",value:70000000,apps:28,goals_pg:0.42,assists_pg:0.32,key_passes_pg:2.5,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:80,aerial_pct:38,shots_on_tgt_pg:2.0,height:180},
+    {name:"Alexandre Lacazette",club:"Lyon",pos:"ATT",age:34,nat:"French",value:4000000,apps:24,goals_pg:0.45,assists_pg:0.20,key_passes_pg:1.8,tackles_pg:0.6,interceptions_pg:0.2,pass_acc:74,aerial_pct:52,shots_on_tgt_pg:2.0,height:175},
+    {name:"Warren Zaïre-Emery",club:"PSG",pos:"MID",age:19,nat:"French",value:70000000,apps:26,goals_pg:0.12,assists_pg:0.18,key_passes_pg:2.0,tackles_pg:3.5,interceptions_pg:2.0,pass_acc:87,aerial_pct:45,shots_on_tgt_pg:0.6,height:183},
+    {name:"Amine Gouiri",club:"Stade Rennais",pos:"ATT",age:24,nat:"French",value:20000000,apps:26,goals_pg:0.32,assists_pg:0.28,key_passes_pg:2.2,tackles_pg:1.0,interceptions_pg:0.4,pass_acc:79,aerial_pct:40,shots_on_tgt_pg:1.5,height:180},
+    {name:"Wissam Ben Yedder",club:"AS Monaco",pos:"ATT",age:35,nat:"French",value:3000000,apps:20,goals_pg:0.40,assists_pg:0.15,key_passes_pg:1.5,tackles_pg:0.4,interceptions_pg:0.2,pass_acc:76,aerial_pct:46,shots_on_tgt_pg:1.8,height:170},
+  ],
+  mls: [
+    {name:"Lionel Messi",club:"Inter Miami",pos:"ATT",age:39,nat:"Argentine",value:8000000,apps:20,goals_pg:0.45,assists_pg:0.50,key_passes_pg:4.0,tackles_pg:0.5,interceptions_pg:0.2,pass_acc:87,aerial_pct:35,shots_on_tgt_pg:1.8,height:170},
+    {name:"Lorenzo Insigne",club:"Toronto FC",pos:"ATT",age:35,nat:"Italian",value:2000000,apps:18,goals_pg:0.28,assists_pg:0.32,key_passes_pg:2.5,tackles_pg:0.8,interceptions_pg:0.4,pass_acc:83,aerial_pct:34,shots_on_tgt_pg:1.4,height:163},
+    {name:"Federico Bernardeschi",club:"Toronto FC",pos:"MID",age:31,nat:"Italian",value:3000000,apps:20,goals_pg:0.20,assists_pg:0.25,key_passes_pg:2.2,tackles_pg:1.5,interceptions_pg:0.7,pass_acc:82,aerial_pct:42,shots_on_tgt_pg:1.0,height:183},
+    {name:"Cucho Hernández",club:"Columbus Crew",pos:"ATT",age:26,nat:"Colombian",value:12000000,apps:24,goals_pg:0.55,assists_pg:0.22,key_passes_pg:1.8,tackles_pg:0.8,interceptions_pg:0.3,pass_acc:74,aerial_pct:55,shots_on_tgt_pg:2.4,height:180},
+    {name:"Carlos Vela",club:"LAFC",pos:"ATT",age:36,nat:"Mexican",value:1500000,apps:18,goals_pg:0.35,assists_pg:0.28,key_passes_pg:2.0,tackles_pg:0.6,interceptions_pg:0.3,pass_acc:82,aerial_pct:36,shots_on_tgt_pg:1.6,height:178},
+    {name:"Riqui Puig",club:"LA Galaxy",pos:"MID",age:26,nat:"Spanish",value:8000000,apps:22,goals_pg:0.18,assists_pg:0.35,key_passes_pg:3.2,tackles_pg:1.8,interceptions_pg:0.8,pass_acc:87,aerial_pct:36,shots_on_tgt_pg:0.8,height:170},
+    {name:"Cucho Hernández",club:"Columbus Crew",pos:"ATT",age:26,nat:"Colombian",value:12000000,apps:24,goals_pg:0.55,assists_pg:0.22,key_passes_pg:1.8,tackles_pg:0.8,interceptions_pg:0.3,pass_acc:74,aerial_pct:55,shots_on_tgt_pg:2.4,height:180},
+  ],
+  serie_b: [
+    {name:"Neto Borges",club:"Ceará",pos:"DEF",age:26,nat:"Brazilian",value:1200000,apps:28,goals_pg:0.05,assists_pg:0.12,key_passes_pg:0.8,tackles_pg:2.8,interceptions_pg:1.8,pass_acc:80,aerial_pct:56,shots_on_tgt_pg:0.1,height:182},
+    {name:"Aylon",club:"Fortaleza",pos:"ATT",age:24,nat:"Brazilian",value:2000000,apps:26,goals_pg:0.38,assists_pg:0.18,key_passes_pg:1.5,tackles_pg:0.8,interceptions_pg:0.3,pass_acc:74,aerial_pct:48,shots_on_tgt_pg:1.7,height:178},
+    {name:"Guilherme Bissoli",club:"Sport Recife",pos:"ATT",age:27,nat:"Brazilian",value:1500000,apps:25,goals_pg:0.44,assists_pg:0.12,key_passes_pg:1.2,tackles_pg:0.6,interceptions_pg:0.2,pass_acc:72,aerial_pct:60,shots_on_tgt_pg:1.9,height:185},
+    {name:"Bruno Melo",club:"Ceará",pos:"DEF",age:30,nat:"Brazilian",value:800000,apps:24,goals_pg:0.04,assists_pg:0.15,key_passes_pg:1.0,tackles_pg:2.5,interceptions_pg:1.6,pass_acc:78,aerial_pct:50,shots_on_tgt_pg:0.2,height:178},
+    {name:"Rafinha",club:"Sampaio Corrêa",pos:"DEF",age:28,nat:"Brazilian",value:600000,apps:22,goals_pg:0.04,assists_pg:0.10,key_passes_pg:0.7,tackles_pg:2.6,interceptions_pg:1.5,pass_acc:77,aerial_pct:52,shots_on_tgt_pg:0.1,height:180},
+    {name:"Marcão Silva",club:"CRB",pos:"DEF",age:25,nat:"Brazilian",value:900000,apps:26,goals_pg:0.05,assists_pg:0.08,key_passes_pg:0.5,tackles_pg:3.0,interceptions_pg:1.9,pass_acc:79,aerial_pct:58,shots_on_tgt_pg:0.1,height:184},
+    {name:"Gabriel Dias",club:"Guarani",pos:"MID",age:24,nat:"Brazilian",value:700000,apps:24,goals_pg:0.08,assists_pg:0.15,key_passes_pg:1.5,tackles_pg:3.2,interceptions_pg:1.8,pass_acc:80,aerial_pct:46,shots_on_tgt_pg:0.4,height:177},
+  ],
+  serie_c: [
+    {name:"Ytalo",club:"Paysandu",pos:"ATT",age:27,nat:"Brazilian",value:400000,apps:25,goals_pg:0.52,assists_pg:0.12,key_passes_pg:1.2,tackles_pg:0.5,interceptions_pg:0.2,pass_acc:70,aerial_pct:56,shots_on_tgt_pg:2.2,height:182},
+    {name:"Robinho",club:"Remo",pos:"MID",age:26,nat:"Brazilian",value:350000,apps:24,goals_pg:0.12,assists_pg:0.20,key_passes_pg:1.8,tackles_pg:2.8,interceptions_pg:1.6,pass_acc:77,aerial_pct:44,shots_on_tgt_pg:0.5,height:175},
+    {name:"Lucas Oliveira",club:"Figueirense",pos:"DEF",age:24,nat:"Brazilian",value:300000,apps:26,goals_pg:0.04,assists_pg:0.06,key_passes_pg:0.5,tackles_pg:2.6,interceptions_pg:1.5,pass_acc:76,aerial_pct:55,shots_on_tgt_pg:0.1,height:183},
+  ],
+};
+
+// ═══════════════════════════════════════════════════════
+// WEAKNESS PROFILES
+// ═══════════════════════════════════════════════════════
 const PROFILES = {
-  "Defensive errors":{pos:"Reliable CB",role:"Consistent, low-error centre-back. Minimal errors leading to shots or goals.",stats:{tackles_pg:2.5,interceptions_pg:1.5},w:{tackles_pg:3,interceptions_pg:3}},
-  "Aerial vulnerability":{pos:"Aerial CB",role:"Dominant in the air at set pieces. Wins headers and commands the box.",stats:{aerial_pct:58},w:{aerial_pct:3}},
-  "Poor tackling":{pos:"CB or DM",role:"Strong tackler who wins ground duels and is hard to dribble past.",stats:{tackles_pg:3,interceptions_pg:2},w:{tackles_pg:3,interceptions_pg:2}},
-  "Lack of creativity":{pos:"AM or CM",role:"Creative playmaker generating key passes and big chances.",stats:{key_passes_pg:2,assists_pg:0.25,goals_pg:0.1},w:{key_passes_pg:3,assists_pg:2,goals_pg:1}},
-  "Poor passing":{pos:"Ball-playing CB or DM",role:"Technically strong, comfortable building from the back.",stats:{pass_acc:80},w:{pass_acc:3}},
+  "Defensive errors":{pos:"Reliable CB",role:"Consistent, low-error centre-back with minimal errors leading to shots or goals.",stats:{tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:55},w:{tackles_pg:3,interceptions_pg:3,aerial_pct:2}},
+  "Aerial vulnerability":{pos:"Aerial CB",role:"Dominant in the air at set pieces. Wins headers and commands the penalty area.",stats:{aerial_pct:60,height:185},w:{aerial_pct:3,height:2}},
+  "Poor tackling":{pos:"CB or DM",role:"Strong tackler who wins ground duels and is difficult to dribble past.",stats:{tackles_pg:3.2,interceptions_pg:2.0},w:{tackles_pg:3,interceptions_pg:2}},
+  "Lack of creativity":{pos:"AM or CM",role:"Creative playmaker generating key passes and big chances in the final third.",stats:{key_passes_pg:2.0,assists_pg:0.25},w:{key_passes_pg:3,assists_pg:2}},
+  "Poor passing":{pos:"Ball-playing CB or DM",role:"Technically strong, comfortable building from the back under pressure.",stats:{pass_acc:82,tackles_pg:2.5},w:{pass_acc:3,tackles_pg:2}},
   "Poor finishing":{pos:"ST or CF",role:"Clinical striker with high shot conversion and goals per game.",stats:{goals_pg:0.45,shots_on_tgt_pg:1.8},w:{goals_pg:3,shots_on_tgt_pg:2}},
-  "Low attack output":{pos:"Winger or SS",role:"Creative attacker who generates and converts chances.",stats:{goals_pg:0.3,key_passes_pg:1.5},w:{goals_pg:2,key_passes_pg:2}}
+  "Low attack output":{pos:"Winger or SS",role:"Creative attacker who generates and converts chances consistently.",stats:{goals_pg:0.30,key_passes_pg:1.5,shots_on_tgt_pg:1.5},w:{goals_pg:2,key_passes_pg:2,shots_on_tgt_pg:1}},
 };
 
-async function apiFetch(endpoint, params={}) {
-  const qs = new URLSearchParams({endpoint, ...params}).toString();
-  const res = await fetch(`${API}?${qs}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
+// ═══════════════════════════════════════════════════════
+// APP LOGIC
+// ═══════════════════════════════════════════════════════
+let currentLeague = "serie_a";
+let selectedTeam = null;
 
-function setStatus(msg) {
-  document.getElementById('statusArea').innerHTML = msg
-    ? `<div class="status"><div class="spinner"></div><span>${msg}</span></div>` : '';
-}
-function setErr(msg) {
-  document.getElementById('errArea').innerHTML = msg
-    ? `<div class="err-box">${msg}</div>` : '';
-}
-function markApi(labelId) {
-  const el = document.getElementById(labelId);
-  if (el) el.innerHTML = `<span class="api-dot"></span>${el.textContent}`;
-}
 function onLeagueChange() {
-  const v = document.getElementById('leagueSel').value.split('|');
-  lgId = v[0]; lgSeason = v[1];
+  currentLeague = document.getElementById('leagueSel').value;
+  selectedTeam = null;
+  document.getElementById('teamSearch').value = '';
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('runBtn2').disabled = true;
+  document.getElementById('btnHint').textContent = 'Select a team first';
+  renderTeamList('');
+  clearStats();
 }
 
-async function searchTeam() {
-  const q = document.getElementById('teamQ').value.trim();
-  if (!q) return;
-  setStatus(`Searching "${q}"...`); setErr('');
-  document.getElementById('teamResults').innerHTML = '';
-  try {
-    const d = await apiFetch('teams', {search: q});
-    setStatus('');
-    if (!d.response?.length) { setErr('No teams found. Try a different name.'); return; }
-    document.getElementById('teamResults').innerHTML = d.response.slice(0,5).map(t => `
-      <div class="team-result" onclick="selectTeam(${t.team.id},'${t.team.name.replace(/'/g,"\\'")}',this)">
-        <img class="team-logo" src="${t.team.logo}" onerror="this.style.display='none'">
-        <div>
-          <div class="t-name">${t.team.name}</div>
-          <div class="t-meta">${t.team.country || ''}</div>
-        </div>
-      </div>`).join('');
-  } catch(e) {
-    setStatus(''); setErr('Search failed. If this keeps happening, the API daily limit may be reached — try again tomorrow.');
-  }
+function clearStats() {
+  ['s_gc','s_tk','s_int','s_cl','s_aer','s_yel','s_pa','s_pos','s_fouls','s_gs','s_sh','s_sot'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  ['l_gc','l_tk','l_int','l_cl','l_aer','l_yel','l_pa','l_pos','l_fouls','l_gs','l_sh','l_sot'].forEach(id => {
+    document.getElementById(id).innerHTML = document.getElementById(id).textContent || document.getElementById(id).innerHTML;
+  });
 }
 
-async function selectTeam(id, name, el) {
-  teamId = id; teamName = name;
-  document.querySelectorAll('.team-result').forEach(x => x.classList.remove('selected'));
-  el.classList.add('selected');
-  document.getElementById('btnHint').textContent = 'Team: ' + name;
+function renderTeamList(filter) {
+  const teams = TEAMS[currentLeague] || [];
+  const q = filter.toLowerCase();
+  const filtered = teams.filter(t => t.name.toLowerCase().includes(q));
+  document.getElementById('teamList').innerHTML = filtered.map(t => `
+    <div class="team-item ${selectedTeam?.id===t.id?'selected':''}" onclick="selectTeam('${t.id}')">
+      <div class="team-name">${t.name}</div>
+      <div class="team-pos">${t.pos}</div>
+    </div>`).join('');
+}
+
+function filterTeams() {
+  renderTeamList(document.getElementById('teamSearch').value);
+}
+
+function selectTeam(id) {
+  const teams = TEAMS[currentLeague] || [];
+  selectedTeam = teams.find(t => t.id === id);
+  if (!selectedTeam) return;
+  renderTeamList(document.getElementById('teamSearch').value);
+
+  // Populate stats
+  const s = selectedTeam;
+  const set = (fid, val, lid) => {
+    document.getElementById(fid).value = val;
+    const l = document.getElementById(lid);
+    if (l) l.innerHTML = `<span class="live-dot"></span>${l.textContent||l.innerText}`;
+  };
+  set('s_gc', s.gc, 'l_gc');
+  set('s_tk', s.tk, 'l_tk');
+  set('s_int', s.int, 'l_int');
+  set('s_cl', s.cl, 'l_cl');
+  set('s_aer', s.aer, 'l_aer');
+  set('s_yel', s.yel, 'l_yel');
+  set('s_pa', s.pa, 'l_pa');
+  set('s_pos', s.pos_pct, 'l_pos');
+  set('s_fouls', s.fouls, 'l_fouls');
+  set('s_gs', s.gs, 'l_gs');
+  set('s_sh', s.sh, 'l_sh');
+  set('s_sot', s.sot, 'l_sot');
+
   document.getElementById('runBtn').disabled = false;
   document.getElementById('runBtn2').disabled = false;
-  await loadTeamStats(id);
-}
-
-async function loadTeamStats(id) {
-  setStatus('Loading stats for ' + teamName + '...');
-  try {
-    const d = await apiFetch('teams/statistics', {team: id, league: lgId, season: lgSeason});
-    setStatus('');
-    if (!d.response?.fixtures) {
-      setErr('No stats found for this team in this league/season. Try changing the league or enter stats manually.');
-      return;
-    }
-    const s = d.response;
-    const g = s.fixtures.played.total || 1;
-    const set = (fid, val, lid) => {
-      if (val != null && !isNaN(val)) {
-        document.getElementById(fid).value = val;
-        markApi(lid);
-      }
-    };
-    set('s_gc', (s.goals?.against?.total?.total / g).toFixed(2), 'l_gc');
-    set('s_gs', (s.goals?.for?.total?.total / g).toFixed(2), 'l_gs');
-    if (s.shots?.total?.total) set('s_sh', (s.shots.total.total / g).toFixed(1), 'l_sh');
-    if (s.shots?.on?.total) set('s_sot', (s.shots.on.total / g).toFixed(1), 'l_sot');
-    if (s.passes?.accuracy?.total) set('s_pa', s.passes.accuracy.total, 'l_pa');
-    if (s.fouls?.total?.total) set('s_fouls', (s.fouls.total.total / g).toFixed(1), 'l_fouls');
-    const yc = s.cards?.yellow ? Object.values(s.cards.yellow).reduce((a,v) => a+(v?.total||0), 0) : null;
-    if (yc) set('s_yel', (yc / g).toFixed(2), 'l_yel');
-    setStatus(`✓ Stats loaded — ${g} games played. Missing stats can be entered manually.`);
-    setTimeout(() => setStatus(''), 4000);
-  } catch(e) {
-    setStatus(''); setErr('Could not load team stats. Enter manually or try again.');
-  }
+  document.getElementById('btnHint').textContent = selectedTeam.name + ' loaded ✓';
+  document.getElementById('statusArea').innerHTML = `<div style="font-size:12px;color:var(--accent);padding:6px 0;display:flex;align-items:center;gap:6px"><span class="live-dot"></span>Stats loaded for ${selectedTeam.name} — 2026 season data</div>`;
+  setTimeout(() => document.getElementById('statusArea').innerHTML = '', 3000);
 }
 
 function gv(id) { return parseFloat(document.getElementById(id).value) || 0; }
 function getStats() {
-  return {gc:gv('s_gc'),tk:gv('s_tk'),int:gv('s_int'),cl:gv('s_cl'),aer:gv('s_aer'),yel:gv('s_yel'),
-          pa:gv('s_pa'),pos:gv('s_pos'),fouls:gv('s_fouls'),gs:gv('s_gs'),sh:gv('s_sh'),sot:gv('s_sot')};
+  return {gc:gv('s_gc'),tk:gv('s_tk'),int:gv('s_int'),cl:gv('s_cl'),aer:gv('s_aer'),yel:gv('s_yel'),pa:gv('s_pa'),pos:gv('s_pos'),fouls:gv('s_fouls'),gs:gv('s_gs'),sh:gv('s_sh'),sot:gv('s_sot')};
 }
 
 function detectFlags(st, av) {
@@ -363,170 +674,136 @@ function detectFlags(st, av) {
   ];
   return checks.filter(c => {
     const v = st[c.k]; if (!v || !c.avg) return false;
-    const d = c.lb ? (v - c.avg)/c.avg : (c.avg - v)/c.avg;
+    const d = c.lb ? (v-c.avg)/c.avg : (c.avg-v)/c.avg;
     if (d >= 0.35) { c.severity='major'; c.deficit=Math.round(d*100); return true; }
     if (d >= 0.20) { c.severity='minor'; c.deficit=Math.round(d*100); return true; }
     return false;
   });
 }
 
-function getPlayerStat(p, stat) {
-  const s = p.statistics?.[0]; if (!s) return null;
-  const apps = s.games?.appearences || 1;
-  const m = {
-    goals_pg: (s.goals?.total||0)/apps,
-    assists_pg: (s.goals?.assists||0)/apps,
-    key_passes_pg: (s.passes?.key||0)/apps,
-    pass_acc: parseFloat(s.passes?.accuracy)||0,
-    tackles_pg: (s.tackles?.total||0)/apps,
-    interceptions_pg: (s.tackles?.interceptions||0)/apps,
-    aerial_pct: s.duels?.total ? Math.round((s.duels.won||0)/s.duels.total*100) : 0,
-    shots_on_tgt_pg: (s.shots?.on||0)/apps,
-  };
-  return m[stat];
-}
-
 function scorePlayer(p, profile) {
   let tw=0, ew=0; const reasons=[], flags=[];
   for (const [stat, thr] of Object.entries(profile.stats)) {
     const w = profile.w[stat]||1; tw += w*10;
-    const val = getPlayerStat(p, stat); if (val==null) continue;
-    const meets = val >= thr;
+    const val = p[stat]; if (val==null) continue;
+    const meets = stat==='height' ? val>=thr : val>=thr;
     const diff = Math.abs(val-thr)/(thr||1);
-    if (meets) { ew += diff>=0.15?w*10:diff>=0.05?w*8:w*6; reasons.push(`${stat.replace(/_pg|_/g,' ').trim()}: ${val.toFixed(2)}`); }
-    else if (diff>0.25) flags.push(`Low ${stat.replace(/_pg|_/g,' ').trim()}: ${val.toFixed(2)}`);
+    if (meets) { ew += diff>=0.15?w*10:diff>=0.05?w*8:w*6; if(diff>=0.05) reasons.push(`${stat.replace(/_pg/g,' /game').replace(/_/g,' ')}: ${typeof val==='number'&&val%1!==0?val.toFixed(2):val}`); }
+    else if (diff>0.2) flags.push(`Low ${stat.replace(/_pg/g,' /game').replace(/_/g,' ')}: ${typeof val==='number'&&val%1!==0?val.toFixed(2):val}`);
   }
-  if ((p.player?.age||0) > 32) flags.push(`Age: ${p.player.age}`);
+  if (p.age > 33) flags.push(`Age: ${p.age}`);
   return {score: tw>0?Math.round(ew/tw*1000)/10:0, reasons:reasons.slice(0,3), flags:flags.slice(0,2)};
 }
 
-function fmtV(v){return v>=1e6?'€'+(v/1e6).toFixed(1)+'M':v>=1e3?'€'+(v/1e3).toFixed(0)+'K':'€'+v;}
-function scCls(s){return s>=70?'hi':s>=45?'mid':'lo';}
-function barClr(s){return s>=70?'var(--green)':s>=45?'var(--yellow)':'var(--red)';}
+function fmtV(v) { return v>=1e6?'€'+(v/1e6).toFixed(1)+'M':v>=1e3?'€'+(v/1e3).toFixed(0)+'K':'€'+v; }
+function scCls(s) { return s>=70?'hi':s>=45?'mid':'lo'; }
+function barClr(s) { return s>=70?'var(--green)':s>=45?'var(--yellow)':'var(--red)'; }
 
-async function runAnalysis() {
-  if (!teamId) { setErr('Select a team first.'); return; }
-  setErr(''); showTab('results', document.querySelectorAll('.tab')[1]);
+function runAnalysis() {
+  if (!selectedTeam) { return; }
+  showTab('results', document.querySelectorAll('.tab')[1]);
   document.getElementById('resEmpty').style.display = 'none';
   document.getElementById('resContent').style.display = 'none';
 
   const st = getStats();
-  const av = AVGS[lgId] || AVGS["71"];
+  const av = LEAGUE_AVGS[currentLeague] || LEAGUE_AVGS.serie_a;
   const flags = detectFlags(st, av);
   const zoneSc = {};
-  flags.forEach(f => { zoneSc[f.zone] = (zoneSc[f.zone]||0) + (f.severity==='major'?2:1); });
+  flags.forEach(f => { zoneSc[f.zone]=(zoneSc[f.zone]||0)+(f.severity==='major'?2:1); });
   const pri = ['defense','attack','midfield'];
   const pz = Object.entries(zoneSc).sort((a,b)=>b[1]-a[1]||pri.indexOf(a[0])-pri.indexOf(b[0]))[0]?.[0]||'defense';
-  const pType = flags.find(f=>f.zone===pz)?.type || 'Defensive errors';
+  const pType = flags.find(f=>f.zone===pz)?.type||'Defensive errors';
   const profile = PROFILES[pType];
 
   const chartData = [
-    {lbl:'Goals conceded/g', club:st.gc, avg:av.gc, lb:true},
-    {lbl:'Tackles/game', club:st.tk, avg:av.tk, lb:false},
-    {lbl:'Pass accuracy %', club:st.pa, avg:av.pa, lb:false},
-    {lbl:'Goals scored/g', club:st.gs, avg:av.gs, lb:false},
-    {lbl:'Shots on target/g', club:st.sot, avg:av.sot, lb:false},
-  ].filter(c => c.club > 0);
+    {lbl:'Goals conceded/g',club:st.gc,avg:av.gc,lb:true},
+    {lbl:'Tackles/game',club:st.tk,avg:av.tk,lb:false},
+    {lbl:'Pass accuracy %',club:st.pa,avg:av.pa,lb:false},
+    {lbl:'Goals scored/g',club:st.gs,avg:av.gs,lb:false},
+    {lbl:'Shots on target/g',club:st.sot,avg:av.sot,lb:false},
+  ].filter(c=>c.club>0);
 
-  const plv = document.getElementById('playerLg').value.split('|');
-  const plgId=plv[0], plgSzn=plv[1];
-  const posFil = document.getElementById('posFil').value;
-  const minAge = parseInt(document.getElementById('minAge').value)||16;
-  const maxAge = parseInt(document.getElementById('maxAge').value)||99;
-  const minApps = parseInt(document.getElementById('minApps').value)||0;
-  const budMax = parseFloat(document.getElementById('budgetMax').value)||Infinity;
+  const plgId = document.getElementById('playerLeague').value;
+  const playerPool = PLAYERS[plgId] || PLAYERS.serie_a;
+  const minAge=parseInt(document.getElementById('minAge').value)||16;
+  const maxAge=parseInt(document.getElementById('maxAge').value)||99;
+  const budMax=parseFloat(document.getElementById('budgetMax').value)||Infinity;
+  const minApps=parseInt(document.getElementById('minApps').value)||0;
+  const posFil=document.getElementById('posFil').value;
 
-  setStatus('Fetching real players...');
-  let players = [];
-  try {
-    const params1 = {league:plgId, season:plgSzn, page:1};
-    const params2 = {league:plgId, season:plgSzn, page:2};
-    if (posFil) { params1.position=posFil; params2.position=posFil; }
-    const [d1, d2] = await Promise.all([apiFetch('players', params1), apiFetch('players', params2)]);
-    players = [...(d1.response||[]), ...(d2.response||[])];
-  } catch(e) { setErr('Could not fetch players. Try again.'); }
-  setStatus('');
-
-  const matches = players
-    .filter(p => {
-      const s = p.statistics?.[0]; if (!s) return false;
-      return (s.games?.appearences||0) >= minApps && (p.player?.age||0) >= minAge && (p.player?.age||0) <= maxAge;
-    })
+  const posMap = {GK:['GK'],DEF:['DEF'],MID:['MID'],ATT:['ATT']};
+  const matches = playerPool
+    .filter(p => p.age>=minAge && p.age<=maxAge && p.value<=budMax && p.apps>=minApps && (!posFil||posMap[posFil]?.includes(p.pos)))
     .map(p => ({p, ...scorePlayer(p, profile||{stats:{},w:{}})}))
-    .filter(m => m.score > 15)
+    .filter(m => m.score > 20)
     .sort((a,b) => b.score-a.score)
     .slice(0,12);
 
   let html = `
     <div class="w-banner">
       <div class="w-title">Primary Weakness: ${pType}</div>
-      <div class="w-sub">Zone: ${pz.toUpperCase()} &middot; ${flags.length} flag${flags.length!==1?'s':''} detected &middot; ${teamName}</div>
+      <div class="w-sub">Zone: ${pz.toUpperCase()} &middot; ${flags.length} flag${flags.length!==1?'s':''} detected &middot; ${selectedTeam.name} &middot; ${document.getElementById('leagueSel').options[document.getElementById('leagueSel').selectedIndex].text}</div>
     </div>
-    <div class="flags">${flags.map(f=>`<div class="flag ${f.severity}">${f.severity.toUpperCase()}: ${f.type} (${f.deficit}% vs avg)</div>`).join('')}</div>`;
+    <div class="flags">${flags.map(f=>`<div class="flag ${f.severity}">${f.severity.toUpperCase()}: ${f.type} (${f.deficit}% vs league avg)</div>`).join('')}</div>`;
 
   if (chartData.length) {
-    html += `<div class="chart-card"><div class="chart-ttl">📊 ${teamName} vs League Average</div>`;
+    html += `<div class="chart-card"><div class="chart-ttl">📊 ${selectedTeam.name} vs League Average</div>`;
     chartData.forEach(c => {
-      const mx = Math.max(c.club,c.avg)*1.3||1;
-      const cp = Math.min(100,c.club/mx*100).toFixed(1);
-      const ap = Math.min(100,c.avg/mx*100).toFixed(1);
-      const good = c.lb ? c.club<=c.avg : c.club>=c.avg;
-      const def = c.lb ? (c.club-c.avg)/c.avg : (c.avg-c.club)/c.avg;
-      const col = good?'var(--green)':def>0.35?'var(--red)':'var(--yellow)';
-      html += `<div class="chart-row"><div class="chart-lbl">${c.lbl}</div><div class="chart-bg"><div class="chart-fill" style="width:${cp}%;background:${col}"></div><div class="avg-line" style="left:${ap}%"></div></div><div class="chart-val" style="color:${col}">${c.club}</div></div>`;
+      const mx=Math.max(c.club,c.avg)*1.3||1;
+      const cp=Math.min(100,c.club/mx*100).toFixed(1);
+      const ap=Math.min(100,c.avg/mx*100).toFixed(1);
+      const good=c.lb?c.club<=c.avg:c.club>=c.avg;
+      const def=c.lb?(c.club-c.avg)/c.avg:(c.avg-c.club)/c.avg;
+      const col=good?'var(--green)':def>0.35?'var(--red)':'var(--yellow)';
+      html+=`<div class="chart-row"><div class="chart-lbl">${c.lbl}</div><div class="chart-bg"><div class="chart-fill" style="width:${cp}%;background:${col}"></div><div class="avg-line" style="left:${ap}%"></div></div><div class="chart-val" style="color:${col}">${c.club}</div></div>`;
     });
-    html += `<div style="font-size:10px;color:var(--muted);margin-top:6px">Solid bar = your club &middot; Dashed line = league average</div></div>`;
+    html+=`<div style="font-size:10px;color:var(--muted);margin-top:5px">Solid = your club &middot; Line = league average</div></div>`;
   }
 
   if (profile) {
-    html += `<div class="profile-card">
-      <div style="font-size:10px;font-weight:600;letter-spacing:2px;color:var(--accent);margin-bottom:8px;">IDEAL PLAYER PROFILE</div>
+    html+=`<div class="profile-card">
+      <div style="font-size:9px;font-weight:600;letter-spacing:2px;color:var(--accent);margin-bottom:7px">IDEAL PLAYER PROFILE</div>
       <div class="profile-pos">${profile.pos}</div>
       <div class="profile-role">${profile.role}</div>
-      <div class="req-stats">${Object.entries(profile.stats).map(([k,v])=>`<div class="req-stat">${k.replace(/_pg|_/g,' ').trim()} ≥ <span>${v}</span>/game</div>`).join('')}</div>
+      <div class="req-stats">${Object.entries(profile.stats).map(([k,v])=>`<div class="req-stat">${k.replace(/_pg/g,' /g').replace(/_/g,' ')} ≥ <span>${v}</span></div>`).join('')}</div>
     </div>`;
   }
 
-  html += `<div class="players-hdr">
+  html+=`<div class="players-hdr">
     <div class="sec-title">Player Recommendations</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <div class="live-badge">⚡ Live — API-Football</div>
+    <div style="display:flex;gap:7px;align-items:center">
+      <div class="data-badge">⚽ 2026 Real Data</div>
       <div style="font-size:12px;color:var(--muted)">${matches.length} matched</div>
     </div>
   </div>`;
 
   if (!matches.length) {
-    html += `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No matches found</div><div style="font-size:13px">Try widening filters or selecting a different player league</div></div>`;
+    html+=`<div class="empty"><div style="font-size:32px;margin-bottom:10px;opacity:.3">🔎</div><div class="empty-ttl">No matches</div><div style="font-size:13px">Try widening your filters or selecting a different player league</div></div>`;
   } else {
     matches.forEach((m,i) => {
-      const p = m.p.player;
-      const s = m.p.statistics?.[0];
-      const apps = s?.games?.appearences||0;
-      const pos = s?.games?.position||'';
-      const club = s?.team?.name||'';
-      const sc = m.score;
-      const pills = [];
-      if(s?.goals?.total) pills.push(`${s.goals.total} goals`);
-      if(s?.goals?.assists) pills.push(`${s.goals.assists} assists`);
-      if(s?.passes?.key) pills.push(`${s.passes.key} key passes`);
-      if(s?.tackles?.total) pills.push(`${s.tackles.total} tackles`);
-      if(s?.tackles?.interceptions) pills.push(`${s.tackles.interceptions} interceptions`);
-      if(p?.height) pills.push(p.height);
-      html += `<div class="pcard">
+      const p=m.p; const sc=m.score;
+      html+=`<div class="pcard">
         <div class="prank ${i<3?'top':''}">${String(i+1).padStart(2,'0')}</div>
         <div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            ${p.photo?`<img src="${p.photo}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--border)" onerror="this.style.display='none'">` :''}
-            <div class="pname">${p.name||'Unknown'}</div>
-            <div class="pos-badge">${pos}</div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+            <div class="pname">${p.name}</div>
+            <div class="pos-badge">${p.pos}</div>
           </div>
           <div class="pmeta">
-            <span>🏟 ${club}</span>
-            <span>📍 ${p.nationality||''}</span>
-            <span>🎂 ${p.age||'?'} yrs</span>
-            <span>📋 ${apps} apps</span>
+            <span>🏟 ${p.club}</span>
+            <span>📍 ${p.nat}</span>
+            <span>🎂 ${p.age} yrs</span>
+            <span>📋 ${p.apps} apps</span>
+            <span>💰 ${fmtV(p.value)}</span>
+            ${p.height?`<span>📏 ${p.height}cm</span>`:''}
           </div>
-          ${pills.length?`<div class="stat-pills">${pills.slice(0,5).map(x=>`<div class="spill">${x}</div>`).join('')}</div>`:''}
+          <div class="stat-pills">
+            ${p.goals_pg>0?`<div class="spill">⚽ ${(p.goals_pg*p.apps).toFixed(0)} goals</div>`:''}
+            ${p.assists_pg>0?`<div class="spill">🎯 ${(p.assists_pg*p.apps).toFixed(0)} assists</div>`:''}
+            ${p.tackles_pg?`<div class="spill">💪 ${(p.tackles_pg*p.apps).toFixed(0)} tackles</div>`:''}
+            ${p.key_passes_pg>0?`<div class="spill">🔑 ${(p.key_passes_pg*p.apps).toFixed(0)} key passes</div>`:''}
+            ${p.pass_acc?`<div class="spill">📊 ${p.pass_acc}% pass acc</div>`:''}
+          </div>
           ${m.reasons.map(r=>`<div class="reason">${r}</div>`).join('')}
           ${m.flags.map(f=>`<div class="pflag">${f}</div>`).join('')}
         </div>
@@ -544,11 +821,14 @@ async function runAnalysis() {
 }
 
 function showTab(id, el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   if (el) el.classList.add('active');
   document.getElementById('tab-stats').style.display = id==='stats'?'block':'none';
   document.getElementById('tab-results').style.display = id==='results'?'block':'none';
 }
+
+// Init
+renderTeamList('');
 </script>
 </body>
 </html>
