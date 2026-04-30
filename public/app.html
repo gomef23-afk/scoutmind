@@ -91,7 +91,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
   <!-- LEFT -->
   <div class="auth-left">
-    <a class="auth-logo" href="index.html">Scout<span>Mind</span></a>
+    <a class="auth-logo" href="/index.html">Scout<span>Mind</span></a>
     <div class="auth-pitch">
       <div class="auth-pitch-title">Tactical<br>Intelligence<br><span>for Football.</span></div>
       <p class="auth-pitch-desc">ScoutMind detects your team's weaknesses and recommends the exact players to fix them — ranked by fit, filtered by budget.</p>
@@ -155,7 +155,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <button class="auth-btn" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);font-weight:500;" onclick="demoLogin()">
           Try Demo — No Account Needed
         </button>
-        <a class="back-link" href="index.html">← Back to homepage</a>
+        <a class="back-link" href="/index.html">← Back to homepage</a>
       </div>
 
       <!-- SIGN UP FORM -->
@@ -205,7 +205,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div class="terms">
           By signing up you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
         </div>
-        <a class="back-link" href="index.html">← Back to homepage</a>
+        <a class="back-link" href="/index.html">← Back to homepage</a>
       </div>
 
       <!-- SUCCESS -->
@@ -292,7 +292,7 @@ function signIn() {
       return;
     }
     localStorage.setItem('sm_current_user', JSON.stringify(user));
-    showSuccess(`Welcome back, ${user.name}! Taking you to ScoutMind...`, 'app.html');
+    showSuccess(`Welcome back, ${user.name}! Taking you to ScoutMind...`, '/app.html');
   }, 800);
 }
 
@@ -323,14 +323,14 @@ function signUp() {
     localStorage.setItem('sm_users', JSON.stringify(users));
     localStorage.setItem('sm_current_user', JSON.stringify(newUser));
     const planNames = { free:'Scout Free', pro:'Scout Pro', club:'Club Basic', clubpro:'Club Pro' };
-    showSuccess(`Account created! You're on the ${planNames[selectedPlan]} plan. Taking you to ScoutMind...`, 'app.html');
+    showSuccess(`Account created! You're on the ${planNames[selectedPlan]} plan. Taking you to ScoutMind...`, '/app.html');
   }, 1000);
 }
 
 function demoLogin() {
   const demoUser = { name: 'Demo User', email: 'demo@scoutmind.app', plan: 'pro', demo: true };
   localStorage.setItem('sm_current_user', JSON.stringify(demoUser));
-  showSuccess('Entering demo mode — full Scout Pro access...', 'app.html');
+  showSuccess('Entering demo mode — full Scout Pro access...', '/app.html');
 }
 
 function showForgot() {
