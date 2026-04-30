@@ -1,346 +1,694 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ScoutMind — Sign In</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<title>ScoutMind — Tactical Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="/leagues_data.js"></script>
+<script src="/players_data.js"></script>
 <style>
-:root {
-  --bg:#07090f;--bg2:#0d1117;--bg3:#141b27;
-  --accent:#00e5a0;--accent2:#00b8ff;
-  --text:#edf2f7;--muted:#5a6a85;--border:#1a2540;
-  --red:#ff4560;--green:#00e5a0;
-}
+:root{--bg:#07090f;--bg2:#0d1117;--bg3:#141b27;--accent:#00e5a0;--accent2:#00b8ff;--warn:#ff6b35;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;--red:#ff4560;--yellow:#f5c842;--green:#00e5a0;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 60% at 30% 50%,rgba(0,229,160,0.04),transparent 70%),radial-gradient(ellipse 40% 40% at 70% 50%,rgba(0,184,255,0.03),transparent 70%);pointer-events:none;}
-
-.auth-wrap{display:grid;grid-template-columns:1fr 1fr;min-height:100vh;width:100%;}
-
-/* LEFT PANEL */
-.auth-left{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:space-between;padding:40px;position:relative;overflow:hidden;}
-.auth-left::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 80%,rgba(0,229,160,0.06),transparent 70%);pointer-events:none;}
-.auth-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--accent);text-decoration:none;}
-.auth-logo span{color:var(--text);}
-.auth-pitch{position:relative;z-index:1;}
-.auth-pitch-title{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:0.95;letter-spacing:1px;margin-bottom:20px;}
-.auth-pitch-title span{color:var(--accent);}
-.auth-pitch-desc{font-size:15px;color:var(--muted);line-height:1.7;max-width:380px;margin-bottom:36px;}
-.auth-features{display:flex;flex-direction:column;gap:14px;}
-.auth-feature{display:flex;align-items:flex-start;gap:12px;}
-.auth-feature-icon{width:32px;height:32px;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-.auth-feature-text{font-size:13px;color:var(--muted);line-height:1.5;}
-.auth-feature-text strong{color:var(--text);display:block;margin-bottom:2px;}
-.auth-quote{font-size:13px;color:var(--muted);font-style:italic;border-left:2px solid var(--accent);padding-left:14px;line-height:1.6;}
-
-/* RIGHT PANEL */
-.auth-right{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 48px;}
-.auth-box{width:100%;max-width:400px;}
-.auth-tabs{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:32px;}
-.auth-tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-radius:7px;transition:all .2s;}
-.auth-tab.active{background:var(--bg3);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3);}
-.auth-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;margin-bottom:6px;}
-.auth-sub{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.5;}
-.form-group{margin-bottom:16px;}
-.form-group label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;}
-.form-group input{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;}
-.form-group input:focus{border-color:var(--accent);}
-.form-group input::placeholder{color:var(--muted);}
-.form-group input.err{border-color:var(--red);}
-.err-msg{font-size:11px;color:var(--red);margin-top:5px;display:none;}
-.err-msg.show{display:block;}
-.auth-btn{width:100%;background:var(--accent);color:#000;border:none;padding:13px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:4px;letter-spacing:0.5px;}
-.auth-btn:hover{background:#00ffb3;transform:translateY(-1px);}
-.auth-btn:disabled{background:var(--muted);cursor:not-allowed;transform:none;}
-.auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--muted);font-size:12px;}
-.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
-.plan-select{margin-bottom:18px;}
-.plan-select-label{font-size:12px;font-weight:500;color:var(--muted);margin-bottom:8px;}
-.plan-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.plan-option{border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .2s;}
-.plan-option:hover{border-color:rgba(255,255,255,0.2);}
-.plan-option.selected{border-color:var(--accent);background:rgba(0,229,160,0.05);}
-.plan-option-name{font-size:12px;font-weight:600;margin-bottom:2px;}
-.plan-option-price{font-size:11px;color:var(--muted);}
-.plan-option.selected .plan-option-name{color:var(--accent);}
-.terms{font-size:11px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.6;}
-.terms a{color:var(--accent);text-decoration:none;}
-.forgot{font-size:12px;color:var(--muted);text-align:right;margin-top:6px;cursor:pointer;}
-.forgot:hover{color:var(--text);}
-.success-screen{display:none;text-align:center;padding:20px 0;}
-.success-icon{font-size:48px;margin-bottom:16px;}
-.success-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-bottom:8px;}
-.success-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px;}
-.loading{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,0.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.back-link{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);text-decoration:none;margin-top:24px;cursor:pointer;transition:color .2s;}
-.back-link:hover{color:var(--text);}
-
-@media(max-width:768px){
-  .auth-wrap{grid-template-columns:1fr;}
-  .auth-left{display:none;}
-  .auth-right{padding:40px 24px;}
-}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);}
+.logo span{color:var(--text);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
+.plan-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);letter-spacing:0.5px;}
+.plan-pill.pro{background:rgba(0,229,160,0.1);color:var(--accent);}
+.plan-pill.club{background:rgba(0,184,255,0.1);color:var(--accent2);}
+.plan-pill.clubpro{background:rgba(245,200,66,0.1);color:var(--yellow);}
+.plan-pill.free{background:rgba(90,106,133,0.1);color:var(--muted);}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
+.logout-btn:hover{border-color:var(--accent);color:var(--text);}
+.app{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 53px);}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:18px 16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:calc(100vh - 53px);}
+.main{padding:22px 28px;overflow-y:auto;}
+.sb-label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+select,input[type=text],input[type=number]{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;}
+select:focus,input:focus{border-color:var(--accent);}
+select option{background:var(--bg3);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.run-btn{width:100%;background:var(--accent);color:#000;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;transition:all .2s;margin-top:2px;}
+.run-btn:hover:not(:disabled){background:#00ffb3;transform:translateY(-1px);}
+.run-btn:disabled{background:var(--muted);cursor:not-allowed;opacity:0.5;}
+hr{border:none;border-top:1px solid var(--border);}
+.team-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border:1px solid var(--border);border-radius:7px;cursor:pointer;margin-bottom:4px;transition:all .2s;}
+.team-item:hover,.team-item.selected{border-color:var(--accent);}
+.team-item.selected{background:rgba(0,229,160,0.05);}
+.team-name{font-size:12px;font-weight:500;}
+.team-pos-lbl{font-size:10px;color:var(--muted);}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.tab{padding:9px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.zone-lbl{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:14px 0 8px;display:flex;align-items:center;gap:6px;}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px;}
+.scard{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px;position:relative;transition:border .2s;}
+.scard:focus-within{border-color:rgba(0,229,160,0.35);}
+.scard.flagged{border-color:rgba(255,107,53,0.4);background:rgba(255,107,53,0.04);}
+.scard.flagged-minor{border-color:rgba(245,200,66,0.3);background:rgba(245,200,66,0.03);}
+.scard-lbl{font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:500;}
+.scard-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);}
+.scard-val.red{color:var(--red);}
+.scard-val.yellow{color:var(--yellow);}
+.scard-val.green{color:var(--green);}
+.scard-unit{font-size:9px;color:var(--muted);margin-top:2px;}
+.scard-avg{font-size:9px;color:var(--muted);margin-top:3px;}
+.scard input{width:100%;background:transparent;border:none;color:inherit;font-size:22px;font-weight:700;font-family:'DM Mono',monospace;outline:none;}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:middle;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.w-banner{background:linear-gradient(135deg,rgba(255,107,53,.1),rgba(255,107,53,.03));border:1px solid rgba(255,107,53,.3);border-radius:12px;padding:15px 18px;margin-bottom:14px;}
+.w-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--warn);margin-bottom:4px;}
+.w-sub{font-size:12px;color:var(--muted);}
+.flags-wrap{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
+.flag-pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;}
+.flag-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+.flag-pill.major{background:rgba(255,69,96,.1);border:1px solid rgba(255,69,96,.25);color:var(--red);}
+.flag-pill.minor{background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.2);color:var(--yellow);}
+.profile-card{background:var(--bg3);border:1px solid rgba(0,229,160,.15);border-radius:12px;padding:15px 18px;margin-bottom:16px;}
+.profile-pos{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:4px;}
+.profile-role{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+.req-stats{display:flex;gap:6px;flex-wrap:wrap;}
+.req-stat{font-size:11px;background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.12);border-radius:5px;padding:3px 9px;}
+.req-stat span{color:var(--accent);font-weight:700;font-family:'DM Mono',monospace;}
+.chart-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:15px 18px;margin-bottom:16px;}
+.chart-ttl{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;}
+.chart-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.chart-lbl{width:130px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0;}
+.chart-bg{flex:1;height:6px;background:var(--border);border-radius:3px;position:relative;}
+.chart-fill{height:100%;border-radius:3px;transition:width .7s ease;}
+.avg-line{position:absolute;top:-5px;height:16px;width:2px;background:rgba(255,255,255,.2);border-radius:1px;}
+.chart-val{width:40px;font-size:11px;font-family:'DM Mono',monospace;text-align:right;}
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-ttl{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;}
+.data-badge{font-size:10px;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.2);color:var(--accent);border-radius:4px;padding:2px 8px;font-weight:700;}
+.pcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:13px 15px;margin-bottom:8px;display:grid;grid-template-columns:44px 1fr 70px;gap:10px;align-items:start;transition:all .2s;cursor:default;}
+.pcard:hover{border-color:rgba(0,229,160,.25);transform:translateX(2px);}
+.prank{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--muted);}
+.prank.top{color:var(--accent);}
+.pname{font-size:14px;font-weight:600;margin-bottom:3px;}
+.pmeta{font-size:11px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.pos-badge{background:rgba(0,102,255,.1);border:1px solid rgba(0,102,255,.2);color:#7ab4ff;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;}
+.stat-pills{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px;}
+.spill{font-size:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--muted);font-family:'DM Mono',monospace;}
+.reason{font-size:11px;color:var(--green);margin-bottom:2px;}
+.reason::before{content:'✓ ';}
+.pflag{font-size:11px;color:var(--warn);margin-bottom:2px;}
+.pflag::before{content:'⚠ ';}
+.score-blk{text-align:right;}
+.score-num{font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1;}
+.score-num.hi{color:var(--green);}
+.score-num.mid{color:var(--yellow);}
+.score-num.lo{color:var(--red);}
+.score-lbl{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:1px;}
+.sbar{height:3px;background:var(--border);border-radius:2px;margin-top:5px;}
+.sbar-fill{height:100%;border-radius:2px;}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.3;}
+.empty-ttl{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);opacity:.35;margin-bottom:6px;}
+.search-inp{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:6px;}
+.search-inp:focus{border-color:var(--accent);}
+.team-list-wrap{max-height:220px;overflow-y:auto;}
+.hint{font-size:11px;color:var(--muted);text-align:center;margin-top:3px;}
+.filter-count{font-size:10px;color:var(--accent);margin-top:4px;text-align:center;}
+/* Free tier lock */
+.locked{opacity:0.4;pointer-events:none;position:relative;}
+.lock-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(7,9,15,0.7);border-radius:12px;z-index:5;}
+.lock-msg{font-size:12px;color:var(--muted);text-align:center;}
+.upgrade-btn{display:inline-block;margin-top:6px;background:var(--accent);color:#000;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
 </style>
 </head>
 <body>
 
-<div class="auth-wrap">
+<!-- AUTH CHECK -->
+<script>
+const _cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
+if (!_cu) window.location.href = '/auth.html';
+</script>
 
-  <!-- LEFT -->
-  <div class="auth-left">
-    <a class="auth-logo" href="/index.html">Scout<span>Mind</span></a>
-    <div class="auth-pitch">
-      <div class="auth-pitch-title">Tactical<br>Intelligence<br><span>for Football.</span></div>
-      <p class="auth-pitch-desc">ScoutMind detects your team's weaknesses and recommends the exact players to fix them — ranked by fit, filtered by budget.</p>
-      <div class="auth-features">
-        <div class="auth-feature">
-          <div class="auth-feature-icon">⚡</div>
-          <div class="auth-feature-text">
-            <strong>Instant analysis</strong>
-            Select your team and get a full tactical breakdown in seconds.
-          </div>
-        </div>
-        <div class="auth-feature">
-          <div class="auth-feature-icon">🌍</div>
-          <div class="auth-feature-text">
-            <strong>8+ leagues covered</strong>
-            Série A, B, C, Premier League, La Liga, Bundesliga, Serie A, Ligue 1, MLS.
-          </div>
-        </div>
-        <div class="auth-feature">
-          <div class="auth-feature-icon">🎯</div>
-          <div class="auth-feature-text">
-            <strong>Real player data</strong>
-            Recommendations based on real 2026 season statistics.
-          </div>
-        </div>
+<!-- NAV -->
+<nav>
+  <div class="logo">Scout<span>Mind</span></div>
+  <div class="nav-right">
+    <div class="user-badge">
+      <span class="live-dot"></span>
+      <span id="nav-name" style="font-size:12px;font-weight:500"></span>
+      <span id="nav-plan" class="plan-pill"></span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+</nav>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- LEAGUE -->
+    <div class="fg">
+      <div class="sb-label">League</div>
+      <select id="leagueSel" onchange="onLeagueChange()">
+        <optgroup label="🇧🇷 Brazil">
+          <option value="serie_a">Série A — Brazil 2026</option>
+          <option value="serie_b">Série B — Brazil 2026</option>
+          <option value="serie_c">Série C — Brazil 2026</option>
+        </optgroup>
+        <optgroup label="🇦🇷 South America">
+          <option value="argentina">Liga Profesional — Argentina 2026</option>
+          <option value="colombia">Liga BetPlay — Colombia 2026</option>
+          <option value="chile">Primera División — Chile 2026</option>
+          <option value="uruguay">Primera División — Uruguay 2026</option>
+          <option value="peru">Liga 1 — Peru 2026</option>
+          <option value="ecuador">LigaPro — Ecuador 2026</option>
+          <option value="paraguay">Apertura — Paraguay 2026</option>
+        </optgroup>
+        <optgroup label="🌎 North/Central America">
+          <option value="mls">MLS — USA 2026</option>
+          <option value="liga_mx">Liga MX — Mexico 2026</option>
+        </optgroup>
+        <optgroup label="🏴󠁧󠁢󠁥󠁮󠁧󠁿 Europe">
+          <option value="premier_league">Premier League — England 2025/26</option>
+          <option value="la_liga">La Liga — Spain 2025/26</option>
+          <option value="bundesliga">Bundesliga — Germany 2025/26</option>
+          <option value="serie_a_it">Serie A — Italy 2025/26</option>
+          <option value="ligue_1">Ligue 1 — France 2025/26</option>
+          <option value="eredivisie">Eredivisie — Netherlands 2025/26</option>
+          <option value="primeira_liga">Primeira Liga — Portugal 2025/26</option>
+          <option value="scottish_prem">Scottish Premiership 2025/26</option>
+          <option value="super_lig">Süper Lig — Turkey 2025/26</option>
+          <option value="jupiler">Jupiler Pro League — Belgium 2025/26</option>
+        </optgroup>
+        <optgroup label="🇸🇦 Middle East">
+          <option value="saudi_pro">Saudi Pro League 2025/26</option>
+        </optgroup>
+        <optgroup label="🌏 Asia">
+          <option value="j_league">J1 League — Japan 2026</option>
+          <option value="k_league">K League 1 — South Korea 2026</option>
+          <option value="chinese_sl">Chinese Super League 2026</option>
+        </optgroup>
+        <optgroup label="🌍 Africa">
+          <option value="egypt_pl">Egyptian Premier League 2025/26</option>
+          <option value="sa_psl">Premier Soccer League — South Africa 2025/26</option>
+        </optgroup>
+        <optgroup label="🌏 Oceania">
+          <option value="a_league">A-League — Australia 2026</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <!-- TEAM SEARCH -->
+    <div class="fg">
+      <div class="sb-label">Find Your Team</div>
+      <input type="text" class="search-inp" id="teamSearch" placeholder="Search teams..." oninput="filterTeams()">
+      <div class="team-list-wrap" id="teamList"></div>
+    </div>
+
+    <hr>
+
+    <!-- PLAYER FILTERS -->
+    <div class="fg">
+      <div class="sb-label">Player Filters</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:3px">Age range</div>
+      <div class="row2">
+        <input type="number" id="minAge" value="16" min="14" max="45" placeholder="Min">
+        <input type="number" id="maxAge" value="35" min="14" max="45" placeholder="Max">
       </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Max budget (€)</div>
+      <input type="number" id="budgetMax" value="50000000">
+      <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Min appearances</div>
+      <input type="number" id="minApps" value="10">
+      <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Position</div>
+      <select id="posFil">
+        <option value="">Any position</option>
+        <option value="GK">Goalkeeper</option>
+        <option value="DEF">Defender</option>
+        <option value="MID">Midfielder</option>
+        <option value="ATT">Attacker</option>
+      </select>
+      <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Search players from</div>
+      <select id="playerLeagueSel">
+        <option value="ALL">All Leagues</option>
+        <optgroup label="🇧🇷 Brazil">
+          <option value="serie_a">Série A</option>
+          <option value="serie_b">Série B</option>
+          <option value="serie_c">Série C</option>
+        </optgroup>
+        <optgroup label="🌎 Americas">
+          <option value="argentina">Argentina</option>
+          <option value="colombia">Colombia</option>
+          <option value="chile">Chile</option>
+          <option value="uruguay">Uruguay</option>
+          <option value="mls">MLS</option>
+          <option value="liga_mx">Liga MX</option>
+        </optgroup>
+        <optgroup label="🏴󠁧󠁢󠁥󠁮󠁧󠁿 Europe">
+          <option value="premier_league">Premier League</option>
+          <option value="la_liga">La Liga</option>
+          <option value="bundesliga">Bundesliga</option>
+          <option value="serie_a_it">Serie A Italy</option>
+          <option value="ligue_1">Ligue 1</option>
+          <option value="eredivisie">Eredivisie</option>
+          <option value="primeira_liga">Primeira Liga</option>
+          <option value="scottish_prem">Scottish Prem</option>
+          <option value="super_lig">Süper Lig</option>
+          <option value="jupiler">Jupiler</option>
+        </optgroup>
+        <optgroup label="🌍 Rest of World">
+          <option value="saudi_pro">Saudi Pro League</option>
+          <option value="j_league">J1 League</option>
+          <option value="k_league">K League</option>
+          <option value="egypt_pl">Egyptian PL</option>
+          <option value="sa_psl">South Africa PSL</option>
+          <option value="a_league">A-League</option>
+        </optgroup>
+      </select>
+      <div id="filter-count" class="filter-count"></div>
     </div>
-    <div class="auth-quote">
-      "Clubs don't need more data. They need answers."
-    </div>
+
+    <hr>
+    <button class="run-btn" id="runBtn" onclick="runAnalysis()" disabled>▶ RUN ANALYSIS</button>
+    <div class="hint" id="btnHint">Select a team first</div>
   </div>
 
-  <!-- RIGHT -->
-  <div class="auth-right">
-    <div class="auth-box">
+  <!-- MAIN -->
+  <div class="main">
+    <div class="tabs">
+      <div class="tab active" id="tab-stats-btn" onclick="showTab('stats',this)">Team Stats</div>
+      <div class="tab" id="tab-results-btn" onclick="showTab('results',this)">Analysis & Players</div>
+    </div>
 
-      <!-- TABS -->
-      <div class="auth-tabs">
-        <div class="auth-tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</div>
-        <div class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Create Account</div>
+    <!-- STATS TAB -->
+    <div id="tab-stats">
+      <div id="statusMsg" style="font-size:12px;color:var(--accent);padding:4px 0;min-height:20px;margin-bottom:8px;"></div>
+      <div class="zone-lbl">⚔ Defense</div>
+      <div class="sgrid">
+        <div class="scard" id="c_gc"><div class="scard-lbl">Goals conceded / game</div><input type="number" id="s_gc" step="0.01" placeholder="—"><div class="scard-unit">per game avg</div><div class="scard-avg" id="a_gc"></div></div>
+        <div class="scard" id="c_tk"><div class="scard-lbl">Tackles / game</div><input type="number" id="s_tk" step="0.1" placeholder="—"><div class="scard-unit">per game avg</div><div class="scard-avg" id="a_tk"></div></div>
+        <div class="scard" id="c_int"><div class="scard-lbl">Interceptions / game</div><input type="number" id="s_int" step="0.1" placeholder="—"><div class="scard-unit">per game avg</div><div class="scard-avg" id="a_int"></div></div>
+        <div class="scard" id="c_cl"><div class="scard-lbl">Clearances / game</div><input type="number" id="s_cl" step="0.1" placeholder="—"><div class="scard-unit">per game avg</div><div class="scard-avg" id="a_cl"></div></div>
+        <div class="scard" id="c_aer"><div class="scard-lbl">Aerial duels won %</div><input type="number" id="s_aer" step="0.1" placeholder="—"><div class="scard-unit">%</div><div class="scard-avg" id="a_aer"></div></div>
+        <div class="scard" id="c_yel"><div class="scard-lbl">Yellow cards / game</div><input type="number" id="s_yel" step="0.01" placeholder="—"><div class="scard-unit">per game avg</div><div class="scard-avg" id="a_yel"></div></div>
       </div>
-
-      <!-- SIGN IN FORM -->
-      <div id="form-signin">
-        <div class="auth-title">Welcome back</div>
-        <div class="auth-sub">Sign in to your ScoutMind account.</div>
-        <div class="form-group">
-          <label>Email address</label>
-          <input type="email" id="si-email" placeholder="you@example.com">
-          <div class="err-msg" id="si-email-err">Please enter a valid email address.</div>
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="si-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')signIn()">
-          <div class="err-msg" id="si-pass-err">Password must be at least 6 characters.</div>
-        </div>
-        <div class="forgot" onclick="showForgot()">Forgot password?</div>
-        <div class="err-msg" id="si-general-err" style="margin-top:10px;font-size:13px;"></div>
-        <button class="auth-btn" id="si-btn" onclick="signIn()" style="margin-top:16px">Sign In</button>
-        <div class="auth-divider">or</div>
-        <button class="auth-btn" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);font-weight:500;" onclick="demoLogin()">
-          Try Demo — No Account Needed
-        </button>
-        <a class="back-link" href="/index.html">← Back to homepage</a>
+      <div class="zone-lbl">🔄 Passing & Possession</div>
+      <div class="sgrid">
+        <div class="scard" id="c_pa"><div class="scard-lbl">Pass accuracy %</div><input type="number" id="s_pa" step="0.1" placeholder="—"><div class="scard-unit">%</div><div class="scard-avg" id="a_pa"></div></div>
+        <div class="scard" id="c_pos"><div class="scard-lbl">Ball possession %</div><input type="number" id="s_pos" step="0.1" placeholder="—"><div class="scard-unit">%</div><div class="scard-avg" id="a_pos"></div></div>
+        <div class="scard" id="c_fouls"><div class="scard-lbl">Fouls / game</div><input type="number" id="s_fouls" step="0.1" placeholder="—"><div class="scard-unit">per game avg</div><div class="scard-avg" id="a_fouls"></div></div>
       </div>
-
-      <!-- SIGN UP FORM -->
-      <div id="form-signup" style="display:none">
-        <div class="auth-title">Create account</div>
-        <div class="auth-sub">Join ScoutMind. Start analysing your team today.</div>
-
-        <div class="plan-select">
-          <div class="plan-select-label">Choose your plan</div>
-          <div class="plan-options">
-            <div class="plan-option selected" id="plan-free" onclick="selectPlan('free')">
-              <div class="plan-option-name">Scout Free</div>
-              <div class="plan-option-price">Free forever</div>
-            </div>
-            <div class="plan-option" id="plan-pro" onclick="selectPlan('pro')">
-              <div class="plan-option-name">Scout Pro</div>
-              <div class="plan-option-price">$9.99 / month</div>
-            </div>
-            <div class="plan-option" id="plan-club" onclick="selectPlan('club')">
-              <div class="plan-option-name">Club Basic</div>
-              <div class="plan-option-price">$49 / month</div>
-            </div>
-            <div class="plan-option" id="plan-clubpro" onclick="selectPlan('clubpro')">
-              <div class="plan-option-name">Club Pro</div>
-              <div class="plan-option-price">$199 / month</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Full name</label>
-          <input type="text" id="su-name" placeholder="Felipe Valois">
-          <div class="err-msg" id="su-name-err">Please enter your name.</div>
-        </div>
-        <div class="form-group">
-          <label>Email address</label>
-          <input type="email" id="su-email" placeholder="you@example.com">
-          <div class="err-msg" id="su-email-err">Please enter a valid email address.</div>
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="su-pass" placeholder="Min. 6 characters">
-          <div class="err-msg" id="su-pass-err">Password must be at least 6 characters.</div>
-        </div>
-        <div class="err-msg" id="su-general-err" style="margin-top:10px;font-size:13px;"></div>
-        <button class="auth-btn" id="su-btn" onclick="signUp()" style="margin-top:8px">Create Account</button>
-        <div class="terms">
-          By signing up you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-        </div>
-        <a class="back-link" href="/index.html">← Back to homepage</a>
+      <div class="zone-lbl">⚽ Attack</div>
+      <div class="sgrid">
+        <div class="scard" id="c_gs"><div class="scard-lbl">Goals scored / game</div><input type="number" id="s_gs" step="0.01" placeholder="—"><div class="scard-unit">per game avg</div><div class="scard-avg" id="a_gs"></div></div>
+        <div class="scard" id="c_sh"><div class="scard-lbl">Total shots / game</div><input type="number" id="s_sh" step="0.1" placeholder="—"><div class="scard-unit">per game avg</div><div class="scard-avg" id="a_sh"></div></div>
+        <div class="scard" id="c_sot"><div class="scard-lbl">Shots on target / game</div><input type="number" id="s_sot" step="0.1" placeholder="—"><div class="scard-unit">per game avg</div><div class="scard-avg" id="a_sot"></div></div>
       </div>
+      <button class="run-btn" id="runBtn2" onclick="runAnalysis()" disabled style="max-width:200px;margin-top:16px">▶ ANALYSE NOW</button>
+    </div>
 
-      <!-- SUCCESS -->
-      <div class="success-screen" id="success-screen">
-        <div class="success-icon">✅</div>
-        <div class="success-title">You're in!</div>
-        <div class="success-sub" id="success-msg">Account created successfully. Redirecting you to ScoutMind...</div>
-        <div style="font-size:12px;color:var(--muted)">Redirecting in <span id="countdown">3</span>s...</div>
+    <!-- RESULTS TAB -->
+    <div id="tab-results" style="display:none">
+      <div class="empty" id="resEmpty">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-ttl">No Analysis Yet</div>
+        <div style="font-size:13px">Select a team and run the analysis</div>
       </div>
-
+      <div id="resContent" style="display:none"></div>
     </div>
   </div>
 </div>
 
 <script>
-// ── Simple localStorage-based auth (prototype) ──
-// In production this would connect to a real backend (Supabase, Firebase, etc.)
+// ═══════════════════════════════════════
+// WEAKNESS PROFILES
+// ═══════════════════════════════════════
+const PROFILES = {
+  "Defensive errors":    {pos:"Reliable CB",    role:"Consistent, low-error centre-back. Minimises mistakes that lead to shots.",    stats:{tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:55,pass_acc:82},w:{tackles_pg:3,interceptions_pg:3,aerial_pct:2,pass_acc:2}},
+  "Aerial vulnerability":{pos:"Aerial CB",      role:"Dominant in the air. Commands the penalty area at set pieces.",                 stats:{aerial_pct:60,height:185,tackles_pg:2.5},w:{aerial_pct:4,height:2,tackles_pg:2}},
+  "Poor tackling":       {pos:"CB or DM",       role:"Strong tackler who wins ground duels and disrupts opposition build-up.",       stats:{tackles_pg:3.2,interceptions_pg:2.0,aerial_pct:50},w:{tackles_pg:4,interceptions_pg:3,aerial_pct:1}},
+  "Lack of creativity":  {pos:"AM or CM",       role:"Creative playmaker generating key passes and chances in the final third.",     stats:{key_passes_pg:2.2,assists_pg:0.22,pass_acc:84},w:{key_passes_pg:4,assists_pg:3,pass_acc:2}},
+  "Poor passing":        {pos:"Ball-playing CB or DM",role:"Technically strong under pressure. Builds from the back with composure.",stats:{pass_acc:84,tackles_pg:2.5,key_passes_pg:1.5},w:{pass_acc:4,tackles_pg:2,key_passes_pg:2}},
+  "Poor finishing":      {pos:"ST or CF",        role:"Clinical striker with high conversion. Goals per game is the priority.",       stats:{goals_pg:0.45,shots_on_tgt_pg:2.0,aerial_pct:55},w:{goals_pg:4,shots_on_tgt_pg:3,aerial_pct:1}},
+  "Low attack output":   {pos:"Winger or SS",    role:"Creative attacker who generates and converts chances consistently.",          stats:{goals_pg:0.28,key_passes_pg:1.8,shots_on_tgt_pg:1.5,assists_pg:0.20},w:{goals_pg:3,key_passes_pg:2,shots_on_tgt_pg:2,assists_pg:2}},
+  "Poor shot volume":    {pos:"Box-to-box MID",  role:"Gets forward to create volume in attack. High shot and key pass numbers.",    stats:{shots_on_tgt_pg:0.8,key_passes_pg:2.0,goals_pg:0.18},w:{shots_on_tgt_pg:3,key_passes_pg:3,goals_pg:2}},
+};
 
-let selectedPlan = 'free';
+// ═══════════════════════════════════════
+// AUTH & USER
+// ═══════════════════════════════════════
+const currentUser = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
+const PLAN_NAMES = {free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro'};
+const PLAN_CLASS = {free:'free',pro:'pro',club:'club',clubpro:'clubpro'};
 
-function switchTab(tab) {
-  document.getElementById('tab-signin').classList.toggle('active', tab==='signin');
-  document.getElementById('tab-signup').classList.toggle('active', tab==='signup');
-  document.getElementById('form-signin').style.display = tab==='signin' ? 'block' : 'none';
-  document.getElementById('form-signup').style.display = tab==='signup' ? 'block' : 'none';
+if (currentUser) {
+  document.getElementById('nav-name').textContent = currentUser.name || 'User';
+  const planEl = document.getElementById('nav-plan');
+  const plan = currentUser.plan || 'free';
+  planEl.textContent = PLAN_NAMES[plan] || 'Scout Free';
+  planEl.className = 'plan-pill ' + (PLAN_CLASS[plan] || 'free');
 }
 
-function selectPlan(plan) {
-  selectedPlan = plan;
-  ['free','pro','club','clubpro'].forEach(p => {
-    document.getElementById('plan-'+p).classList.toggle('selected', p===plan);
+function logout() {
+  localStorage.removeItem('sm_current_user');
+  window.location.href = '/auth.html';
+}
+
+// ═══════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════
+let currentLeague = 'serie_a';
+let selectedTeam = null;
+
+function onLeagueChange() {
+  currentLeague = document.getElementById('leagueSel').value;
+  selectedTeam = null;
+  document.getElementById('teamSearch').value = '';
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('runBtn2').disabled = true;
+  document.getElementById('btnHint').textContent = 'Select a team first';
+  clearStats();
+  renderTeamList('');
+}
+
+function clearStats() {
+  ['s_gc','s_tk','s_int','s_cl','s_aer','s_yel','s_pa','s_pos','s_fouls','s_gs','s_sh','s_sot'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  ['c_gc','c_tk','c_int','c_cl','c_aer','c_yel','c_pa','c_pos','c_fouls','c_gs','c_sh','c_sot'].forEach(id => {
+    document.getElementById(id).className = 'scard';
+  });
+  ['a_gc','a_tk','a_int','a_cl','a_aer','a_yel','a_pa','a_pos','a_fouls','a_gs','a_sh','a_sot'].forEach(id => {
+    document.getElementById(id).textContent = '';
   });
 }
 
-function showErr(id, show) {
-  document.getElementById(id).classList.toggle('show', show);
-  const input = document.getElementById(id.replace('-err','').replace('si-','si-').replace('su-','su-'));
-  if (input) input.classList.toggle('err', show);
+function renderTeamList(filter) {
+  const teams = TEAMS[currentLeague] || [];
+  const q = filter.toLowerCase();
+  const filtered = q ? teams.filter(t => t.name.toLowerCase().includes(q)) : teams;
+  document.getElementById('teamList').innerHTML = filtered.length === 0
+    ? '<div style="font-size:12px;color:var(--muted);padding:8px 0;text-align:center">No teams found</div>'
+    : filtered.map(t => `
+      <div class="team-item ${selectedTeam?.id===t.id?'selected':''}" onclick="selectTeam('${t.id}')">
+        <div class="team-name">${t.name}</div>
+        <div class="team-pos-lbl">${t.pos}</div>
+      </div>`).join('');
 }
 
-function setLoading(btnId, loading) {
-  const btn = document.getElementById(btnId);
-  btn.disabled = loading;
-  btn.innerHTML = loading ? '<span class="loading"></span>Please wait...' : btn.dataset.original || btn.innerHTML;
-  if (!loading && !btn.dataset.original) btn.dataset.original = btn.innerHTML;
+function filterTeams() {
+  renderTeamList(document.getElementById('teamSearch').value);
 }
 
-function showSuccess(msg, redirectUrl) {
-  document.getElementById('form-signin').style.display = 'none';
-  document.getElementById('form-signup').style.display = 'none';
-  document.getElementById('success-screen').style.display = 'block';
-  document.getElementById('success-msg').textContent = msg;
-  let count = 3;
-  const interval = setInterval(() => {
-    count--;
-    document.getElementById('countdown').textContent = count;
-    if (count <= 0) {
-      clearInterval(interval);
-      window.location.href = redirectUrl;
+function selectTeam(id) {
+  const teams = TEAMS[currentLeague] || [];
+  selectedTeam = teams.find(t => t.id === id);
+  if (!selectedTeam) return;
+  renderTeamList(document.getElementById('teamSearch').value);
+
+  const s = selectedTeam;
+  const av = LEAGUE_AVGS[currentLeague] || {};
+
+  const statMap = [
+    ['s_gc','c_gc','a_gc', s.gc, av.gc, true],
+    ['s_tk','c_tk','a_tk', s.tk, av.tk, false],
+    ['s_int','c_int','a_int', s.int, av.int, false],
+    ['s_cl','c_cl','a_cl', s.cl, av.cl, false],
+    ['s_aer','c_aer','a_aer', s.aer, av.aer, false],
+    ['s_yel','c_yel','a_yel', s.yel, av.yel, true],
+    ['s_pa','c_pa','a_pa', s.pa, av.pa, false],
+    ['s_pos','c_pos','a_pos', s.pos_pct, av.pos, false],
+    ['s_fouls','c_fouls','a_fouls', s.fouls, av.fouls, true],
+    ['s_gs','c_gs','a_gs', s.gs, av.gs, false],
+    ['s_sh','c_sh','a_sh', s.sh, av.sh, false],
+    ['s_sot','c_sot','a_sot', s.sot, av.sot, false],
+  ];
+
+  statMap.forEach(([sid, cid, aid, val, avg, lowerIsBetter]) => {
+    document.getElementById(sid).value = val;
+    if (avg) {
+      const d = lowerIsBetter ? (val - avg) / avg : (avg - val) / avg;
+      const card = document.getElementById(cid);
+      card.className = 'scard' + (d >= 0.35 ? ' flagged' : d >= 0.20 ? ' flagged-minor' : '');
+      document.getElementById(aid).textContent = `League avg: ${avg}`;
     }
-  }, 1000);
+  });
+
+  document.getElementById('runBtn').disabled = false;
+  document.getElementById('runBtn2').disabled = false;
+  document.getElementById('btnHint').textContent = s.name + ' loaded ✓';
+  document.getElementById('statusMsg').innerHTML = `<span class="live-dot"></span> Stats loaded for <strong>${s.name}</strong> — ${LEAGUE_META[currentLeague]?.name || ''} 2026`;
+  setTimeout(() => document.getElementById('statusMsg').innerHTML = '', 3000);
+  updateFilterCount();
 }
 
-function signIn() {
-  const email = document.getElementById('si-email').value.trim();
-  const pass = document.getElementById('si-pass').value;
-  let valid = true;
+function updateFilterCount() {
+  const plLeague = document.getElementById('playerLeagueSel').value;
+  const minAge = parseInt(document.getElementById('minAge').value)||0;
+  const maxAge = parseInt(document.getElementById('maxAge').value)||99;
+  const budget = parseFloat(document.getElementById('budgetMax').value)||Infinity;
+  const minApps = parseInt(document.getElementById('minApps').value)||0;
+  const pos = document.getElementById('posFil').value;
 
-  if (!email || !email.includes('@')) { showErr('si-email-err', true); valid = false; } else showErr('si-email-err', false);
-  if (!pass || pass.length < 6) { showErr('si-pass-err', true); valid = false; } else showErr('si-pass-err', false);
-  if (!valid) return;
+  const pool = plLeague === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === plLeague);
+  const count = pool.filter(p =>
+    p.age >= minAge && p.age <= maxAge &&
+    p.value <= budget && p.apps >= minApps &&
+    (!pos || p.pos === pos)
+  ).length;
+  document.getElementById('filter-count').textContent = count + ' players match your filters';
+}
 
-  setLoading('si-btn', true);
+// ═══════════════════════════════════════
+// ANALYSIS ENGINE
+// ═══════════════════════════════════════
+function gv(id) { return parseFloat(document.getElementById(id).value) || 0; }
 
-  // Check stored users
-  setTimeout(() => {
-    const users = JSON.parse(localStorage.getItem('sm_users') || '[]');
-    const user = users.find(u => u.email === email && u.pass === pass);
-    if (!user) {
-      setLoading('si-btn', false);
-      const err = document.getElementById('si-general-err');
-      err.textContent = 'No account found with these credentials. Check your details or create an account.';
-      err.classList.add('show');
-      return;
+function detectWeaknesses() {
+  const av = LEAGUE_AVGS[currentLeague] || {};
+  const st = {
+    gc: gv('s_gc'), tk: gv('s_tk'), int: gv('s_int'), cl: gv('s_cl'),
+    aer: gv('s_aer'), yel: gv('s_yel'), pa: gv('s_pa'), pos: gv('s_pos'),
+    fouls: gv('s_fouls'), gs: gv('s_gs'), sh: gv('s_sh'), sot: gv('s_sot'),
+  };
+
+  const checks = [
+    {k:'gc',  avg:av.gc,  lb:true,  zone:'defense',  type:'Defensive errors'},
+    {k:'aer', avg:av.aer, lb:false, zone:'defense',  type:'Aerial vulnerability'},
+    {k:'tk',  avg:av.tk,  lb:false, zone:'defense',  type:'Poor tackling'},
+    {k:'int', avg:av.int, lb:false, zone:'defense',  type:'Poor tackling'},
+    {k:'pa',  avg:av.pa,  lb:false, zone:'midfield', type:'Poor passing'},
+    {k:'cl',  avg:av.cl,  lb:false, zone:'defense',  type:'Defensive errors'},
+    {k:'gs',  avg:av.gs,  lb:false, zone:'attack',   type:'Poor finishing'},
+    {k:'sot', avg:av.sot, lb:false, zone:'attack',   type:'Low attack output'},
+    {k:'sh',  avg:av.sh,  lb:false, zone:'attack',   type:'Poor shot volume'},
+  ];
+
+  return checks.filter(c => {
+    if (!st[c.k] || !c.avg) return false;
+    const d = c.lb ? (st[c.k] - c.avg) / c.avg : (c.avg - st[c.k]) / c.avg;
+    if (d >= 0.35) { c.severity = 'major'; c.deficit = Math.round(d * 100); return true; }
+    if (d >= 0.20) { c.severity = 'minor'; c.deficit = Math.round(d * 100); return true; }
+    return false;
+  });
+}
+
+function scorePlayer(p, profile) {
+  if (!profile) return {score:0, reasons:[], flags:[]};
+  let tw = 0, ew = 0;
+  const reasons = [], flags = [];
+  for (const [stat, thr] of Object.entries(profile.stats)) {
+    const w = profile.w[stat] || 1;
+    tw += w * 10;
+    const val = p[stat];
+    if (val == null) continue;
+    const meets = val >= thr;
+    const diff = Math.abs(val - thr) / (thr || 1);
+    if (meets) {
+      const pts = diff >= 0.20 ? w * 10 : diff >= 0.08 ? w * 7 : w * 5;
+      ew += pts;
+      if (diff >= 0.08) reasons.push(`${stat.replace(/_pg$/,' /g').replace(/_/g,' ')}: ${typeof val === 'number' && val % 1 !== 0 ? val.toFixed(2) : val}`);
+    } else if (diff > 0.25) {
+      flags.push(`Low ${stat.replace(/_pg$/,' /g').replace(/_/g,' ')}: ${typeof val === 'number' && val % 1 !== 0 ? val.toFixed(2) : val}`);
     }
-    localStorage.setItem('sm_current_user', JSON.stringify(user));
-    showSuccess(`Welcome back, ${user.name}! Taking you to ScoutMind...`, '/app.html');
-  }, 800);
-}
-
-function signUp() {
-  const name = document.getElementById('su-name').value.trim();
-  const email = document.getElementById('su-email').value.trim();
-  const pass = document.getElementById('su-pass').value;
-  let valid = true;
-
-  if (!name) { showErr('su-name-err', true); valid = false; } else showErr('su-name-err', false);
-  if (!email || !email.includes('@')) { showErr('su-email-err', true); valid = false; } else showErr('su-email-err', false);
-  if (!pass || pass.length < 6) { showErr('su-pass-err', true); valid = false; } else showErr('su-pass-err', false);
-  if (!valid) return;
-
-  setLoading('su-btn', true);
-
-  setTimeout(() => {
-    const users = JSON.parse(localStorage.getItem('sm_users') || '[]');
-    if (users.find(u => u.email === email)) {
-      setLoading('su-btn', false);
-      const err = document.getElementById('su-general-err');
-      err.textContent = 'An account with this email already exists. Sign in instead.';
-      err.classList.add('show');
-      return;
-    }
-    const newUser = { name, email, pass, plan: selectedPlan, joined: new Date().toISOString() };
-    users.push(newUser);
-    localStorage.setItem('sm_users', JSON.stringify(users));
-    localStorage.setItem('sm_current_user', JSON.stringify(newUser));
-    const planNames = { free:'Scout Free', pro:'Scout Pro', club:'Club Basic', clubpro:'Club Pro' };
-    showSuccess(`Account created! You're on the ${planNames[selectedPlan]} plan. Taking you to ScoutMind...`, '/app.html');
-  }, 1000);
-}
-
-function demoLogin() {
-  const demoUser = { name: 'Demo User', email: 'demo@scoutmind.app', plan: 'pro', demo: true };
-  localStorage.setItem('sm_current_user', JSON.stringify(demoUser));
-  showSuccess('Entering demo mode — full Scout Pro access...', '/app.html');
-}
-
-function showForgot() {
-  const email = document.getElementById('si-email').value.trim();
-  if (email) {
-    alert(`If an account exists for ${email}, a reset link has been sent. (Demo: this feature requires a backend)`);
-  } else {
-    alert('Enter your email address first, then click Forgot password.');
   }
+  if (p.age > 34) flags.push(`Age: ${p.age}`);
+  return { score: tw > 0 ? Math.round(ew / tw * 1000) / 10 : 0, reasons: reasons.slice(0,3), flags: flags.slice(0,2) };
 }
+
+function fmtVal(v) {
+  return v >= 1e6 ? '€' + (v/1e6).toFixed(1) + 'M' : v >= 1e3 ? '€' + (v/1e3).toFixed(0) + 'K' : '€' + v;
+}
+function scCls(s) { return s >= 70 ? 'hi' : s >= 45 ? 'mid' : 'lo'; }
+function barClr(s) { return s >= 70 ? 'var(--green)' : s >= 45 ? 'var(--yellow)' : 'var(--red)'; }
+
+function runAnalysis() {
+  if (!selectedTeam) return;
+  showTab('results', document.getElementById('tab-results-btn'));
+
+  const flags = detectWeaknesses();
+  const av = LEAGUE_AVGS[currentLeague] || {};
+  const st = {gc:gv('s_gc'),tk:gv('s_tk'),int:gv('s_int'),cl:gv('s_cl'),aer:gv('s_aer'),pa:gv('s_pa'),gs:gv('s_gs'),sh:gv('s_sh'),sot:gv('s_sot')};
+
+  // Priority zone
+  const zoneSc = {};
+  flags.forEach(f => { zoneSc[f.zone] = (zoneSc[f.zone]||0) + (f.severity==='major'?2:1); });
+  const priOrder = ['defense','attack','midfield'];
+  const priZone = Object.entries(zoneSc).sort((a,b) => b[1]-a[1] || priOrder.indexOf(a[0])-priOrder.indexOf(b[0]))[0]?.[0] || 'attack';
+  const priType = flags.find(f => f.zone === priZone)?.type || 'Low attack output';
+  const profile = PROFILES[priType];
+
+  // Player filtering
+  const plLeague = document.getElementById('playerLeagueSel').value;
+  const minAge = parseInt(document.getElementById('minAge').value)||0;
+  const maxAge = parseInt(document.getElementById('maxAge').value)||99;
+  const budget = parseFloat(document.getElementById('budgetMax').value)||Infinity;
+  const minApps = parseInt(document.getElementById('minApps').value)||0;
+  const posFil = document.getElementById('posFil').value;
+
+  const pool = plLeague === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === plLeague);
+  const filtered = pool.filter(p =>
+    p.age >= minAge && p.age <= maxAge &&
+    p.value <= budget && p.apps >= minApps &&
+    (!posFil || p.pos === posFil)
+  );
+
+  const ranked = filtered
+    .map(p => ({p, ...scorePlayer(p, profile)}))
+    .filter(m => m.score > 15)
+    .sort((a,b) => b.score - a.score)
+    .slice(0, 15);
+
+  // Chart data
+  const chartRows = [
+    {lbl:'Goals conceded/g', club:st.gc, avg:av.gc, lb:true},
+    {lbl:'Tackles/game',     club:st.tk, avg:av.tk, lb:false},
+    {lbl:'Pass accuracy %',  club:st.pa, avg:av.pa, lb:false},
+    {lbl:'Goals scored/g',   club:st.gs, avg:av.gs, lb:false},
+    {lbl:'Shots on target/g',club:st.sot,avg:av.sot,lb:false},
+    {lbl:'Aerial duels %',   club:st.aer,avg:av.aer,lb:false},
+  ].filter(c => c.club > 0 && c.avg > 0);
+
+  // Build HTML
+  let html = '';
+
+  // Weakness banner
+  html += `<div class="w-banner">
+    <div class="w-title">Primary Weakness: ${priType}</div>
+    <div class="w-sub">Zone: ${priZone.toUpperCase()} · ${flags.length} weakness flag${flags.length!==1?'s':''} detected · ${selectedTeam.name} · ${LEAGUE_META[currentLeague]?.flag||''} ${LEAGUE_META[currentLeague]?.name||''}</div>
+  </div>`;
+
+  // Flags
+  if (flags.length) {
+    html += `<div class="flags-wrap">${flags.map(f=>
+      `<div class="flag-pill ${f.severity}">${f.severity.toUpperCase()}: ${f.type} (${f.deficit}% vs avg)</div>`
+    ).join('')}</div>`;
+  } else {
+    html += `<div style="background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.2);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--green)">✓ No major weaknesses detected — this team is performing above or at league average across all metrics.</div>`;
+  }
+
+  // Chart
+  if (chartRows.length) {
+    html += `<div class="chart-card"><div class="chart-ttl">📊 ${selectedTeam.name} vs League Average</div>`;
+    chartRows.forEach(c => {
+      const mx = Math.max(c.club, c.avg) * 1.35 || 1;
+      const cp = Math.min(100, c.club/mx*100).toFixed(1);
+      const ap = Math.min(100, c.avg/mx*100).toFixed(1);
+      const good = c.lb ? c.club <= c.avg : c.club >= c.avg;
+      const def = c.lb ? (c.club-c.avg)/c.avg : (c.avg-c.club)/c.avg;
+      const col = good ? 'var(--green)' : def > 0.35 ? 'var(--red)' : 'var(--yellow)';
+      html += `<div class="chart-row">
+        <div class="chart-lbl">${c.lbl}</div>
+        <div class="chart-bg">
+          <div class="chart-fill" style="width:${cp}%;background:${col}"></div>
+          <div class="avg-line" style="left:${ap}%"></div>
+        </div>
+        <div class="chart-val" style="color:${col}">${c.club}</div>
+      </div>`;
+    });
+    html += `<div style="font-size:10px;color:var(--muted);margin-top:5px">Bar = your club · White line = league average</div></div>`;
+  }
+
+  // Profile
+  if (profile) {
+    html += `<div class="profile-card">
+      <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:7px">IDEAL PLAYER PROFILE</div>
+      <div class="profile-pos">${profile.pos}</div>
+      <div class="profile-role">${profile.role}</div>
+      <div class="req-stats">${Object.entries(profile.stats).map(([k,v])=>
+        `<div class="req-stat">${k.replace(/_pg$/,' /g').replace(/_/g,' ')} ≥ <span>${v}</span></div>`
+      ).join('')}</div>
+    </div>`;
+  }
+
+  // Players header
+  html += `<div class="section-hdr">
+    <div class="section-ttl">Player Recommendations</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="data-badge">⚽ ${ranked.length} matched</div>
+      <div class="data-badge" style="background:rgba(0,184,255,0.08);border-color:rgba(0,184,255,0.2);color:var(--accent2)">${filtered.length} players searched</div>
+    </div>
+  </div>`;
+
+  if (!ranked.length) {
+    html += `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No Matches Found</div><div style="font-size:13px">Try widening your filters — increase the budget, age range, or select "All Leagues"</div></div>`;
+  } else {
+    ranked.forEach((m, i) => {
+      const p = m.p;
+      const sc = m.score;
+      html += `<div class="pcard">
+        <div class="prank ${i<3?'top':''}">${String(i+1).padStart(2,'0')}</div>
+        <div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+            <div class="pname">${p.name}</div>
+            <div class="pos-badge">${p.pos}</div>
+          </div>
+          <div class="pmeta">
+            <span>🏟 ${p.club}</span>
+            <span>📍 ${p.nat}</span>
+            <span>🎂 ${p.age} yrs</span>
+            <span>📋 ${p.apps} apps</span>
+            <span>💰 ${fmtVal(p.value)}</span>
+            ${p.height ? `<span>📏 ${p.height}cm</span>` : ''}
+          </div>
+          <div class="stat-pills">
+            ${p.goals_pg > 0 ? `<div class="spill">⚽ ${(p.goals_pg*p.apps).toFixed(0)} goals</div>` : ''}
+            ${p.assists_pg > 0 ? `<div class="spill">🎯 ${(p.assists_pg*p.apps).toFixed(0)} assists</div>` : ''}
+            ${p.tackles_pg > 0 ? `<div class="spill">💪 ${(p.tackles_pg*p.apps).toFixed(0)} tackles</div>` : ''}
+            ${p.key_passes_pg > 0 ? `<div class="spill">🔑 ${(p.key_passes_pg*p.apps).toFixed(0)} key passes</div>` : ''}
+            ${p.pass_acc ? `<div class="spill">📊 ${p.pass_acc}% pass acc</div>` : ''}
+            ${p.aerial_pct > 0 ? `<div class="spill">✈ ${p.aerial_pct}% aerial</div>` : ''}
+          </div>
+          ${m.reasons.map(r => `<div class="reason">${r}</div>`).join('')}
+          ${m.flags.map(f => `<div class="pflag">${f}</div>`).join('')}
+        </div>
+        <div class="score-blk">
+          <div class="score-num ${scCls(sc)}">${sc}%</div>
+          <div class="score-lbl">MATCH</div>
+          <div class="sbar"><div class="sbar-fill" style="width:${sc}%;background:${barClr(sc)}"></div></div>
+        </div>
+      </div>`;
+    });
+  }
+
+  document.getElementById('resEmpty').style.display = 'none';
+  document.getElementById('resContent').innerHTML = html;
+  document.getElementById('resContent').style.display = 'block';
+}
+
+function showTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el?.classList.add('active');
+  document.getElementById('tab-stats').style.display = id === 'stats' ? 'block' : 'none';
+  document.getElementById('tab-results').style.display = id === 'results' ? 'block' : 'none';
+}
+
+// Init
+renderTeamList('');
+document.getElementById('playerLeagueSel').addEventListener('change', updateFilterCount);
+['minAge','maxAge','budgetMax','minApps','posFil'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateFilterCount);
+});
 </script>
 </body>
 </html>
