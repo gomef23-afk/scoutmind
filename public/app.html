@@ -947,6 +947,7 @@ function runAnalysis() {
       const p = m.p;
       const sc = m.score;
       const isCurrentPlayer = selectedTeam && p.club === selectedTeam.name;
+      const altPos = m.altPositions || [];
       html += `<div class="pcard" style="${isCurrentPlayer ? 'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);' : ''}">
         <div class="prank ${i<3?'top':''}">${String(i+1).padStart(2,'0')}</div>
         <div>
@@ -973,7 +974,7 @@ function runAnalysis() {
           </div>
           ${m.reasons.map(r => `<div class="reason">${r}</div>`).join('')}
           ${m.flags.map(f => `<div class="pflag">${f}</div>`).join('')}
-          ${m.altPositions && m.altPositions.length ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${m.altPositions.map(a=>`<div style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:var(--yellow)">🔄 Can play ${a.pos}</div>`).join('')}</div>` : ''}
+          ${altPos && altPos.length ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${altPos.map(a=>`<div style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:var(--yellow)">🔄 Can play ${a.pos}</div>`).join('')}</div>` : ''}
         </div>
         <div class="score-blk">
           <div class="score-num ${scCls(sc)}">${sc}%</div>
@@ -1183,7 +1184,7 @@ function renderSquadPlayers() {
   const posColors = {GK:'rgba(245,200,66,0.1)',DEF:'rgba(0,184,255,0.1)',MID:'rgba(0,229,160,0.1)',ATT:'rgba(255,107,53,0.1)'};
   const posTextColors = {GK:'var(--yellow)',DEF:'var(--accent2)',MID:'var(--accent)',ATT:'var(--warn)'};
 
-  document.getElementById('squad-list').innerHTML = scored.map(({p, score, reasons, flags}, i) => {
+  document.getElementById('squad-list').innerHTML = scored.map(({p, score, reasons, flags, altPositions}, i) => {
     const isCurrentPlayer = fanTeam && p.club === fanTeam.name;
     return `
     <div class="pcard" style="margin-bottom:8px;${isCurrentPlayer ? 'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.04);' : ''}">
