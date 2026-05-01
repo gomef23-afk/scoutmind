@@ -188,7 +188,7 @@ const PLAYERS_DB = [
   // Brighton
   {name:"Igor Thiago",club:"Brighton",league:"premier_league",pos:"ATT",age:23,nat:"Brazilian",value:50000000,apps:28,goals_pg:0.75,assists_pg:0.08,key_passes_pg:1.4,pass_acc:72,tackles_pg:0.5,interceptions_pg:0.2,aerial_pct:60,shots_on_tgt_pg:3.2,height:185},
   {name:"João Pedro",club:"Brighton",league:"premier_league",pos:"ATT",age:23,nat:"Brazilian",value:50000000,apps:28,goals_pg:0.50,assists_pg:0.18,key_passes_pg:1.8,pass_acc:76,tackles_pg:0.5,interceptions_pg:0.2,aerial_pct:55,shots_on_tgt_pg:2.4,height:187},
-  {name:"Fabian Hürzeler",club:"Brighton",league:"premier_league",pos:"MID",age:0,nat:"German",value:0,apps:0,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:0,tackles_pg:0,interceptions_pg:0,aerial_pct:0,shots_on_tgt_pg:0,height:0},
+  
   {name:"Carlos Baleba",club:"Brighton",league:"premier_league",pos:"MID",age:21,nat:"Cameroonian",value:30000000,apps:26,goals_pg:0.08,assists_pg:0.12,key_passes_pg:1.6,pass_acc:83,tackles_pg:3.8,interceptions_pg:2.0,aerial_pct:50,shots_on_tgt_pg:0.3,height:183},
 
   // Manchester United
@@ -504,9 +504,219 @@ const PLAYERS_DB = [
   {name:"Oscar",club:"Shanghai Port",league:"chinese_sl",pos:"MID",age:34,nat:"Brazilian",value:3000000,apps:22,goals_pg:0.15,assists_pg:0.28,key_passes_pg:2.5,pass_acc:85,tackles_pg:1.5,interceptions_pg:0.7,aerial_pct:42,shots_on_tgt_pg:0.7,height:174},
   {name:"Hulk (Guangzhou)",club:"Guangzhou FC",league:"chinese_sl",pos:"ATT",age:39,nat:"Brazilian",value:500000,apps:16,goals_pg:0.32,assists_pg:0.12,key_passes_pg:1.2,pass_acc:72,tackles_pg:0.4,interceptions_pg:0.2,aerial_pct:55,shots_on_tgt_pg:1.5,height:180},
   {name:"Wu Lei",club:"Shanghai Shenhua",league:"chinese_sl",pos:"ATT",age:33,nat:"Chinese",value:2000000,apps:22,goals_pg:0.32,assists_pg:0.18,key_passes_pg:1.8,pass_acc:76,tackles_pg:0.8,interceptions_pg:0.3,aerial_pct:40,shots_on_tgt_pg:1.4,height:174},
+
+  // ════════════════════════════════
+  // 🧤 GOALKEEPERS — ALL LEAGUES
+  // ════════════════════════════════
+  {name:"Alisson Becker",club:"Liverpool",league:"premier_league",pos:"GK",age:32,nat:"Brazilian",value:35000000,apps:30,goals_pg:0,assists_pg:0.02,key_passes_pg:0,pass_acc:76,tackles_pg:0,interceptions_pg:0,aerial_pct:72,shots_on_tgt_pg:0,height:191},
+  {name:"David Raya",club:"Arsenal",league:"premier_league",pos:"GK",age:29,nat:"Spanish",value:40000000,apps:32,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:78,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:183},
+  {name:"Ederson",club:"Manchester City",league:"premier_league",pos:"GK",age:31,nat:"Brazilian",value:35000000,apps:28,goals_pg:0,assists_pg:0.02,key_passes_pg:0,pass_acc:82,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:188},
+  {name:"Jordan Pickford",club:"Everton",league:"premier_league",pos:"GK",age:31,nat:"English",value:20000000,apps:30,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:65,shots_on_tgt_pg:0,height:185},
+  {name:"Nick Pope",club:"Newcastle United",league:"premier_league",pos:"GK",age:33,nat:"English",value:18000000,apps:28,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:198},
+  {name:"Marc-André ter Stegen",club:"Barcelona",league:"la_liga",pos:"GK",age:33,nat:"German",value:25000000,apps:28,goals_pg:0,assists_pg:0.02,key_passes_pg:0,pass_acc:84,tackles_pg:0,interceptions_pg:0,aerial_pct:72,shots_on_tgt_pg:0,height:187},
+  {name:"Thibaut Courtois",club:"Real Madrid",league:"la_liga",pos:"GK",age:33,nat:"Belgian",value:30000000,apps:26,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:76,tackles_pg:0,interceptions_pg:0,aerial_pct:74,shots_on_tgt_pg:0,height:199},
+  {name:"Jan Oblak",club:"Atlético Madrid",league:"la_liga",pos:"GK",age:32,nat:"Slovenian",value:28000000,apps:30,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:72,shots_on_tgt_pg:0,height:188},
+  {name:"Manuel Neuer",club:"Bayern Munich",league:"bundesliga",pos:"GK",age:39,nat:"German",value:5000000,apps:24,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:80,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:193},
+  {name:"Oliver Baumann",club:"Hoffenheim",league:"bundesliga",pos:"GK",age:34,nat:"German",value:5000000,apps:28,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:186},
+  {name:"Gregor Kobel",club:"Borussia Dortmund",league:"bundesliga",pos:"GK",age:27,nat:"Swiss",value:30000000,apps:28,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:76,tackles_pg:0,interceptions_pg:0,aerial_pct:72,shots_on_tgt_pg:0,height:194},
+  {name:"Gianluigi Donnarumma",club:"Paris Saint-Germain",league:"ligue_1",pos:"GK",age:26,nat:"Italian",value:50000000,apps:30,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:75,tackles_pg:0,interceptions_pg:0,aerial_pct:73,shots_on_tgt_pg:0,height:196},
+  {name:"Giorgi Mamardashvili",club:"Valencia",league:"la_liga",pos:"GK",age:24,nat:"Georgian",value:30000000,apps:30,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:198},
+  {name:"Yann Sommer",club:"Inter Milan",league:"serie_a_it",pos:"GK",age:36,nat:"Swiss",value:8000000,apps:28,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:76,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:183},
+  {name:"André Onana",club:"Manchester United",league:"premier_league",pos:"GK",age:29,nat:"Cameroonian",value:35000000,apps:28,goals_pg:0,assists_pg:0.02,key_passes_pg:0,pass_acc:78,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:190},
+  {name:"Emiliano Martínez",club:"Aston Villa",league:"premier_league",pos:"GK",age:32,nat:"Argentine",value:30000000,apps:30,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:71,shots_on_tgt_pg:0,height:195},
+  {name:"Kepa Arrizabalaga",club:"Chelsea",league:"premier_league",pos:"GK",age:30,nat:"Spanish",value:15000000,apps:22,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:77,tackles_pg:0,interceptions_pg:0,aerial_pct:66,shots_on_tgt_pg:0,height:186},
+  {name:"Bento",club:"Al-Nassr",league:"saudi_pro",pos:"GK",age:25,nat:"Brazilian",value:15000000,apps:26,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:191},
+  {name:"John Victor",club:"Corinthians",league:"serie_a",pos:"GK",age:27,nat:"Brazilian",value:3000000,apps:28,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:190},
+  {name:"Rafael",club:"Flamengo",league:"serie_a",pos:"GK",age:34,nat:"Brazilian",value:1500000,apps:26,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:186},
+  {name:"Marcos Felipe",club:"Fluminense",league:"serie_a",pos:"GK",age:28,nat:"Brazilian",value:2000000,apps:25,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:188},
+  {name:"Ivan",club:"Cruzeiro",league:"serie_a",pos:"GK",age:30,nat:"Brazilian",value:2500000,apps:27,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:189},
+  {name:"Gabriel Brazão",club:"Internacional",league:"serie_a",pos:"GK",age:25,nat:"Brazilian",value:3000000,apps:26,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:190},
+  {name:"Lucas Perri",club:"Botafogo",league:"serie_a",pos:"GK",age:26,nat:"Brazilian",value:4000000,apps:29,goals_pg:0,assists_pg:0.01,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:187},
+  {name:"Hugo Souza",league:"serie_a",club:"Corinthians",pos:"GK",age:24,nat:"Brazilian",value:2000000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:66,shots_on_tgt_pg:0,height:188},
 ];
 
 // Filter out invalid entries (placeholder entries with 0 apps)
 const PLAYERS_VALID = PLAYERS_DB.filter(p => p.apps > 0 && p.value > 0);
 
 console.log('ScoutMind player database loaded:', PLAYERS_VALID.length, 'players across', new Set(PLAYERS_VALID.map(p=>p.league)).size, 'leagues');
+
+// ════════════════════════════════════════════════════════
+// ADDITIONAL GOALKEEPERS — One per team across all leagues
+// ════════════════════════════════════════════════════════
+const GK_ADDITIONS = [
+  // 🇧🇷 SÉRIE A
+  {name:"Rossi",club:"Flamengo",league:"serie_a",pos:"GK",age:29,nat:"Brazilian",value:4000000,apps:30,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:71,shots_on_tgt_pg:0,height:188},
+  {name:"Weverton",club:"Palmeiras",league:"serie_a",pos:"GK",age:36,nat:"Brazilian",value:2000000,apps:32,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:188},
+  {name:"John",club:"Botafogo",league:"serie_a",pos:"GK",age:26,nat:"Brazilian",value:3500000,apps:30,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:186},
+  {name:"Fábio",club:"Fluminense",league:"serie_a",pos:"GK",age:43,nat:"Brazilian",value:500000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:191},
+  {name:"Anderson",club:"Cruzeiro",league:"serie_a",pos:"GK",age:34,nat:"Brazilian",value:1500000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:186},
+  {name:"Hugo Cândido",club:"Corinthians",league:"serie_a",pos:"GK",age:27,nat:"Brazilian",value:2000000,apps:27,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:189},
+  {name:"Rafael",club:"São Paulo",league:"serie_a",pos:"GK",age:34,nat:"Brazilian",value:1500000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:186},
+  {name:"Everson",club:"Atlético Mineiro",league:"serie_a",pos:"GK",age:34,nat:"Brazilian",value:2000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:191},
+  {name:"Marcos Felipe",club:"Bahia",league:"serie_a",pos:"GK",age:28,nat:"Brazilian",value:2000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:188},
+  {name:"Grando",club:"Grêmio",league:"serie_a",pos:"GK",age:26,nat:"Brazilian",value:1500000,apps:25,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:66,shots_on_tgt_pg:0,height:187},
+  {name:"Rochet",club:"Internacional",league:"serie_a",pos:"GK",age:31,nat:"Uruguayan",value:3000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:190},
+  {name:"Léo Jardim",club:"Vasco da Gama",league:"serie_a",pos:"GK",age:28,nat:"Brazilian",value:2000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:187},
+  {name:"Cleiton",club:"Red Bull Bragantino",league:"serie_a",pos:"GK",age:26,nat:"Brazilian",value:3000000,apps:27,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:186},
+  {name:"Gabriel Brazão",club:"Santos",league:"serie_a",pos:"GK",age:25,nat:"Brazilian",value:2000000,apps:25,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:189},
+  {name:"Alex Muralha",club:"Vitória",league:"serie_a",pos:"GK",age:35,nat:"Brazilian",value:800000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:69,tackles_pg:0,interceptions_pg:0,aerial_pct:66,shots_on_tgt_pg:0,height:188},
+  {name:"Santos",club:"Athletico Paranaense",league:"serie_a",pos:"GK",age:32,nat:"Brazilian",value:1500000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:187},
+  {name:"Douglas Friedrich",club:"Coritiba",league:"serie_a",pos:"GK",age:26,nat:"Brazilian",value:1000000,apps:23,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:69,tackles_pg:0,interceptions_pg:0,aerial_pct:65,shots_on_tgt_pg:0,height:186},
+  {name:"César",club:"Juventude",league:"serie_a",pos:"GK",age:35,nat:"Brazilian",value:600000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:68,tackles_pg:0,interceptions_pg:0,aerial_pct:64,shots_on_tgt_pg:0,height:185},
+  {name:"Mirassol GK",club:"Mirassol",league:"serie_a",pos:"GK",age:28,nat:"Brazilian",value:800000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:68,tackles_pg:0,interceptions_pg:0,aerial_pct:65,shots_on_tgt_pg:0,height:186},
+  {name:"Jandrei",club:"São Paulo",league:"serie_a",pos:"GK",age:31,nat:"Brazilian",value:1200000,apps:18,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:187},
+
+  // 🇧🇷 SÉRIE B
+  {name:"Richard",club:"Ceará",league:"serie_b",pos:"GK",age:30,nat:"Brazilian",value:1000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:187},
+  {name:"João Ricardo",club:"Fortaleza",league:"serie_b",pos:"GK",age:36,nat:"Brazilian",value:600000,apps:25,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:69,tackles_pg:0,interceptions_pg:0,aerial_pct:66,shots_on_tgt_pg:0,height:188},
+  {name:"Mailson",club:"Sport Recife",league:"serie_b",pos:"GK",age:32,nat:"Brazilian",value:800000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:69,tackles_pg:0,interceptions_pg:0,aerial_pct:66,shots_on_tgt_pg:0,height:186},
+  {name:"Douglas",club:"Sampaio Corrêa",league:"serie_b",pos:"GK",age:34,nat:"Brazilian",value:400000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:68,tackles_pg:0,interceptions_pg:0,aerial_pct:64,shots_on_tgt_pg:0,height:185},
+  {name:"Lucas Frigeri",club:"Madureira",league:"serie_b",pos:"GK",age:29,nat:"Brazilian",value:400000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:68,tackles_pg:0,interceptions_pg:0,aerial_pct:64,shots_on_tgt_pg:0,height:185},
+  {name:"Matheus Nogueira",club:"CRB",league:"serie_b",pos:"GK",age:28,nat:"Brazilian",value:600000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:69,tackles_pg:0,interceptions_pg:0,aerial_pct:65,shots_on_tgt_pg:0,height:186},
+  {name:"Ygor Vinhas",club:"Náutico",league:"serie_b",pos:"GK",age:27,nat:"Brazilian",value:500000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:68,tackles_pg:0,interceptions_pg:0,aerial_pct:64,shots_on_tgt_pg:0,height:185},
+  {name:"Dalton",club:"Guarani",league:"serie_b",pos:"GK",age:28,nat:"Brazilian",value:500000,apps:21,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:67,tackles_pg:0,interceptions_pg:0,aerial_pct:63,shots_on_tgt_pg:0,height:184},
+
+  // 🇦🇷 ARGENTINA
+  {name:"Ángel Correa GK",club:"River Plate",league:"argentina",pos:"GK",age:30,nat:"Argentine",value:2000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:188},
+  {name:"Sergio Romero",club:"Boca Juniors",league:"argentina",pos:"GK",age:37,nat:"Argentine",value:500000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:192},
+  {name:"Facundo Cambeses",club:"Racing Club",league:"argentina",pos:"GK",age:27,nat:"Argentine",value:2000000,apps:25,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:189},
+  {name:"Martín Campaña",club:"Independiente",league:"argentina",pos:"GK",age:33,nat:"Uruguayan",value:1000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:190},
+  {name:"Augusto Batalla",club:"San Lorenzo",league:"argentina",pos:"GK",age:28,nat:"Argentine",value:1200000,apps:23,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:187},
+  {name:"Rodrigo Rey",club:"Estudiantes LP",league:"argentina",pos:"GK",age:34,nat:"Argentine",value:800000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:188},
+
+  // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 PREMIER LEAGUE
+  {name:"Robert Sánchez",club:"Chelsea",league:"premier_league",pos:"GK",age:27,nat:"Spanish",value:18000000,apps:20,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:76,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:197},
+  {name:"Sam Johnstone",club:"Crystal Palace",league:"premier_league",pos:"GK",age:31,nat:"English",value:8000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:193},
+  {name:"Bart Verbruggen",club:"Brighton",league:"premier_league",pos:"GK",age:22,nat:"Dutch",value:20000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:75,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:190},
+  {name:"José Sá",club:"Wolverhampton",league:"premier_league",pos:"GK",age:31,nat:"Portuguese",value:10000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:190},
+  {name:"Matz Sels",club:"Nottingham Forest",league:"premier_league",pos:"GK",age:32,nat:"Belgian",value:8000000,apps:30,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:188},
+  {name:"Martin Dúbravka",club:"Manchester United",league:"premier_league",pos:"GK",age:36,nat:"Slovak",value:3000000,apps:18,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:192},
+  {name:"Alphonse Areola",club:"West Ham",league:"premier_league",pos:"GK",age:32,nat:"French",value:6000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:195},
+  {name:"Bernd Leno",club:"Fulham",league:"premier_league",pos:"GK",age:33,nat:"German",value:8000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:190},
+  {name:"Thomas Flekken",club:"Brentford",league:"premier_league",pos:"GK",age:31,nat:"Dutch",value:10000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:194},
+  {name:"Dean Henderson",club:"Sunderland",league:"premier_league",pos:"GK",age:28,nat:"English",value:12000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:190},
+  {name:"Illan Meslier",club:"Leeds United",league:"premier_league",pos:"GK",age:24,nat:"French",value:15000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:196},
+
+  // 🇪🇸 LA LIGA
+  {name:"Rui Silva",club:"Real Betis",league:"la_liga",pos:"GK",age:30,nat:"Portuguese",value:8000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:190},
+  {name:"Álex Remiro",club:"Real Sociedad",league:"la_liga",pos:"GK",age:29,nat:"Spanish",value:20000000,apps:30,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:76,tackles_pg:0,interceptions_pg:0,aerial_pct:71,shots_on_tgt_pg:0,height:185},
+  {name:"Sergio Herrera",club:"Osasuna",league:"la_liga",pos:"GK",age:31,nat:"Spanish",value:5000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:186},
+  {name:"Unai Simón",club:"Athletic Bilbao",league:"la_liga",pos:"GK",age:28,nat:"Spanish",value:25000000,apps:30,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:77,tackles_pg:0,interceptions_pg:0,aerial_pct:71,shots_on_tgt_pg:0,height:188},
+  {name:"Vicente Guaita",club:"Getafe",league:"la_liga",pos:"GK",age:37,nat:"Spanish",value:2000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:189},
+  {name:"Predrag Rajković",club:"Rayo Vallecano",league:"la_liga",pos:"GK",age:30,nat:"Serbian",value:6000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:193},
+  {name:"Iñaki Peña",club:"Barcelona",league:"la_liga",pos:"GK",age:26,nat:"Spanish",value:10000000,apps:18,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:80,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:189},
+  {name:"Andriy Lunin",club:"Real Madrid",league:"la_liga",pos:"GK",age:25,nat:"Ukrainian",value:25000000,apps:18,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:77,tackles_pg:0,interceptions_pg:0,aerial_pct:71,shots_on_tgt_pg:0,height:191},
+
+  // 🇩🇪 BUNDESLIGA
+  {name:"Stefan Ortega",club:"Manchester City",league:"bundesliga",pos:"GK",age:32,nat:"German",value:8000000,apps:12,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:76,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:185},
+  {name:"Frederik Rønnow",club:"Union Berlin",league:"bundesliga",pos:"GK",age:32,nat:"Danish",value:5000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:191},
+  {name:"Peter Gulácsi",club:"RB Leipzig",league:"bundesliga",pos:"GK",age:34,nat:"Hungarian",value:6000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:190},
+  {name:"Kevin Trapp",club:"Eintracht Frankfurt",league:"bundesliga",pos:"GK",age:35,nat:"German",value:5000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:189},
+  {name:"Lukáš Hrádecký",club:"Bayer Leverkusen",league:"bundesliga",pos:"GK",age:35,nat:"Finnish",value:5000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:190},
+  {name:"Alexander Nübel",club:"VfB Stuttgart",league:"bundesliga",pos:"GK",age:28,nat:"German",value:18000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:75,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:193},
+  {name:"Pavao Pervan",club:"VfL Wolfsburg",league:"bundesliga",pos:"GK",age:37,nat:"Austrian",value:1000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:66,shots_on_tgt_pg:0,height:190},
+
+  // 🇮🇹 SERIE A ITALY
+  {name:"Michele Di Gregorio",club:"Juventus",league:"serie_a_it",pos:"GK",age:27,nat:"Italian",value:25000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:75,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:188},
+  {name:"Guglielmo Vicario",club:"Tottenham",league:"serie_a_it",pos:"GK",age:28,nat:"Italian",value:28000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:76,tackles_pg:0,interceptions_pg:0,aerial_pct:71,shots_on_tgt_pg:0,height:192},
+  {name:"Pierluigi Gollini",club:"Genoa",league:"serie_a_it",pos:"GK",age:30,nat:"Italian",value:5000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:193},
+  {name:"Marco Sportiello",club:"AC Milan",league:"serie_a_it",pos:"GK",age:32,nat:"Italian",value:3000000,apps:15,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:192},
+  {name:"Ivan Provedel",club:"Lazio",league:"serie_a_it",pos:"GK",age:30,nat:"Italian",value:12000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:190},
+  {name:"Lukasz Skorupski",club:"Bologna",league:"serie_a_it",pos:"GK",age:33,nat:"Polish",value:5000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:188},
+  {name:"Simone Scuffet",club:"Cagliari",league:"serie_a_it",pos:"GK",age:29,nat:"Italian",value:4000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:188},
+
+  // 🇫🇷 LIGUE 1
+  {name:"Geronimo Rulli",club:"Olympique Marseille",league:"ligue_1",pos:"GK",age:32,nat:"Argentine",value:8000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:189},
+  {name:"Philipp Köhn",club:"AS Monaco",league:"ligue_1",pos:"GK",age:27,nat:"Swiss",value:8000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:190},
+  {name:"Kasper Schmeichel",club:"OGC Nice",league:"ligue_1",pos:"GK",age:38,nat:"Danish",value:2000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:189},
+  {name:"Anthony Lopes",club:"Olympique Lyon",league:"ligue_1",pos:"GK",age:34,nat:"Portuguese",value:5000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:184},
+  {name:"Brice Samba",club:"RC Lens",league:"ligue_1",pos:"GK",age:30,nat:"Congolese",value:12000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:194},
+
+  // 🇸🇦 SAUDI PRO LEAGUE
+  {name:"Yassine Bounou",club:"Al-Hilal",league:"saudi_pro",pos:"GK",age:33,nat:"Moroccan",value:10000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:192},
+  {name:"David Ospina",club:"Al-Nassr",league:"saudi_pro",pos:"GK",age:36,nat:"Colombian",value:2000000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:183},
+  {name:"Marcelo Grohe",club:"Al-Ittihad",league:"saudi_pro",pos:"GK",age:36,nat:"Brazilian",value:1500000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:191},
+  {name:"Edouard Mendy",club:"Al-Ahli",league:"saudi_pro",pos:"GK",age:32,nat:"Senegalese",value:8000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:197},
+
+  // 🇲🇽 LIGA MX
+  {name:"Memo Ochoa",club:"Club América",league:"liga_mx",pos:"GK",age:40,nat:"Mexican",value:1000000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:183},
+  {name:"Raúl Gudiño",club:"Chivas Guadalajara",league:"liga_mx",pos:"GK",age:28,nat:"Mexican",value:2000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:185},
+  {name:"Nahuel Guzmán",club:"Tigres UANL",league:"liga_mx",pos:"GK",age:38,nat:"Argentine",value:1000000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:193},
+  {name:"Luis Malagón",club:"Club América",league:"liga_mx",pos:"GK",age:26,nat:"Mexican",value:3000000,apps:18,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:188},
+  {name:"Sebastián Jurado",club:"Cruz Azul",league:"liga_mx",pos:"GK",age:26,nat:"Mexican",value:2000000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:187},
+
+  // 🇺🇸 MLS
+  {name:"Matt Turner",club:"Nottingham Forest",league:"mls",pos:"GK",age:30,nat:"American",value:8000000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:190},
+  {name:"Stefan Frei",club:"Seattle Sounders",league:"mls",pos:"GK",age:38,nat:"American",value:1000000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:190},
+  {name:"Drake Callender",club:"Inter Miami",league:"mls",pos:"GK",age:26,nat:"American",value:2000000,apps:20,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:196},
+  {name:"Patrick Schulte",club:"Columbus Crew",league:"mls",pos:"GK",age:24,nat:"American",value:3000000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:193},
+  {name:"Maxime Crépeau",club:"LAFC",league:"mls",pos:"GK",age:30,nat:"Canadian",value:3000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:188},
+
+  // 🇳🇱 EREDIVISIE
+  {name:"Diant Ramaj",club:"Ajax",league:"eredivisie",pos:"GK",age:24,nat:"Albanian",value:8000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:76,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:192},
+  {name:"Walter Benítez",club:"PSV Eindhoven",league:"eredivisie",pos:"GK",age:32,nat:"Argentine",value:5000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:187},
+  {name:"Timon Wellenreuther",club:"Feyenoord",league:"eredivisie",pos:"GK",age:29,nat:"German",value:4000000,apps:25,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:197},
+
+  // 🇵🇹 PRIMEIRA LIGA
+  {name:"Anatoliy Trubin",club:"Benfica",league:"primeira_liga",pos:"GK",age:23,nat:"Ukrainian",value:25000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:76,tackles_pg:0,interceptions_pg:0,aerial_pct:71,shots_on_tgt_pg:0,height:194},
+  {name:"Diogo Costa",club:"FC Porto",league:"primeira_liga",pos:"GK",age:25,nat:"Portuguese",value:40000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:78,tackles_pg:0,interceptions_pg:0,aerial_pct:72,shots_on_tgt_pg:0,height:190},
+  {name:"Franco Israel",club:"Sporting CP",league:"primeira_liga",pos:"GK",age:25,nat:"Uruguayan",value:8000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:189},
+
+  // 🇹🇷 SÜPER LIG
+  {name:"Fernando Muslera",club:"Galatasaray",league:"super_lig",pos:"GK",age:38,nat:"Uruguayan",value:1000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:189},
+  {name:"Altay Bayındır",club:"Manchester United",league:"super_lig",pos:"GK",age:27,nat:"Turkish",value:10000000,apps:8,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:199},
+  {name:"Ersin Destanoğlu",club:"Beşiktaş",league:"super_lig",pos:"GK",age:24,nat:"Turkish",value:15000000,apps:28,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:74,tackles_pg:0,interceptions_pg:0,aerial_pct:70,shots_on_tgt_pg:0,height:192},
+
+  // 🇧🇪 JUPILER
+  {name:"Simon Mignolet",club:"Club Brugge",league:"jupiler",pos:"GK",age:37,nat:"Belgian",value:2000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:73,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:193},
+  {name:"Hendrik Van Crombrugge",club:"Anderlecht",league:"jupiler",pos:"GK",age:32,nat:"Belgian",value:3000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:189},
+
+  // 🏴󠁧󠁢󠁳󠁣󠁴󠁿 SCOTTISH PREMIERSHIP
+  {name:"Joe Hart",club:"Celtic",league:"scottish_prem",pos:"GK",age:37,nat:"English",value:500000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:196},
+  {name:"Jack Butland",club:"Rangers",league:"scottish_prem",pos:"GK",age:31,nat:"English",value:3000000,apps:26,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:196},
+
+  // 🇯🇵 J1 LEAGUE
+  {name:"Kim Seung-gyu",club:"Vissel Kobe",league:"j_league",pos:"GK",age:35,nat:"South Korean",value:1000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:189},
+  {name:"Sung Yeon-je",club:"Kawasaki Frontale",league:"j_league",pos:"GK",age:28,nat:"South Korean",value:2000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:190},
+  {name:"Yoshikatsu Kawaguchi",club:"Gamba Osaka",league:"j_league",pos:"GK",age:28,nat:"Japanese",value:1500000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:187},
+
+  // 🇰🇷 K LEAGUE
+  {name:"Jo Hyun-woo",club:"Jeonbuk Hyundai Motors",league:"k_league",pos:"GK",age:31,nat:"South Korean",value:2000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:69,shots_on_tgt_pg:0,height:189},
+  {name:"Seol Young-woo",club:"Ulsan HD",league:"k_league",pos:"GK",age:27,nat:"South Korean",value:1500000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:188},
+
+  // 🇪🇬 EGYPT PREMIER LEAGUE
+  {name:"Mohamed El-Shenawy",club:"Al Ahly",league:"egypt_pl",pos:"GK",age:35,nat:"Egyptian",value:1000000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:187},
+  {name:"Mohamed Awad",club:"Zamalek",league:"egypt_pl",pos:"GK",age:30,nat:"Egyptian",value:800000,apps:24,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:186},
+
+  // 🇿🇦 SOUTH AFRICA PSL
+  {name:"Ronwen Williams",club:"Mamelodi Sundowns",league:"sa_psl",pos:"GK",age:32,nat:"South African",value:1000000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:183},
+  {name:"Daniel Akpeyi",club:"Kaizer Chiefs",league:"sa_psl",pos:"GK",age:36,nat:"Nigerian",value:500000,apps:20,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:69,tackles_pg:0,interceptions_pg:0,aerial_pct:66,shots_on_tgt_pg:0,height:190},
+
+  // 🇦🇺 A-LEAGUE
+  {name:"Danny Vukovic",club:"Melbourne City",league:"a_league",pos:"GK",age:38,nat:"Australian",value:300000,apps:20,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:69,tackles_pg:0,interceptions_pg:0,aerial_pct:66,shots_on_tgt_pg:0,height:186},
+  {name:"Andrew Redmayne",club:"Sydney FC",league:"a_league",pos:"GK",age:35,nat:"Australian",value:400000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:193},
+
+  // 🇨🇴 COLOMBIA
+  {name:"Camilo Vargas",club:"Atlético Nacional",league:"colombia",pos:"GK",age:33,nat:"Colombian",value:1500000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:187},
+
+  // 🇨🇱 CHILE
+  {name:"Brayan Cortés",club:"Colo-Colo",league:"chile",pos:"GK",age:27,nat:"Chilean",value:2000000,apps:22,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:72,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:190},
+
+  // 🇺🇾 URUGUAY
+  {name:"Kevin Dawson",club:"Peñarol",league:"uruguay",pos:"GK",age:32,nat:"Uruguayan",value:1000000,apps:20,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:71,tackles_pg:0,interceptions_pg:0,aerial_pct:68,shots_on_tgt_pg:0,height:192},
+
+  // 🇨🇳 CHINESE SUPER LEAGUE
+  {name:"Wang Dalei",club:"Shanghai Port",league:"chinese_sl",pos:"GK",age:35,nat:"Chinese",value:500000,apps:20,goals_pg:0,assists_pg:0,key_passes_pg:0,pass_acc:70,tackles_pg:0,interceptions_pg:0,aerial_pct:67,shots_on_tgt_pg:0,height:188},
+];
+
+// Merge into PLAYERS_DB
+PLAYERS_DB.push(...GK_ADDITIONS);
+// Recompute PLAYERS_VALID
+// Update PLAYERS_VALID to include all additions
+const PLAYERS_VALID_ALL = PLAYERS_DB.filter(p => p.apps > 0 && p.value > 0);
+// Override PLAYERS_VALID with complete dataset
+if (typeof PLAYERS_VALID !== 'undefined') {
+  PLAYERS_VALID.length = 0;
+  PLAYERS_VALID.push(...PLAYERS_VALID_ALL);
+}
+console.log('ScoutMind player database complete:', PLAYERS_DB.length, 'total players,', PLAYERS_DB.filter(p=>p.pos==="GK").length, 'GKs');
