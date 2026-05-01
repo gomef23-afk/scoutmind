@@ -339,68 +339,99 @@ if (!_cu) window.location.href = '/auth.html';
 
     <!-- BUILD YOUR SQUAD TAB -->
     <div id="tab-squad" style="display:none">
-      <div style="margin-bottom:20px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:6px">Build Your Squad</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6">Pick any position and browse the best players available. Filter by league, budget and age to find your ideal signing.</div>
+      <div style="margin-bottom:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:4px">🎮 Build Your Squad</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6">Pick your team, choose a position, and see which players would be a good fit — with match scores.</div>
       </div>
 
-      <!-- Squad filters -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;">
-        <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Position</div>
-          <select id="squad-pos" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
-            <option value="">All Positions</option>
-            <option value="GK">GK — Goalkeeper</option>
-            <optgroup label="Defenders">
-              <option value="DEF_ALL">Any Defender</option>
-              <option value="CB">CB — Centre Back</option>
-              <option value="RB">RB — Right Back</option>
-              <option value="LB">LB — Left Back</option>
-            </optgroup>
-            <optgroup label="Midfielders">
-              <option value="MID_ALL">Any Midfielder</option>
-              <option value="CDM">CDM — Defensive Mid</option>
-              <option value="CM">CM — Central Mid</option>
-              <option value="CAM">CAM — Attacking Mid</option>
-            </optgroup>
-            <optgroup label="Attackers">
-              <option value="ATT_ALL">Any Attacker</option>
-              <option value="RW">RW — Right Winger</option>
-              <option value="LW">LW — Left Winger</option>
-              <option value="ST">ST — Striker</option>
-            </optgroup>
-          </select>
+      <!-- Step 1: Pick your team -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:10px">Step 1 — Pick Your Team</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:5px">League</div>
+            <select id="fan-league" onchange="onFanLeagueChange()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+              <option value="serie_a">🇧🇷 Série A</option>
+              <option value="serie_b">🇧🇷 Série B</option>
+              <option value="serie_c">🇧🇷 Série C</option>
+              <option value="argentina">🇦🇷 Argentina</option>
+              <option value="premier_league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
+              <option value="la_liga">🇪🇸 La Liga</option>
+              <option value="bundesliga">🇩🇪 Bundesliga</option>
+              <option value="serie_a_it">🇮🇹 Serie A Italy</option>
+              <option value="ligue_1">🇫🇷 Ligue 1</option>
+              <option value="eredivisie">🇳🇱 Eredivisie</option>
+              <option value="primeira_liga">🇵🇹 Primeira Liga</option>
+              <option value="mls">🇺🇸 MLS</option>
+              <option value="liga_mx">🇲🇽 Liga MX</option>
+              <option value="saudi_pro">🇸🇦 Saudi Pro League</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Team</div>
+            <select id="fan-team" onchange="onFanTeamChange()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+              <option value="">Select a team...</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">League</div>
-          <select id="squad-league" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
-            <option value="ALL">All Leagues</option>
-            <option value="serie_a">🇧🇷 Série A</option>
-            <option value="serie_b">🇧🇷 Série B</option>
-            <option value="premier_league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
-            <option value="la_liga">🇪🇸 La Liga</option>
-            <option value="bundesliga">🇩🇪 Bundesliga</option>
-            <option value="serie_a_it">🇮🇹 Serie A Italy</option>
-            <option value="ligue_1">🇫🇷 Ligue 1</option>
-            <option value="argentina">🇦🇷 Argentina</option>
-            <option value="mls">🇺🇸 MLS</option>
-            <option value="saudi_pro">🇸🇦 Saudi Pro League</option>
-          </select>
+        <div id="fan-team-stats" style="display:none;margin-top:12px;display:none;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="fan-team-badges"></div>
         </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Max Budget (€)</div>
-          <input type="number" id="squad-budget" value="200000000" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Sort By</div>
-          <select id="squad-sort" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
-            <option value="value">Market Value</option>
-            <option value="goals">Goals / Game</option>
-            <option value="assists">Assists / Game</option>
-            <option value="tackles">Tackles / Game</option>
-            <option value="pass_acc">Pass Accuracy</option>
-            <option value="aerial">Aerial Duels %</option>
-          </select>
+      </div>
+
+      <!-- Step 2: Pick position & search -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:10px">Step 2 — Find a Player</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Position needed</div>
+            <select id="squad-pos" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+              <option value="">Any Position</option>
+              <option value="GK">GK — Goalkeeper</option>
+              <optgroup label="Defenders">
+                <option value="DEF_CB">CB — Centre Back</option>
+                <option value="DEF_RB">RB — Right Back</option>
+                <option value="DEF_LB">LB — Left Back</option>
+                <option value="DEF">DEF — Any Defender</option>
+              </optgroup>
+              <optgroup label="Midfielders">
+                <option value="MID_CDM">CDM — Defensive Mid</option>
+                <option value="MID_CM">CM — Central Mid</option>
+                <option value="MID_CAM">CAM — Attacking Mid</option>
+                <option value="MID">MID — Any Midfielder</option>
+              </optgroup>
+              <optgroup label="Attackers">
+                <option value="ATT_RW">RW — Right Winger</option>
+                <option value="ATT_LW">LW — Left Winger</option>
+                <option value="ATT_ST">ST — Striker</option>
+                <option value="ATT">ATT — Any Attacker</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Search from league</div>
+            <select id="squad-league" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+              <option value="ALL">All Leagues</option>
+              <option value="serie_a">🇧🇷 Série A</option>
+              <option value="serie_b">🇧🇷 Série B</option>
+              <option value="premier_league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
+              <option value="la_liga">🇪🇸 La Liga</option>
+              <option value="bundesliga">🇩🇪 Bundesliga</option>
+              <option value="serie_a_it">🇮🇹 Serie A Italy</option>
+              <option value="ligue_1">🇫🇷 Ligue 1</option>
+              <option value="argentina">🇦🇷 Argentina</option>
+              <option value="mls">🇺🇸 MLS</option>
+              <option value="saudi_pro">🇸🇦 Saudi Pro League</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Max budget (€)</div>
+            <input type="number" id="squad-budget" value="200000000" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Max age</div>
+            <input type="number" id="squad-age" value="35" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+          </div>
         </div>
       </div>
 
@@ -846,56 +877,174 @@ function showTab(id, el) {
   document.getElementById('tab-stats').style.display = id === 'stats' ? 'block' : 'none';
   document.getElementById('tab-results').style.display = id === 'results' ? 'block' : 'none';
   document.getElementById('tab-squad').style.display = id === 'squad' ? 'block' : 'none';
-  if (id === 'squad') renderSquadPlayers();
+  if (id === 'squad') { onFanLeagueChange(); renderSquadPlayers(); }
 }
 
 // ═══════════════════════════════════════
 // BUILD YOUR SQUAD MODE
 // ═══════════════════════════════════════
+let fanTeam = null;
+
+function onFanLeagueChange() {
+  const league = document.getElementById('fan-league').value;
+  const teams = TEAMS[league] || [];
+  const sel = document.getElementById('fan-team');
+  sel.innerHTML = '<option value="">Select a team...</option>' +
+    teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  fanTeam = null;
+  document.getElementById('fan-team-stats').style.display = 'none';
+  renderSquadPlayers();
+}
+
+function onFanTeamChange() {
+  const league = document.getElementById('fan-league').value;
+  const tid = document.getElementById('fan-team').value;
+  if (!tid) { fanTeam = null; renderSquadPlayers(); return; }
+  const teams = TEAMS[league] || [];
+  fanTeam = teams.find(t => t.id === tid);
+  if (!fanTeam) return;
+
+  // Show team style badges
+  const av = LEAGUE_AVGS[league] || {};
+  const badges = [];
+  if (fanTeam.pos_pct > (av.pos||50)+5) badges.push({txt:'High Possession', col:'var(--accent)'});
+  if (fanTeam.pa > (av.pa||80)+3) badges.push({txt:'Technical Style', col:'var(--accent)'});
+  if (fanTeam.tk > (av.tk||18)+1) badges.push({txt:'High Press', col:'var(--warn)'});
+  if (fanTeam.gs > (av.gs||1.3)+0.2) badges.push({txt:'Strong Attack', col:'var(--yellow)'});
+  if (fanTeam.gc < (av.gc||1.3)-0.15) badges.push({txt:'Solid Defence', col:'var(--accent2)'});
+  if (fanTeam.aer > (av.aer||51)+2) badges.push({txt:'Aerial Dominance', col:'var(--accent2)'});
+
+  document.getElementById('fan-team-badges').innerHTML = badges.map(b =>
+    `<div style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.05);border:1px solid ${b.col}30;color:${b.col}">${b.txt}</div>`
+  ).join('');
+  document.getElementById('fan-team-stats').style.display = 'block';
+  renderSquadPlayers();
+}
+
+// Score a player's fit for a specific team style
+function scorePlayerForTeam(p, team, league) {
+  if (!team) return {score: 50, reasons: [], flags: []};
+  const av = LEAGUE_AVGS[league] || {};
+  let score = 50; // base score
+  const reasons = [], flags = [];
+
+  // Style matching — reward players who complement team style
+  const isAttacker = p.pos === 'ATT';
+  const isDefender = p.pos === 'DEF';
+  const isMid = p.pos === 'MID';
+  const isGK = p.pos === 'GK';
+
+  if (isGK) {
+    // GK fit based on team defensive style
+    if (team.gc < (av.gc||1.3)) {
+      // Team has good defence, reward GKs who distribute well
+      if (p.pass_acc > 72) { score += 15; reasons.push(`Good distribution: ${p.pass_acc}% pass acc`); }
+    }
+    if (p.aerial_pct > 68) { score += 10; reasons.push(`Strong aerial: ${p.aerial_pct}%`); }
+    if (p.pass_acc > 75) { score += 10; reasons.push(`Technical GK: ${p.pass_acc}% pass acc`); }
+    if (p.age < 28) { score += 5; reasons.push(`Young GK: ${p.age} yrs`); }
+    if (p.age > 36) { score -= 10; flags.push(`Age concern: ${p.age}`); }
+  } else if (isDefender) {
+    // Match defensive style
+    if (team.aer > (av.aer||51)) {
+      // Aerial team needs aerial CBs
+      if (p.aerial_pct > 60) { score += 15; reasons.push(`Aerial fit: ${p.aerial_pct}%`); }
+    }
+    if (team.tk > (av.tk||18)) {
+      // High press needs good tacklers
+      if (p.tackles_pg > 2.5) { score += 12; reasons.push(`Press fit: ${p.tackles_pg.toFixed(1)} tkl/g`); }
+    }
+    if (team.pos_pct > (av.pos||50)+3) {
+      // Possession team needs CBs who can pass
+      if (p.pass_acc > 82) { score += 12; reasons.push(`Passing CB: ${p.pass_acc}%`); }
+    }
+    if (p.tackles_pg > 2.5) { score += 8; }
+    if (p.interceptions_pg > 1.5) { score += 8; }
+    if (p.aerial_pct > 58) { score += 5; }
+    if (p.pass_acc > 80) { score += 5; }
+    if (p.age > 34) { score -= 8; flags.push(`Age: ${p.age}`); }
+  } else if (isMid) {
+    if (team.pos_pct > (av.pos||50)+3) {
+      // Possession team
+      if (p.pass_acc > 84) { score += 15; reasons.push(`Possession fit: ${p.pass_acc}% pass`); }
+      if (p.key_passes_pg > 2.0) { score += 10; reasons.push(`Creative: ${p.key_passes_pg.toFixed(1)} kp/g`); }
+    }
+    if (team.tk > (av.tk||18)+1) {
+      // Pressing team needs engine midfielders
+      if (p.tackles_pg > 3.0) { score += 15; reasons.push(`Press engine: ${p.tackles_pg.toFixed(1)} tkl/g`); }
+    }
+    if (team.gs > (av.gs||1.3)+0.15) {
+      // Attacking team needs contributing mids
+      if (p.goals_pg > 0.15 || p.assists_pg > 0.20) {
+        score += 12;
+        reasons.push(`Goal contribution: ${((p.goals_pg||0)+(p.assists_pg||0)).toFixed(2)}/g`);
+      }
+    }
+    if (p.pass_acc > 83) { score += 5; }
+    if (p.key_passes_pg > 1.5) { score += 5; }
+    if (p.age > 33) { score -= 5; flags.push(`Age: ${p.age}`); }
+  } else if (isAttacker) {
+    if (team.gs < (av.gs||1.3)-0.1) {
+      // Team needs goals
+      if (p.goals_pg > 0.35) { score += 18; reasons.push(`Goalscorer fit: ${p.goals_pg.toFixed(2)}/g`); }
+      if (p.shots_on_tgt_pg > 1.8) { score += 10; reasons.push(`Shot volume: ${p.shots_on_tgt_pg.toFixed(1)}/g`); }
+    }
+    if (team.pos_pct > (av.pos||50)+3) {
+      // Possession team needs creative attackers
+      if (p.key_passes_pg > 1.8) { score += 12; reasons.push(`Creative: ${p.key_passes_pg.toFixed(1)} kp/g`); }
+      if (p.assists_pg > 0.20) { score += 10; reasons.push(`Assists: ${p.assists_pg.toFixed(2)}/g`); }
+    }
+    if (p.goals_pg > 0.40) { score += 8; }
+    if (p.assists_pg > 0.25) { score += 5; }
+    if (p.key_passes_pg > 2.0) { score += 5; }
+    if (p.age > 34) { score -= 8; flags.push(`Age: ${p.age}`); }
+    if (p.age > 37) { score -= 10; }
+  }
+
+  // Cap score between 20-98
+  score = Math.min(98, Math.max(20, Math.round(score)));
+  return { score, reasons: reasons.slice(0,3), flags: flags.slice(0,2) };
+}
+
 function renderSquadPlayers() {
   const posVal = document.getElementById('squad-pos').value;
   const leagueVal = document.getElementById('squad-league').value;
   const budget = parseFloat(document.getElementById('squad-budget').value) || Infinity;
-  const sortBy = document.getElementById('squad-sort').value;
+  const maxAge = parseInt(document.getElementById('squad-age').value) || 99;
+  const fanLeague = document.getElementById('fan-league').value;
 
+  // Map detailed position values to DB position categories
   const posGroupMap = {
-    'DEF_ALL':['DEF'], 'MID_ALL':['MID'], 'ATT_ALL':['ATT'],
-    'GK':['GK'], 'CB':['DEF'], 'RB':['DEF'], 'LB':['DEF'],
-    'CDM':['MID'], 'CM':['MID'], 'CAM':['MID'],
-    'RW':['ATT'], 'LW':['ATT'], 'ST':['ATT']
+    'DEF':'DEF','DEF_CB':'DEF','DEF_RB':'DEF','DEF_LB':'DEF',
+    'MID':'MID','MID_CDM':'MID','MID_CM':'MID','MID_CAM':'MID',
+    'ATT':'ATT','ATT_RW':'ATT','ATT_LW':'ATT','ATT_ST':'ATT',
+    'GK':'GK'
   };
+  const basePos = posVal ? posGroupMap[posVal] : null;
 
   let pool = leagueVal === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === leagueVal);
-  if (posVal) {
-    const allowed = posGroupMap[posVal] || [posVal];
-    pool = pool.filter(p => allowed.includes(p.pos));
-  }
-  pool = pool.filter(p => p.value <= budget);
-
-  // Sort
-  const sortFns = {
-    value:   (a,b) => b.value - a.value,
-    goals:   (a,b) => b.goals_pg - a.goals_pg,
-    assists: (a,b) => b.assists_pg - a.assists_pg,
-    tackles: (a,b) => b.tackles_pg - a.tackles_pg,
-    pass_acc:(a,b) => b.pass_acc - a.pass_acc,
-    aerial:  (a,b) => b.aerial_pct - a.aerial_pct,
-  };
-  pool.sort(sortFns[sortBy] || sortFns.value);
-  pool = pool.slice(0, 30);
-
-  document.getElementById('squad-count').textContent = `Showing top ${pool.length} players`;
+  if (basePos) pool = pool.filter(p => p.pos === basePos);
+  pool = pool.filter(p => p.value <= budget && p.age <= maxAge);
 
   if (!pool.length) {
+    document.getElementById('squad-count').textContent = '';
     document.getElementById('squad-list').innerHTML = `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No Players Found</div><div style="font-size:13px">Try widening your filters</div></div>`;
     return;
   }
 
-  const posLabels = {GK:'GK',DEF:'DEF',MID:'MID',ATT:'ATT'};
+  // Score each player for team fit
+  const scored = pool.map(p => ({
+    p,
+    ...scorePlayerForTeam(p, fanTeam, fanLeague)
+  })).sort((a,b) => b.score - a.score).slice(0, 20);
+
+  const teamLabel = fanTeam ? `for ${fanTeam.name}` : '(select a team for personalised scores)';
+  document.getElementById('squad-count').textContent = `${scored.length} players shown ${teamLabel}`;
+
   const posColors = {GK:'rgba(245,200,66,0.1)',DEF:'rgba(0,184,255,0.1)',MID:'rgba(0,229,160,0.1)',ATT:'rgba(255,107,53,0.1)'};
   const posTextColors = {GK:'var(--yellow)',DEF:'var(--accent2)',MID:'var(--accent)',ATT:'var(--warn)'};
 
-  document.getElementById('squad-list').innerHTML = pool.map((p, i) => `
+  document.getElementById('squad-list').innerHTML = scored.map(({p, score, reasons, flags}, i) => `
     <div class="pcard" style="margin-bottom:8px">
       <div class="prank ${i<3?'top':''}">${String(i+1).padStart(2,'0')}</div>
       <div>
@@ -919,10 +1068,13 @@ function renderSquadPlayers() {
           ${p.pass_acc ? `<div class="spill">📊 ${p.pass_acc}% pass</div>` : ''}
           ${p.aerial_pct > 0 ? `<div class="spill">✈ ${p.aerial_pct}% aerial</div>` : ''}
         </div>
+        ${reasons.map(r => `<div class="reason">${r}</div>`).join('')}
+        ${flags.map(f => `<div class="pflag">${f}</div>`).join('')}
       </div>
       <div class="score-blk">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);line-height:1">${fmtVal(p.value)}</div>
-        <div class="score-lbl">MARKET VAL</div>
+        <div class="score-num ${scCls(score)}">${score}%</div>
+        <div class="score-lbl">${fanTeam ? 'FIT SCORE' : 'BASE SCORE'}</div>
+        <div class="sbar"><div class="sbar-fill" style="width:${score}%;background:${barClr(score)}"></div></div>
       </div>
     </div>`).join('');
 }
