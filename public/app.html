@@ -485,6 +485,91 @@ const POSITION_PROFILES = {
   }
 };
 
+// ═══════════════════════════════════════
+// SUBPOSITION SCORING — penalty for wrong specific position
+// ═══════════════════════════════════════
+
+// How well does a player's natural subpos fit the requested subpos?
+const SUBPOS_COMPATIBILITY = {
+  // Defender compatibility
+  CB:  {CB:1.0, RB:0.6, LB:0.6, WB:0.5, DEF:0.8},
+  RB:  {RB:1.0, CB:0.55, WB:0.75, LB:0.4, DEF:0.8},
+  LB:  {LB:1.0, CB:0.55, WB:0.75, RB:0.4, DEF:0.8},
+  WB:  {WB:1.0, RB:0.8, LB:0.8, CB:0.4, DEF:0.7},
+  // Midfielder compatibility
+  CDM: {CDM:1.0, CM:0.7, CB:0.5, CAM:0.5, MID:0.8},
+  CM:  {CM:1.0, CDM:0.75, CAM:0.75, MID:0.9},
+  CAM: {CAM:1.0, CM:0.75, RW:0.6, LW:0.6, MID:0.8},
+  // Attacker compatibility
+  ST:  {ST:1.0, CF:0.9, RW:0.5, LW:0.5, ATT:0.8},
+  CF:  {CF:1.0, ST:0.9, CAM:0.6, ATT:0.8},
+  RW:  {RW:1.0, LW:0.7, CAM:0.65, ST:0.5, ATT:0.75},
+  LW:  {LW:1.0, RW:0.7, CAM:0.65, ST:0.5, ATT:0.75},
+};
+
+function getSubposCompatibility(playerSubpos, requestedSubpos) {
+  if (!playerSubpos || !requestedSubpos) return 1.0;
+  if (playerSubpos === requestedSubpos) return 1.0;
+  const map = SUBPOS_COMPATIBILITY[playerSubpos];
+  if (!map) return 0.7;
+  return map[requestedSubpos] || 0.6;
+}
+
+// ═══════════════════════════════════════
+// ALTERNATIVE POSITION DETECTION
+// ═══════════════════════════════════════
+function detectAltPositions(p) {
+  const alts = [];
+  if (!p || !p.pos) return alts;
+
+  // CDM who could play CB
+  if (p.pos === 'MID' && p.subpos === 'CDM') {
+    if (p.aerial_pct >= 58 && p.tackles_pg >= 3.0 && p.pass_acc >= 82 && p.height >= 183) {
+      alts.push({pos:'CB', reason:'Aerial+tackling stats suit CB role'});
+    }
+  }
+  // CM who could play CAM
+  if (p.pos === 'MID' && (p.subpos === 'CM' || !p.subpos)) {
+    if (p.key_passes_pg >= 2.2 && p.goals_pg >= 0.15) {
+      alts.push({pos:'CAM', reason:'Creative output suits CAM role'});
+    }
+    if (p.tackles_pg >= 3.5 && p.aerial_pct >= 50) {
+      alts.push({pos:'CDM', reason:'Defensive work rate suits CDM'});
+    }
+  }
+  // CAM who could play ST
+  if (p.pos === 'MID' && p.subpos === 'CAM') {
+    if (p.goals_pg >= 0.25 && p.shots_on_tgt_pg >= 1.2) {
+      alts.push({pos:'ST', reason:'Goals & shots output suits ST role'});
+    }
+  }
+  // RB/LB who could play RW/LW
+  if (p.pos === 'DEF' && (p.subpos === 'RB' || p.subpos === 'LB')) {
+    if (p.assists_pg >= 0.20 && p.key_passes_pg >= 1.2) {
+      alts.push({pos: p.subpos === 'RB' ? 'RW' : 'LW', reason:'Attacking output suits winger role'});
+    }
+  }
+  // CB who could play CDM
+  if (p.pos === 'DEF' && p.subpos === 'CB') {
+    if (p.pass_acc >= 88 && p.tackles_pg >= 2.8) {
+      alts.push({pos:'CDM', reason:'Technical + defensive suits CDM'});
+    }
+  }
+  // Winger who could play ST
+  if (p.pos === 'ATT' && (p.subpos === 'RW' || p.subpos === 'LW')) {
+    if (p.goals_pg >= 0.40 && p.aerial_pct >= 48) {
+      alts.push({pos:'ST', reason:'Goal return suits striker role'});
+    }
+  }
+  // ST who could play CAM
+  if (p.pos === 'ATT' && p.subpos === 'ST') {
+    if (p.assists_pg >= 0.22 && p.key_passes_pg >= 1.5) {
+      alts.push({pos:'CAM', reason:'Playmaking suits CAM role'});
+    }
+  }
+  return alts.slice(0, 2); // max 2 suggestions
+}
+
 // Get the correct profile — use position override if user has filtered by position
 function getProfile(weaknessType, positionFilter) {
   if (positionFilter && POSITION_PROFILES[positionFilter]) {
@@ -678,7 +763,7 @@ function detectWeaknesses() {
   });
 }
 
-function scorePlayer(p, profile) {
+function scorePlayer(p, profile, requestedSubpos) {
   if (!profile) return {score:0, reasons:[], flags:[]};
   let tw = 0, ew = 0;
   const reasons = [], flags = [];
@@ -698,7 +783,27 @@ function scorePlayer(p, profile) {
     }
   }
   if (p.age > 34) flags.push(`Age: ${p.age}`);
-  return { score: tw > 0 ? Math.round(ew / tw * 1000) / 10 : 0, reasons: reasons.slice(0,3), flags: flags.slice(0,2) };
+  
+  let rawScore = tw > 0 ? Math.round(ew / tw * 1000) / 10 : 0;
+  
+  // Apply subposition compatibility penalty
+  if (requestedSubpos && p.subpos) {
+    const compat = getSubposCompatibility(p.subpos, requestedSubpos);
+    if (compat < 1.0) {
+      rawScore = rawScore * compat;
+      if (compat < 0.7) flags.push(`Natural ${p.subpos}, asked for ${requestedSubpos}`);
+    }
+  }
+  
+  // Detect alternative positions
+  const altPositions = detectAltPositions(p);
+  
+  return { 
+    score: Math.round(rawScore * 10) / 10, 
+    reasons: reasons.slice(0,3), 
+    flags: flags.slice(0,2),
+    altPositions
+  };
 }
 
 function fmtVal(v) {
@@ -748,8 +853,18 @@ function runAnalysis() {
     (!allowedPos || allowedPos.includes(p.pos))
   );
 
+  // Extract specific subposition from filter (e.g. DEF_CB -> CB)
+  const subposMap2 = {
+    'DEF_CB':'CB','DEF_RB':'RB','DEF_LB':'LB','DEF_WB':'WB',
+    'MID_CDM':'CDM','MID_CM':'CM','MID_CAM':'CAM',
+    'ATT_RW':'RW','ATT_LW':'LW','ATT_ST':'ST','ATT_CF':'CF',
+    'GK':'GK','CB':'CB','RB':'RB','LB':'LB',
+    'CDM':'CDM','CM':'CM','CAM':'CAM','RW':'RW','LW':'LW','ST':'ST'
+  };
+  const requestedSubpos = subposMap2[posFil] || null;
+
   const ranked = filtered
-    .map(p => ({p, ...scorePlayer(p, profile)}))
+    .map(p => ({p, ...scorePlayer(p, profile, requestedSubpos)}))
     .filter(m => m.score > 15)
     .sort((a,b) => b.score - a.score)
     .slice(0, 15);
@@ -831,12 +946,14 @@ function runAnalysis() {
     ranked.forEach((m, i) => {
       const p = m.p;
       const sc = m.score;
-      html += `<div class="pcard">
+      const isCurrentPlayer = selectedTeam && p.club === selectedTeam.name;
+      html += `<div class="pcard" style="${isCurrentPlayer ? 'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);' : ''}">
         <div class="prank ${i<3?'top':''}">${String(i+1).padStart(2,'0')}</div>
         <div>
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;flex-wrap:wrap">
             <div class="pname">${p.name}</div>
             <div class="pos-badge">${p.pos}</div>
+            ${isCurrentPlayer ? `<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>` : ''}
           </div>
           <div class="pmeta">
             <span>🏟 ${p.club}</span>
@@ -856,6 +973,7 @@ function runAnalysis() {
           </div>
           ${m.reasons.map(r => `<div class="reason">${r}</div>`).join('')}
           ${m.flags.map(f => `<div class="pflag">${f}</div>`).join('')}
+          ${m.altPositions && m.altPositions.length ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${m.altPositions.map(a=>`<div style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:var(--yellow)">🔄 Can play ${a.pos}</div>`).join('')}</div>` : ''}
         </div>
         <div class="score-blk">
           <div class="score-num ${scCls(sc)}">${sc}%</div>
@@ -922,7 +1040,7 @@ function onFanTeamChange() {
 }
 
 // Score a player's fit for a specific team style
-function scorePlayerForTeam(p, team, league) {
+function scorePlayerForTeam(p, team, league, requestedSubpos) {
   if (!team) return {score: 50, reasons: [], flags: []};
   const av = LEAGUE_AVGS[league] || {};
   let score = 50; // base score
@@ -1001,9 +1119,21 @@ function scorePlayerForTeam(p, team, league) {
     if (p.age > 37) { score -= 10; }
   }
 
-  // Cap score between 20-98
-  score = Math.min(98, Math.max(20, Math.round(score)));
-  return { score, reasons: reasons.slice(0,3), flags: flags.slice(0,2) };
+  // Apply subposition compatibility penalty
+  if (requestedSubpos && p.subpos) {
+    const compat = getSubposCompatibility(p.subpos, requestedSubpos);
+    if (compat < 1.0) {
+      score = score * compat;
+      if (compat < 0.7) flags.push(`Natural ${p.subpos}, asked for ${requestedSubpos}`);
+    }
+  }
+
+  // Detect alternative positions
+  const altPositions = detectAltPositions(p);
+
+  // Cap score between 15-98
+  score = Math.min(98, Math.max(15, Math.round(score)));
+  return { score, reasons: reasons.slice(0,3), flags: flags.slice(0,2), altPositions };
 }
 
 function renderSquadPlayers() {
@@ -1032,10 +1162,19 @@ function renderSquadPlayers() {
     return;
   }
 
+  // Extract requested subpos from position value
+  const subposMap3 = {
+    'DEF_CB':'CB','DEF_RB':'RB','DEF_LB':'LB',
+    'MID_CDM':'CDM','MID_CM':'CM','MID_CAM':'CAM',
+    'ATT_RW':'RW','ATT_LW':'LW','ATT_ST':'ST',
+    'GK':'GK'
+  };
+  const reqSubpos = subposMap3[posVal] || null;
+
   // Score each player for team fit
   const scored = pool.map(p => ({
     p,
-    ...scorePlayerForTeam(p, fanTeam, fanLeague)
+    ...scorePlayerForTeam(p, fanTeam, fanLeague, reqSubpos)
   })).sort((a,b) => b.score - a.score).slice(0, 20);
 
   const teamLabel = fanTeam ? `for ${fanTeam.name}` : '(select a team for personalised scores)';
@@ -1044,13 +1183,16 @@ function renderSquadPlayers() {
   const posColors = {GK:'rgba(245,200,66,0.1)',DEF:'rgba(0,184,255,0.1)',MID:'rgba(0,229,160,0.1)',ATT:'rgba(255,107,53,0.1)'};
   const posTextColors = {GK:'var(--yellow)',DEF:'var(--accent2)',MID:'var(--accent)',ATT:'var(--warn)'};
 
-  document.getElementById('squad-list').innerHTML = scored.map(({p, score, reasons, flags}, i) => `
-    <div class="pcard" style="margin-bottom:8px">
+  document.getElementById('squad-list').innerHTML = scored.map(({p, score, reasons, flags}, i) => {
+    const isCurrentPlayer = fanTeam && p.club === fanTeam.name;
+    return `
+    <div class="pcard" style="margin-bottom:8px;${isCurrentPlayer ? 'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.04);' : ''}">
       <div class="prank ${i<3?'top':''}">${String(i+1).padStart(2,'0')}</div>
       <div>
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;flex-wrap:wrap">
           <div class="pname">${p.name}</div>
-          <div class="pos-badge" style="background:${posColors[p.pos]||'rgba(0,102,255,0.1)'};color:${posTextColors[p.pos]||'#7ab4ff'}">${p.pos}</div>
+          <div class="pos-badge" style="background:${posColors[p.pos]||'rgba(0,102,255,0.1)'};color:${posTextColors[p.pos]||'#7ab4ff'}">${p.subpos || p.pos}</div>
+          ${isCurrentPlayer ? `<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>` : ''}
         </div>
         <div class="pmeta">
           <span>🏟 ${p.club}</span>
@@ -1070,13 +1212,15 @@ function renderSquadPlayers() {
         </div>
         ${reasons.map(r => `<div class="reason">${r}</div>`).join('')}
         ${flags.map(f => `<div class="pflag">${f}</div>`).join('')}
+        ${altPositions && altPositions.length ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${altPositions.map(a=>`<div style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:var(--yellow)">🔄 Can play ${a.pos}</div>`).join('')}</div>` : ''}
       </div>
       <div class="score-blk">
         <div class="score-num ${scCls(score)}">${score}%</div>
         <div class="score-lbl">${fanTeam ? 'FIT SCORE' : 'BASE SCORE'}</div>
         <div class="sbar"><div class="sbar-fill" style="width:${score}%;background:${barClr(score)}"></div></div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // Init
