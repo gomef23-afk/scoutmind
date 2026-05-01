@@ -223,10 +223,29 @@ if (!_cu) window.location.href = '/auth.html';
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Position</div>
       <select id="posFil">
         <option value="">Any position</option>
-        <option value="GK">Goalkeeper</option>
-        <option value="DEF">Defender</option>
-        <option value="MID">Midfielder</option>
-        <option value="ATT">Attacker</option>
+        <optgroup label="Goalkeeper">
+          <option value="GK">GK — Goalkeeper</option>
+        </optgroup>
+        <optgroup label="Defenders">
+          <option value="DEF">DEF — Any Defender</option>
+          <option value="CB">CB — Centre Back</option>
+          <option value="RB">RB — Right Back</option>
+          <option value="LB">LB — Left Back</option>
+          <option value="WB">WB — Wing Back</option>
+        </optgroup>
+        <optgroup label="Midfielders">
+          <option value="MID">MID — Any Midfielder</option>
+          <option value="CDM">CDM — Defensive Mid</option>
+          <option value="CM">CM — Central Mid</option>
+          <option value="CAM">CAM — Attacking Mid</option>
+        </optgroup>
+        <optgroup label="Attackers">
+          <option value="ATT">ATT — Any Attacker</option>
+          <option value="RW">RW — Right Winger</option>
+          <option value="LW">LW — Left Winger</option>
+          <option value="ST">ST — Striker</option>
+          <option value="CF">CF — Centre Forward</option>
+        </optgroup>
       </select>
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Search players from</div>
       <select id="playerLeagueSel">
@@ -277,7 +296,8 @@ if (!_cu) window.location.href = '/auth.html';
   <div class="main">
     <div class="tabs">
       <div class="tab active" id="tab-stats-btn" onclick="showTab('stats',this)">Team Stats</div>
-      <div class="tab" id="tab-results-btn" onclick="showTab('results',this)">Analysis & Players</div>
+      <div class="tab" id="tab-results-btn" onclick="showTab('results',this)">Best Fit Analysis</div>
+      <div class="tab" id="tab-squad-btn" onclick="showTab('squad',this)">🎮 Build Your Squad</div>
     </div>
 
     <!-- STATS TAB -->
@@ -315,6 +335,77 @@ if (!_cu) window.location.href = '/auth.html';
         <div style="font-size:13px">Select a team and run the analysis</div>
       </div>
       <div id="resContent" style="display:none"></div>
+    </div>
+
+    <!-- BUILD YOUR SQUAD TAB -->
+    <div id="tab-squad" style="display:none">
+      <div style="margin-bottom:20px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:6px">Build Your Squad</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6">Pick any position and browse the best players available. Filter by league, budget and age to find your ideal signing.</div>
+      </div>
+
+      <!-- Squad filters -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Position</div>
+          <select id="squad-pos" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+            <option value="">All Positions</option>
+            <option value="GK">GK — Goalkeeper</option>
+            <optgroup label="Defenders">
+              <option value="DEF_ALL">Any Defender</option>
+              <option value="CB">CB — Centre Back</option>
+              <option value="RB">RB — Right Back</option>
+              <option value="LB">LB — Left Back</option>
+            </optgroup>
+            <optgroup label="Midfielders">
+              <option value="MID_ALL">Any Midfielder</option>
+              <option value="CDM">CDM — Defensive Mid</option>
+              <option value="CM">CM — Central Mid</option>
+              <option value="CAM">CAM — Attacking Mid</option>
+            </optgroup>
+            <optgroup label="Attackers">
+              <option value="ATT_ALL">Any Attacker</option>
+              <option value="RW">RW — Right Winger</option>
+              <option value="LW">LW — Left Winger</option>
+              <option value="ST">ST — Striker</option>
+            </optgroup>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">League</div>
+          <select id="squad-league" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+            <option value="ALL">All Leagues</option>
+            <option value="serie_a">🇧🇷 Série A</option>
+            <option value="serie_b">🇧🇷 Série B</option>
+            <option value="premier_league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
+            <option value="la_liga">🇪🇸 La Liga</option>
+            <option value="bundesliga">🇩🇪 Bundesliga</option>
+            <option value="serie_a_it">🇮🇹 Serie A Italy</option>
+            <option value="ligue_1">🇫🇷 Ligue 1</option>
+            <option value="argentina">🇦🇷 Argentina</option>
+            <option value="mls">🇺🇸 MLS</option>
+            <option value="saudi_pro">🇸🇦 Saudi Pro League</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Max Budget (€)</div>
+          <input type="number" id="squad-budget" value="200000000" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Sort By</div>
+          <select id="squad-sort" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+            <option value="value">Market Value</option>
+            <option value="goals">Goals / Game</option>
+            <option value="assists">Assists / Game</option>
+            <option value="tackles">Tackles / Game</option>
+            <option value="pass_acc">Pass Accuracy</option>
+            <option value="aerial">Aerial Duels %</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="squad-count" style="font-size:12px;color:var(--accent);margin-bottom:12px"></div>
+      <div id="squad-list"></div>
     </div>
   </div>
 </div>
@@ -504,10 +595,17 @@ function updateFilterCount() {
   const pos = document.getElementById('posFil').value;
 
   const pool = plLeague === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === plLeague);
+  const posMapFC = {
+    'GK':['GK'],'DEF':['DEF'],'MID':['MID'],'ATT':['ATT'],
+    'CB':['DEF'],'RB':['DEF'],'LB':['DEF'],'WB':['DEF'],
+    'CDM':['MID'],'CM':['MID'],'CAM':['MID'],
+    'RW':['ATT'],'LW':['ATT'],'ST':['ATT'],'CF':['ATT']
+  };
+  const allowedPosFC = pos ? (posMapFC[pos] || [pos]) : null;
   const count = pool.filter(p =>
     p.age >= minAge && p.age <= maxAge &&
     p.value <= budget && p.apps >= minApps &&
-    (!pos || p.pos === pos)
+    (!allowedPosFC || allowedPosFC.includes(p.pos))
   ).length;
   document.getElementById('filter-count').textContent = count + ' players match your filters';
 }
@@ -526,22 +624,25 @@ function detectWeaknesses() {
   };
 
   const checks = [
-    {k:'gc',  avg:av.gc,  lb:true,  zone:'defense',  type:'Defensive errors'},
-    {k:'aer', avg:av.aer, lb:false, zone:'defense',  type:'Aerial vulnerability'},
-    {k:'tk',  avg:av.tk,  lb:false, zone:'defense',  type:'Poor tackling'},
-    {k:'int', avg:av.int, lb:false, zone:'defense',  type:'Poor tackling'},
-    {k:'pa',  avg:av.pa,  lb:false, zone:'midfield', type:'Poor passing'},
-    {k:'cl',  avg:av.cl,  lb:false, zone:'defense',  type:'Defensive errors'},
-    {k:'gs',  avg:av.gs,  lb:false, zone:'attack',   type:'Poor finishing'},
-    {k:'sot', avg:av.sot, lb:false, zone:'attack',   type:'Low attack output'},
-    {k:'sh',  avg:av.sh,  lb:false, zone:'attack',   type:'Poor shot volume'},
+    {k:'gc',  avg:av.gc,  lb:true,  zone:'defense',  type:'Defensive errors',   threshold:0.15},
+    {k:'aer', avg:av.aer, lb:false, zone:'defense',  type:'Aerial vulnerability',threshold:0.15},
+    {k:'tk',  avg:av.tk,  lb:false, zone:'defense',  type:'Poor tackling',       threshold:0.15},
+    {k:'int', avg:av.int, lb:false, zone:'defense',  type:'Poor tackling',       threshold:0.15},
+    {k:'cl',  avg:av.cl,  lb:false, zone:'defense',  type:'Defensive errors',    threshold:0.15},
+    {k:'pa',  avg:av.pa,  lb:false, zone:'midfield', type:'Poor passing',        threshold:0.08},
+    {k:'pos', avg:av.pos, lb:false, zone:'midfield', type:'Lack of creativity',  threshold:0.10},
+    {k:'gs',  avg:av.gs,  lb:false, zone:'attack',   type:'Poor finishing',      threshold:0.15},
+    {k:'sot', avg:av.sot, lb:false, zone:'attack',   type:'Low attack output',   threshold:0.15},
+    {k:'sh',  avg:av.sh,  lb:false, zone:'attack',   type:'Poor shot volume',    threshold:0.15},
   ];
 
   return checks.filter(c => {
     if (!st[c.k] || !c.avg) return false;
     const d = c.lb ? (st[c.k] - c.avg) / c.avg : (c.avg - st[c.k]) / c.avg;
-    if (d >= 0.35) { c.severity = 'major'; c.deficit = Math.round(d * 100); return true; }
-    if (d >= 0.20) { c.severity = 'minor'; c.deficit = Math.round(d * 100); return true; }
+    const majorT = c.threshold ? c.threshold * 2.5 : 0.35;
+    const minorT = c.threshold ? c.threshold * 1.5 : 0.20;
+    if (d >= majorT) { c.severity = 'major'; c.deficit = Math.round(d * 100); return true; }
+    if (d >= minorT) { c.severity = 'minor'; c.deficit = Math.round(d * 100); return true; }
     return false;
   });
 }
@@ -601,10 +702,19 @@ function runAnalysis() {
   const posFil = document.getElementById('posFil').value;
 
   const pool = plLeague === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === plLeague);
+  // Map detailed positions to player position categories
+  const posMap = {
+    'GK':['GK'], 'DEF':['DEF'], 'MID':['MID'], 'ATT':['ATT'],
+    'CB':['DEF'], 'RB':['DEF'], 'LB':['DEF'], 'WB':['DEF'],
+    'CDM':['MID'], 'CM':['MID'], 'CAM':['MID'],
+    'RW':['ATT'], 'LW':['ATT'], 'ST':['ATT'], 'CF':['ATT']
+  };
+  const allowedPos = posFil ? (posMap[posFil] || [posFil]) : null;
+
   const filtered = pool.filter(p =>
     p.age >= minAge && p.age <= maxAge &&
     p.value <= budget && p.apps >= minApps &&
-    (!posFil || p.pos === posFil)
+    (!allowedPos || allowedPos.includes(p.pos))
   );
 
   const ranked = filtered
@@ -735,6 +845,86 @@ function showTab(id, el) {
   el?.classList.add('active');
   document.getElementById('tab-stats').style.display = id === 'stats' ? 'block' : 'none';
   document.getElementById('tab-results').style.display = id === 'results' ? 'block' : 'none';
+  document.getElementById('tab-squad').style.display = id === 'squad' ? 'block' : 'none';
+  if (id === 'squad') renderSquadPlayers();
+}
+
+// ═══════════════════════════════════════
+// BUILD YOUR SQUAD MODE
+// ═══════════════════════════════════════
+function renderSquadPlayers() {
+  const posVal = document.getElementById('squad-pos').value;
+  const leagueVal = document.getElementById('squad-league').value;
+  const budget = parseFloat(document.getElementById('squad-budget').value) || Infinity;
+  const sortBy = document.getElementById('squad-sort').value;
+
+  const posGroupMap = {
+    'DEF_ALL':['DEF'], 'MID_ALL':['MID'], 'ATT_ALL':['ATT'],
+    'GK':['GK'], 'CB':['DEF'], 'RB':['DEF'], 'LB':['DEF'],
+    'CDM':['MID'], 'CM':['MID'], 'CAM':['MID'],
+    'RW':['ATT'], 'LW':['ATT'], 'ST':['ATT']
+  };
+
+  let pool = leagueVal === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === leagueVal);
+  if (posVal) {
+    const allowed = posGroupMap[posVal] || [posVal];
+    pool = pool.filter(p => allowed.includes(p.pos));
+  }
+  pool = pool.filter(p => p.value <= budget);
+
+  // Sort
+  const sortFns = {
+    value:   (a,b) => b.value - a.value,
+    goals:   (a,b) => b.goals_pg - a.goals_pg,
+    assists: (a,b) => b.assists_pg - a.assists_pg,
+    tackles: (a,b) => b.tackles_pg - a.tackles_pg,
+    pass_acc:(a,b) => b.pass_acc - a.pass_acc,
+    aerial:  (a,b) => b.aerial_pct - a.aerial_pct,
+  };
+  pool.sort(sortFns[sortBy] || sortFns.value);
+  pool = pool.slice(0, 30);
+
+  document.getElementById('squad-count').textContent = `Showing top ${pool.length} players`;
+
+  if (!pool.length) {
+    document.getElementById('squad-list').innerHTML = `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No Players Found</div><div style="font-size:13px">Try widening your filters</div></div>`;
+    return;
+  }
+
+  const posLabels = {GK:'GK',DEF:'DEF',MID:'MID',ATT:'ATT'};
+  const posColors = {GK:'rgba(245,200,66,0.1)',DEF:'rgba(0,184,255,0.1)',MID:'rgba(0,229,160,0.1)',ATT:'rgba(255,107,53,0.1)'};
+  const posTextColors = {GK:'var(--yellow)',DEF:'var(--accent2)',MID:'var(--accent)',ATT:'var(--warn)'};
+
+  document.getElementById('squad-list').innerHTML = pool.map((p, i) => `
+    <div class="pcard" style="margin-bottom:8px">
+      <div class="prank ${i<3?'top':''}">${String(i+1).padStart(2,'0')}</div>
+      <div>
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+          <div class="pname">${p.name}</div>
+          <div class="pos-badge" style="background:${posColors[p.pos]||'rgba(0,102,255,0.1)'};color:${posTextColors[p.pos]||'#7ab4ff'}">${p.pos}</div>
+        </div>
+        <div class="pmeta">
+          <span>🏟 ${p.club}</span>
+          <span>📍 ${p.nat}</span>
+          <span>🎂 ${p.age} yrs</span>
+          <span>📋 ${p.apps} apps</span>
+          <span>💰 ${fmtVal(p.value)}</span>
+          ${p.height ? `<span>📏 ${p.height}cm</span>` : ''}
+        </div>
+        <div class="stat-pills">
+          ${p.goals_pg > 0 ? `<div class="spill">⚽ ${p.goals_pg.toFixed(2)}/g</div>` : ''}
+          ${p.assists_pg > 0 ? `<div class="spill">🎯 ${p.assists_pg.toFixed(2)}/g</div>` : ''}
+          ${p.tackles_pg > 0 ? `<div class="spill">💪 ${p.tackles_pg.toFixed(1)} tkl/g</div>` : ''}
+          ${p.key_passes_pg > 0 ? `<div class="spill">🔑 ${p.key_passes_pg.toFixed(1)} kp/g</div>` : ''}
+          ${p.pass_acc ? `<div class="spill">📊 ${p.pass_acc}% pass</div>` : ''}
+          ${p.aerial_pct > 0 ? `<div class="spill">✈ ${p.aerial_pct}% aerial</div>` : ''}
+        </div>
+      </div>
+      <div class="score-blk">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);line-height:1">${fmtVal(p.value)}</div>
+        <div class="score-lbl">MARKET VAL</div>
+      </div>
+    </div>`).join('');
 }
 
 // Init
