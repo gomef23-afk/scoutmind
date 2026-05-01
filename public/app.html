@@ -334,6 +334,59 @@ const PROFILES = {
   "Poor shot volume":    {pos:"Box-to-box MID",  role:"Gets forward to create volume in attack. High shot and key pass numbers.",    stats:{shots_on_tgt_pg:0.8,key_passes_pg:2.0,goals_pg:0.18},w:{shots_on_tgt_pg:3,key_passes_pg:3,goals_pg:2}},
 };
 
+// Position-specific profiles — override weakness profile when user filters by position
+// This ensures a CB search never ranks players on goals, a GK search ranks on saves etc.
+const POSITION_PROFILES = {
+  GK: {
+    pos:"Goalkeeper",
+    role:"Reliable shot-stopper with good distribution. Commands the penalty area and sweeps behind the defence.",
+    stats:{pass_acc:68,aerial_pct:60},
+    w:{pass_acc:3,aerial_pct:4}
+  },
+  DEF: {
+    pos:"Defender",
+    role:"Solid, reliable defender. Strong in the air, wins tackles and reads the game well.",
+    stats:{tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:58,pass_acc:82},
+    w:{tackles_pg:4,interceptions_pg:3,aerial_pct:2,pass_acc:2}
+  },
+  MID: {
+    pos:"Midfielder",
+    role:"Energetic, technically strong midfielder. Controls tempo, creates chances and contributes defensively.",
+    stats:{key_passes_pg:1.8,pass_acc:83,tackles_pg:2.5,assists_pg:0.15},
+    w:{key_passes_pg:3,pass_acc:3,tackles_pg:2,assists_pg:2}
+  },
+  ATT: {
+    pos:"Attacker",
+    role:"Clinical attacker who creates and converts chances. Goals and key passes are the priority.",
+    stats:{goals_pg:0.35,shots_on_tgt_pg:1.8,key_passes_pg:1.5,assists_pg:0.18},
+    w:{goals_pg:4,shots_on_tgt_pg:3,key_passes_pg:2,assists_pg:1}
+  }
+};
+
+// Get the correct profile — use position override if user has filtered by position
+function getProfile(weaknessType, positionFilter) {
+  if (positionFilter && POSITION_PROFILES[positionFilter]) {
+    // Merge: use position profile as base but blend in weakness context
+    const posProfile = POSITION_PROFILES[positionFilter];
+    const weakProfile = PROFILES[weaknessType];
+    
+    // For same-zone matches (e.g. ATT weakness + ATT filter), use weakness profile
+    const attackWeaknesses = ["Poor finishing","Low attack output","Poor shot volume"];
+    const defWeaknesses = ["Defensive errors","Aerial vulnerability","Poor tackling"];
+    const midWeaknesses = ["Lack of creativity","Poor passing"];
+    
+    const isMatch = (
+      (positionFilter === 'ATT' && attackWeaknesses.includes(weaknessType)) ||
+      (positionFilter === 'DEF' && defWeaknesses.includes(weaknessType)) ||
+      (positionFilter === 'MID' && midWeaknesses.includes(weaknessType)) ||
+      (positionFilter === 'GK')
+    );
+    
+    return isMatch && weakProfile ? weakProfile : posProfile;
+  }
+  return PROFILES[weaknessType] || PROFILES["Low attack output"];
+}
+
 // ═══════════════════════════════════════
 // AUTH & USER
 // ═══════════════════════════════════════
@@ -536,7 +589,8 @@ function runAnalysis() {
   const priOrder = ['defense','attack','midfield'];
   const priZone = Object.entries(zoneSc).sort((a,b) => b[1]-a[1] || priOrder.indexOf(a[0])-priOrder.indexOf(b[0]))[0]?.[0] || 'attack';
   const priType = flags.find(f => f.zone === priZone)?.type || 'Low attack output';
-  const profile = PROFILES[priType];
+  const posFil2 = document.getElementById('posFil').value;
+  const profile = getProfile(priType, posFil2);
 
   // Player filtering
   const plLeague = document.getElementById('playerLeagueSel').value;
