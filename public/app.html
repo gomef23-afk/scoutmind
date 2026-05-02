@@ -279,11 +279,11 @@ if (!_cu) window.location.href = '/auth.html';
         <option value="10000000">Up to €10M</option>
         <option value="20000000">Up to €20M</option>
         <option value="30000000">Up to €30M</option>
-        <option value="50000000" selected>Up to €50M</option>
+        <option value="50000000">Up to €50M</option>
         <option value="75000000">Up to €75M</option>
         <option value="100000000">Up to €100M</option>
         <option value="150000000">Up to €150M</option>
-        <option value="999000000">No limit</option>
+        <option value="999000000" selected>No limit</option>
       </select>
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Min appearances</div>
       <input type="number" id="minApps" value="10">
@@ -942,17 +942,9 @@ function updateFilterCount() {
   const pos = document.getElementById('posFil').value;
 
   const pool = plLeague === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === plLeague);
-  const posMapFC = {
-    'GK':['GK'],'DEF':['DEF'],'MID':['MID'],'ATT':['ATT'],
-    'CB':['DEF'],'RB':['DEF'],'LB':['DEF'],'WB':['DEF'],
-    'CDM':['MID'],'CM':['MID'],'CAM':['MID'],
-    'RW':['ATT'],'LW':['ATT'],'ST':['ATT'],'CF':['ATT']
-  };
-  const allowedPosFC = pos ? (posMapFC[pos] || [pos]) : null;
   const count = pool.filter(p =>
     p.age >= minAge && p.age <= maxAge &&
-    p.value <= budget && p.apps >= minApps &&
-    (!allowedPosFC || allowedPosFC.includes(p.pos))
+    p.value <= budget && p.apps >= minApps
   ).length;
   document.getElementById('filter-count').textContent = count + ' players match your filters';
 }
@@ -1191,19 +1183,18 @@ function runAnalysis() {
   const posFil = document.getElementById('posFil').value;
 
   const pool = plLeague === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === plLeague);
-  // Map detailed positions to player position categories
-  const posMap = {
-    'GK':['GK'], 'DEF':['DEF'], 'MID':['MID'], 'ATT':['ATT'],
-    'CB':['DEF'], 'RB':['DEF'], 'LB':['DEF'], 'WB':['DEF'],
-    'CDM':['MID'], 'CM':['MID'], 'CAM':['MID'],
-    'RW':['ATT'], 'LW':['ATT'], 'ST':['ATT'], 'CF':['ATT']
-  };
-  const allowedPos = posFil ? (posMap[posFil] || [posFil]) : null;
 
+  // Filter by budget, age, apps — NO position filter here, algorithm decides position
   const filtered = pool.filter(p =>
     p.age >= minAge && p.age <= maxAge &&
     p.value <= budget && p.apps >= minApps &&
-    (!allowedPos || allowedPos.includes(p.pos))
+    targetPos.includes(p.pos)
+  );
+
+  // Fallback: if budget too tight or no players match, remove position restriction
+  const finalFiltered = filtered.length > 5 ? filtered : pool.filter(p =>
+    p.age >= minAge && p.age <= maxAge &&
+    p.value <= budget && p.apps >= minApps
   );
 
   // Extract specific subposition from filter (e.g. DEF_CB -> CB)
@@ -1216,7 +1207,7 @@ function runAnalysis() {
   };
   const requestedSubpos = subposMap2[posFil] || null;
 
-  const ranked = filtered
+  const ranked = finalFiltered
     .map(p => {
       const scored = scorePlayer(p, profile, requestedSubpos);
       const ctx = applyContextualFactors(scored.score, p, selectedTeam, currentLeague);
