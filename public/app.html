@@ -467,8 +467,18 @@ if (!_cu) window.location.href = '/auth.html';
             </select>
           </div>
           <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Max budget (€)</div>
-            <input type="number" id="squad-budget" value="200000000" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Max budget</div>
+            <select id="squad-budget" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
+              <option value="5000000">Up to €5M</option>
+              <option value="10000000">Up to €10M</option>
+              <option value="20000000">Up to €20M</option>
+              <option value="30000000">Up to €30M</option>
+              <option value="50000000">Up to €50M</option>
+              <option value="75000000">Up to €75M</option>
+              <option value="100000000">Up to €100M</option>
+              <option value="150000000">Up to €150M</option>
+              <option value="999000000" selected>No limit</option>
+            </select>
           </div>
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Max age</div>
