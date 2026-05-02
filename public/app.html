@@ -119,6 +119,52 @@ hr{border:none;border-top:1px solid var(--border);}
 .lock-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(7,9,15,0.7);border-radius:12px;z-index:5;}
 .lock-msg{font-size:12px;color:var(--muted);text-align:center;}
 .upgrade-btn{display:inline-block;margin-top:6px;background:var(--accent);color:#000;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
+
+.curr-btn.active { background: var(--accent) !important; color: #000 !important; }
+.curr-btn:hover:not(.active) { color: var(--text) !important; }
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 768px) {
+  nav { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+  nav > div:first-child { order: 1; }
+  nav > .nav-right { order: 2; gap: 6px; }
+  nav > .nav-right > div:first-child { display: none; } /* hide currency on mobile nav */
+  .user-badge { display: none; }
+  .logout-btn { display: none; }
+  #sidebar-toggle { display: flex !important; align-items: center; justify-content: center; }
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed !important;
+    top: 0; left: -320px;
+    width: 300px;
+    height: 100vh;
+    z-index: 160;
+    transition: left .3s ease;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding-top: 60px;
+  }
+  .sidebar.open { left: 0; }
+  .main { padding: 16px 14px; }
+  .sgrid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .tabs { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+  .tab { padding: 8px 12px; font-size: 12px; }
+  .pcard { grid-template-columns: 36px 1fr 56px; gap: 8px; padding: 11px 12px; }
+  .prank { font-size: 22px; }
+  .pname { font-size: 13px; }
+  .pmeta { gap: 5px; }
+  .score-num { font-size: 26px; }
+  .section-hdr { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .chart-lbl { width: 90px; font-size: 10px; }
+  .team-list-wrap { max-height: 180px; }
+  .squad-filters-grid { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 480px) {
+  .sgrid { grid-template-columns: 1fr 1fr; }
+  .scard input { font-size: 18px; }
+  .pcard { grid-template-columns: 32px 1fr 50px; gap: 6px; }
+  .pmeta span:nth-child(n+5) { display: none; }
+}
 </style>
 </head>
 <body>
@@ -131,8 +177,14 @@ if (!_cu) window.location.href = '/auth.html';
 
 <!-- NAV -->
 <nav>
-  <div class="logo">Scout<span>Mind</span></div>
+  <div style="display:flex;align-items:center;gap:20px"><div class="logo">Scout<span>Mind</span></div><a href="/news.html" style="font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">📰 Transfer News</a></div>
   <div class="nav-right">
+    <div style="display:flex;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px;">
+      <button class="curr-btn active" data-c="EUR" onclick="setCurrency('EUR')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">€ EUR</button>
+      <button class="curr-btn" data-c="USD" onclick="setCurrency('USD')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">$ USD</button>
+      <button class="curr-btn" data-c="BRL" onclick="setCurrency('BRL')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">R$ BRL</button>
+      <button class="curr-btn" data-c="GBP" onclick="setCurrency('GBP')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">£ GBP</button>
+    </div>
     <div class="user-badge">
       <span class="live-dot"></span>
       <span id="nav-name" style="font-size:12px;font-weight:500"></span>
@@ -145,7 +197,11 @@ if (!_cu) window.location.href = '/auth.html';
 <div class="app">
 
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <!-- Mobile sidebar toggle button -->
+<button id="sidebar-toggle" onclick="toggleSidebar()" style="display:none;position:fixed;bottom:24px;right:24px;z-index:200;background:var(--accent);color:#000;border:none;border-radius:50%;width:52px;height:52px;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(0,229,160,0.4);font-family:inherit;">⚙</button>
+<!-- Overlay -->
+<div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:150;"></div>
+<div class="sidebar" id="sidebar">
 
     <!-- LEAGUE -->
     <div class="fg">
@@ -644,13 +700,13 @@ function clearStats() {
 }
 
 function renderTeamList(filter) {
-  const teams = TEAMS[currentLeague] || [];
+  const teams = (TEAMS[currentLeague] || []).slice().sort((a,b) => a.name.localeCompare(b.name));
   const q = filter.toLowerCase();
   const filtered = q ? teams.filter(t => t.name.toLowerCase().includes(q)) : teams;
   document.getElementById('teamList').innerHTML = filtered.length === 0
     ? '<div style="font-size:12px;color:var(--muted);padding:8px 0;text-align:center">No teams found</div>'
     : filtered.map(t => `
-      <div class="team-item ${selectedTeam?.id===t.id?'selected':''}" onclick="selectTeam('${t.id}')">
+      <div class="team-item ${selectedTeam?.id===t.id?'selected':''}" onclick="selectTeamWrapped('${t.id}')">
         <div class="team-name">${t.name}</div>
         <div class="team-pos-lbl">${t.pos}</div>
       </div>`).join('');
@@ -806,8 +862,25 @@ function scorePlayer(p, profile, requestedSubpos) {
   };
 }
 
+// Currency system
+let currentCurrency = 'EUR';
+const CURRENCIES = {
+  EUR: {sym:'€', rate:1,     fmt:(v) => v>=1e6?'€'+(v/1e6).toFixed(1)+'M':v>=1e3?'€'+(v/1e3).toFixed(0)+'K':'€'+v},
+  USD: {sym:'$', rate:1.08,  fmt:(v) => v>=1e6?'$'+((v*1.08)/1e6).toFixed(1)+'M':v>=1e3?'$'+((v*1.08)/1e3).toFixed(0)+'K':'$'+(v*1.08).toFixed(0)},
+  BRL: {sym:'R$',rate:5.90,  fmt:(v) => v>=1e6?'R$'+((v*5.90)/1e6).toFixed(1)+'M':v>=1e3?'R$'+((v*5.90)/1e3).toFixed(0)+'K':'R$'+(v*5.90).toFixed(0)},
+  GBP: {sym:'£', rate:0.85,  fmt:(v) => v>=1e6?'£'+((v*0.85)/1e6).toFixed(1)+'M':v>=1e3?'£'+((v*0.85)/1e3).toFixed(0)+'K':'£'+(v*0.85).toFixed(0)},
+};
 function fmtVal(v) {
-  return v >= 1e6 ? '€' + (v/1e6).toFixed(1) + 'M' : v >= 1e3 ? '€' + (v/1e3).toFixed(0) + 'K' : '€' + v;
+  return CURRENCIES[currentCurrency]?.fmt(v) || '€' + v;
+}
+function setCurrency(c) {
+  currentCurrency = c;
+  document.querySelectorAll('.curr-btn').forEach(b => b.classList.toggle('active', b.dataset.c === c));
+  // Re-render if analysis is showing
+  const resContent = document.getElementById('resContent');
+  if (resContent && resContent.style.display !== 'none') runAnalysis();
+  const squadList = document.getElementById('squad-list');
+  if (squadList && squadList.innerHTML) renderSquadPlayers();
 }
 function scCls(s) { return s >= 70 ? 'hi' : s >= 45 ? 'mid' : 'lo'; }
 function barClr(s) { return s >= 70 ? 'var(--green)' : s >= 45 ? 'var(--yellow)' : 'var(--red)'; }
@@ -1006,7 +1079,7 @@ let fanTeam = null;
 
 function onFanLeagueChange() {
   const league = document.getElementById('fan-league').value;
-  const teams = TEAMS[league] || [];
+  const teams = (TEAMS[league] || []).slice().sort((a,b) => a.name.localeCompare(b.name));
   const sel = document.getElementById('fan-team');
   sel.innerHTML = '<option value="">Select a team...</option>' +
     teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
@@ -1222,6 +1295,27 @@ function renderSquadPlayers() {
       </div>
     </div>`;
   }).join('');
+}
+
+// Sidebar toggle for mobile
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  const isOpen = sidebar.classList.contains('open');
+  sidebar.classList.toggle('open', !isOpen);
+  overlay.style.display = isOpen ? 'none' : 'block';
+}
+
+// Close sidebar when team is selected on mobile
+const _origSelectTeam = selectTeam;
+function selectTeamWrapped(id) {
+  _origSelectTeam(id);
+  if (window.innerWidth <= 768) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar.classList.remove('open');
+    overlay.style.display = 'none';
+  }
 }
 
 // Init
