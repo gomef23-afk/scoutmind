@@ -1352,10 +1352,14 @@ function runAnalysis() {
     </div>
   </div>`;
 
+  // Free users: limit to 3 results
+  const visibleRanked = isFree ? ranked.slice(0, 3) : ranked;
+  const hiddenCount = isFree ? Math.max(0, ranked.length - 3) : 0;
+
   if (!ranked.length) {
     html += `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No Matches Found</div><div style="font-size:13px">Try widening your filters — increase the budget, age range, or select "All Leagues"</div></div>`;
   } else {
-    ranked.forEach((m, i) => {
+    visibleRanked.forEach((m, i) => {
       const p = m.p;
       const sc = m.score;
       const isCurrentPlayer = selectedTeam && p.club === selectedTeam.name;
@@ -1392,8 +1396,17 @@ function runAnalysis() {
     });
   }
 
+  // Upgrade prompt for free users
+  if (isFree && hiddenCount > 0) {
+    html += `<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:20px;text-align:center;margin:16px 0;">
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px">🔒 ${hiddenCount} more players hidden</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Upgrade to Scout Pro to see all recommendations, secondary weakness analysis and full player profiles.</div>
+      <a href="/auth.html?tab=signup&plan=pro" style="display:inline-block;background:var(--accent);color:#000;font-size:13px;font-weight:800;padding:10px 24px;border-radius:8px;text-decoration:none;">Upgrade to Scout Pro — $9.99/mo</a>
+    </div>`;
+  }
+
   // Secondary weakness section
-  if (rankedSec.length > 0) {
+  if (rankedSec.length > 0 && !isFree) {
     html += `<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
       <div class="section-hdr">
         <div style="display:flex;align-items:center;gap:8px">
