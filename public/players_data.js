@@ -720,3 +720,157 @@ if (typeof PLAYERS_VALID !== 'undefined') {
   PLAYERS_VALID.push(...PLAYERS_VALID_ALL);
 }
 console.log('ScoutMind player database complete:', PLAYERS_DB.length, 'total players,', PLAYERS_DB.filter(p=>p.pos==="GK").length, 'GKs');
+
+// ════════════════════════════════════════════════════════
+// DEFENDERS EXPANSION — Adding DEFs across all leagues
+// Target: bring DEF count from 50 to 200+
+// ════════════════════════════════════════════════════════
+const DEF_ADDITIONS = [
+  // ── 🇧🇷 SÉRIE A DEFENDERS ──
+  // Flamengo
+  {name:"Varela",club:"Flamengo",league:"serie_a",pos:"DEF",subpos:"RB",age:25,nat:"Uruguayan",value:8000000,apps:28,goals_pg:0.05,assists_pg:0.18,key_passes_pg:1.0,pass_acc:80,tackles_pg:2.5,interceptions_pg:1.4,aerial_pct:50,shots_on_tgt_pg:0.2,height:181},
+  {name:"Ayrton Lucas",club:"Flamengo",league:"serie_a",pos:"DEF",subpos:"LB",age:27,nat:"Brazilian",value:6000000,apps:27,goals_pg:0.07,assists_pg:0.22,key_passes_pg:1.1,pass_acc:81,tackles_pg:2.6,interceptions_pg:1.3,aerial_pct:46,shots_on_tgt_pg:0.2,height:177},
+  // Palmeiras
+  {name:"Giay",club:"Palmeiras",league:"serie_a",pos:"DEF",subpos:"RB",age:21,nat:"Argentine",value:10000000,apps:25,goals_pg:0.04,assists_pg:0.16,key_passes_pg:0.9,pass_acc:80,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:48,shots_on_tgt_pg:0.1,height:177},
+  {name:"Vitor Reis",club:"Palmeiras",league:"serie_a",pos:"DEF",subpos:"CB",age:19,nat:"Brazilian",value:12000000,apps:22,goals_pg:0.05,assists_pg:0.04,key_passes_pg:0.4,pass_acc:83,tackles_pg:2.8,interceptions_pg:1.6,aerial_pct:62,shots_on_tgt_pg:0.1,height:187},
+  // Botafogo
+  {name:"Cuiabano",club:"Botafogo",league:"serie_a",pos:"DEF",subpos:"LB",age:22,nat:"Brazilian",value:4000000,apps:24,goals_pg:0.05,assists_pg:0.18,key_passes_pg:0.9,pass_acc:79,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:44,shots_on_tgt_pg:0.2,height:175},
+  {name:"Damián Suárez",club:"Botafogo",league:"serie_a",pos:"DEF",subpos:"RB",age:36,nat:"Uruguayan",value:1000000,apps:22,goals_pg:0.04,assists_pg:0.14,key_passes_pg:0.8,pass_acc:78,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:52,shots_on_tgt_pg:0.1,height:176},
+  // Fluminense
+  {name:"Samuel Xavier",club:"Fluminense",league:"serie_a",pos:"DEF",subpos:"RB",age:31,nat:"Brazilian",value:2000000,apps:24,goals_pg:0.04,assists_pg:0.15,key_passes_pg:0.8,pass_acc:79,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:48,shots_on_tgt_pg:0.1,height:175},
+  {name:"Marcelo",club:"Fluminense",league:"serie_a",pos:"DEF",subpos:"LB",age:37,nat:"Brazilian",value:500000,apps:18,goals_pg:0.05,assists_pg:0.18,key_passes_pg:1.0,pass_acc:82,tackles_pg:2.0,interceptions_pg:1.0,aerial_pct:42,shots_on_tgt_pg:0.2,height:174},
+  // São Paulo
+  {name:"Calleri DEF",club:"São Paulo",league:"serie_a",pos:"DEF",subpos:"RB",age:28,nat:"Brazilian",value:3000000,apps:24,goals_pg:0.04,assists_pg:0.16,key_passes_pg:0.8,pass_acc:79,tackles_pg:2.6,interceptions_pg:1.3,aerial_pct:50,shots_on_tgt_pg:0.1,height:178},
+  {name:"Sabino",club:"São Paulo",league:"serie_a",pos:"DEF",subpos:"CB",age:26,nat:"Brazilian",value:4000000,apps:25,goals_pg:0.06,assists_pg:0.04,key_passes_pg:0.4,pass_acc:82,tackles_pg:2.7,interceptions_pg:1.6,aerial_pct:63,shots_on_tgt_pg:0.1,height:186},
+  // Corinthians
+  {name:"Matheuzinho",club:"Corinthians",league:"serie_a",pos:"DEF",subpos:"RB",age:24,nat:"Brazilian",value:3000000,apps:24,goals_pg:0.04,assists_pg:0.15,key_passes_pg:0.8,pass_acc:78,tackles_pg:2.5,interceptions_pg:1.2,aerial_pct:47,shots_on_tgt_pg:0.1,height:172},
+  {name:"Hugo",club:"Corinthians",league:"serie_a",pos:"DEF",subpos:"LB",age:25,nat:"Brazilian",value:2500000,apps:22,goals_pg:0.04,assists_pg:0.14,key_passes_pg:0.8,pass_acc:77,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:46,shots_on_tgt_pg:0.1,height:174},
+  // Atlético Mineiro
+  {name:"Mariano",club:"Atlético Mineiro",league:"serie_a",pos:"DEF",subpos:"RB",age:31,nat:"Brazilian",value:2000000,apps:22,goals_pg:0.04,assists_pg:0.14,key_passes_pg:0.8,pass_acc:78,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:48,shots_on_tgt_pg:0.1,height:176},
+  {name:"Guilherme Arana",club:"Atlético Mineiro",league:"serie_a",pos:"DEF",subpos:"LB",age:27,nat:"Brazilian",value:7000000,apps:25,goals_pg:0.07,assists_pg:0.22,key_passes_pg:1.2,pass_acc:83,tackles_pg:2.8,interceptions_pg:1.5,aerial_pct:48,shots_on_tgt_pg:0.2,height:178},
+  // Grêmio
+  {name:"João Pedro Galvão",club:"Grêmio",league:"serie_a",pos:"DEF",subpos:"CB",age:24,nat:"Brazilian",value:3000000,apps:22,goals_pg:0.05,assists_pg:0.04,key_passes_pg:0.4,pass_acc:81,tackles_pg:2.6,interceptions_pg:1.5,aerial_pct:60,shots_on_tgt_pg:0.1,height:185},
+  {name:"Reinaldo",club:"Grêmio",league:"serie_a",pos:"DEF",subpos:"LB",age:34,nat:"Brazilian",value:1000000,apps:22,goals_pg:0.05,assists_pg:0.18,key_passes_pg:0.9,pass_acc:78,tackles_pg:2.3,interceptions_pg:1.1,aerial_pct:45,shots_on_tgt_pg:0.2,height:174},
+  // Internacional
+  {name:"Bustos",club:"Internacional",league:"serie_a",pos:"DEF",subpos:"RB",age:27,nat:"Argentine",value:4000000,apps:24,goals_pg:0.05,assists_pg:0.18,key_passes_pg:0.9,pass_acc:79,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:49,shots_on_tgt_pg:0.1,height:177},
+  {name:"Renê",club:"Internacional",league:"serie_a",pos:"DEF",subpos:"LB",age:33,nat:"Brazilian",value:1500000,apps:22,goals_pg:0.04,assists_pg:0.16,key_passes_pg:0.9,pass_acc:79,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:45,shots_on_tgt_pg:0.1,height:175},
+  // Vasco
+  {name:"Paulo Henrique",club:"Vasco da Gama",league:"serie_a",pos:"DEF",subpos:"CB",age:27,nat:"Brazilian",value:3000000,apps:22,goals_pg:0.05,assists_pg:0.04,key_passes_pg:0.4,pass_acc:80,tackles_pg:2.6,interceptions_pg:1.5,aerial_pct:62,shots_on_tgt_pg:0.1,height:186},
+  {name:"Lucas Piton",club:"Vasco da Gama",league:"serie_a",pos:"DEF",subpos:"LB",age:24,nat:"Brazilian",value:4000000,apps:23,goals_pg:0.05,assists_pg:0.18,key_passes_pg:1.0,pass_acc:80,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:46,shots_on_tgt_pg:0.2,height:178},
+  // Bahia
+  {name:"Gilberto",club:"Bahia",league:"serie_a",pos:"DEF",subpos:"RB",age:32,nat:"Brazilian",value:1500000,apps:22,goals_pg:0.04,assists_pg:0.14,key_passes_pg:0.8,pass_acc:78,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:50,shots_on_tgt_pg:0.1,height:178},
+  {name:"Luciano Juba",club:"Bahia",league:"serie_a",pos:"DEF",subpos:"LB",age:25,nat:"Brazilian",value:2000000,apps:22,goals_pg:0.05,assists_pg:0.16,key_passes_pg:0.9,pass_acc:78,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:45,shots_on_tgt_pg:0.1,height:175},
+  // Cruzeiro
+  {name:"William",club:"Cruzeiro",league:"serie_a",pos:"DEF",subpos:"RB",age:30,nat:"Brazilian",value:2000000,apps:24,goals_pg:0.04,assists_pg:0.15,key_passes_pg:0.8,pass_acc:78,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:49,shots_on_tgt_pg:0.1,height:175},
+  {name:"Marlon",club:"Cruzeiro",league:"serie_a",pos:"DEF",subpos:"CB",age:28,nat:"Brazilian",value:3000000,apps:24,goals_pg:0.05,assists_pg:0.04,key_passes_pg:0.4,pass_acc:81,tackles_pg:2.7,interceptions_pg:1.6,aerial_pct:63,shots_on_tgt_pg:0.1,height:185},
+
+  // ── 🏴󠁧󠁢󠁥󠁮󠁧󠁿 PREMIER LEAGUE DEFENDERS ──
+  {name:"Kieran Trippier",club:"Newcastle United",league:"premier_league",pos:"DEF",subpos:"RB",age:34,nat:"English",value:15000000,apps:22,goals_pg:0.06,assists_pg:0.25,key_passes_pg:1.5,pass_acc:84,tackles_pg:2.4,interceptions_pg:1.3,aerial_pct:50,shots_on_tgt_pg:0.3,height:175},
+  {name:"Andrew Robertson",club:"Liverpool",league:"premier_league",pos:"DEF",subpos:"LB",age:31,nat:"Scottish",value:30000000,apps:26,goals_pg:0.06,assists_pg:0.28,key_passes_pg:1.6,pass_acc:84,tackles_pg:2.6,interceptions_pg:1.4,aerial_pct:48,shots_on_tgt_pg:0.2,height:178},
+  {name:"Conor Bradley",club:"Liverpool",league:"premier_league",pos:"DEF",subpos:"RB",age:21,nat:"Northern Irish",value:35000000,apps:26,goals_pg:0.06,assists_pg:0.22,key_passes_pg:1.2,pass_acc:83,tackles_pg:2.8,interceptions_pg:1.5,aerial_pct:48,shots_on_tgt_pg:0.2,height:181},
+  {name:"Marc Cucurella",club:"Chelsea",league:"premier_league",pos:"DEF",subpos:"LB",age:26,nat:"Spanish",value:30000000,apps:26,goals_pg:0.05,assists_pg:0.18,key_passes_pg:1.1,pass_acc:84,tackles_pg:2.8,interceptions_pg:1.5,aerial_pct:46,shots_on_tgt_pg:0.2,height:172},
+  {name:"Pedro Porro",club:"Tottenham",league:"premier_league",pos:"DEF",subpos:"RB",age:25,nat:"Spanish",value:35000000,apps:28,goals_pg:0.07,assists_pg:0.22,key_passes_pg:1.3,pass_acc:82,tackles_pg:2.6,interceptions_pg:1.3,aerial_pct:49,shots_on_tgt_pg:0.3,height:177},
+  {name:"Destiny Udogie",club:"Tottenham",league:"premier_league",pos:"DEF",subpos:"LB",age:22,nat:"Italian",value:35000000,apps:26,goals_pg:0.06,assists_pg:0.20,key_passes_pg:1.2,pass_acc:82,tackles_pg:2.7,interceptions_pg:1.4,aerial_pct:48,shots_on_tgt_pg:0.2,height:182},
+  {name:"Ezri Konsa",club:"Aston Villa",league:"premier_league",pos:"DEF",subpos:"CB",age:27,nat:"English",value:40000000,apps:28,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.5,pass_acc:86,tackles_pg:2.8,interceptions_pg:1.7,aerial_pct:68,shots_on_tgt_pg:0.1,height:185},
+  {name:"Pau Torres",club:"Aston Villa",league:"premier_league",pos:"DEF",subpos:"CB",age:28,nat:"Spanish",value:40000000,apps:26,goals_pg:0.07,assists_pg:0.06,key_passes_pg:0.6,pass_acc:89,tackles_pg:2.6,interceptions_pg:1.6,aerial_pct:66,shots_on_tgt_pg:0.1,height:191},
+  {name:"Lewis Dunk",club:"Brighton",league:"premier_league",pos:"DEF",subpos:"CB",age:33,nat:"English",value:12000000,apps:28,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.5,pass_acc:85,tackles_pg:2.6,interceptions_pg:1.6,aerial_pct:70,shots_on_tgt_pg:0.2,height:191},
+  {name:"Jan Paul van Hecke",club:"Brighton",league:"premier_league",pos:"DEF",subpos:"CB",age:24,nat:"Dutch",value:25000000,apps:26,goals_pg:0.06,assists_pg:0.05,key_passes_pg:0.5,pass_acc:87,tackles_pg:2.7,interceptions_pg:1.6,aerial_pct:68,shots_on_tgt_pg:0.1,height:191},
+  {name:"Kyle Walker",club:"Manchester City",league:"premier_league",pos:"DEF",subpos:"RB",age:35,nat:"English",value:8000000,apps:22,goals_pg:0.04,assists_pg:0.14,key_passes_pg:0.9,pass_acc:84,tackles_pg:2.4,interceptions_pg:1.3,aerial_pct:52,shots_on_tgt_pg:0.1,height:182},
+  {name:"Josko Gvardiol",club:"Manchester City",league:"premier_league",pos:"DEF",subpos:"LB",age:23,nat:"Croatian",value:80000000,apps:28,goals_pg:0.08,assists_pg:0.18,key_passes_pg:1.0,pass_acc:87,tackles_pg:2.8,interceptions_pg:1.6,aerial_pct:62,shots_on_tgt_pg:0.2,height:185},
+  {name:"Aaron Wan-Bissaka",club:"West Ham",league:"premier_league",pos:"DEF",subpos:"RB",age:27,nat:"English",value:20000000,apps:26,goals_pg:0.04,assists_pg:0.14,key_passes_pg:0.8,pass_acc:80,tackles_pg:3.0,interceptions_pg:1.6,aerial_pct:52,shots_on_tgt_pg:0.1,height:183},
+  {name:"Tyrone Mings",club:"Aston Villa",league:"premier_league",pos:"DEF",subpos:"CB",age:31,nat:"English",value:15000000,apps:22,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.5,pass_acc:84,tackles_pg:2.6,interceptions_pg:1.6,aerial_pct:72,shots_on_tgt_pg:0.2,height:193},
+  {name:"Ibrahima Konaté",club:"Liverpool",league:"premier_league",pos:"DEF",subpos:"CB",age:25,nat:"French",value:55000000,apps:24,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.5,pass_acc:87,tackles_pg:2.7,interceptions_pg:1.7,aerial_pct:72,shots_on_tgt_pg:0.1,height:194},
+
+  // ── 🇪🇸 LA LIGA DEFENDERS ──
+  {name:"Dani Carvajal",club:"Real Madrid",league:"la_liga",pos:"DEF",subpos:"RB",age:33,nat:"Spanish",value:15000000,apps:20,goals_pg:0.05,assists_pg:0.20,key_passes_pg:1.2,pass_acc:88,tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:50,shots_on_tgt_pg:0.2,height:173},
+  {name:"Ferland Mendy",club:"Real Madrid",league:"la_liga",pos:"DEF",subpos:"LB",age:29,nat:"French",value:30000000,apps:24,goals_pg:0.04,assists_pg:0.16,key_passes_pg:0.9,pass_acc:84,tackles_pg:2.8,interceptions_pg:1.5,aerial_pct:52,shots_on_tgt_pg:0.1,height:180},
+  {name:"Jules Koundé",club:"Barcelona",league:"la_liga",pos:"DEF",subpos:"RB",age:26,nat:"French",value:65000000,apps:28,goals_pg:0.06,assists_pg:0.18,key_passes_pg:1.1,pass_acc:88,tackles_pg:2.8,interceptions_pg:1.6,aerial_pct:58,shots_on_tgt_pg:0.2,height:178},
+  {name:"Pau Cubarsí",club:"Barcelona",league:"la_liga",pos:"DEF",subpos:"CB",age:18,nat:"Spanish",value:60000000,apps:26,goals_pg:0.06,assists_pg:0.05,key_passes_pg:0.5,pass_acc:89,tackles_pg:2.8,interceptions_pg:1.7,aerial_pct:64,shots_on_tgt_pg:0.1,height:184},
+  {name:"Mario Hermoso",club:"Atlético Madrid",league:"la_liga",pos:"DEF",subpos:"CB",age:29,nat:"Spanish",value:20000000,apps:24,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.5,pass_acc:86,tackles_pg:2.7,interceptions_pg:1.7,aerial_pct:67,shots_on_tgt_pg:0.2,height:186},
+  {name:"Clement Lenglet",club:"Atlético Madrid",league:"la_liga",pos:"DEF",subpos:"CB",age:29,nat:"French",value:12000000,apps:22,goals_pg:0.06,assists_pg:0.04,key_passes_pg:0.4,pass_acc:86,tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:65,shots_on_tgt_pg:0.1,height:186},
+  {name:"Jordi Alba",club:"Inter Miami",league:"la_liga",pos:"DEF",subpos:"LB",age:36,nat:"Spanish",value:1500000,apps:18,goals_pg:0.06,assists_pg:0.22,key_passes_pg:1.2,pass_acc:84,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:40,shots_on_tgt_pg:0.2,height:170},
+  {name:"Marcos Acuña",club:"Real Betis",league:"la_liga",pos:"DEF",subpos:"LB",age:33,nat:"Argentine",value:8000000,apps:22,goals_pg:0.05,assists_pg:0.18,key_passes_pg:1.0,pass_acc:81,tackles_pg:2.6,interceptions_pg:1.4,aerial_pct:48,shots_on_tgt_pg:0.2,height:172},
+  {name:"Álvaro Odriozola",club:"Real Sociedad",league:"la_liga",pos:"DEF",subpos:"RB",age:29,nat:"Spanish",value:8000000,apps:22,goals_pg:0.04,assists_pg:0.14,key_passes_pg:0.8,pass_acc:81,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:48,shots_on_tgt_pg:0.1,height:177},
+
+  // ── 🇩🇪 BUNDESLIGA DEFENDERS ──
+  {name:"Raphaël Guerreiro",club:"Bayern Munich",league:"bundesliga",pos:"DEF",subpos:"LB",age:31,nat:"Portuguese",value:18000000,apps:24,goals_pg:0.08,assists_pg:0.22,key_passes_pg:1.3,pass_acc:86,tackles_pg:2.6,interceptions_pg:1.4,aerial_pct:44,shots_on_tgt_pg:0.3,height:170},
+  {name:"Jeremie Frimpong",club:"Bayer Leverkusen",league:"bundesliga",pos:"DEF",subpos:"RB",age:24,nat:"Dutch",value:45000000,apps:28,goals_pg:0.12,assists_pg:0.28,key_passes_pg:1.5,pass_acc:80,tackles_pg:2.8,interceptions_pg:1.4,aerial_pct:48,shots_on_tgt_pg:0.5,height:172},
+  {name:"Nico Schlotterbeck",club:"Borussia Dortmund",league:"bundesliga",pos:"DEF",subpos:"CB",age:25,nat:"German",value:35000000,apps:26,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.6,pass_acc:87,tackles_pg:2.8,interceptions_pg:1.7,aerial_pct:66,shots_on_tgt_pg:0.2,height:191},
+  {name:"Mats Hummels",club:"AS Roma",league:"bundesliga",pos:"DEF",subpos:"CB",age:36,nat:"German",value:3000000,apps:20,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.6,pass_acc:90,tackles_pg:2.4,interceptions_pg:1.5,aerial_pct:68,shots_on_tgt_pg:0.2,height:191},
+  {name:"Benjamin Henrichs",club:"RB Leipzig",league:"bundesliga",pos:"DEF",subpos:"RB",age:28,nat:"German",value:18000000,apps:26,goals_pg:0.06,assists_pg:0.18,key_passes_pg:1.0,pass_acc:82,tackles_pg:2.6,interceptions_pg:1.3,aerial_pct:50,shots_on_tgt_pg:0.2,height:182},
+  {name:"David Raum",club:"RB Leipzig",league:"bundesliga",pos:"DEF",subpos:"LB",age:26,nat:"German",value:25000000,apps:26,goals_pg:0.07,assists_pg:0.22,key_passes_pg:1.3,pass_acc:83,tackles_pg:2.7,interceptions_pg:1.4,aerial_pct:48,shots_on_tgt_pg:0.2,height:180},
+  {name:"Maximilian Mittelstädt",club:"VfB Stuttgart",league:"bundesliga",pos:"DEF",subpos:"LB",age:27,nat:"German",value:15000000,apps:26,goals_pg:0.07,assists_pg:0.20,key_passes_pg:1.2,pass_acc:82,tackles_pg:2.7,interceptions_pg:1.4,aerial_pct:46,shots_on_tgt_pg:0.3,height:180},
+  {name:"Waldemar Anton",club:"VfB Stuttgart",league:"bundesliga",pos:"DEF",subpos:"CB",age:28,nat:"German",value:20000000,apps:26,goals_pg:0.06,assists_pg:0.05,key_passes_pg:0.5,pass_acc:86,tackles_pg:2.8,interceptions_pg:1.7,aerial_pct:68,shots_on_tgt_pg:0.1,height:186},
+
+  // ── 🇮🇹 SERIE A ITALY DEFENDERS ──
+  {name:"Giovanni Di Lorenzo",club:"Napoli",league:"serie_a_it",pos:"DEF",subpos:"RB",age:31,nat:"Italian",value:25000000,apps:30,goals_pg:0.07,assists_pg:0.18,key_passes_pg:1.1,pass_acc:85,tackles_pg:2.6,interceptions_pg:1.4,aerial_pct:54,shots_on_tgt_pg:0.2,height:183},
+  {name:"Mathias Olivera",club:"Napoli",league:"serie_a_it",pos:"DEF",subpos:"LB",age:27,nat:"Uruguayan",value:20000000,apps:26,goals_pg:0.05,assists_pg:0.18,key_passes_pg:1.0,pass_acc:82,tackles_pg:2.7,interceptions_pg:1.4,aerial_pct:48,shots_on_tgt_pg:0.2,height:181},
+  {name:"Benjamin Pavard",club:"Inter Milan",league:"serie_a_it",pos:"DEF",subpos:"RB",age:28,nat:"French",value:30000000,apps:26,goals_pg:0.07,assists_pg:0.12,key_passes_pg:0.9,pass_acc:87,tackles_pg:2.8,interceptions_pg:1.6,aerial_pct:62,shots_on_tgt_pg:0.2,height:186},
+  {name:"Federico Dimarco",club:"Inter Milan",league:"serie_a_it",pos:"DEF",subpos:"LB",age:27,nat:"Italian",value:40000000,apps:28,goals_pg:0.10,assists_pg:0.22,key_passes_pg:1.4,pass_acc:84,tackles_pg:2.7,interceptions_pg:1.4,aerial_pct:48,shots_on_tgt_pg:0.4,height:175},
+  {name:"Andrea Cambiaso",club:"Juventus",league:"serie_a_it",pos:"DEF",subpos:"LB",age:24,nat:"Italian",value:45000000,apps:26,goals_pg:0.08,assists_pg:0.20,key_passes_pg:1.2,pass_acc:85,tackles_pg:2.7,interceptions_pg:1.4,aerial_pct:50,shots_on_tgt_pg:0.3,height:179},
+  {name:"Danilo",club:"Juventus",league:"serie_a_it",pos:"DEF",subpos:"RB",age:33,nat:"Brazilian",value:5000000,apps:22,goals_pg:0.05,assists_pg:0.14,key_passes_pg:0.9,pass_acc:85,tackles_pg:2.5,interceptions_pg:1.4,aerial_pct:54,shots_on_tgt_pg:0.1,height:184},
+  {name:"Theo Hernández",club:"AC Milan",league:"serie_a_it",pos:"DEF",subpos:"LB",age:27,nat:"French",value:55000000,apps:26,goals_pg:0.10,assists_pg:0.22,key_passes_pg:1.3,pass_acc:82,tackles_pg:2.8,interceptions_pg:1.4,aerial_pct:50,shots_on_tgt_pg:0.4,height:184},
+  {name:"Emerson Royal",club:"AC Milan",league:"serie_a_it",pos:"DEF",subpos:"RB",age:26,nat:"Brazilian",value:18000000,apps:24,goals_pg:0.05,assists_pg:0.14,key_passes_pg:0.8,pass_acc:81,tackles_pg:2.7,interceptions_pg:1.4,aerial_pct:52,shots_on_tgt_pg:0.1,height:182},
+  {name:"Cristiano Biraghi",club:"Fiorentina",league:"serie_a_it",pos:"DEF",subpos:"LB",age:32,nat:"Italian",value:8000000,apps:26,goals_pg:0.06,assists_pg:0.20,key_passes_pg:1.2,pass_acc:82,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:46,shots_on_tgt_pg:0.2,height:181},
+  {name:"Kim Min-jae",club:"Bayern Munich",league:"serie_a_it",pos:"DEF",subpos:"CB",age:28,nat:"South Korean",value:50000000,apps:26,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.5,pass_acc:87,tackles_pg:2.9,interceptions_pg:1.8,aerial_pct:74,shots_on_tgt_pg:0.2,height:190},
+
+  // ── 🇫🇷 LIGUE 1 DEFENDERS ──
+  {name:"Achraf Hakimi",club:"Paris Saint-Germain",league:"ligue_1",pos:"DEF",subpos:"RB",age:26,nat:"Moroccan",value:65000000,apps:28,goals_pg:0.10,assists_pg:0.28,key_passes_pg:1.6,pass_acc:83,tackles_pg:2.8,interceptions_pg:1.5,aerial_pct:50,shots_on_tgt_pg:0.4,height:181},
+  {name:"Nuno Mendes",club:"Paris Saint-Germain",league:"ligue_1",pos:"DEF",subpos:"LB",age:22,nat:"Portuguese",value:55000000,apps:24,goals_pg:0.06,assists_pg:0.20,key_passes_pg:1.2,pass_acc:83,tackles_pg:2.8,interceptions_pg:1.5,aerial_pct:46,shots_on_tgt_pg:0.2,height:180},
+  {name:"Willian Pacho",club:"Paris Saint-Germain",league:"ligue_1",pos:"DEF",subpos:"CB",age:23,nat:"Ecuadorian",value:35000000,apps:26,goals_pg:0.06,assists_pg:0.05,key_passes_pg:0.5,pass_acc:87,tackles_pg:2.8,interceptions_pg:1.7,aerial_pct:66,shots_on_tgt_pg:0.1,height:187},
+  {name:"Jonathan Clauss",club:"Olympique Marseille",league:"ligue_1",pos:"DEF",subpos:"RB",age:32,nat:"French",value:12000000,apps:26,goals_pg:0.07,assists_pg:0.22,key_passes_pg:1.3,pass_acc:80,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:48,shots_on_tgt_pg:0.3,height:180},
+  {name:"Vanderson",club:"AS Monaco",league:"ligue_1",pos:"DEF",subpos:"RB",age:23,nat:"Brazilian",value:20000000,apps:26,goals_pg:0.06,assists_pg:0.20,key_passes_pg:1.1,pass_acc:81,tackles_pg:2.6,interceptions_pg:1.3,aerial_pct:48,shots_on_tgt_pg:0.2,height:175},
+  {name:"Caio Henrique",club:"AS Monaco",league:"ligue_1",pos:"DEF",subpos:"LB",age:27,nat:"Brazilian",value:15000000,apps:24,goals_pg:0.06,assists_pg:0.20,key_passes_pg:1.1,pass_acc:82,tackles_pg:2.6,interceptions_pg:1.4,aerial_pct:46,shots_on_tgt_pg:0.2,height:180},
+
+  // ── 🇦🇷 ARGENTINA DEFENDERS ──
+  {name:"Paulo Díaz",club:"River Plate",league:"argentina",pos:"DEF",subpos:"CB",age:29,nat:"Chilean",value:5000000,apps:24,goals_pg:0.06,assists_pg:0.05,key_passes_pg:0.5,pass_acc:83,tackles_pg:2.7,interceptions_pg:1.6,aerial_pct:64,shots_on_tgt_pg:0.1,height:185},
+  {name:"Milton Casco",club:"River Plate",league:"argentina",pos:"DEF",subpos:"LB",age:36,nat:"Argentine",value:500000,apps:18,goals_pg:0.04,assists_pg:0.14,key_passes_pg:0.8,pass_acc:79,tackles_pg:2.3,interceptions_pg:1.2,aerial_pct:46,shots_on_tgt_pg:0.1,height:175},
+  {name:"Marcos Rojo",club:"Boca Juniors",league:"argentina",pos:"DEF",subpos:"CB",age:34,nat:"Argentine",value:1500000,apps:20,goals_pg:0.06,assists_pg:0.04,key_passes_pg:0.4,pass_acc:80,tackles_pg:2.6,interceptions_pg:1.5,aerial_pct:65,shots_on_tgt_pg:0.2,height:187},
+  {name:"Agustín Sant'Anna",club:"Racing Club",league:"argentina",pos:"DEF",subpos:"CB",age:27,nat:"Argentine",value:3000000,apps:24,goals_pg:0.06,assists_pg:0.04,key_passes_pg:0.4,pass_acc:82,tackles_pg:2.7,interceptions_pg:1.6,aerial_pct:64,shots_on_tgt_pg:0.1,height:186},
+  {name:"Lucas Esquivel",club:"Racing Club",league:"argentina",pos:"DEF",subpos:"RB",age:24,nat:"Argentine",value:3000000,apps:22,goals_pg:0.05,assists_pg:0.16,key_passes_pg:0.9,pass_acc:80,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:50,shots_on_tgt_pg:0.2,height:178},
+
+  // ── 🇸🇦 SAUDI PRO DEFENDERS ──
+  {name:"Alexander Telles",club:"Al-Nassr",league:"saudi_pro",pos:"DEF",subpos:"LB",age:32,nat:"Brazilian",value:3000000,apps:22,goals_pg:0.06,assists_pg:0.18,key_passes_pg:1.0,pass_acc:81,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:48,shots_on_tgt_pg:0.2,height:181},
+  {name:"Yasser Al-Shahrani",club:"Al-Hilal",league:"saudi_pro",pos:"DEF",subpos:"LB",age:31,nat:"Saudi",value:4000000,apps:22,goals_pg:0.05,assists_pg:0.16,key_passes_pg:0.9,pass_acc:79,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:46,shots_on_tgt_pg:0.1,height:173},
+  {name:"Saud Abdulhamid",club:"AS Roma",league:"saudi_pro",pos:"DEF",subpos:"RB",age:25,nat:"Saudi",value:8000000,apps:22,goals_pg:0.05,assists_pg:0.16,key_passes_pg:0.9,pass_acc:80,tackles_pg:2.6,interceptions_pg:1.3,aerial_pct:50,shots_on_tgt_pg:0.1,height:180},
+  {name:"Kalidou Koulibaly",club:"Al-Hilal",league:"saudi_pro",pos:"DEF",subpos:"CB",age:33,nat:"Senegalese",value:8000000,apps:22,goals_pg:0.07,assists_pg:0.04,key_passes_pg:0.5,pass_acc:85,tackles_pg:2.8,interceptions_pg:1.7,aerial_pct:72,shots_on_tgt_pg:0.2,height:187},
+
+  // ── 🇲🇽 LIGA MX DEFENDERS ──
+  {name:"Jorge Sánchez",club:"Club América",league:"liga_mx",pos:"DEF",subpos:"RB",age:26,nat:"Mexican",value:5000000,apps:22,goals_pg:0.05,assists_pg:0.16,key_passes_pg:0.9,pass_acc:80,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:50,shots_on_tgt_pg:0.1,height:178},
+  {name:"Jesús Angulo",club:"Tigres UANL",league:"liga_mx",pos:"DEF",subpos:"RB",age:27,nat:"Mexican",value:3000000,apps:22,goals_pg:0.05,assists_pg:0.14,key_passes_pg:0.8,pass_acc:79,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:50,shots_on_tgt_pg:0.1,height:178},
+  {name:"Alan Mozo",club:"Pumas UNAM",league:"liga_mx",pos:"DEF",subpos:"RB",age:28,nat:"Mexican",value:2500000,apps:22,goals_pg:0.04,assists_pg:0.14,key_passes_pg:0.8,pass_acc:78,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:48,shots_on_tgt_pg:0.1,height:175},
+
+  // ── 🇺🇸 MLS DEFENDERS ──
+  {name:"DeAndre Yedlin",club:"Inter Miami",league:"mls",pos:"DEF",subpos:"RB",age:32,nat:"American",value:2000000,apps:20,goals_pg:0.04,assists_pg:0.14,key_passes_pg:0.8,pass_acc:78,tackles_pg:2.4,interceptions_pg:1.2,aerial_pct:48,shots_on_tgt_pg:0.1,height:175},
+  {name:"Aaron Long",club:"New York Red Bulls",league:"mls",pos:"DEF",subpos:"CB",age:32,nat:"American",value:2000000,apps:22,goals_pg:0.06,assists_pg:0.04,key_passes_pg:0.4,pass_acc:79,tackles_pg:2.6,interceptions_pg:1.5,aerial_pct:66,shots_on_tgt_pg:0.2,height:188},
+  {name:"George Campbell",club:"Atlanta United",league:"mls",pos:"DEF",subpos:"CB",age:24,nat:"American",value:3000000,apps:22,goals_pg:0.05,assists_pg:0.04,key_passes_pg:0.4,pass_acc:80,tackles_pg:2.6,interceptions_pg:1.5,aerial_pct:64,shots_on_tgt_pg:0.1,height:190},
+  {name:"Kai Wagner",club:"Philadelphia Union",league:"mls",pos:"DEF",subpos:"LB",age:28,nat:"German",value:3000000,apps:22,goals_pg:0.05,assists_pg:0.18,key_passes_pg:1.0,pass_acc:80,tackles_pg:2.6,interceptions_pg:1.3,aerial_pct:46,shots_on_tgt_pg:0.2,height:183},
+
+  // ── 🇳🇱 EREDIVISIE DEFENDERS ──
+  {name:"Devyne Rensch",club:"Ajax",league:"eredivisie",pos:"DEF",subpos:"RB",age:22,nat:"Dutch",value:15000000,apps:24,goals_pg:0.06,assists_pg:0.18,key_passes_pg:1.0,pass_acc:82,tackles_pg:2.6,interceptions_pg:1.4,aerial_pct:50,shots_on_tgt_pg:0.2,height:179},
+  {name:"Owen Wijndal",club:"Ajax",league:"eredivisie",pos:"DEF",subpos:"LB",age:25,nat:"Dutch",value:10000000,apps:24,goals_pg:0.05,assists_pg:0.18,key_passes_pg:1.0,pass_acc:82,tackles_pg:2.6,interceptions_pg:1.3,aerial_pct:46,shots_on_tgt_pg:0.2,height:178},
+  {name:"Olivier Boscagli",club:"PSV Eindhoven",league:"eredivisie",pos:"DEF",subpos:"CB",age:27,nat:"French",value:12000000,apps:26,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.6,pass_acc:86,tackles_pg:2.7,interceptions_pg:1.6,aerial_pct:66,shots_on_tgt_pg:0.2,height:185},
+
+  // ── 🇵🇹 PRIMEIRA LIGA DEFENDERS ──
+  {name:"Álvaro Carreras",club:"Benfica",league:"primeira_liga",pos:"DEF",subpos:"LB",age:22,nat:"Spanish",value:20000000,apps:26,goals_pg:0.06,assists_pg:0.20,key_passes_pg:1.1,pass_acc:82,tackles_pg:2.7,interceptions_pg:1.4,aerial_pct:46,shots_on_tgt_pg:0.2,height:182},
+  {name:"António Silva",club:"Benfica",league:"primeira_liga",pos:"DEF",subpos:"CB",age:21,nat:"Portuguese",value:35000000,apps:26,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.5,pass_acc:88,tackles_pg:2.8,interceptions_pg:1.7,aerial_pct:68,shots_on_tgt_pg:0.1,height:187},
+  {name:"Pepe",club:"FC Porto",league:"primeira_liga",pos:"DEF",subpos:"CB",age:42,nat:"Portuguese",value:500000,apps:18,goals_pg:0.07,assists_pg:0.04,key_passes_pg:0.4,pass_acc:84,tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:70,shots_on_tgt_pg:0.2,height:188},
+  {name:"Nélson Semedo",club:"Sporting CP",league:"primeira_liga",pos:"DEF",subpos:"RB",age:31,nat:"Portuguese",value:12000000,apps:24,goals_pg:0.05,assists_pg:0.16,key_passes_pg:1.0,pass_acc:82,tackles_pg:2.6,interceptions_pg:1.3,aerial_pct:50,shots_on_tgt_pg:0.1,height:179},
+
+  // ── 🇹🇷 SÜPER LIG DEFENDERS ──
+  {name:"Sacha Boey",club:"Bayern Munich",league:"super_lig",pos:"DEF",subpos:"RB",age:24,nat:"French",value:25000000,apps:20,goals_pg:0.06,assists_pg:0.18,key_passes_pg:1.0,pass_acc:82,tackles_pg:2.7,interceptions_pg:1.4,aerial_pct:50,shots_on_tgt_pg:0.2,height:177},
+  {name:"Abdülkerim Bardakcı",club:"Galatasaray",league:"super_lig",pos:"DEF",subpos:"CB",age:27,nat:"Turkish",value:10000000,apps:26,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.5,pass_acc:83,tackles_pg:2.7,interceptions_pg:1.6,aerial_pct:67,shots_on_tgt_pg:0.2,height:188},
+  {name:"Lucas Torreira",club:"Galatasaray",league:"super_lig",pos:"MID",subpos:"CDM",age:29,nat:"Uruguayan",value:8000000,apps:24,goals_pg:0.10,assists_pg:0.12,key_passes_pg:1.5,pass_acc:86,tackles_pg:4.0,interceptions_pg:2.2,aerial_pct:48,shots_on_tgt_pg:0.4,height:166},
+
+  // ── 🇧🇪 JUPILER DEFENDERS ──
+  {name:"Brandon Mechele",club:"Club Brugge",league:"jupiler",pos:"DEF",subpos:"CB",age:32,nat:"Belgian",value:4000000,apps:26,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.5,pass_acc:83,tackles_pg:2.7,interceptions_pg:1.6,aerial_pct:68,shots_on_tgt_pg:0.2,height:190},
+  {name:"Sander Coopman",club:"Club Brugge",league:"jupiler",pos:"DEF",subpos:"RB",age:28,nat:"Belgian",value:3000000,apps:22,goals_pg:0.05,assists_pg:0.14,key_passes_pg:0.8,pass_acc:80,tackles_pg:2.5,interceptions_pg:1.3,aerial_pct:50,shots_on_tgt_pg:0.1,height:178},
+
+  // ── 🏴󠁧󠁢󠁳󠁣󠁴󠁿 SCOTTISH DEFENDERS ──
+  {name:"Cameron Carter-Vickers",club:"Celtic",league:"scottish_prem",pos:"DEF",subpos:"CB",age:27,nat:"American",value:10000000,apps:26,goals_pg:0.06,assists_pg:0.05,key_passes_pg:0.4,pass_acc:83,tackles_pg:2.8,interceptions_pg:1.7,aerial_pct:66,shots_on_tgt_pg:0.1,height:187},
+  {name:"Alistair Johnston",club:"Celtic",league:"scottish_prem",pos:"DEF",subpos:"RB",age:26,nat:"Canadian",value:6000000,apps:26,goals_pg:0.05,assists_pg:0.16,key_passes_pg:0.9,pass_acc:80,tackles_pg:2.7,interceptions_pg:1.4,aerial_pct:52,shots_on_tgt_pg:0.2,height:180},
+  {name:"Connor Goldson",club:"Rangers",league:"scottish_prem",pos:"DEF",subpos:"CB",age:32,nat:"English",value:4000000,apps:24,goals_pg:0.07,assists_pg:0.05,key_passes_pg:0.4,pass_acc:81,tackles_pg:2.6,interceptions_pg:1.6,aerial_pct:68,shots_on_tgt_pg:0.2,height:190},
+];
+
+PLAYERS_DB.push(...DEF_ADDITIONS);
+console.log('Total players after DEF additions:', PLAYERS_DB.filter(p => p.apps > 0 && p.value > 0).length);
