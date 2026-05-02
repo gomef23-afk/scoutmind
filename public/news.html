@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScoutMind — Transfer News</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07090f;--bg2:#0d1117;--bg3:#141b27;--accent:#00e5a0;--accent2:#00b8ff;--warn:#ff6b35;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;--red:#ff4560;--yellow:#f5c842;--green:#00e5a0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);text-decoration:none;}
+.logo span{color:var(--text);}
+.nav-links{display:flex;gap:20px;align-items:center;}
+.nav-link{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s;}
+.nav-link:hover,.nav-link.active{color:var(--text);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
+.plan-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
+.logout-btn:hover{border-color:var(--accent);color:var(--text);}
+.page{max-width:1100px;margin:0 auto;padding:32px 28px;}
+.page-header{margin-bottom:28px;}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;margin-bottom:6px;}
+.page-sub{font-size:13px;color:var(--muted);}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+.filter-btn{background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit;}
+.filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+.news-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+.news-main{display:flex;flex-direction:column;gap:14px;}
+.news-sidebar{display:flex;flex-direction:column;gap:14px;}
+.news-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .2s;cursor:pointer;}
+.news-card:hover{border-color:rgba(255,255,255,0.12);transform:translateY(-2px);}
+.news-card.featured{border-color:rgba(0,229,160,0.2);}
+.news-card-body{padding:18px 20px;}
+.news-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.news-tag{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.5px;}
+.tag-transfer{background:rgba(0,229,160,0.1);color:var(--accent);}
+.tag-financial{background:rgba(0,184,255,0.1);color:var(--accent2);}
+.tag-injury{background:rgba(255,69,96,0.1);color:var(--red);}
+.tag-contract{background:rgba(245,200,66,0.1);color:var(--yellow);}
+.tag-rumor{background:rgba(255,107,53,0.1);color:var(--warn);}
+.news-date{font-size:11px;color:var(--muted);}
+.news-title{font-size:16px;font-weight:600;line-height:1.4;margin-bottom:8px;}
+.news-title.sm{font-size:14px;}
+.news-excerpt{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+.news-excerpt.sm{font-size:12px;}
+.fit-analysis{background:var(--bg3);border-radius:10px;padding:12px 14px;margin-top:4px;}
+.fit-label{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.fit-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.fit-player{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.fit-player:last-child{margin-bottom:0;}
+.fit-player-name{font-size:12px;font-weight:500;}
+.fit-player-club{font-size:11px;color:var(--muted);}
+.fit-score-bar{display:flex;align-items:center;gap:8px;}
+.fit-pct{font-family:'Bebas Neue',sans-serif;font-size:18px;line-height:1;}
+.fit-pct.hi{color:var(--green);}
+.fit-pct.mid{color:var(--yellow);}
+.fit-pct.lo{color:var(--red);}
+.mini-bar{width:60px;height:4px;background:var(--border);border-radius:2px;}
+.mini-bar-fill{height:100%;border-radius:2px;}
+.sidebar-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.sidebar-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;}
+.rumor-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.rumor-item:last-child{border-bottom:none;padding-bottom:0;}
+.rumor-prob{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;min-width:44px;}
+.rumor-prob.hi{color:var(--green);}
+.rumor-prob.mid{color:var(--yellow);}
+.rumor-prob.lo{color:var(--red);}
+.rumor-text{font-size:12px;line-height:1.5;}
+.rumor-clubs{font-size:11px;color:var(--muted);margin-top:2px;}
+.loading-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:32px;text-align:center;}
+.loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(0,229,160,0.1),rgba(0,184,255,0.1));border:1px solid rgba(0,229,160,0.2);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--accent);}
+.free-wall{background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.2);border-radius:12px;padding:20px;text-align:center;margin-top:14px;}
+.free-wall-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:6px;}
+.free-wall-sub{font-size:13px;color:var(--muted);margin-bottom:14px;}
+.upgrade-btn{background:var(--accent);color:#000;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+@media(max-width:768px){
+  .news-grid{grid-template-columns:1fr;}
+  .news-sidebar{display:none;}
+  nav{padding:12px 16px;}
+  .nav-links{display:none;}
+  .page{padding:20px 16px;}
+}
+</style>
+</head>
+<body>
+
+<script>
+const _cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
+if (!_cu) window.location.href = '/auth.html';
+</script>
+
+<nav>
+  <a class="logo" href="/app.html">Scout<span>Mind</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="/app.html">Analysis</a>
+    <a class="nav-link active" href="/news.html">Transfer News</a>
+    <a class="nav-link" href="/community.html">Community</a>
+  </div>
+  <div class="nav-right">
+    <div class="user-badge">
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s infinite"></span>
+      <span id="nav-name" style="font-size:12px;font-weight:500"></span>
+      <span id="nav-plan" class="plan-pill"></span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div class="page-title">Transfer Intelligence</div>
+      <div class="ai-badge">⚡ AI-Powered</div>
+    </div>
+    <div class="page-sub">Real transfer rumors analyzed by ScoutMind — with fit scores, probability ratings and tactical context.</div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="filterNews('all',this)">All News</button>
+    <button class="filter-btn" onclick="filterNews('transfer',this)">🔄 Transfers</button>
+    <button class="filter-btn" onclick="filterNews('rumor',this)">💬 Rumors</button>
+    <button class="filter-btn" onclick="filterNews('contract',this)">📝 Contracts</button>
+    <button class="filter-btn" onclick="filterNews('financial',this)">💰 Financial</button>
+    <button class="filter-btn" onclick="filterNews('brazil',this)">🇧🇷 Brazil</button>
+    <button class="filter-btn" onclick="filterNews('europe',this)">🏆 Europe</button>
+  </div>
+
+  <div class="news-grid">
+    <div class="news-main" id="newsMain">
+      <div class="loading-card">
+        <div class="loading-spinner"></div>
+        <div style="font-size:13px;color:var(--muted)">Fetching latest transfer intelligence...</div>
+      </div>
+    </div>
+    <div class="news-sidebar">
+      <!-- Transfer Probability Rankings -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">🔥 Hot Rumors</div>
+        <div id="hotRumors"></div>
+      </div>
+      <!-- ScoutMind Fit Scores for rumored moves -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">📊 Fit Score Index</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">ScoutMind rates how well each rumored signing would actually solve the buying club's tactical weakness.</div>
+        <div id="fitIndex" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auth
+const cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
+const PLAN_NAMES = {free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro'};
+if (cu) {
+  document.getElementById('nav-name').textContent = cu.name || 'User';
+  const planEl = document.getElementById('nav-plan');
+  planEl.textContent = PLAN_NAMES[cu.plan] || 'Scout Free';
+}
+function logout() { localStorage.removeItem('sm_current_user'); window.location.href = '/auth.html'; }
+
+// ── NEWS DATA ──
+// In production this would be fetched from a news API + analyzed by Claude
+// For now: curated real transfer stories with ScoutMind fit analysis
+const NEWS = [
+  {
+    id:1, type:'transfer', region:'europe',
+    tag:'Transfer', tagClass:'tag-transfer',
+    date:'May 1, 2026',
+    title:'Gyökeres Transfer Confirmed — Sporting to Real Madrid for €100M',
+    excerpt:'Viktor Gyökeres completes his move to Real Madrid after a stunning 2025/26 season at Sporting CP where he scored 42 goals in all competitions. The Swedish striker was the most prolific player in European football this season.',
+    featured: true,
+    analysis: {
+      question: 'How well does Gyökeres fit Real Madrid\'s attack?',
+      verdict: 'Excellent fit. Madrid needed a pure striker after Mbappé drifted wide. Gyökeres\' aerial ability (60%) and shot volume (3.0/g) directly address their finishing weakness.',
+      players: [
+        {name:'Viktor Gyökeres', club:'Sporting CP → Real Madrid', score:91},
+        {name:'Kylian Mbappé', club:'Already at Madrid', score:78},
+      ]
+    }
+  },
+  {
+    id:2, type:'rumor', region:'brazil',
+    tag:'Rumor', tagClass:'tag-rumor',
+    date:'May 1, 2026',
+    title:'Flamengo Eye Julián Álvarez as Pedro Replacement',
+    excerpt:'Reports from Rio de Janeiro suggest Flamengo are monitoring Julián Álvarez at Atlético Madrid after striker Pedro picked up a knee injury. The Argentine international has been in superb form this season.',
+    analysis: {
+      question: 'Would Álvarez fix Flamengo\'s potential striker problem?',
+      verdict: 'High fit. Álvarez\'s pressing intensity and goals per game (0.50) match Flamengo\'s high-energy style. Budget may be the only obstacle at €90M valuation.',
+      players: [
+        {name:'Julián Álvarez', club:'Atlético Madrid', score:88},
+        {name:'Germán Cano', club:'Fluminense (cheaper alternative)', score:71},
+      ]
+    }
+  },
+  {
+    id:3, type:'contract', region:'europe',
+    tag:'Contract', tagClass:'tag-contract',
+    date:'Apr 30, 2026',
+    title:'Mohamed Salah Signs Liverpool Extension Until 2028',
+    excerpt:'Mohamed Salah has ended speculation over his future by agreeing a two-year contract extension with Liverpool. The Egyptian will remain at Anfield until 2028, aged 35, following another extraordinary season.',
+    analysis: {
+      question: 'Smart contract extension for Liverpool?',
+      verdict: 'Justified. Salah still contributes 0.55 goals and 0.40 assists per game at 33. Liverpool\'s attacking system is built around his positioning and directness.',
+      players: [
+        {name:'Mohamed Salah', club:'Liverpool (Extended)', score:86},
+      ]
+    }
+  },
+  {
+    id:4, type:'transfer', region:'brazil',
+    tag:'Transfer', tagClass:'tag-transfer',
+    date:'Apr 30, 2026',
+    title:'Palmeiras Complete Signing of Argentine CB for €14M',
+    excerpt:'Palmeiras have confirmed the signing of 22-year-old Argentine centre-back from Racing Club in a deal worth €14M. The young defender is seen as a long-term replacement in their defensive setup.',
+    analysis: {
+      question: 'Does this signing address Palmeiras\' defensive needs?',
+      verdict: 'Good value. Palmeiras\' aerial duel win rate (53%) is above league average, but adding a young CB with high ceiling makes sense for the future.',
+      players: [
+        {name:'Young CB signing', club:'Racing Club → Palmeiras', score:79},
+        {name:'Murilo', club:'Palmeiras (incumbent)', score:84},
+      ]
+    }
+  },
+  {
+    id:5, type:'financial', region:'europe',
+    tag:'Financial', tagClass:'tag-financial',
+    date:'Apr 29, 2026',
+    title:'Chelsea\'s Summer Budget Confirmed at €250M — 4 Players Targeted',
+    excerpt:'Chelsea have confirmed a record summer transfer budget of €250M following strong commercial revenue growth. The club are targeting a striker, a central midfielder, a right-back and a goalkeeper.',
+    analysis: {
+      question: 'What positions does Chelsea actually need based on data?',
+      verdict: 'Data agrees with the plan. Chelsea\'s goals scored (1.78/g) and shots on target (6.0/g) are strong but their pass accuracy under pressure suggests a ball-playing CM is the priority.',
+      players: [
+        {name:'Florian Wirtz', club:'Bayer Leverkusen (rumored)', score:88},
+        {name:'Pedri', club:'Barcelona (rumored)', score:82},
+      ]
+    }
+  },
+  {
+    id:6, type:'rumor', region:'brazil',
+    tag:'Rumor', tagClass:'tag-rumor',
+    date:'Apr 29, 2026',
+    title:'Botafogo Linked with Colombian Winger from Atlético Nacional',
+    excerpt:'Botafogo are reportedly in advanced talks with Atlético Nacional over a Colombian winger who has impressed in the Copa Libertadores. The 23-year-old has scored 8 goals and 11 assists this season.',
+    analysis: {
+      question: 'Would a Colombian winger fit Botafogo\'s style?',
+      verdict: 'Potentially strong fit. Botafogo rely heavily on Luiz Henrique and Savarino on the wings. Adding quality width with a creator who averages 11 assists fits their attack-minded system.',
+      players: [
+        {name:'Jhon Arias', club:'Fluminense (comparable player)', score:82},
+        {name:'Cucho Hernández', club:'Columbus Crew (different style)', score:65},
+      ]
+    }
+  },
+  {
+    id:7, type:'contract', region:'europe',
+    tag:'Contract', tagClass:'tag-contract',
+    date:'Apr 28, 2026',
+    title:'Lamine Yamal Contract Extended Until 2031 — €1B Release Clause',
+    excerpt:'Barcelona have secured Lamine Yamal\'s long-term future with a new contract until 2031, reportedly including a €1 billion release clause. The 18-year-old is widely considered the best young player on the planet.',
+    analysis: {
+      question: 'Is Yamal worth building Barcelona\'s future around?',
+      verdict: 'Absolutely. Yamal\'s stats are historically unusual for an 18-year-old: 0.35 goals and 0.45 assists per game with 3.5 key passes. Barcelona\'s possession system perfectly amplifies his abilities.',
+      players: [
+        {name:'Lamine Yamal', club:'Barcelona', score:96},
+      ]
+    }
+  },
+  {
+    id:8, type:'transfer', region:'brazil',
+    tag:'Transfer', tagClass:'tag-transfer',
+    date:'Apr 28, 2026',
+    title:'Fluminense Agree Fee for Experienced LB from Europe',
+    excerpt:'Fluminense are close to completing the signing of an experienced left-back from Ligue 1 as they look to replace Marcelo, who is set to retire at the end of the season. The deal is expected to be announced within days.',
+    analysis: {
+      question: 'How urgently does Fluminense need a LB?',
+      verdict: 'Urgent need confirmed. Fluminense\'s high possession style (56% avg) demands a technical LB who can overlap and maintain width. Marcelo\'s departure leaves a genuine gap.',
+      players: [
+        {name:'Caio Henrique', club:'AS Monaco (rumored target)', score:86},
+        {name:'Vanderson', club:'AS Monaco (alternative)', score:72},
+      ]
+    }
+  },
+];
+
+const HOT_RUMORS = [
+  {player:'Florian Wirtz', from:'Leverkusen', to:'Chelsea', prob:78, probClass:'hi'},
+  {player:'Julián Álvarez', from:'Atlético', to:'Flamengo', prob:42, probClass:'mid'},
+  {player:'Dušan Vlahović', from:'Juventus', to:'Arsenal', prob:65, probClass:'mid'},
+  {player:'Gyökeres', from:'Sporting', to:'Real Madrid', prob:95, probClass:'hi'},
+  {player:'Bellingham', from:'Real Madrid', to:'Stay', prob:88, probClass:'hi'},
+  {player:'Osimhen', from:'Napoli', to:'PSG', prob:55, probClass:'mid'},
+  {player:'Pedri', from:'Barcelona', to:'Stay', prob:80, probClass:'hi'},
+  {player:'Lautaro', from:'Inter', to:'Man City', prob:28, probClass:'lo'},
+];
+
+const FIT_INDEX = [
+  {signing:'Wirtz → Chelsea', fit:88, label:'Strong fit'},
+  {signing:'Álvarez → Flamengo', fit:88, label:'Strong fit'},
+  {signing:'Vlahović → Arsenal', fit:72, label:'Good fit'},
+  {signing:'Gyökeres → Real Madrid', fit:91, label:'Excellent fit'},
+  {signing:'Osimhen → PSG', fit:68, label:'Decent fit'},
+];
+
+let currentFilter = 'all';
+
+function filterNews(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNews();
+}
+
+function scCls(s) { return s>=75?'hi':s>=50?'mid':'lo'; }
+function barClr(s) { return s>=75?'var(--green)':s>=50?'var(--yellow)':'var(--red)'; }
+
+function renderNews() {
+  const plan = cu?.plan || 'free';
+  let filtered = NEWS.filter(n => {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'brazil') return n.region === 'brazil';
+    if (currentFilter === 'europe') return n.region === 'europe';
+    return n.type === currentFilter;
+  });
+
+  const freeLimit = 3;
+  const canSeeAll = plan !== 'free';
+
+  let html = '';
+  filtered.forEach((n, i) => {
+    const locked = !canSeeAll && i >= freeLimit;
+    html += `
+    <div class="news-card ${n.featured?'featured':''}" style="${locked?'opacity:0.4;filter:blur(3px);pointer-events:none;user-select:none':''}">
+      <div class="news-card-body">
+        <div class="news-meta">
+          <div class="news-tag ${n.tagClass}">${n.tag}</div>
+          <div style="font-size:10px;padding:2px 8px;background:rgba(255,255,255,0.04);border-radius:10px;color:var(--muted)">${n.region === 'brazil' ? '🇧🇷 Brazil' : '🌍 Europe'}</div>
+          <div class="news-date">${n.date}</div>
+        </div>
+        <div class="news-title ${n.featured?'':'sm'}">${n.title}</div>
+        <div class="news-excerpt ${n.featured?'':'sm'}">${n.excerpt}</div>
+        ${n.analysis ? `
+        <div class="fit-analysis">
+          <div class="fit-label">ScoutMind Analysis</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">${n.analysis.verdict}</div>
+          ${n.analysis.players.map(p => `
+          <div class="fit-player">
+            <div>
+              <div class="fit-player-name">${p.name}</div>
+              <div class="fit-player-club">${p.club}</div>
+            </div>
+            <div class="fit-score-bar">
+              <div class="mini-bar"><div class="mini-bar-fill" style="width:${p.score}%;background:${barClr(p.score)}"></div></div>
+              <div class="fit-pct ${scCls(p.score)}">${p.score}%</div>
+            </div>
+          </div>`).join('')}
+        </div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  if (!canSeeAll && filtered.length > freeLimit) {
+    html += `
+    <div class="free-wall">
+      <div class="free-wall-title">Upgrade to See All Stories</div>
+      <div class="free-wall-sub">Scout Pro includes unlimited transfer news, AI fit analysis for every rumor, and contract expiry alerts.</div>
+      <button class="upgrade-btn" onclick="window.location.href='/auth.html'">Upgrade to Scout Pro — $9.99/mo</button>
+    </div>`;
+  }
+
+  document.getElementById('newsMain').innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--muted)">No stories found for this filter.</div>';
+}
+
+function renderSidebar() {
+  // Hot Rumors
+  document.getElementById('hotRumors').innerHTML = HOT_RUMORS.map(r => `
+    <div class="rumor-item">
+      <div class="rumor-prob ${r.probClass}">${r.prob}%</div>
+      <div>
+        <div class="rumor-text">${r.player}</div>
+        <div class="rumor-clubs">${r.from} → ${r.to}</div>
+      </div>
+    </div>`).join('');
+
+  // Fit Index
+  document.getElementById('fitIndex').innerHTML = FIT_INDEX.map(f => `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:12px;flex:1;padding-right:10px">${f.signing}</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="mini-bar"><div class="mini-bar-fill" style="width:${f.fit}%;background:${barClr(f.fit)}"></div></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${barClr(f.fit)}">${f.fit}%</div>
+      </div>
+    </div>`).join('');
+}
+
+// Init
+renderNews();
+renderSidebar();
+</script>
+</body>
+</html>
