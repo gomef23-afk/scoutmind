@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScoutMind — Community</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07090f;--bg2:#0d1117;--bg3:#141b27;--accent:#00e5a0;--accent2:#00b8ff;--warn:#ff6b35;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;--red:#ff4560;--yellow:#f5c842;--green:#00e5a0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);text-decoration:none;}
+.logo span{color:var(--text);}
+.nav-links{display:flex;gap:20px;align-items:center;}
+.nav-link{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s;}
+.nav-link:hover,.nav-link.active{color:var(--text);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
+.plan-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
+.logout-btn:hover{border-color:var(--accent);color:var(--text);}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* PAGE LAYOUT */
+.page{max-width:1200px;margin:0 auto;padding:28px;}
+.two-col{display:grid;grid-template-columns:300px 1fr;gap:20px;}
+
+/* TEAM SELECTOR */
+.team-selector{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;position:sticky;top:80px;}
+.ts-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
+.ts-search{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;}
+.ts-search:focus{border-color:var(--accent);}
+.ts-league-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:8px 6px 4px;}
+.ts-team{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:2px;}
+.ts-team:hover{background:rgba(255,255,255,0.04);}
+.ts-team.active{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);}
+.ts-team-name{font-size:13px;font-weight:500;}
+.ts-team-league{font-size:10px;color:var(--muted);}
+.ts-scroll{max-height:calc(100vh - 280px);overflow-y:auto;}
+.league-select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px;font-family:inherit;outline:none;margin-bottom:8px;}
+
+/* TEAM PAGE */
+.team-hero{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;position:relative;overflow:hidden;}
+.team-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(0,229,160,0.06),transparent 70%);pointer-events:none;}
+.team-name-big{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;margin-bottom:6px;}
+.team-meta-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.team-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.badge-pos{background:rgba(0,184,255,0.1);color:var(--accent2);}
+.badge-style{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--accent);}
+.badge-warn{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.2);color:var(--warn);}
+.team-stats-mini{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;}
+.tsm-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
+.tsm-val{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;}
+.tsm-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+.scoutmind-verdict{background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:10px;padding:14px 16px;margin-top:14px;}
+.sv-label{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.sv-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 2s infinite;}
+.sv-text{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* TABS */
+.comm-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px;}
+.comm-tab{padding:9px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+.comm-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* POLLS */
+.poll-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;}
+.poll-question{font-size:15px;font-weight:600;margin-bottom:4px;}
+.poll-meta{font-size:11px;color:var(--muted);margin-bottom:14px;}
+.poll-option{margin-bottom:8px;cursor:pointer;}
+.poll-option-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.poll-option-label{font-size:13px;font-weight:500;}
+.poll-option-pct{font-size:12px;font-family:'DM Mono',monospace;color:var(--accent);}
+.poll-bar-bg{height:6px;background:var(--border);border-radius:3px;}
+.poll-bar-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .6s ease;}
+.poll-bar-fill.voted{background:var(--accent2);}
+.poll-voted-badge{font-size:10px;color:var(--accent);margin-left:6px;}
+.create-poll-btn{width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);padding:12px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s;margin-bottom:12px;}
+.create-poll-btn:hover{border-color:var(--accent);color:var(--accent);}
+.poll-form{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;display:none;}
+.poll-form.open{display:block;}
+.pf-label{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;}
+.pf-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:7px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;}
+.pf-input:focus{border-color:var(--accent);}
+.pf-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.pf-btn{background:var(--accent);color:#000;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
+.pf-btn:hover{background:#00ffb3;}
+.pf-cancel{background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;gap:0;}
+.chat-msg{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.chat-avatar{width:34px;height:34px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.chat-body{flex:1;}
+.chat-header{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+.chat-user{font-size:13px;font-weight:600;}
+.chat-plan{font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;}
+.chat-pro{background:rgba(0,229,160,0.1);color:var(--accent);}
+.chat-club{background:rgba(0,184,255,0.1);color:var(--accent2);}
+.chat-time{font-size:11px;color:var(--muted);}
+.chat-text{font-size:13px;color:var(--muted);line-height:1.5;}
+.chat-reactions{display:flex;gap:6px;margin-top:6px;}
+.reaction-btn{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;transition:all .2s;font-family:inherit;color:var(--text);}
+.reaction-btn:hover,.reaction-btn.reacted{background:rgba(0,229,160,0.08);border-color:rgba(0,229,160,0.3);}
+.chat-input-wrap{position:sticky;bottom:0;background:var(--bg);padding:14px 0 0;}
+.chat-input-row{display:flex;gap:8px;}
+.chat-input{flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;transition:border .2s;}
+.chat-input:focus{border-color:var(--accent);}
+.chat-send{background:var(--accent);color:#000;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
+.chat-send:hover{background:#00ffb3;}
+.pro-gate{background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:10px;padding:16px;text-align:center;margin-top:10px;}
+.pro-gate-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.pro-gate-sub{font-size:12px;color:var(--muted);margin-bottom:12px;}
+.upgrade-btn{background:var(--accent);color:#000;border:none;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+/* WISHLIST */
+.wish-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+.wish-rank{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--muted);min-width:36px;line-height:1;}
+.wish-rank.top{color:var(--accent);}
+.wish-info{flex:1;}
+.wish-name{font-size:14px;font-weight:600;margin-bottom:2px;}
+.wish-meta{font-size:11px;color:var(--muted);}
+.wish-votes{text-align:right;}
+.wish-vote-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;gap:5px;}
+.wish-vote-btn:hover,.wish-vote-btn.voted{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+.wish-count{font-size:11px;color:var(--muted);margin-top:4px;text-align:center;}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:.3;}
+
+/* MOBILE */
+@media(max-width:768px){
+  .two-col{grid-template-columns:1fr;}
+  .team-selector{position:static;}
+  .ts-scroll{max-height:200px;}
+  .team-stats-mini{grid-template-columns:repeat(2,1fr);}
+  nav{padding:12px 16px;}
+  .nav-links{display:none;}
+  .page{padding:14px;}
+}
+</style>
+</head>
+<body>
+
+<script>
+const _cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
+if (!_cu) window.location.href = '/auth.html';
+</script>
+
+<nav>
+  <a class="logo" href="/app.html">Scout<span>Mind</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="/app.html">Analysis</a>
+    <a class="nav-link" href="/news.html">Transfer News</a>
+    <a class="nav-link active" href="/community.html">Community</a>
+  </div>
+  <div class="nav-right">
+    <div class="user-badge">
+      <span class="live-dot"></span>
+      <span id="nav-name" style="font-size:12px;font-weight:500"></span>
+      <span id="nav-plan" class="plan-pill"></span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div style="margin-bottom:20px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:4px">Fan Community</div>
+    <div style="font-size:13px;color:var(--muted)">Pick your team. Vote on transfers. Chat with fans. See what ScoutMind thinks.</div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- TEAM SELECTOR -->
+    <div>
+      <div class="team-selector">
+        <div class="ts-title">Find Your Club</div>
+        <select class="league-select" id="comm-league" onchange="loadLeagueTeams()">
+          <option value="serie_a">🇧🇷 Série A</option>
+          <option value="serie_b">🇧🇷 Série B</option>
+          <option value="premier_league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
+          <option value="la_liga">🇪🇸 La Liga</option>
+          <option value="bundesliga">🇩🇪 Bundesliga</option>
+          <option value="serie_a_it">🇮🇹 Serie A Italy</option>
+          <option value="ligue_1">🇫🇷 Ligue 1</option>
+          <option value="argentina">🇦🇷 Argentina</option>
+          <option value="mls">🇺🇸 MLS</option>
+          <option value="saudi_pro">🇸🇦 Saudi Pro League</option>
+          <option value="eredivisie">🇳🇱 Eredivisie</option>
+          <option value="primeira_liga">🇵🇹 Primeira Liga</option>
+        </select>
+        <input type="text" class="ts-search" id="comm-search" placeholder="Search teams..." oninput="filterCommTeams()">
+        <div class="ts-scroll" id="comm-team-list"></div>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="comm-main">
+      <div class="empty">
+        <div class="empty-icon">👥</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;opacity:.35;margin-bottom:6px">Select Your Club</div>
+        <div style="font-size:13px">Pick a team from the left to see their community page</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/leagues_data.js"></script>
+<script>
+// ── AUTH ──
+const cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
+const PLAN_NAMES = {free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro'};
+const isPro = cu && ['pro','club','clubpro'].includes(cu.plan);
+
+if (cu) {
+  document.getElementById('nav-name').textContent = cu.name || 'User';
+  const planEl = document.getElementById('nav-plan');
+  planEl.textContent = PLAN_NAMES[cu.plan] || 'Scout Free';
+}
+function logout() { localStorage.removeItem('sm_current_user'); window.location.href = '/auth.html'; }
+
+// ── STATE ──
+let activeTeam = null;
+let activeLeague = 'serie_a';
+let activeCommTab = 'polls';
+
+// ── COMMUNITY DATA (stored in localStorage per team) ──
+function getTeamData(teamId) {
+  const key = `sm_comm_${teamId}`;
+  const stored = localStorage.getItem(key);
+  if (stored) return JSON.parse(stored);
+  // Default data for new teams
+  return getDefaultData(teamId);
+}
+
+function saveTeamData(teamId, data) {
+  localStorage.setItem(`sm_comm_${teamId}`, JSON.stringify(data));
+}
+
+function getDefaultData(teamId) {
+  // Seed with realistic default polls and chat
+  const defaults = {
+    flamengo: {
+      polls: [
+        {id:'p1', q:'Who should be our starting striker next season?', opts:['Pedro','Igor Jesus','New signing'], votes:[142,89,210], userVote:null, author:'ScoutMind', time:'2h ago'},
+        {id:'p2', q:'Should Flamengo sell Gerson this summer?', opts:['Yes, cash in now','No, keep him','Depends on the offer'], votes:[45,287,123], userVote:null, author:'ScoutMind', time:'1d ago'},
+      ],
+      chat: [
+        {id:'c1',user:'FlaFan2026',plan:'pro',emoji:'🦅',time:'5m ago',text:'Pedro está voando esse ano! Merece renovação imediata.',reactions:{fire:12,'👏':8}},
+        {id:'c2',user:'RioNação',plan:'free',emoji:'🔴',time:'12m ago',text:'A defesa precisa de reforços. Léo Ortiz sozinho não aguenta.',reactions:{fire:5,'👏':3}},
+        {id:'c3',user:'FlaCampeão',plan:'club',emoji:'⚫',time:'28m ago',text:'Arrascaeta é o melhor jogador do Brasil atualmente, não tem discussão.',reactions:{fire:24,'👏':15}},
+        {id:'c4',user:'ScoutMind',plan:'pro',emoji:'🤖',time:'1h ago',text:'📊 ScoutMind Analysis: Flamengo\'s biggest weakness this week is aerial vulnerability (44% duels won vs 51% league avg). A tall CB should be the priority signing.',reactions:{fire:31,'👏':22}},
+      ],
+      wishlist: [
+        {name:'Julián Álvarez',club:'Atlético Madrid',pos:'ST',votes:234,userVoted:false},
+        {name:'Nico Williams',club:'Athletic Bilbao',pos:'LW',votes:189,userVoted:false},
+        {name:'Alejandro Grimaldo',club:'Bayer Leverkusen',pos:'LB',votes:145,userVoted:false},
+        {name:'Alessandro Bastoni',club:'Inter Milan',pos:'CB',votes:98,userVoted:false},
+      ]
+    },
+    palmeiras: {
+      polls: [
+        {id:'p1', q:'Is Estêvão ready to be starter every game?', opts:['Yes, 100%','Needs more time','Rotation is fine'], votes:[312,87,56], userVote:null, author:'ScoutMind', time:'3h ago'},
+        {id:'p2', q:'Who is Palmeiras\' player of the season so far?', opts:['Estêvão','Richard Rios','Murilo','Raphael Veiga'], votes:[289,145,67,112], userVote:null, author:'VerdãoFan', time:'2d ago'},
+      ],
+      chat: [
+        {id:'c1',user:'VerdãoNação',plan:'pro',emoji:'💚',time:'3m ago',text:'Estêvão para o Chelsea? Que vergonha. Deveríamos ter renovado antes.',reactions:{fire:45,'👏':12}},
+        {id:'c2',user:'PalmeirasFiel',plan:'free',emoji:'🐷',time:'15m ago',text:'Richard Rios está jogando muito bem. Jogador top.',reactions:{fire:18,'👏':9}},
+        {id:'c3',user:'ScoutMind',plan:'pro',emoji:'🤖',time:'2h ago',text:'📊 ScoutMind Analysis: Palmeiras lead the league in possession (58%). Their biggest opportunity is adding a creative CAM to convert that possession into more goals.',reactions:{fire:28,'👏':19}},
+      ],
+      wishlist: [
+        {name:'Florian Wirtz',club:'Bayer Leverkusen',pos:'CAM',votes:178,userVoted:false},
+        {name:'Pedri',club:'Barcelona',pos:'CM',votes:134,userVoted:false},
+        {name:'Lamine Yamal',club:'Barcelona',pos:'RW',votes:89,userVoted:false},
+      ]
+    }
+  };
+  return defaults[teamId] || {
+    polls: [
+      {id:'p1', q:`What position does ${teamId} need most?`, opts:['Striker','Centre-back','Midfielder','Goalkeeper'], votes:[120,98,75,45], userVote:null, author:'ScoutMind', time:'1d ago'},
+    ],
+    chat: [
+      {id:'c1',user:'ScoutMind',plan:'pro',emoji:'🤖',time:'1h ago',text:`📊 ScoutMind is tracking this team. Check back for weekly tactical analysis and transfer insights.`,reactions:{fire:8,'👏':5}},
+    ],
+    wishlist: [
+      {name:'Mystery Signing',club:'Unknown',pos:'???',votes:50,userVoted:false},
+    ]
+  };
+}
+
+// ── TEAM LIST ──
+function loadLeagueTeams() {
+  activeLeague = document.getElementById('comm-league').value;
+  filterCommTeams();
+}
+
+function filterCommTeams() {
+  const q = document.getElementById('comm-search').value.toLowerCase();
+  const teams = (TEAMS[activeLeague] || []).slice().sort((a,b) => a.name.localeCompare(b.name));
+  const filtered = q ? teams.filter(t => t.name.toLowerCase().includes(q)) : teams;
+
+  document.getElementById('comm-team-list').innerHTML = filtered.length === 0
+    ? '<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">No teams found</div>'
+    : filtered.map(t => `
+      <div class="ts-team ${activeTeam?.id===t.id?'active':''}" onclick="selectCommTeam('${t.id}','${activeLeague}')">
+        <div>
+          <div class="ts-team-name">${t.name}</div>
+          <div class="ts-team-league">${t.pos || ''}</div>
+        </div>
+        <div style="font-size:10px;color:var(--muted)">›</div>
+      </div>`).join('');
+}
+
+function selectCommTeam(teamId, league) {
+  const teams = TEAMS[league] || [];
+  activeTeam = teams.find(t => t.id === teamId);
+  activeLeague = league;
+  if (!activeTeam) return;
+  filterCommTeams();
+  renderTeamPage();
+}
+
+// ── TEAM PAGE ──
+function renderTeamPage() {
+  if (!activeTeam) return;
+  const t = activeTeam;
+  const av = LEAGUE_AVGS[activeLeague] || {};
+  const data = getTeamData(t.id);
+
+  // Style badges
+  const badges = [];
+  if (t.pos_pct > (av.pos||50)+5) badges.push({txt:'High Possession',cls:'badge-style'});
+  if (t.tk > (av.tk||18)+1) badges.push({txt:'High Press',cls:'badge-warn'});
+  if (t.gs > (av.gs||1.3)+0.2) badges.push({txt:'Strong Attack',cls:'badge-style'});
+  if (t.gc < (av.gc||1.3)-0.15) badges.push({txt:'Solid Defence',cls:'badge-style'});
+  if (t.pa > (av.pa||80)+3) badges.push({txt:'Technical Style',cls:'badge-style'});
+  if (t.aer > (av.aer||51)+2) badges.push({txt:'Aerial Dominance',cls:'badge-style'});
+
+  // ScoutMind verdict
+  const verdicts = [];
+  if (t.gc > (av.gc||1.3)*1.2) verdicts.push('defensive errors are a concern');
+  if (t.gs < (av.gs||1.3)*0.85) verdicts.push('attacking output is below league average');
+  if (t.pa < (av.pa||80)*0.95) verdicts.push('passing accuracy needs improvement');
+  if (t.aer < (av.aer||51)*0.9) verdicts.push('aerial vulnerability at set pieces');
+  const verdictText = verdicts.length > 0
+    ? `ScoutMind identifies ${verdicts.slice(0,2).join(' and ')} as priority areas to address. ${badges.length > 0 ? `Strengths include ${badges.slice(0,2).map(b=>b.txt).join(' and ')}.` : ''}`
+    : `${t.name} are performing well across all key metrics this season. Maintaining squad depth and fitness will be key.`;
+
+  document.getElementById('comm-main').innerHTML = `
+    <div class="team-hero">
+      <div class="team-name-big">${t.name}</div>
+      <div class="team-meta-row">
+        <div class="team-badge badge-pos">${LEAGUE_META[activeLeague]?.flag||''} ${LEAGUE_META[activeLeague]?.name||activeLeague}</div>
+        ${t.pos ? `<div class="team-badge badge-pos">Position: ${t.pos}</div>` : ''}
+        ${badges.map(b=>`<div class="team-badge ${b.cls}">${b.txt}</div>`).join('')}
+      </div>
+      <div class="team-stats-mini">
+        <div class="tsm-card">
+          <div class="tsm-val" style="color:${t.gs>=(av.gs||1.3)?'var(--green)':'var(--red)'}">${t.gs||'—'}</div>
+          <div class="tsm-lbl">Goals/game</div>
+        </div>
+        <div class="tsm-card">
+          <div class="tsm-val" style="color:${t.gc<=(av.gc||1.3)?'var(--green)':'var(--red)'}">${t.gc||'—'}</div>
+          <div class="tsm-lbl">Conceded/game</div>
+        </div>
+        <div class="tsm-card">
+          <div class="tsm-val">${t.pa||'—'}%</div>
+          <div class="tsm-lbl">Pass accuracy</div>
+        </div>
+        <div class="tsm-card">
+          <div class="tsm-val">${t.pos_pct||'—'}%</div>
+          <div class="tsm-lbl">Possession</div>
+        </div>
+      </div>
+      <div class="scoutmind-verdict">
+        <div class="sv-label">ScoutMind Weekly Verdict</div>
+        <div class="sv-text">${verdictText}</div>
+      </div>
+    </div>
+
+    <div class="comm-tabs">
+      <div class="comm-tab ${activeCommTab==='polls'?'active':''}" onclick="switchCommTab('polls',this)">🗳 Polls</div>
+      <div class="comm-tab ${activeCommTab==='chat'?'active':''}" onclick="switchCommTab('chat',this)">💬 Fan Chat</div>
+      <div class="comm-tab ${activeCommTab==='wishlist'?'active':''}" onclick="switchCommTab('wishlist',this)">⭐ Transfer Wishlist</div>
+    </div>
+
+    <div id="comm-tab-content"></div>
+  `;
+
+  renderCommTab();
+}
+
+function switchCommTab(tab, el) {
+  activeCommTab = tab;
+  document.querySelectorAll('.comm-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderCommTab();
+}
+
+function renderCommTab() {
+  const data = getTeamData(activeTeam.id);
+  const el = document.getElementById('comm-tab-content');
+  if (!el) return;
+
+  if (activeCommTab === 'polls') renderPolls(el, data);
+  else if (activeCommTab === 'chat') renderChat(el, data);
+  else if (activeCommTab === 'wishlist') renderWishlist(el, data);
+}
+
+// ── POLLS ──
+function renderPolls(el, data) {
+  let html = '';
+
+  // Create poll button
+  if (isPro) {
+    html += `<button class="create-poll-btn" onclick="togglePollForm()">+ Create a Poll</button>
+    <div class="poll-form" id="poll-form">
+      <div class="pf-label">Poll question</div>
+      <input class="pf-input" id="pf-question" placeholder="e.g. Who should we sign this summer?">
+      <div class="pf-label">Option 1</div>
+      <input class="pf-input" id="pf-opt1" placeholder="Option A">
+      <div class="pf-label">Option 2</div>
+      <input class="pf-input" id="pf-opt2" placeholder="Option B">
+      <div class="pf-label">Option 3 (optional)</div>
+      <input class="pf-input" id="pf-opt3" placeholder="Option C">
+      <div style="display:flex;gap:8px">
+        <button class="pf-btn" onclick="submitPoll()">Create Poll</button>
+        <button class="pf-cancel" onclick="togglePollForm()">Cancel</button>
+      </div>
+    </div>`;
+  } else {
+    html += `<div class="pro-gate" style="margin-bottom:12px">
+      <div class="pro-gate-title">Create Polls with Scout Pro</div>
+      <div class="pro-gate-sub">Start conversations. Scout Pro members can create polls for their team's community.</div>
+      <button class="upgrade-btn" onclick="window.location.href='/auth.html'">Upgrade — $9.99/mo</button>
+    </div>`;
+  }
+
+  data.polls.forEach(poll => {
+    const total = poll.votes.reduce((a,b) => a+b, 0);
+    html += `<div class="poll-card">
+      <div class="poll-question">${poll.q}</div>
+      <div class="poll-meta">by ${poll.author} · ${poll.time} · ${total} votes</div>
+      ${poll.opts.map((opt, i) => {
+        const pct = total > 0 ? Math.round(poll.votes[i]/total*100) : 0;
+        const isVoted = poll.userVote === i;
+        return `<div class="poll-option" onclick="vote('${poll.id}',${i})">
+          <div class="poll-option-row">
+            <div class="poll-option-label">${opt}${isVoted?'<span class="poll-voted-badge">✓ Your vote</span>':''}</div>
+            <div class="poll-option-pct">${pct}%</div>
+          </div>
+          <div class="poll-bar-bg"><div class="poll-bar-fill ${isVoted?'voted':''}" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function togglePollForm() {
+  const f = document.getElementById('poll-form');
+  if (f) f.classList.toggle('open');
+}
+
+function submitPoll() {
+  const q = document.getElementById('pf-question').value.trim();
+  const o1 = document.getElementById('pf-opt1').value.trim();
+  const o2 = document.getElementById('pf-opt2').value.trim();
+  const o3 = document.getElementById('pf-opt3').value.trim();
+  if (!q || !o1 || !o2) { alert('Please fill in the question and at least 2 options.'); return; }
+
+  const data = getTeamData(activeTeam.id);
+  const opts = [o1, o2, ...(o3 ? [o3] : [])];
+  data.polls.unshift({
+    id: 'p' + Date.now(),
+    q, opts,
+    votes: opts.map(() => 0),
+    userVote: null,
+    author: cu.name || 'Fan',
+    time: 'just now'
+  });
+  saveTeamData(activeTeam.id, data);
+  renderCommTab();
+}
+
+function vote(pollId, optIndex) {
+  const data = getTeamData(activeTeam.id);
+  const poll = data.polls.find(p => p.id === pollId);
+  if (!poll) return;
+  if (poll.userVote !== null) return; // already voted
+  poll.votes[optIndex]++;
+  poll.userVote = optIndex;
+  saveTeamData(activeTeam.id, data);
+  renderCommTab();
+}
+
+// ── CHAT ──
+function renderChat(el, data) {
+  let html = `<div class="chat-wrap">`;
+  data.chat.forEach(msg => {
+    const reactions = Object.entries(msg.reactions || {});
+    html += `<div class="chat-msg">
+      <div class="chat-avatar">${msg.emoji}</div>
+      <div class="chat-body">
+        <div class="chat-header">
+          <div class="chat-user">${msg.user}</div>
+          <div class="chat-plan ${msg.plan==='club'||msg.plan==='clubpro'?'chat-club':'chat-pro'}">${PLAN_NAMES[msg.plan]||msg.plan}</div>
+          <div class="chat-time">${msg.time}</div>
+        </div>
+        <div class="chat-text">${msg.text}</div>
+        <div class="chat-reactions">
+          ${reactions.map(([emoji, count]) =>
+            `<button class="reaction-btn" onclick="react('${msg.id}','${emoji}')">${emoji} ${count}</button>`
+          ).join('')}
+          <button class="reaction-btn" onclick="react('${msg.id}','fire')">🔥 React</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Chat input — Pro only
+  if (isPro) {
+    html += `<div class="chat-input-wrap">
+      <div class="chat-input-row">
+        <input class="chat-input" id="chat-input" placeholder="Share your thoughts..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()">Send</button>
+      </div>
+    </div>`;
+  } else {
+    html += `<div class="pro-gate" style="margin-top:14px">
+      <div class="pro-gate-title">Join the conversation</div>
+      <div class="pro-gate-sub">Scout Pro members can post in fan chat. Free members can read and react.</div>
+      <button class="upgrade-btn" onclick="window.location.href='/auth.html'">Upgrade — $9.99/mo</button>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  if (!input || !input.value.trim()) return;
+  const data = getTeamData(activeTeam.id);
+  const emojis = ['⚽','🏆','🔥','💪','🦁','⭐','🎯','🛡'];
+  data.chat.unshift({
+    id: 'c' + Date.now(),
+    user: cu.name || 'Fan',
+    plan: cu.plan || 'free',
+    emoji: emojis[Math.floor(Math.random()*emojis.length)],
+    time: 'just now',
+    text: input.value.trim(),
+    reactions: {'🔥':0,'👏':0}
+  });
+  saveTeamData(activeTeam.id, data);
+  renderCommTab();
+}
+
+function react(msgId, emoji) {
+  const data = getTeamData(activeTeam.id);
+  const msg = data.chat.find(m => m.id === msgId);
+  if (!msg) return;
+  if (!msg.reactions) msg.reactions = {};
+  msg.reactions[emoji] = (msg.reactions[emoji] || 0) + 1;
+  saveTeamData(activeTeam.id, data);
+  renderCommTab();
+}
+
+// ── WISHLIST ──
+function renderWishlist(el, data) {
+  let html = `<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Vote for the players you want your club to sign. Top voted picks go to the scouting team.</div>`;
+
+  data.wishlist.sort((a,b) => b.votes - a.votes).forEach((p, i) => {
+    html += `<div class="wish-card">
+      <div class="wish-rank ${i<3?'top':''}">${String(i+1).padStart(2,'0')}</div>
+      <div class="wish-info">
+        <div class="wish-name">${p.name}</div>
+        <div class="wish-meta">📍 ${p.club} · ${p.pos}</div>
+      </div>
+      <div class="wish-votes">
+        <button class="wish-vote-btn ${p.userVoted?'voted':''}" onclick="wishVote(${i})">
+          ${p.userVoted ? '✓ Voted' : '▲ Want'}
+        </button>
+        <div class="wish-count">${p.votes} votes</div>
+      </div>
+    </div>`;
+  });
+
+  // Add suggestion
+  if (isPro) {
+    html += `<div style="margin-top:14px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Suggest a player:</div>
+      <div style="display:flex;gap:8px">
+        <input id="wish-name" class="pf-input" style="margin:0" placeholder="Player name">
+        <input id="wish-club" class="pf-input" style="margin:0" placeholder="Current club">
+        <input id="wish-pos" class="pf-input" style="margin:0;width:80px" placeholder="Pos">
+        <button class="pf-btn" onclick="addWish()">Add</button>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function wishVote(index) {
+  const data = getTeamData(activeTeam.id);
+  const sorted = [...data.wishlist].sort((a,b) => b.votes - a.votes);
+  const player = sorted[index];
+  if (!player) return;
+  const orig = data.wishlist.find(p => p.name === player.name);
+  if (!orig || orig.userVoted) return;
+  orig.votes++;
+  orig.userVoted = true;
+  saveTeamData(activeTeam.id, data);
+  renderCommTab();
+}
+
+function addWish() {
+  const name = document.getElementById('wish-name').value.trim();
+  const club = document.getElementById('wish-club').value.trim();
+  const pos = document.getElementById('wish-pos').value.trim();
+  if (!name || !club) return;
+  const data = getTeamData(activeTeam.id);
+  data.wishlist.push({name, club, pos:pos||'???', votes:1, userVoted:true});
+  saveTeamData(activeTeam.id, data);
+  renderCommTab();
+}
+
+// ── INIT ──
+loadLeagueTeams();
+</script>
+</body>
+</html>
