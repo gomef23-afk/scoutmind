@@ -345,6 +345,18 @@ if (!_cu) window.location.href = '/auth.html';
     <!-- STATS TAB -->
     <div id="tab-stats">
       <div id="statusMsg" style="font-size:12px;color:var(--accent);padding:4px 0;min-height:20px;margin-bottom:8px;"></div>
+      <div id="teamInfoBar" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div id="teamInfoName" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;"></div>
+            <div id="teamInfoDetails" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div id="teamInfoCoach" style="font-size:12px;color:var(--muted);"></div>
+            <div id="teamInfoInstagram" style="font-size:12px;"></div>
+          </div>
+        </div>
+      </div>
       <div class="zone-lbl">⚔ Defense</div>
       <div class="sgrid">
         <div class="scard" id="c_gc"><div class="scard-lbl">Goals conceded / game</div><input type="number" id="s_gc" step="0.01" placeholder="—"><div class="scard-unit">per game avg</div><div class="scard-avg" id="a_gc"></div></div>
@@ -504,7 +516,7 @@ const PROFILES = {
   "Lack of creativity":  {pos:"AM or CM",       role:"Creative playmaker generating key passes and chances in the final third.",     stats:{key_passes_pg:2.2,assists_pg:0.22,pass_acc:84},w:{key_passes_pg:4,assists_pg:3,pass_acc:2}},
   "Poor passing":        {pos:"Ball-playing CB or DM",role:"Technically strong under pressure. Builds from the back with composure.",stats:{pass_acc:84,tackles_pg:2.5,key_passes_pg:1.5},w:{pass_acc:4,tackles_pg:2,key_passes_pg:2}},
   "Poor finishing":      {pos:"ST or CF",        role:"Clinical striker with high conversion. Goals per game is the priority.",       stats:{goals_pg:0.45,shots_on_tgt_pg:2.0,aerial_pct:55},w:{goals_pg:4,shots_on_tgt_pg:3,aerial_pct:1}},
-  "Low attack output":   {pos:"Winger or SS",    role:"Creative attacker who generates and converts chances consistently.",          stats:{goals_pg:0.28,key_passes_pg:1.8,shots_on_tgt_pg:1.5,assists_pg:0.20},w:{goals_pg:3,key_passes_pg:2,shots_on_tgt_pg:2,assists_pg:2}},
+  "Low attack output":   {pos:"Winger or Attacking Mid",    role:"Creative attacker who generates and converts chances consistently.",          stats:{goals_pg:0.28,key_passes_pg:1.8,shots_on_tgt_pg:1.5,assists_pg:0.20},w:{goals_pg:3,key_passes_pg:2,shots_on_tgt_pg:2,assists_pg:2}},
   "Poor shot volume":    {pos:"Box-to-box MID",  role:"Gets forward to create volume in attack. High shot and key pass numbers.",    stats:{shots_on_tgt_pg:0.8,key_passes_pg:2.0,goals_pg:0.18},w:{shots_on_tgt_pg:3,key_passes_pg:3,goals_pg:2}},
   "Goalkeeper weakness": {pos:"Goalkeeper",       role:"Reliable shot-stopper with strong aerial ability and good distribution. Reduces goals conceded immediately.",stats:{saves_pg:3.2,clean_sheets:10,gc_pg:1.1,pass_acc:72,aerial_pct:68},w:{saves_pg:4,clean_sheets:3,gc_pg:3,pass_acc:1,aerial_pct:2}},
 };
@@ -702,6 +714,14 @@ function applyContextualFactors(baseScore, p, selectedTeam, targetLeague) {
       contextFlags.push({icon:'📊', text:`Step up in league level — proven potential needed`, color:'var(--yellow)'});
     } else if (diff <= -2) {
       contextFlags.push({icon:'📊', text:`Significant step down — may be seeking exit`, color:'var(--muted)'});
+    }
+  }
+
+  // ── PREVIOUSLY COACHED BY CURRENT COACH ──
+  if (selectedTeam) {
+    const coach = COACHES[selectedTeam.id];
+    if (coach && coach.former_players && coach.former_players.includes(p.name)) {
+      contextBoosts.push({icon:'🎓', text:`Previously coached by ${coach.name} — knows the system`, color:'var(--accent)'});
     }
   }
 
@@ -930,6 +950,24 @@ function selectTeam(id) {
   document.getElementById('btnHint').textContent = s.name + ' loaded ✓';
   document.getElementById('statusMsg').innerHTML = `<span class="live-dot"></span> Stats loaded for <strong>${s.name}</strong> — ${LEAGUE_META[currentLeague]?.name || ''} 2026`;
   setTimeout(() => document.getElementById('statusMsg').innerHTML = '', 3000);
+
+  // Show team info bar
+  const info = TEAM_INFO?.[s.id];
+  const coach = COACHES?.[s.id];
+  const infoBar = document.getElementById('teamInfoBar');
+  if (infoBar) {
+    document.getElementById('teamInfoName').textContent = info?.fullName || s.name;
+    document.getElementById('teamInfoDetails').textContent = [
+      info?.city, info?.stadium, info?.founded ? `Est. ${info.founded}` : null,
+      info?.capacity ? `${info.capacity.toLocaleString()} capacity` : null
+    ].filter(Boolean).join(' · ');
+    document.getElementById('teamInfoCoach').innerHTML = coach ?
+      `👔 <strong>${coach.name}</strong> · Since ${coach.since}` : '';
+    document.getElementById('teamInfoInstagram').innerHTML = info?.instagram ?
+      `<a href="https://instagram.com/${info.instagram.replace('@','')}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px;">${info.instagram}</a>` : '';
+    infoBar.style.display = 'block';
+  }
+
   updateFilterCount();
 }
 
