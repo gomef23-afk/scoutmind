@@ -719,6 +719,32 @@ function applyContextualFactors(baseScore, p, selectedTeam, targetLeague) {
     }
   }
 
+  // ── SAME LEAGUE BONUS ──
+  if (selectedTeam && p.league === targetLeague && p.club !== selectedTeam.name) {
+    contextBoosts.push({icon:'🏆', text:'Same league — no adaptation period, simpler transfer', color:'var(--accent)'});
+  }
+
+  // ── FORMERLY PLAYED FOR THIS CLUB ──
+  if (selectedTeam && p.former_clubs && p.former_clubs.includes(selectedTeam.name)) {
+    contextBoosts.push({icon:'🏠', text:`Former ${selectedTeam.name} player — knows the club DNA`, color:'var(--accent2)'});
+  }
+
+  // ── INJURY RISK ──
+  if (p.injury_risk === 'high') {
+    contextFlags.push({icon:'🚑', text:'Injury prone — high risk of missed games, short contract recommended', color:'var(--red)'});
+  } else if (p.injury_risk === 'low') {
+    contextBoosts.push({icon:'💪', text:'Injury resilient — consistently available, low fitness risk', color:'var(--green)'});
+  }
+
+  // ── NATIONAL TEAM ──
+  if (p.nat_team && p.caps > 0) {
+    if (p.caps >= 50) {
+      contextBoosts.push({icon:'🌍', text:`${p.nat_team} international — ${p.caps} caps, proven at highest level`, color:'var(--accent)'});
+    } else if (p.caps >= 20) {
+      contextBoosts.push({icon:'🌍', text:`${p.nat_team} international — ${p.caps} caps`, color:'var(--accent2)'});
+    }
+  }
+
   // ── NATIONALITY / WORK PERMIT ──
   if ((targetLeague === 'serie_a' || targetLeague === 'serie_b' || targetLeague === 'serie_c') && p.nat === 'Brazilian') {
     contextBoosts.push({icon:'🇧🇷', text:'Brazilian — no work permit needed, simpler deal', color:'var(--accent2)'});
@@ -1221,6 +1247,7 @@ function runAnalysis() {
             ${p.key_passes_pg > 0 ? `<div class="spill">🔑 ${(p.key_passes_pg*p.apps).toFixed(0)} key passes</div>` : ''}
             ${p.pass_acc ? `<div class="spill">📊 ${p.pass_acc}% pass acc</div>` : ''}
             ${p.aerial_pct > 0 ? `<div class="spill">✈ ${p.aerial_pct}% aerial</div>` : ''}
+            ${p.caps > 0 ? `<div class="spill">🌍 ${p.caps} caps</div>` : ''}
           </div>
           ${m.reasons.map(r => `<div class="reason">${r}</div>`).join('')}
           ${m.flags.map(f => `<div class="pflag">${f}</div>`).join('')}
