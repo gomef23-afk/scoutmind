@@ -336,10 +336,6 @@ function renderTeamPage() {
   const coach = COACHES?.[t.id] || {};
 
   // Club colors for visual identity
-  const colors = info.colors || ['#00e5a0','#0d1117'];
-  const primaryColor = colors[0];
-  const secondaryColor = colors[1] || '#0d1117';
-
   // Generate initials badge
   const initials = t.name.split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase();
 
@@ -366,15 +362,15 @@ function renderTeamPage() {
     <!-- CLUB PROFILE CARD -->
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;">
 
-      <!-- Color header banner -->
-      <div style="height:6px;background:linear-gradient(90deg,${primaryColor},${secondaryColor})"></div>
+      <!-- Header accent -->
+      <div style="height:3px;background:var(--border)"></div>
 
       <div style="padding:20px 22px;">
         <div style="display:flex;align-items:center;gap:18px;margin-bottom:16px;">
 
           <!-- Club badge (initials-based) -->
-          <div style="width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,${primaryColor}22,${primaryColor}44);border:2px solid ${primaryColor}55;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:${primaryColor}">${initials}</div>
+          <div style="width:64px;height:64px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text)">${initials}</div>
           </div>
 
           <!-- Club name + details -->
@@ -383,13 +379,13 @@ function renderTeamPage() {
             <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${[info.city, info.stadium, info.founded?'Est. '+info.founded:null].filter(Boolean).join(' · ')}</div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               <div style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--muted)">${LEAGUE_META[activeLeague]?.flag||''} ${LEAGUE_META[activeLeague]?.name||activeLeague}</div>
-              ${t.pos ? `<div style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;background:${primaryColor}15;color:${primaryColor}">${t.pos} in league</div>` : ''}
+              ${t.pos ? `<div style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--muted)">${t.pos} in league</div>` : ''}
               ${info.capacity ? `<div style="font-size:11px;color:var(--muted)">🏟 ${info.capacity.toLocaleString()} cap.</div>` : ''}
             </div>
           </div>
 
           <!-- Instagram link -->
-          ${info.instagram ? `<a href="https://instagram.com/${info.instagram.replace('@','')}" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;transition:all .2s" onmouseover="this.style.borderColor='${primaryColor}'" onmouseout="this.style.borderColor='var(--border)'">
+          ${info.instagram ? `<a href="https://instagram.com/${info.instagram.replace('@','')}" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
             <div style="font-size:18px">📸</div>
             <div style="font-size:10px;color:var(--muted);font-weight:600">${info.instagram}</div>
           </a>` : ''}
