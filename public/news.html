@@ -118,7 +118,10 @@ if (!_cu) window.location.href = '/auth.html';
       <div class="page-title">Transfer Intelligence</div>
       <div class="ai-badge">⚡ AI-Powered</div>
     </div>
-    <div class="page-sub">Real transfer rumors analyzed by ScoutMind — with fit scores, probability ratings and tactical context.</div>
+    <div class="page-sub" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      Real transfer rumors analyzed by ScoutMind AI — with fit scores, probability ratings and tactical context.
+      <button onclick="fetchAINews()" style="background:transparent;border:1px solid var(--border);color:var(--accent);padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">⚡ Refresh AI News</button>
+    </div>
   </div>
 
   <div class="filters">
@@ -165,10 +168,82 @@ if (cu) {
 }
 function logout() { localStorage.removeItem('sm_current_user'); window.location.href = '/auth.html'; }
 
-// ── NEWS DATA ──
-// In production this would be fetched from a news API + analyzed by Claude
-// For now: curated real transfer stories with ScoutMind fit analysis
-const NEWS = [
+// ── AI NEWS SYSTEM ──
+// Uses Claude API to generate fresh transfer analysis based on real football context
+let NEWS = [];
+let newsLoaded = false;
+
+async function fetchAINews() {
+  document.getElementById('newsMain').innerHTML = `
+    <div class="loading-card">
+      <div class="loading-spinner"></div>
+      <div style="font-size:13px;color:var(--muted)">ScoutMind AI is generating transfer intelligence...</div>
+    </div>`;
+
+  const prompt = `You are ScoutMind, an AI football scouting platform. Generate 6 realistic football transfer news stories for May 2026 in JSON format.
+
+Each story must be about REAL players and clubs with plausible 2026 transfer scenarios.
+Include a mix of: Brazilian football (Série A), European leagues (Premier League, La Liga, Bundesliga, Serie A), and Saudi Pro League.
+
+Return ONLY a valid JSON array with exactly this structure, no other text:
+[
+  {
+    "id": 1,
+    "type": "transfer|rumor|contract|financial",
+    "region": "brazil|europe|global",
+    "tag": "Transfer|Rumor|Contract|Financial",
+    "tagClass": "tag-transfer|tag-rumor|tag-contract|tag-financial",
+    "date": "May 2026",
+    "title": "Headline here",
+    "excerpt": "2-3 sentence news story with real player names and clubs.",
+    "featured": true/false,
+    "analysis": {
+      "verdict": "ScoutMind tactical verdict 2-3 sentences explaining fit using stats language.",
+      "players": [
+        {"name": "Player Name", "club": "Club Name", "score": 75}
+      ]
+    }
+  }
+]
+
+Make stories realistic, varied, and tactically interesting. Include Brazilian players when possible. Mix serious transfers with interesting rumors.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || '';
+
+    // Parse JSON from response
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      NEWS = JSON.parse(jsonMatch[0]);
+      newsLoaded = true;
+      renderNews();
+      renderSidebar();
+    } else {
+      throw new Error('No JSON found');
+    }
+  } catch (err) {
+    console.error('AI news error:', err);
+    // Fallback to static news
+    NEWS = FALLBACK_NEWS;
+    newsLoaded = true;
+    renderNews();
+    renderSidebar();
+  }
+}
+
+// Fallback static news if API fails
+const FALLBACK_NEWS = [
   {
     id:1, type:'transfer', region:'europe',
     tag:'Transfer', tagClass:'tag-transfer',
@@ -290,6 +365,8 @@ const NEWS = [
   },
 ];
 
+];
+
 const HOT_RUMORS = [
   {player:'Florian Wirtz', from:'Leverkusen', to:'Chelsea', prob:78, probClass:'hi'},
   {player:'Julián Álvarez', from:'Atlético', to:'Flamengo', prob:42, probClass:'mid'},
@@ -400,9 +477,8 @@ function renderSidebar() {
     </div>`).join('');
 }
 
-// Init
-renderNews();
-renderSidebar();
+// Init — fetch AI news
+fetchAINews();
 </script>
 </body>
 </html>
