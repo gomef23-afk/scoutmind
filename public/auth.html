@@ -120,7 +120,6 @@ select option{background:#0d1117;}
 
 <script>
 // ── SUPABASE CONFIG ──
-// Replace these with your actual Supabase project values
 const SUPABASE_URL = 'https://kdhbpzooyjxcglbxbuya.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -136,10 +135,15 @@ function selectPlan(plan, el) {
 
 // ── TAB SWITCHING ──
 function showTab(tab) {
-  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  var formLogin = document.getElementById('form-login');
+  var formReg = document.getElementById('form-register');
+  var tabLogin = document.getElementById('tab-login');
+  var tabReg = document.getElementById('tab-register');
+  if (!formLogin || !formReg) return;
+  formLogin.style.display = tab === 'login' ? 'block' : 'none';
+  formReg.style.display = tab === 'register' ? 'block' : 'none';
+  tabLogin.classList.toggle('active', tab === 'login');
+  tabReg.classList.toggle('active', tab === 'register');
   hideMessages();
 }
 
@@ -277,9 +281,8 @@ function loginDemo() {
 }
 
 // ── CHECK IF ALREADY LOGGED IN ──
-supabase.auth.getSession().then(({ data: { session } }) => {
-  if (session) {
-    // Already logged in - redirect to app
+supabase.auth.getSession().then(function(result) {
+  if (result.data && result.data.session) {
     window.location.href = '/app.html';
   }
 });
