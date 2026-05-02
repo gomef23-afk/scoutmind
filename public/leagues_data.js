@@ -474,3 +474,107 @@ TEAMS.jupiler = [
 ];
 
 console.log('ScoutMind leagues data loaded:', Object.keys(TEAMS).length, 'leagues,', Object.values(TEAMS).reduce((a,t)=>a+t.length,0), 'teams');
+
+
+// ════════════════════════════════════════════════════════
+// COACHES DATABASE — for "previously coached by" feature
+// former_players: players they've coached at previous clubs
+// ════════════════════════════════════════════════════════
+const COACHES = {
+  // 🇧🇷 SÉRIE A
+  "fla":  {name:"Filipe Luís",    nat:"Brazilian", since:"2024", former_clubs:["Flamengo U20"], former_players:["Arrascaeta","Gerson","Pedro","Léo Ortiz","De La Cruz"]},
+  "pal":  {name:"Abel Ferreira",  nat:"Portuguese",since:"2020", former_clubs:["PAOK","Braga"], former_players:["Estêvão","Raphael Veiga","Murilo","Richard Rios","Piquerez","Flaco López"]},
+  "bot":  {name:"Artur Jorge",    nat:"Portuguese",since:"2024", former_clubs:["Braga","PSG"], former_players:["Luiz Henrique","Marlon Freitas","Igor Jesus","Savarino","Alexander Barboza"]},
+  "flu":  {name:"Mano Menezes",   nat:"Brazilian", since:"2024", former_clubs:["Cruzeiro","Corinthians","Athletico-PR","Inter"], former_players:["Thiago Silva","Jhon Arias","Germán Cano","Nonato"]},
+  "cru":  {name:"Leonardo Jardim",nat:"Portuguese",since:"2024", former_clubs:["Monaco","Sporting CP","Olympiakos"], former_players:["Kaio Jorge","Matheus Pereira","Lucas Silva"]},
+  "sao":  {name:"Luis Zubeldía",  nat:"Argentine", since:"2024", former_clubs:["LDU Quito","Lanús"], former_players:["Calleri","Lucas Moura","Welington","Arboleda"]},
+  "cor":  {name:"Ramón Díaz",     nat:"Argentine", since:"2024", former_clubs:["River Plate","Olimpia"], former_players:["Yuri Alberto","Raniele","André Ramalho"]},
+  "atm":  {name:"Gabriel Milito", nat:"Argentine", since:"2024", former_clubs:["Estudiantes","Guadalajara"], former_players:["Paulinho","Guilherme Arana","Júnior Alonso","Hulk"]},
+  "int":  {name:"Roger Machado",  nat:"Brazilian", since:"2024", former_clubs:["Bahia","Fluminense","Cruzeiro"], former_players:["Alan Patrick","Wesley","Enner Valencia"]},
+  "vas":  {name:"Felipe Maestri", nat:"Brazilian", since:"2025", former_clubs:[], former_players:["Vegetti","Philippe Coutinho"]},
+  "gre":  {name:"Gustavo Quinteros",nat:"Argentine",since:"2024",former_clubs:["Vélez Sársfield","Colo-Colo"], former_players:["Cristaldo","Kannemann"]},
+  "bah":  {name:"Rogério Ceni",   nat:"Brazilian", since:"2024", former_clubs:["Flamengo","São Paulo","Bahia","Cruzeiro"], former_players:["Éverton Ribeiro","Thaciano","Cauly"]},
+  "rbr":  {name:"Pedro Caixinha", nat:"Portuguese",since:"2024", former_clubs:["Red Bull Salzburg","Cruz Azul","Rangers"], former_players:["Cuello","Vinicinho"]},
+  "san":  {name:"Fábio Carille",  nat:"Brazilian", since:"2024", former_clubs:["Corinthians","Al-Wehda"], former_players:["Guilherme"]},
+
+  // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 PREMIER LEAGUE
+  "mci":  {name:"Pep Guardiola",  nat:"Spanish",   since:"2016", former_clubs:["Barcelona","Bayern Munich"], former_players:["Erling Haaland","Rodri","Kevin De Bruyne","Bernardo Silva","Phil Foden","Rúben Dias","Josko Gvardiol","Kyle Walker"]},
+  "ars":  {name:"Mikel Arteta",   nat:"Spanish",   since:"2019", former_clubs:["Manchester City (asst)"], former_players:["Bukayo Saka","Martin Ødegaard","William Saliba","Kai Havertz","Ben White","Ruben Neves"]},
+  "liv":  {name:"Arne Slot",      nat:"Dutch",     since:"2024", former_clubs:["Feyenoord"], former_players:["Mohamed Salah","Virgil van Dijk","Trent Alexander-Arnold","Alexis Mac Allister","Diogo Jota"]},
+  "che":  {name:"Enzo Maresca",   nat:"Italian",   since:"2024", former_clubs:["Leicester City","Manchester City (asst)"], former_players:["Cole Palmer","Nicolas Jackson","Moisés Caicedo","Reece James"]},
+  "new":  {name:"Eddie Howe",     nat:"English",   since:"2021", former_clubs:["Bournemouth"], former_players:["Alexander Isak","Bruno Guimarães","Sven Botman","Kieran Trippier"]},
+  "tot":  {name:"Ange Postecoglou",nat:"Australian",since:"2023",former_clubs:["Celtic","Yokohama F.Marinos"], former_players:["Heung-min Son","Dominic Solanke","Pedro Porro","Destiny Udogie"]},
+  "mnu":  {name:"Ruben Amorim",   nat:"Portuguese",since:"2024", former_clubs:["Sporting CP"], former_players:["Rasmus Højlund","Bruno Fernandes","Lisandro Martínez"]},
+  "avl":  {name:"Unai Emery",     nat:"Spanish",   since:"2022", former_clubs:["Arsenal","Villarreal","PSG","Sevilla"], former_players:["Ollie Watkins","Youri Tielemans","Pau Torres","Ezri Konsa"]},
+  "bha":  {name:"Fabian Hürzeler",nat:"German",    since:"2024", former_clubs:["St. Pauli"], former_players:["João Pedro","Igor Thiago","Carlos Baleba","Lewis Dunk"]},
+  "nfo":  {name:"Nuno Espírito Santo",nat:"Portuguese",since:"2024",former_clubs:["Wolves","Tottenham","Al-Ittihad"], former_players:["Morgan Gibbs-White","Chris Wood","Matz Sels"]},
+
+  // 🇪🇸 LA LIGA
+  "bar":  {name:"Hansi Flick",    nat:"German",    since:"2024", former_clubs:["Bayern Munich","Germany NT"], former_players:["Robert Lewandowski","Pedri","Lamine Yamal","Gavi","Alejandro Balde","Ronald Araújo","Pau Cubarsí","Jules Koundé"]},
+  "rma":  {name:"Carlo Ancelotti",nat:"Italian",   since:"2021", former_clubs:["AC Milan","Chelsea","PSG","Bayern Munich","Napoli","Everton"], former_players:["Vinicius Jr","Kylian Mbappé","Jude Bellingham","Federico Valverde","Antonio Rüdiger","Éder Militão","Dani Carvajal","Ferland Mendy"]},
+  "atl":  {name:"Diego Simeone",  nat:"Argentine", since:"2011", former_clubs:["River Plate","San Lorenzo","Catania"], former_players:["Antoine Griezmann","Julián Álvarez","José Giménez","Marcos Llorente","Mario Hermoso"]},
+
+  // 🇩🇪 BUNDESLIGA
+  "bay":  {name:"Vincent Kompany",nat:"Belgian",   since:"2024", former_clubs:["Burnley","Anderlecht"], former_players:["Harry Kane","Jamal Musiala","Joshua Kimmich","Alphonso Davies","Leroy Sané","Jonathan Tah"]},
+  "b04":  {name:"Xabi Alonso",    nat:"Spanish",   since:"2022", former_clubs:["Real Sociedad B"], former_players:["Florian Wirtz","Granit Xhaka","Victor Boniface","Alejandro Grimaldo","Jeremie Frimpong"]},
+  "bvb":  {name:"Niko Kovač",     nat:"Croatian",  since:"2024", former_clubs:["Bayern Munich","Monaco","Wolves","Nice"], former_players:["Serhou Guirassy","Julian Brandt","Emre Can","Nico Schlotterbeck"]},
+  "rbl":  {name:"Marco Rose",     nat:"German",    since:"2024", former_clubs:["Borussia Mönchengladbach","Dortmund","RB Salzburg"], former_players:["Lois Openda","Xavi Simons","Peter Gulácsi","Benjamin Henrichs"]},
+
+  // 🇮🇹 SERIE A ITALY
+  "nap":  {name:"Antonio Conte",  nat:"Italian",   since:"2024", former_clubs:["Juventus","Italy NT","Chelsea","Inter Milan","Tottenham"], former_players:["Victor Osimhen","Alessandro Buongiorno","Giovanni Di Lorenzo","Mathias Olivera"]},
+  "int":  {name:"Simone Inzaghi", nat:"Italian",   since:"2021", former_clubs:["Lazio"], former_players:["Lautaro Martínez","Nicolò Barella","Alessandro Bastoni","Davide Frattesi","Marcus Thuram","Benjamin Pavard","Federico Dimarco"]},
+  "juv":  {name:"Thiago Motta",   nat:"Italian",   since:"2024", former_clubs:["Bologna"], former_players:["Dušan Vlahović","Federico Chiesa","Manuel Locatelli","Gleison Bremer","Andrea Cambiaso"]},
+  "acm":  {name:"Paulo Fonseca",  nat:"Portuguese",since:"2024", former_clubs:["Shakhtar","Roma","Lille","Newcastle"], former_players:["Rafael Leão","Tijjani Reijnders","Mike Maignan","Theo Hernández"]},
+  "ata":  {name:"Gian Piero Gasperini",nat:"Italian",since:"2016",former_clubs:["Genoa","Palermo","Inter Milan"], former_players:["Mateo Retegui","Teun Koopmeiners","Giorgio Scalvini"]},
+
+  // 🇫🇷 LIGUE 1
+  "psg":  {name:"Luis Enrique",   nat:"Spanish",   since:"2023", former_clubs:["Barcelona","Spain NT","Celta","Roma"], former_players:["Ousmane Dembélé","Bradley Barcola","Warren Zaïre-Emery","Marquinhos","Achraf Hakimi","Nuno Mendes"]},
+
+  // 🇵🇹 PRIMEIRA LIGA
+  "scp":  {name:"Rúben Amorim",   nat:"Portuguese",since:"2020 (left 2024)", former_clubs:["Sporting CP","Manchester United"], former_players:["Viktor Gyökeres","Pedro Gonçalves","Franco Israel"]},
+};
+
+// ════════════════════════════════════════════════════════
+// TEAM INFO — Official details for team pages
+// ════════════════════════════════════════════════════════
+const TEAM_INFO = {
+  // 🇧🇷 SÉRIE A
+  "fla": {fullName:"Clube de Regatas do Flamengo", founded:1895, stadium:"Maracanã", capacity:78838, instagram:"@flamengo", city:"Rio de Janeiro", colors:["#E8241A","#000000"]},
+  "pal": {fullName:"Sociedade Esportiva Palmeiras", founded:1914, stadium:"Allianz Parque", capacity:43713, instagram:"@palmeiras", city:"São Paulo", colors:["#006437","#FFFFFF"]},
+  "bot": {fullName:"Botafogo de Futebol e Regatas", founded:1894, stadium:"Nilton Santos", capacity:46000, instagram:"@botafogo", city:"Rio de Janeiro", colors:["#000000","#FFFFFF"]},
+  "flu": {fullName:"Fluminense Football Club", founded:1902, stadium:"Maracanã", capacity:78838, instagram:"@fluminensefc", city:"Rio de Janeiro", colors:["#6B2D2D","#009944","#FFFFFF"]},
+  "cru": {fullName:"Cruzeiro Esporte Clube", founded:1921, stadium:"Mineirão", capacity:61846, instagram:"@cruzeiro", city:"Belo Horizonte", colors:["#003087","#FFFFFF"]},
+  "sao": {fullName:"São Paulo Futebol Clube", founded:1930, stadium:"MorumBIS", capacity:67052, instagram:"@saopaulofc", city:"São Paulo", colors:["#FF0000","#000000","#FFFFFF"]},
+  "cor": {fullName:"Sport Club Corinthians Paulista", founded:1910, stadium:"Neo Química Arena", capacity:49205, instagram:"@corinthians", city:"São Paulo", colors:["#000000","#FFFFFF"]},
+  "atm": {fullName:"Clube Atlético Mineiro", founded:1908, stadium:"Arena MRV", capacity:44000, instagram:"@atletico", city:"Belo Horizonte", colors:["#000000","#FFFFFF"]},
+  "int2":{fullName:"Sport Club Internacional", founded:1909, stadium:"Beira-Rio", capacity:50128, instagram:"@scinternacional", city:"Porto Alegre", colors:["#FF0000","#FFFFFF"]},
+  "vas": {fullName:"Club de Regatas Vasco da Gama", founded:1898, stadium:"São Januário", capacity:21880, instagram:"@vascodagama", city:"Rio de Janeiro", colors:["#000000","#FFFFFF"]},
+  "gre": {fullName:"Grêmio Foot-Ball Porto Alegrense", founded:1903, stadium:"Arena do Grêmio", capacity:60540, instagram:"@gremio", city:"Porto Alegre", colors:["#0080C8","#000000","#FFFFFF"]},
+  "bah": {fullName:"Esporte Clube Bahia", founded:1931, stadium:"Arena Fonte Nova", capacity:47907, instagram:"@ecbahia", city:"Salvador", colors:["#003DA5","#FFFFFF"]},
+  "rbr": {fullName:"Red Bull Bragantino", founded:1928, stadium:"Nabi Abi Chedid", capacity:15000, instagram:"@redbullbragantino", city:"Bragança Paulista", colors:["#E30613","#FFFFFF"]},
+  "san": {fullName:"Santos Futebol Clube", founded:1912, stadium:"Vila Belmiro", capacity:16798, instagram:"@santosfc", city:"Santos", colors:["#000000","#FFFFFF"]},
+  // 🏴󠁧󠁢󠁥󠁮󠁧󠁿 PREMIER LEAGUE
+  "mci": {fullName:"Manchester City FC", founded:1880, stadium:"Etihad Stadium", capacity:53400, instagram:"@mancity", city:"Manchester", colors:["#6CABDD","#FFFFFF"]},
+  "ars": {fullName:"Arsenal FC", founded:1886, stadium:"Emirates Stadium", capacity:60704, instagram:"@arsenal", city:"London", colors:["#EF0107","#FFFFFF"]},
+  "liv": {fullName:"Liverpool FC", founded:1892, stadium:"Anfield", capacity:61276, instagram:"@liverpoolfc", city:"Liverpool", colors:["#C8102E","#FFFFFF"]},
+  "che": {fullName:"Chelsea FC", founded:1905, stadium:"Stamford Bridge", capacity:40341, instagram:"@chelseafc", city:"London", colors:["#034694","#FFFFFF"]},
+  "new": {fullName:"Newcastle United FC", founded:1892, stadium:"St. James' Park", capacity:52305, instagram:"@nufc", city:"Newcastle", colors:["#241F20","#FFFFFF"]},
+  "tot": {fullName:"Tottenham Hotspur FC", founded:1882, stadium:"Tottenham Hotspur Stadium", capacity:62850, instagram:"@spursofficial", city:"London", colors:["#132257","#FFFFFF"]},
+  "mnu": {fullName:"Manchester United FC", founded:1878, stadium:"Old Trafford", capacity:74310, instagram:"@manchesterunited", city:"Manchester", colors:["#DA291C","#FFFFFF"]},
+  "avl": {fullName:"Aston Villa FC", founded:1874, stadium:"Villa Park", capacity:42785, instagram:"@avfcofficial", city:"Birmingham", colors:["#95BFE5","#670E36"]},
+  "bha": {fullName:"Brighton & Hove Albion FC", founded:1901, stadium:"Amex Stadium", capacity:31800, instagram:"@officialbhafc", city:"Brighton", colors:["#0057B8","#FFFFFF"]},
+  "nfo": {fullName:"Nottingham Forest FC", founded:1865, stadium:"City Ground", capacity:30445, instagram:"@nottmforest", city:"Nottingham", colors:["#DD0000","#FFFFFF"]},
+  // 🇪🇸 LA LIGA
+  "bar": {fullName:"Futbol Club Barcelona", founded:1899, stadium:"Spotify Camp Nou", capacity:99354, instagram:"@fcbarcelona", city:"Barcelona", colors:["#A50044","#004D98"]},
+  "rma": {fullName:"Real Madrid CF", founded:1902, stadium:"Santiago Bernabéu", capacity:81044, instagram:"@realmadrid", city:"Madrid", colors:["#FFFFFF","#00529F"]},
+  "atl": {fullName:"Club Atlético de Madrid", founded:1903, stadium:"Cívitas Metropolitano", capacity:68456, instagram:"@atleticodemadrid", city:"Madrid", colors:["#CB3524","#FFFFFF"]},
+  // 🇩🇪 BUNDESLIGA
+  "bay": {fullName:"FC Bayern München", founded:1900, stadium:"Allianz Arena", capacity:75000, instagram:"@fcbayern", city:"Munich", colors:["#DC052D","#FFFFFF"]},
+  "b04": {fullName:"Bayer 04 Leverkusen", founded:1904, stadium:"BayArena", capacity:30210, instagram:"@bayer04fussball", city:"Leverkusen", colors:["#E32221","#000000"]},
+  "bvb": {fullName:"Borussia Dortmund", founded:1909, stadium:"Signal Iduna Park", capacity:81365, instagram:"@bvb09", city:"Dortmund", colors:["#FDE100","#000000"]},
+  // 🇮🇹 SERIE A ITALY
+  "nap": {fullName:"SSC Napoli", founded:1926, stadium:"Diego Armando Maradona", capacity:54726, instagram:"@officialsscnapoli", city:"Naples", colors:["#003DA5","#FFFFFF"]},
+  "int": {fullName:"FC Internazionale Milano", founded:1908, stadium:"Giuseppe Meazza", capacity:75923, instagram:"@inter", city:"Milan", colors:["#010E80","#000000"]},
+  "juv": {fullName:"Juventus FC", founded:1897, stadium:"Allianz Stadium", capacity:41507, instagram:"@juventusfc", city:"Turin", colors:["#000000","#FFFFFF"]},
+  "acm": {fullName:"AC Milan", founded:1899, stadium:"Giuseppe Meazza", capacity:75923, instagram:"@acmilan", city:"Milan", colors:["#FB090B","#000000"]},
+};
