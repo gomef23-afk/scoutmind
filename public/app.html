@@ -1165,85 +1165,86 @@ function runAnalysis() {
   const av = LEAGUE_AVGS[currentLeague] || {};
   const st = {gc:gv('s_gc'),tk:gv('s_tk'),int:gv('s_int'),cl:gv('s_cl'),aer:gv('s_aer'),pa:gv('s_pa'),gs:gv('s_gs'),sh:gv('s_sh'),sot:gv('s_sot')};
 
-  // Priority zone
+  // ── Step 1: Detect primary weakness zone ──
   const zoneSc = {};
   flags.forEach(f => { zoneSc[f.zone] = (zoneSc[f.zone]||0) + (f.severity==='major'?2:1); });
   const priOrder = ['goalkeeper','defense','attack','midfield'];
   const priZone = Object.entries(zoneSc).sort((a,b) => b[1]-a[1] || priOrder.indexOf(a[0])-priOrder.indexOf(b[0]))[0]?.[0] || 'attack';
   const priType = flags.find(f => f.zone === priZone)?.type || 'Low attack output';
-  const posFil2 = document.getElementById('posFil').value;
-  const profile = getProfile(priType, posFil2);
+  const profile = getProfile(priType, null);
 
-  // Player filtering
+  // ── Step 2: Map weakness to target position ──
+  const weaknessToPos = {
+    'Goalkeeper weakness': ['GK'],
+    'Defensive errors':    ['DEF'],
+    'Aerial vulnerability':['DEF'],
+    'Poor tackling':       ['DEF','MID'],
+    'Lack of creativity':  ['MID'],
+    'Poor passing':        ['MID','DEF'],
+    'Poor finishing':      ['ATT'],
+    'Low attack output':   ['ATT','MID'],
+    'Poor shot volume':    ['MID','ATT'],
+  };
+  const targetPos = weaknessToPos[priType] || ['ATT','DEF','MID','GK'];
+
+  // ── Step 3: Secondary weakness ──
+  const secZone = Object.entries(zoneSc).filter(([z]) => z !== priZone).sort((a,b) => b[1]-a[1])[0]?.[0];
+  const secType = secZone ? flags.find(f => f.zone === secZone)?.type : null;
+  const secProfile = secType ? getProfile(secType, null) : null;
+  const secPos = secType ? (weaknessToPos[secType] || []) : [];
+
+  // ── Step 4: Filter player pool ──
   const plLeague = document.getElementById('playerLeagueSel').value;
   const minAge = parseInt(document.getElementById('minAge').value)||0;
   const maxAge = parseInt(document.getElementById('maxAge').value)||99;
   const budget = parseFloat(document.getElementById('budgetMax').value)||Infinity;
   const minApps = parseInt(document.getElementById('minApps').value)||0;
-  const posFil = document.getElementById('posFil').value;
 
   const pool = plLeague === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === plLeague);
 
-  // Filter by budget, age, apps — NO position filter here, algorithm decides position
-  const filtered = pool.filter(p =>
+  // Primary pool — filtered by target position
+  let primaryPool = pool.filter(p =>
     p.age >= minAge && p.age <= maxAge &&
     p.value <= budget && p.apps >= minApps &&
     targetPos.includes(p.pos)
   );
+  // If empty (e.g. budget too low), fallback to all positions
+  if (primaryPool.length === 0) {
+    primaryPool = pool.filter(p =>
+      p.age >= minAge && p.age <= maxAge &&
+      p.value <= budget && p.apps >= minApps
+    );
+  }
 
-  // Fallback: if budget too tight or no players match, remove position restriction
-  const finalFiltered = filtered.length > 5 ? filtered : pool.filter(p =>
+  // Secondary pool — different position from primary
+  const secondaryPool = secProfile ? pool.filter(p =>
     p.age >= minAge && p.age <= maxAge &&
-    p.value <= budget && p.apps >= minApps
-  );
+    p.value <= budget && p.apps >= minApps &&
+    secPos.includes(p.pos) && !targetPos.includes(p.pos)
+  ) : [];
 
-  // Extract specific subposition from filter (e.g. DEF_CB -> CB)
-  const subposMap2 = {
-    'DEF_CB':'CB','DEF_RB':'RB','DEF_LB':'LB','DEF_WB':'WB',
-    'MID_CDM':'CDM','MID_CM':'CM','MID_CAM':'CAM',
-    'ATT_RW':'RW','ATT_LW':'LW','ATT_ST':'ST','ATT_CF':'CF',
-    'GK':'GK','CB':'CB','RB':'RB','LB':'LB',
-    'CDM':'CDM','CM':'CM','CAM':'CAM','RW':'RW','LW':'LW','ST':'ST'
-  };
-  const requestedSubpos = subposMap2[posFil] || null;
-
-  const ranked = finalFiltered
+  // ── Step 5: Score and rank ──
+  const ranked = primaryPool
     .map(p => {
-      const scored = scorePlayer(p, profile, requestedSubpos);
+      const scored = scorePlayer(p, profile, null);
       const ctx = applyContextualFactors(scored.score, p, selectedTeam, currentLeague);
-      return {
-        p,
-        ...scored,
-        score: ctx.score,
-        contextFlags: ctx.contextFlags,
-        contextBoosts: ctx.contextBoosts,
-        isSecondary: false
-      };
+      return { p, ...scored, score: ctx.score, contextFlags: ctx.contextFlags, contextBoosts: ctx.contextBoosts };
     })
     .filter(m => m.score > 10)
     .sort((a,b) => b.score - a.score)
     .slice(0, 12);
 
-  // Secondary weakness recommendations
-  const rankedSec = secProfile ? secFiltered
+  const rankedSec = secProfile ? secondaryPool
     .map(p => {
       const scored = scorePlayer(p, secProfile, null);
       const ctx = applyContextualFactors(scored.score, p, selectedTeam, currentLeague);
-      return {
-        p,
-        ...scored,
-        score: ctx.score,
-        contextFlags: ctx.contextFlags,
-        contextBoosts: ctx.contextBoosts,
-        isSecondary: true,
-        secType
-      };
+      return { p, ...scored, score: ctx.score, contextFlags: ctx.contextFlags, contextBoosts: ctx.contextBoosts };
     })
     .filter(m => m.score > 10)
     .sort((a,b) => b.score - a.score)
     .slice(0, 5) : [];
 
-  // Chart data
+  // ── Step 6: Build HTML ──
   const chartRows = [
     {lbl:'Goals conceded/g', club:st.gc, avg:av.gc, lb:true},
     {lbl:'Tackles/game',     club:st.tk, avg:av.tk, lb:false},
@@ -1253,7 +1254,6 @@ function runAnalysis() {
     {lbl:'Aerial duels %',   club:st.aer,avg:av.aer,lb:false},
   ].filter(c => c.club > 0 && c.avg > 0);
 
-  // Build HTML
   let html = '';
 
   // Weakness banner
@@ -1310,7 +1310,7 @@ function runAnalysis() {
     <div class="section-ttl">Player Recommendations</div>
     <div style="display:flex;gap:8px;align-items:center">
       <div class="data-badge">⚽ ${ranked.length} matched</div>
-      <div class="data-badge" style="background:rgba(0,184,255,0.08);border-color:rgba(0,184,255,0.2);color:var(--accent2)">${filtered.length} players searched</div>
+      <div class="data-badge" style="background:rgba(0,184,255,0.08);border-color:rgba(0,184,255,0.2);color:var(--accent2)">${primaryPool.length} players searched</div>
     </div>
   </div>`;
 
@@ -1327,7 +1327,7 @@ function runAnalysis() {
         <div>
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;flex-wrap:wrap">
             <div class="pname">${p.name}</div>
-            <div class="pos-badge">${p.pos}</div>
+            <div class="pos-badge">${p.subpos||p.pos}</div>
             ${isCurrentPlayer ? `<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>` : ''}
           </div>
           <div class="pmeta">
@@ -1364,29 +1364,21 @@ function runAnalysis() {
         </div>
       </div>`;
     rankedSec.forEach((m, i) => {
-      const p = m.p;
-      const sc = m.score;
+      const p = m.p; const sc = m.score;
       const isCurrentPlayer = selectedTeam && p.club === selectedTeam.name;
-      const altPos = m.altPositions || [];
       html += `<div class="pcard" style="${isCurrentPlayer?'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);':''}opacity:0.85">
         <div class="prank">${String(i+1).padStart(2,'0')}</div>
         <div>
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
             <div class="pname">${p.name}</div>
             <div class="pos-badge">${p.subpos||p.pos}</div>
             ${isCurrentPlayer?`<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>`:''}
           </div>
-          <div class="pmeta">
-            <span>🏟 ${p.club}</span>
-            <span>📍 ${p.nat}</span>
-            <span>🎂 ${p.age} yrs</span>
-            <span>📋 ${p.apps} apps</span>
-            <span>💰 ${fmtVal(p.value)}</span>
-          </div>
+          <div class="pmeta"><span>🏟 ${p.club}</span><span>📍 ${p.nat}</span><span>🎂 ${p.age} yrs</span><span>📋 ${p.apps} apps</span><span>💰 ${fmtVal(p.value)}</span></div>
           <div class="stat-pills">${getPositionStats(p)}</div>
           ${m.reasons.map(r=>`<div class="reason">${r}</div>`).join('')}
-          ${(m.contextBoosts||[]).map(b=>`<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${b.icon||'✓'}</span><span>${b.text}</span></div>`).join('')}
-          ${(m.contextFlags||[]).map(f=>`<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${f.icon||'⚠'}</span><span>${f.text}</span></div>`).join('')}
+          ${(m.contextBoosts||[]).map(b=>`<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px">${b.icon} ${b.text}</div>`).join('')}
+          ${(m.contextFlags||[]).map(f=>`<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px">${f.icon} ${f.text}</div>`).join('')}
         </div>
         <div class="score-blk">
           <div class="score-num ${scCls(sc)}">${sc}%</div>
@@ -1402,6 +1394,7 @@ function runAnalysis() {
   document.getElementById('resContent').innerHTML = html;
   document.getElementById('resContent').style.display = 'block';
 }
+
 
 function showTab(id, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
