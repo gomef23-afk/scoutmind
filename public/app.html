@@ -287,7 +287,7 @@ if (!_cu) window.location.href = '/auth.html';
       </select>
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Min appearances</div>
       <input type="number" id="minApps" value="10">
-      <!-- Position filter removed from Best Fit — use Build Your Squad tab to browse by position -->
+      <!-- Position filter removed from Best Fit — use Player Explorer tab to browse by position -->
       <input type="hidden" id="posFil" value="">
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Search players from</div>
       <select id="playerLeagueSel">
@@ -339,7 +339,7 @@ if (!_cu) window.location.href = '/auth.html';
     <div class="tabs">
       <div class="tab active" id="tab-stats-btn" onclick="showTab('stats',this)">Team Stats</div>
       <div class="tab" id="tab-results-btn" onclick="showTab('results',this)">Best Fit Analysis</div>
-      <div class="tab" id="tab-squad-btn" onclick="showTab('squad',this)">🎮 Build Your Squad</div>
+      <div class="tab" id="tab-squad-btn" onclick="showTab('squad',this)">🔎 Player Explorer</div>
     </div>
 
     <!-- STATS TAB -->
@@ -374,7 +374,24 @@ if (!_cu) window.location.href = '/auth.html';
       <div class="empty" id="resEmpty">
         <div class="empty-icon">🔍</div>
         <div class="empty-ttl">No Analysis Yet</div>
-        <div style="font-size:13px">Select a team and run the analysis</div>
+        <div style="font-size:13px;margin-bottom:20px">Select a team from the sidebar and click Run Analysis</div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:left;max-width:520px;margin:0 auto;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:12px">How Best Fit Analysis works</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <div style="background:rgba(0,229,160,0.1);color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:16px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+              <div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Weakness Detection</div><div style="font-size:11px;color:var(--muted);line-height:1.5">Your team's stats are compared against the league average across 12 metrics — goals, tackles, pass accuracy, aerial duels and more. Any zone significantly below average is flagged.</div></div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <div style="background:rgba(0,229,160,0.1);color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:16px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+              <div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Ideal Profile Built</div><div style="font-size:11px;color:var(--muted);line-height:1.5">Based on the primary weakness, ScoutMind defines the exact type of player needed — position, role and minimum stat thresholds.</div></div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <div style="background:rgba(0,229,160,0.1);color:var(--accent);font-family:'Bebas Neue',sans-serif;font-size:16px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+              <div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Players Ranked by Fit %</div><div style="font-size:11px;color:var(--muted);line-height:1.5">Every player in the database is scored against the profile. Age, injury history, rival club status, league level and international caps are shown as context flags — they inform your decision without hiding good players.</div></div>
+            </div>
+          </div>
+        </div>
       </div>
       <div id="resContent" style="display:none"></div>
     </div>
@@ -382,7 +399,7 @@ if (!_cu) window.location.href = '/auth.html';
     <!-- BUILD YOUR SQUAD TAB -->
     <div id="tab-squad" style="display:none">
       <div style="margin-bottom:16px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:4px">🎮 Build Your Squad</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:4px">🔎 Player Explorer</div>
         <div style="font-size:13px;color:var(--muted);line-height:1.6">Pick your team, choose a position, and see which players would be a good fit — with match scores.</div>
       </div>
 
@@ -496,6 +513,7 @@ const PROFILES = {
   "Poor finishing":      {pos:"ST or CF",        role:"Clinical striker with high conversion. Goals per game is the priority.",       stats:{goals_pg:0.45,shots_on_tgt_pg:2.0,aerial_pct:55},w:{goals_pg:4,shots_on_tgt_pg:3,aerial_pct:1}},
   "Low attack output":   {pos:"Winger or SS",    role:"Creative attacker who generates and converts chances consistently.",          stats:{goals_pg:0.28,key_passes_pg:1.8,shots_on_tgt_pg:1.5,assists_pg:0.20},w:{goals_pg:3,key_passes_pg:2,shots_on_tgt_pg:2,assists_pg:2}},
   "Poor shot volume":    {pos:"Box-to-box MID",  role:"Gets forward to create volume in attack. High shot and key pass numbers.",    stats:{shots_on_tgt_pg:0.8,key_passes_pg:2.0,goals_pg:0.18},w:{shots_on_tgt_pg:3,key_passes_pg:3,goals_pg:2}},
+  "Goalkeeper weakness": {pos:"Goalkeeper",       role:"Reliable shot-stopper with strong aerial ability and good distribution. Reduces goals conceded immediately.",stats:{saves_pg:3.2,clean_sheets:10,gc_pg:1.1,pass_acc:72,aerial_pct:68},w:{saves_pg:4,clean_sheets:3,gc_pg:3,pass_acc:1,aerial_pct:2}},
 };
 
 // Position-specific profiles — override weakness profile when user filters by position
@@ -796,24 +814,21 @@ function detectAltPositions(p) {
 // Get the correct profile — use position override if user has filtered by position
 function getProfile(weaknessType, positionFilter) {
   if (positionFilter && POSITION_PROFILES[positionFilter]) {
-    // Merge: use position profile as base but blend in weakness context
     const posProfile = POSITION_PROFILES[positionFilter];
     const weakProfile = PROFILES[weaknessType];
-    
-    // For same-zone matches (e.g. ATT weakness + ATT filter), use weakness profile
     const attackWeaknesses = ["Poor finishing","Low attack output","Poor shot volume"];
-    const defWeaknesses = ["Defensive errors","Aerial vulnerability","Poor tackling"];
+    const defWeaknesses = ["Defensive errors","Aerial vulnerability","Poor tackling","Goalkeeper weakness"];
     const midWeaknesses = ["Lack of creativity","Poor passing"];
-    
     const isMatch = (
       (positionFilter === 'ATT' && attackWeaknesses.includes(weaknessType)) ||
       (positionFilter === 'DEF' && defWeaknesses.includes(weaknessType)) ||
       (positionFilter === 'MID' && midWeaknesses.includes(weaknessType)) ||
       (positionFilter === 'GK')
     );
-    
     return isMatch && weakProfile ? weakProfile : posProfile;
   }
+  // GK weakness always returns GK profile
+  if (weaknessType === 'Goalkeeper weakness') return PROFILES['Goalkeeper weakness'];
   return PROFILES[weaknessType] || PROFILES["Low attack output"];
 }
 
@@ -963,13 +978,16 @@ function detectWeaknesses() {
   };
 
   const checks = [
+    // GK check first — if goals conceded is significantly above average, GK is the priority
+    {k:'gc',  avg:av.gc,  lb:true,  zone:'goalkeeper', type:'Goalkeeper weakness', threshold:0.22},
+    // Then defensive outfield checks
     {k:'gc',  avg:av.gc,  lb:true,  zone:'defense',  type:'Defensive errors',   threshold:0.15},
     {k:'aer', avg:av.aer, lb:false, zone:'defense',  type:'Aerial vulnerability',threshold:0.15},
     {k:'tk',  avg:av.tk,  lb:false, zone:'defense',  type:'Poor tackling',       threshold:0.15},
     {k:'int', avg:av.int, lb:false, zone:'defense',  type:'Poor tackling',       threshold:0.15},
     {k:'cl',  avg:av.cl,  lb:false, zone:'defense',  type:'Defensive errors',    threshold:0.15},
-    {k:'pa',  avg:av.pa,  lb:false, zone:'midfield', type:'Poor passing',        threshold:0.08},
-    {k:'pos', avg:av.pos, lb:false, zone:'midfield', type:'Lack of creativity',  threshold:0.10},
+    {k:'pa',  avg:av.pa,  lb:false, zone:'midfield', type:'Poor passing',        threshold:0.06},
+    {k:'pos', avg:av.pos, lb:false, zone:'midfield', type:'Lack of creativity',  threshold:0.07},
     {k:'gs',  avg:av.gs,  lb:false, zone:'attack',   type:'Poor finishing',      threshold:0.15},
     {k:'sot', avg:av.sot, lb:false, zone:'attack',   type:'Low attack output',   threshold:0.15},
     {k:'sh',  avg:av.sh,  lb:false, zone:'attack',   type:'Poor shot volume',    threshold:0.15},
@@ -1165,7 +1183,7 @@ function runAnalysis() {
   // Priority zone
   const zoneSc = {};
   flags.forEach(f => { zoneSc[f.zone] = (zoneSc[f.zone]||0) + (f.severity==='major'?2:1); });
-  const priOrder = ['defense','attack','midfield'];
+  const priOrder = ['goalkeeper','defense','attack','midfield'];
   const priZone = Object.entries(zoneSc).sort((a,b) => b[1]-a[1] || priOrder.indexOf(a[0])-priOrder.indexOf(b[0]))[0]?.[0] || 'attack';
   const priType = flags.find(f => f.zone === priZone)?.type || 'Low attack output';
   const posFil2 = document.getElementById('posFil').value;
@@ -1214,12 +1232,32 @@ function runAnalysis() {
         ...scored,
         score: ctx.score,
         contextFlags: ctx.contextFlags,
-        contextBoosts: ctx.contextBoosts
+        contextBoosts: ctx.contextBoosts,
+        isSecondary: false
       };
     })
     .filter(m => m.score > 10)
     .sort((a,b) => b.score - a.score)
-    .slice(0, 15);
+    .slice(0, 12);
+
+  // Secondary weakness recommendations
+  const rankedSec = secProfile ? secFiltered
+    .map(p => {
+      const scored = scorePlayer(p, secProfile, null);
+      const ctx = applyContextualFactors(scored.score, p, selectedTeam, currentLeague);
+      return {
+        p,
+        ...scored,
+        score: ctx.score,
+        contextFlags: ctx.contextFlags,
+        contextBoosts: ctx.contextBoosts,
+        isSecondary: true,
+        secType
+      };
+    })
+    .filter(m => m.score > 10)
+    .sort((a,b) => b.score - a.score)
+    .slice(0, 5) : [];
 
   // Chart data
   const chartRows = [
@@ -1237,7 +1275,7 @@ function runAnalysis() {
   // Weakness banner
   html += `<div class="w-banner">
     <div class="w-title">Primary Weakness: ${priType}</div>
-    <div class="w-sub">Zone: ${priZone.toUpperCase()} · ${flags.length} weakness flag${flags.length!==1?'s':''} detected · ${selectedTeam.name} · ${LEAGUE_META[currentLeague]?.flag||''} ${LEAGUE_META[currentLeague]?.name||''}</div>
+    <div class="w-sub">Zone: ${priZone==='goalkeeper'?'GOALKEEPER':priZone.toUpperCase()} · ${flags.length} weakness flag${flags.length!==1?'s':''} detected · ${selectedTeam.name} · ${LEAGUE_META[currentLeague]?.flag||''} ${LEAGUE_META[currentLeague]?.name||''}</div>
   </div>`;
 
   // Flags
@@ -1330,6 +1368,50 @@ function runAnalysis() {
         </div>
       </div>`;
     });
+  }
+
+  // Secondary weakness section
+  if (rankedSec.length > 0) {
+    html += `<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+      <div class="section-hdr">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="section-ttl">Also Consider</div>
+          <div class="data-badge" style="background:rgba(245,200,66,0.08);border-color:rgba(245,200,66,0.2);color:var(--yellow)">Secondary weakness: ${secType}</div>
+        </div>
+      </div>`;
+    rankedSec.forEach((m, i) => {
+      const p = m.p;
+      const sc = m.score;
+      const isCurrentPlayer = selectedTeam && p.club === selectedTeam.name;
+      const altPos = m.altPositions || [];
+      html += `<div class="pcard" style="${isCurrentPlayer?'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);':''}opacity:0.85">
+        <div class="prank">${String(i+1).padStart(2,'0')}</div>
+        <div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;flex-wrap:wrap">
+            <div class="pname">${p.name}</div>
+            <div class="pos-badge">${p.subpos||p.pos}</div>
+            ${isCurrentPlayer?`<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>`:''}
+          </div>
+          <div class="pmeta">
+            <span>🏟 ${p.club}</span>
+            <span>📍 ${p.nat}</span>
+            <span>🎂 ${p.age} yrs</span>
+            <span>📋 ${p.apps} apps</span>
+            <span>💰 ${fmtVal(p.value)}</span>
+          </div>
+          <div class="stat-pills">${getPositionStats(p)}</div>
+          ${m.reasons.map(r=>`<div class="reason">${r}</div>`).join('')}
+          ${(m.contextBoosts||[]).map(b=>`<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${b.icon||'✓'}</span><span>${b.text}</span></div>`).join('')}
+          ${(m.contextFlags||[]).map(f=>`<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${f.icon||'⚠'}</span><span>${f.text}</span></div>`).join('')}
+        </div>
+        <div class="score-blk">
+          <div class="score-num ${scCls(sc)}">${sc}%</div>
+          <div class="score-lbl">MATCH</div>
+          <div class="sbar"><div class="sbar-fill" style="width:${sc}%;background:${barClr(sc)}"></div></div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
   }
 
   document.getElementById('resEmpty').style.display = 'none';
