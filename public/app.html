@@ -273,8 +273,18 @@ if (!_cu) window.location.href = '/auth.html';
         <input type="number" id="minAge" value="16" min="14" max="45" placeholder="Min">
         <input type="number" id="maxAge" value="35" min="14" max="45" placeholder="Max">
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Max budget (€)</div>
-      <input type="number" id="budgetMax" value="50000000">
+      <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Max budget</div>
+      <select id="budgetMax">
+        <option value="5000000">Up to €5M</option>
+        <option value="10000000">Up to €10M</option>
+        <option value="20000000">Up to €20M</option>
+        <option value="30000000">Up to €30M</option>
+        <option value="50000000" selected>Up to €50M</option>
+        <option value="75000000">Up to €75M</option>
+        <option value="100000000">Up to €100M</option>
+        <option value="150000000">Up to €150M</option>
+        <option value="999000000">No limit</option>
+      </select>
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Min appearances</div>
       <input type="number" id="minApps" value="10">
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Position</div>
