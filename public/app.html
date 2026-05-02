@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ScoutMind — Tactical Intelligence</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="/leagues_data.js"></script>
 <script src="/players_data.js"></script>
@@ -171,8 +172,27 @@ hr{border:none;border-top:1px solid var(--border);}
 
 <!-- AUTH CHECK -->
 <script>
+const _supa = window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
 const _cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
-if (!_cu) window.location.href = '/auth.html';
+if (!_cu) {
+  _supa.auth.getSession().then(function(result) {
+    var session = result.data.session;
+    if (!session) {
+      window.location.href = '/auth.html';
+    } else {
+      _supa.from('profiles').select('*').eq('id', session.user.id).single().then(function(res) {
+        var profile = res.data;
+        localStorage.setItem('sm_current_user', JSON.stringify({
+          id: session.user.id,
+          email: session.user.email,
+          name: profile ? profile.name : session.user.email.split('@')[0],
+          plan: profile ? profile.plan : 'free'
+        }));
+        window.location.reload();
+      });
+    }
+  });
+}
 </script>
 
 <!-- NAV -->
@@ -864,6 +884,8 @@ if (currentUser) {
 }
 
 function logout() {
+  var s = window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
+  s.auth.signOut();
   localStorage.removeItem('sm_current_user');
   window.location.href = '/auth.html';
 }
