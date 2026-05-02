@@ -851,13 +851,16 @@ function getProfile(weaknessType, positionFilter) {
 const currentUser = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
 const PLAN_NAMES = {free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro'};
 const PLAN_CLASS = {free:'free',pro:'pro',club:'club',clubpro:'clubpro'};
+const userPlan = currentUser?.plan || 'free';
+const isPro = ['pro','club','clubpro'].includes(userPlan);
+const isClub = ['club','clubpro'].includes(userPlan);
+const isFree = userPlan === 'free';
 
 if (currentUser) {
   document.getElementById('nav-name').textContent = currentUser.name || 'User';
   const planEl = document.getElementById('nav-plan');
-  const plan = currentUser.plan || 'free';
-  planEl.textContent = PLAN_NAMES[plan] || 'Scout Free';
-  planEl.className = 'plan-pill ' + (PLAN_CLASS[plan] || 'free');
+  planEl.textContent = PLAN_NAMES[userPlan] || 'Scout Free';
+  planEl.className = 'plan-pill ' + (PLAN_CLASS[userPlan] || 'free');
 }
 
 function logout() {
