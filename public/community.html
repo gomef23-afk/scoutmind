@@ -332,6 +332,16 @@ function renderTeamPage() {
   const t = activeTeam;
   const av = LEAGUE_AVGS[activeLeague] || {};
   const data = getTeamData(t.id);
+  const info = TEAM_INFO?.[t.id] || {};
+  const coach = COACHES?.[t.id] || {};
+
+  // Club colors for visual identity
+  const colors = info.colors || ['#00e5a0','#0d1117'];
+  const primaryColor = colors[0];
+  const secondaryColor = colors[1] || '#0d1117';
+
+  // Generate initials badge
+  const initials = t.name.split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase();
 
   // Style badges
   const badges = [];
@@ -353,34 +363,81 @@ function renderTeamPage() {
     : `${t.name} are performing well across all key metrics this season. Maintaining squad depth and fitness will be key.`;
 
   document.getElementById('comm-main').innerHTML = `
-    <div class="team-hero">
-      <div class="team-name-big">${t.name}</div>
-      <div class="team-meta-row">
-        <div class="team-badge badge-pos">${LEAGUE_META[activeLeague]?.flag||''} ${LEAGUE_META[activeLeague]?.name||activeLeague}</div>
-        ${t.pos ? `<div class="team-badge badge-pos">Position: ${t.pos}</div>` : ''}
-        ${badges.map(b=>`<div class="team-badge ${b.cls}">${b.txt}</div>`).join('')}
+    <!-- CLUB PROFILE CARD -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;">
+
+      <!-- Color header banner -->
+      <div style="height:6px;background:linear-gradient(90deg,${primaryColor},${secondaryColor})"></div>
+
+      <div style="padding:20px 22px;">
+        <div style="display:flex;align-items:center;gap:18px;margin-bottom:16px;">
+
+          <!-- Club badge (initials-based) -->
+          <div style="width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,${primaryColor}22,${primaryColor}44);border:2px solid ${primaryColor}55;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:${primaryColor}">${initials}</div>
+          </div>
+
+          <!-- Club name + details -->
+          <div style="flex:1">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;line-height:1;margin-bottom:4px">${info.fullName || t.name}</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${[info.city, info.stadium, info.founded?'Est. '+info.founded:null].filter(Boolean).join(' · ')}</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--muted)">${LEAGUE_META[activeLeague]?.flag||''} ${LEAGUE_META[activeLeague]?.name||activeLeague}</div>
+              ${t.pos ? `<div style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;background:${primaryColor}15;color:${primaryColor}">${t.pos} in league</div>` : ''}
+              ${info.capacity ? `<div style="font-size:11px;color:var(--muted)">🏟 ${info.capacity.toLocaleString()} cap.</div>` : ''}
+            </div>
+          </div>
+
+          <!-- Instagram link -->
+          ${info.instagram ? `<a href="https://instagram.com/${info.instagram.replace('@','')}" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;transition:all .2s" onmouseover="this.style.borderColor='${primaryColor}'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:18px">📸</div>
+            <div style="font-size:10px;color:var(--muted);font-weight:600">${info.instagram}</div>
+          </a>` : ''}
+        </div>
+
+        <!-- Coach info -->
+        ${coach.name ? `<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+          <div style="font-size:20px">👔</div>
+          <div>
+            <div style="font-size:13px;font-weight:600">${coach.name}</div>
+            <div style="font-size:11px;color:var(--muted)">Head Coach · Since ${coach.since} · ${coach.nat}</div>
+            ${coach.former_clubs?.length ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">Former clubs: ${coach.former_clubs.slice(0,3).join(', ')}</div>` : ''}
+          </div>
+        </div>` : ''}
+
+        <!-- Style badges -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+          ${badges.map(b=>`<div class="team-badge ${b.cls}">${b.txt}</div>`).join('')}
+        </div>
+
+        <!-- Stats grid -->
+        <div class="team-stats-mini">
+          <div class="tsm-card">
+            <div class="tsm-val" style="color:${t.gs>=(av.gs||1.3)?'var(--green)':'var(--red)'}">${t.gs||'—'}</div>
+            <div class="tsm-lbl">Goals/game</div>
+          </div>
+          <div class="tsm-card">
+            <div class="tsm-val" style="color:${t.gc<=(av.gc||1.3)?'var(--green)':'var(--red)'}">${t.gc||'—'}</div>
+            <div class="tsm-lbl">Conceded/game</div>
+          </div>
+          <div class="tsm-card">
+            <div class="tsm-val">${t.pa||'—'}%</div>
+            <div class="tsm-lbl">Pass accuracy</div>
+          </div>
+          <div class="tsm-card">
+            <div class="tsm-val">${t.pos_pct||'—'}%</div>
+            <div class="tsm-lbl">Possession</div>
+          </div>
+        </div>
       </div>
-      <div class="team-stats-mini">
-        <div class="tsm-card">
-          <div class="tsm-val" style="color:${t.gs>=(av.gs||1.3)?'var(--green)':'var(--red)'}">${t.gs||'—'}</div>
-          <div class="tsm-lbl">Goals/game</div>
+
+      <!-- ScoutMind verdict footer -->
+      <div style="border-top:1px solid var(--border);padding:12px 22px;background:rgba(0,229,160,0.02)">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:6px">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s infinite"></span>
+          ScoutMind Weekly Verdict
         </div>
-        <div class="tsm-card">
-          <div class="tsm-val" style="color:${t.gc<=(av.gc||1.3)?'var(--green)':'var(--red)'}">${t.gc||'—'}</div>
-          <div class="tsm-lbl">Conceded/game</div>
-        </div>
-        <div class="tsm-card">
-          <div class="tsm-val">${t.pa||'—'}%</div>
-          <div class="tsm-lbl">Pass accuracy</div>
-        </div>
-        <div class="tsm-card">
-          <div class="tsm-val">${t.pos_pct||'—'}%</div>
-          <div class="tsm-lbl">Possession</div>
-        </div>
-      </div>
-      <div class="scoutmind-verdict">
-        <div class="sv-label">ScoutMind Weekly Verdict</div>
-        <div class="sv-text">${verdictText}</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">${verdictText}</div>
       </div>
     </div>
 
