@@ -770,12 +770,12 @@ footer {
 <nav>
   <div class="nav-logo">Scout<span>Mind</span></div>
   <div class="nav-links">
-    <a onclick="scrollTo('how')">How it works</a>
-    <a onclick="scrollTo('for-who')">For who</a>
-    <a onclick="scrollTo('pricing')">Pricing</a>
-    <a onclick="scrollTo('faq')">FAQ</a>
+    <a onclick="scrollToSection('how')">How it works</a>
+    <a onclick="scrollToSection('for-who')">For who</a>
+    <a onclick="scrollToSection('pricing')">Pricing</a>
+    <a onclick="scrollToSection('faq')">FAQ</a>
   </div>
-  <a class="nav-cta" href="auth.html">Open App →</a>
+  <a class="nav-cta" href="/auth.html">Open App →</a>
 </nav>
 
 <!-- HERO -->
@@ -809,8 +809,8 @@ footer {
         ScoutMind analyses your team's match data, identifies tactical weaknesses, and recommends the exact players to solve them — ranked by fit, filtered by budget.
       </p>
       <div class="hero-actions">
-        <a class="btn-primary" href="auth.html">▶ Try It Free</a>
-        <a class="btn-ghost" onclick="scrollTo('how')">See how it works</a>
+        <a class="btn-primary" href="/auth.html">▶ Try It Free</a>
+        <a class="btn-ghost" onclick="scrollToSection('how')">See how it works</a>
       </div>
       <div class="hero-stats">
         <div>
@@ -920,27 +920,32 @@ footer {
 <div class="section reveal">
   <div class="section-tag">How it works</div>
   <div class="section-title">From Data to<br>Decision in Minutes</div>
-  <div class="section-sub">No analysts needed. No expensive consultants. Just input your team stats and let ScoutMind do the work.</div>
+  <div class="section-sub">No analysts needed. No expensive consultants. Just select your team and let ScoutMind do the work — from weakness detection to ranked player recommendations.</div>
   <div class="steps">
     <div class="step">
       <div class="step-num">01</div>
       <div class="step-title">Select your team</div>
-      <div class="step-desc">Choose your club from 8+ leagues worldwide. Stats auto-load from the 2026 season data.</div>
+      <div class="step-desc">Choose your club from 30+ leagues worldwide — Série A, Premier League, La Liga, Bundesliga and more. Real 2026 stats auto-load instantly.</div>
     </div>
     <div class="step">
       <div class="step-num">02</div>
-      <div class="step-title">Weakness detected</div>
-      <div class="step-desc">The algorithm compares your stats against league averages and flags weak zones — defense, midfield, attack.</div>
+      <div class="step-title">Weaknesses detected</div>
+      <div class="step-desc">The algorithm compares your team's stats vs the league average across 12 metrics — goals, tackles, pass accuracy, aerial duels and more — and flags every weak zone automatically.</div>
     </div>
     <div class="step">
       <div class="step-num">03</div>
-      <div class="step-title">Profile generated</div>
-      <div class="step-desc">ScoutMind builds the ideal player profile for your specific tactical need — position, stats, role type.</div>
+      <div class="step-title">Ideal profile built</div>
+      <div class="step-desc">ScoutMind defines exactly what type of player you need. CB? CDM? Creative CAM? It generates the position, role description and minimum stat thresholds — automatically.</div>
     </div>
     <div class="step">
       <div class="step-num">04</div>
-      <div class="step-title">Players ranked</div>
-      <div class="step-desc">Real players ranked by match score. Filter by age, budget, position, and league to find your signing.</div>
+      <div class="step-title">Players ranked by fit</div>
+      <div class="step-desc">545 real players ranked by match score. Every card shows age context (🌟 high upside vs ⚠ short-term only), rival club warnings, league level flags, and budget filters.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">05</div>
+      <div class="step-title">Stay informed</div>
+      <div class="step-desc">Transfer Intelligence news with AI fit scores for every rumor. Fan Community pages with polls, wishlist voting and live chat. Build Your Squad mode for fans to explore freely.</div>
     </div>
   </div>
 </div>
@@ -1010,7 +1015,7 @@ footer {
         <li class="dim">Community features</li>
         <li class="dim">Custom reports</li>
       </ul>
-      <button class="pricing-btn outline" onclick="window.location.href='app.html'">Get Started Free</button>
+      <button class="pricing-btn outline" onclick="window.location.href='/app.html'">Get Started Free</button>
     </div>
 
     <!-- Scout Pro -->
@@ -1034,7 +1039,7 @@ footer {
         <li>Community — polls, chat, rankings</li>
         <li class="dim">Custom scouting reports</li>
       </ul>
-      <button class="pricing-btn primary">Start 7-day Free Trial</button>
+      <button class="pricing-btn primary" onclick="window.location.href='/auth.html?plan=pro'">Start 7-day Free Trial</button>
     </div>
 
     <!-- Club Basic -->
@@ -1057,7 +1062,7 @@ footer {
         <li>Up to 3 team profiles</li>
         <li class="dim">API access</li>
       </ul>
-      <button class="pricing-btn outline">Contact Us</button>
+      <button class="pricing-btn outline" onclick="window.location.href='mailto:hello@scoutmind.app?subject=ScoutMind Club Plan Inquiry'">Contact Us</button>
     </div>
 
     <!-- Club Pro -->
@@ -1080,7 +1085,7 @@ footer {
         <li>Dedicated account manager</li>
         <li>Custom integrations on request</li>
       </ul>
-      <button class="pricing-btn outline">Contact Us</button>
+      <button class="pricing-btn outline" onclick="window.location.href='mailto:hello@scoutmind.app?subject=ScoutMind Club Plan Inquiry'">Contact Us</button>
     </div>
 
   </div>
@@ -1131,8 +1136,8 @@ footer {
   <div class="cta-title">Ready to Scout<br><span>Smarter?</span></div>
   <p class="cta-sub">Join clubs, agents, and fans already using ScoutMind to make better football decisions.</p>
   <div class="cta-actions">
-    <a class="btn-primary" href="auth.html">▶ Open the App</a>
-    <a class="btn-ghost" onclick="scrollTo('pricing')">See Pricing</a>
+    <a class="btn-primary" href="/auth.html">▶ Open the App</a>
+    <a class="btn-ghost" onclick="scrollToSection('pricing')">See Pricing</a>
   </div>
 </div>
 
@@ -1140,21 +1145,21 @@ footer {
 <footer>
   <div class="footer-logo">Scout<span>Mind</span></div>
   <div class="footer-links">
-    <a href="#">Privacy</a>
-    <a href="#">Terms</a>
+    <a href="#" onclick="showLegal('privacy')">Privacy</a>
+    <a href="#" onclick="showLegal('terms')">Terms</a>
     <a href="mailto:hello@scoutmind.app">Contact</a>
   </div>
   <div class="footer-copy">© 2026 ScoutMind. All rights reserved.</div>
 </footer>
 
 <!-- FLOATING BADGE -->
-<a class="live-badge" href="auth.html">
+<a class="live-badge" href="/auth.html">
   <div class="live-dot-badge"></div>
   Live App →
 </a>
 
 <script>
-function scrollTo(id) {
+function scrollToSection(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -1168,6 +1173,47 @@ const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+
+// Legal Modal
+function showLegal(type) {
+  const modal = document.getElementById('legal-modal');
+  const content = document.getElementById('legal-content');
+  if (type === 'privacy') {
+    content.innerHTML = `
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-bottom:16px;color:#edf2f7">Privacy Policy</h2>
+      <p style="font-size:13px;color:#5a6a85;margin-bottom:12px">Last updated: May 2026</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Data we collect:</strong> Email address, name, and plan type when you create an account. Usage data to improve the product.</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">How we use it:</strong> To provide the ScoutMind service, send product updates, and improve recommendations. We never sell your data to third parties.</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Data storage:</strong> Account data is stored securely. Community posts and poll votes are stored locally in your browser.</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Your rights:</strong> You can delete your account and all associated data at any time by contacting hello@scoutmind.app.</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7"><strong style="color:#edf2f7">Contact:</strong> hello@scoutmind.app</p>`;
+  } else {
+    content.innerHTML = `
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-bottom:16px;color:#edf2f7">Terms of Service</h2>
+      <p style="font-size:13px;color:#5a6a85;margin-bottom:12px">Last updated: May 2026</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Service:</strong> ScoutMind provides AI-powered football scouting analysis. All player statistics and recommendations are for informational purposes only.</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Accounts:</strong> You are responsible for maintaining the security of your account. One account per user.</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Subscriptions:</strong> Scout Pro is billed monthly. Club plans are billed as agreed. All plans can be cancelled with 30 days notice.</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Data accuracy:</strong> ScoutMind uses real statistical data but cannot guarantee 100% accuracy at all times. Data is updated regularly.</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Acceptable use:</strong> ScoutMind is for scouting and analysis purposes. Reselling or redistributing our data is not permitted.</p>
+      <p style="font-size:14px;color:#a0aec0;line-height:1.7"><strong style="color:#edf2f7">Contact:</strong> hello@scoutmind.app</p>`;
+  }
+  modal.style.display = 'flex';
+}
+// Close on backdrop click
+document.getElementById('legal-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
 </script>
+
+<!-- Legal Modal HTML -->
+<div id="legal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#0d1117;border:1px solid #1a2540;border-radius:16px;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;padding:32px;position:relative">
+    <button onclick="document.getElementById('legal-modal').style.display='none'" style="position:absolute;top:16px;right:16px;background:transparent;border:none;color:#5a6a85;font-size:20px;cursor:pointer">✕</button>
+    <div id="legal-content"></div>
+  </div>
+</div>
+
 </body>
 </html>
