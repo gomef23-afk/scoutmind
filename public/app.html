@@ -287,33 +287,8 @@ if (!_cu) window.location.href = '/auth.html';
       </select>
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Min appearances</div>
       <input type="number" id="minApps" value="10">
-      <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Position</div>
-      <select id="posFil">
-        <option value="">Any position</option>
-        <optgroup label="Goalkeeper">
-          <option value="GK">GK — Goalkeeper</option>
-        </optgroup>
-        <optgroup label="Defenders">
-          <option value="DEF">DEF — Any Defender</option>
-          <option value="CB">CB — Centre Back</option>
-          <option value="RB">RB — Right Back</option>
-          <option value="LB">LB — Left Back</option>
-          <option value="WB">WB — Wing Back</option>
-        </optgroup>
-        <optgroup label="Midfielders">
-          <option value="MID">MID — Any Midfielder</option>
-          <option value="CDM">CDM — Defensive Mid</option>
-          <option value="CM">CM — Central Mid</option>
-          <option value="CAM">CAM — Attacking Mid</option>
-        </optgroup>
-        <optgroup label="Attackers">
-          <option value="ATT">ATT — Any Attacker</option>
-          <option value="RW">RW — Right Winger</option>
-          <option value="LW">LW — Left Winger</option>
-          <option value="ST">ST — Striker</option>
-          <option value="CF">CF — Centre Forward</option>
-        </optgroup>
-      </select>
+      <!-- Position filter removed from Best Fit — use Build Your Squad tab to browse by position -->
+      <input type="hidden" id="posFil" value="">
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Search players from</div>
       <select id="playerLeagueSel">
         <option value="ALL">All Leagues</option>
@@ -1011,6 +986,107 @@ function detectWeaknesses() {
   });
 }
 
+// ═══════════════════════════════════════
+// POSITION-AWARE STAT DISPLAY
+// ═══════════════════════════════════════
+function getPositionStats(p) {
+  const sub = p.subpos || p.pos;
+  const apps = p.apps || 1;
+  const pill = (icon, val, label) =>
+    `<div class="spill">${icon} ${val} ${label}</div>`;
+
+  // Helper to show per-game or total stats cleanly
+  const perG = (v) => v > 0 ? v.toFixed(2) : null;
+  const total = (v) => v > 0 ? (v * apps).toFixed(0) : null;
+  const pct = (v) => v > 0 ? v + '%' : null;
+
+  let pills = [];
+
+  if (p.pos === 'GK') {
+    if (p.saves_pg)       pills.push(pill('🧤', p.saves_pg.toFixed(1), 'saves/g'));
+    if (p.clean_sheets)   pills.push(pill('🔒', p.clean_sheets, 'clean sheets'));
+    if (p.gc_pg)          pills.push(pill('🥅', p.gc_pg.toFixed(1), 'conceded/g'));
+    if (p.pass_acc)       pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
+    if (p.aerial_pct)     pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
+    if (p.caps > 0)       pills.push(pill('🌍', p.caps, 'caps'));
+
+  } else if (sub === 'CB') {
+    if (p.tackles_pg)       pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
+    if (p.interceptions_pg) pills.push(pill('🛡', total(p.interceptions_pg), 'interceptions'));
+    if (p.aerial_pct)       pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
+    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
+    if (p.height)           pills.push(pill('📏', p.height + 'cm', ''));
+    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
+
+  } else if (sub === 'RB' || sub === 'LB' || sub === 'WB') {
+    if (p.tackles_pg)       pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
+    if (p.assists_pg)       pills.push(pill('🎯', total(p.assists_pg), 'assists'));
+    if (p.key_passes_pg)    pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
+    if (p.aerial_pct)       pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
+    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
+    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
+
+  } else if (sub === 'CDM') {
+    if (p.tackles_pg)       pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
+    if (p.interceptions_pg) pills.push(pill('🛡', total(p.interceptions_pg), 'interceptions'));
+    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
+    if (p.aerial_pct)       pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
+    if (p.goals_pg)         pills.push(pill('⚽', total(p.goals_pg), 'goals'));
+    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
+
+  } else if (sub === 'CM') {
+    if (p.key_passes_pg)    pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
+    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
+    if (p.tackles_pg)       pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
+    if (p.assists_pg)       pills.push(pill('🎯', total(p.assists_pg), 'assists'));
+    if (p.goals_pg)         pills.push(pill('⚽', total(p.goals_pg), 'goals'));
+    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
+
+  } else if (sub === 'CAM') {
+    if (p.key_passes_pg)    pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
+    if (p.assists_pg)       pills.push(pill('🎯', total(p.assists_pg), 'assists'));
+    if (p.goals_pg)         pills.push(pill('⚽', total(p.goals_pg), 'goals'));
+    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
+    if (p.shots_on_tgt_pg)  pills.push(pill('🎯', total(p.shots_on_tgt_pg), 'shots on tgt'));
+    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
+
+  } else if (sub === 'RW' || sub === 'LW') {
+    if (p.goals_pg)         pills.push(pill('⚽', total(p.goals_pg), 'goals'));
+    if (p.assists_pg)       pills.push(pill('🎯', total(p.assists_pg), 'assists'));
+    if (p.key_passes_pg)    pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
+    if (p.shots_on_tgt_pg)  pills.push(pill('🎯', total(p.shots_on_tgt_pg), 'shots on tgt'));
+    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
+    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
+
+  } else if (sub === 'ST' || sub === 'CF') {
+    if (p.goals_pg)         pills.push(pill('⚽', total(p.goals_pg), 'goals'));
+    if (p.shots_on_tgt_pg)  pills.push(pill('🎯', total(p.shots_on_tgt_pg), 'shots on tgt'));
+    if (p.aerial_pct)       pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
+    if (p.assists_pg)       pills.push(pill('🎯', total(p.assists_pg), 'assists'));
+    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
+    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
+
+  } else {
+    // Fallback for players without subpos — show balanced stats
+    if (p.pos === 'DEF') {
+      if (p.tackles_pg)     pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
+      if (p.aerial_pct)     pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
+      if (p.pass_acc)       pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
+    } else if (p.pos === 'MID') {
+      if (p.key_passes_pg)  pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
+      if (p.pass_acc)       pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
+      if (p.tackles_pg)     pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
+    } else {
+      if (p.goals_pg)       pills.push(pill('⚽', total(p.goals_pg), 'goals'));
+      if (p.assists_pg)     pills.push(pill('🎯', total(p.assists_pg), 'assists'));
+      if (p.key_passes_pg)  pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
+    }
+    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
+  }
+
+  return pills.slice(0, 6).join('');
+}
+
 function scorePlayer(p, profile, requestedSubpos) {
   if (!profile) return {score:0, reasons:[], flags:[]};
   let tw = 0, ew = 0;
@@ -1240,15 +1316,7 @@ function runAnalysis() {
             <span>💰 ${fmtVal(p.value)}</span>
             ${p.height ? `<span>📏 ${p.height}cm</span>` : ''}
           </div>
-          <div class="stat-pills">
-            ${p.goals_pg > 0 ? `<div class="spill">⚽ ${(p.goals_pg*p.apps).toFixed(0)} goals</div>` : ''}
-            ${p.assists_pg > 0 ? `<div class="spill">🎯 ${(p.assists_pg*p.apps).toFixed(0)} assists</div>` : ''}
-            ${p.tackles_pg > 0 ? `<div class="spill">💪 ${(p.tackles_pg*p.apps).toFixed(0)} tackles</div>` : ''}
-            ${p.key_passes_pg > 0 ? `<div class="spill">🔑 ${(p.key_passes_pg*p.apps).toFixed(0)} key passes</div>` : ''}
-            ${p.pass_acc ? `<div class="spill">📊 ${p.pass_acc}% pass acc</div>` : ''}
-            ${p.aerial_pct > 0 ? `<div class="spill">✈ ${p.aerial_pct}% aerial</div>` : ''}
-            ${p.caps > 0 ? `<div class="spill">🌍 ${p.caps} caps</div>` : ''}
-          </div>
+          <div class="stat-pills">${getPositionStats(p)}</div>
           ${m.reasons.map(r => `<div class="reason">${r}</div>`).join('')}
           ${m.flags.map(f => `<div class="pflag">${f}</div>`).join('')}
           ${(m.contextBoosts||[]).map(b => `<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${b.icon||'✓'}</span><span>${b.text}</span></div>`).join('')}
@@ -1333,14 +1401,15 @@ function scorePlayerForTeam(p, team, league, requestedSubpos) {
   const isGK = p.pos === 'GK';
 
   if (isGK) {
-    // GK fit based on team defensive style
-    if (team.gc < (av.gc||1.3)) {
-      // Team has good defence, reward GKs who distribute well
-      if (p.pass_acc > 72) { score += 15; reasons.push(`Good distribution: ${p.pass_acc}% pass acc`); }
-    }
-    if (p.aerial_pct > 68) { score += 10; reasons.push(`Strong aerial: ${p.aerial_pct}%`); }
-    if (p.pass_acc > 75) { score += 10; reasons.push(`Technical GK: ${p.pass_acc}% pass acc`); }
-    if (p.age < 28) { score += 5; reasons.push(`Young GK: ${p.age} yrs`); }
+    // GK fit — saves and clean sheets are primary indicators
+    if (p.saves_pg >= 3.5)    { score += 18; reasons.push(`High save volume: ${p.saves_pg.toFixed(1)}/g`); }
+    else if (p.saves_pg >= 3.0){ score += 12; reasons.push(`Solid saves: ${p.saves_pg.toFixed(1)}/g`); }
+    if (p.clean_sheets >= 12)  { score += 15; reasons.push(`${p.clean_sheets} clean sheets`); }
+    else if (p.clean_sheets >= 8){ score += 8; reasons.push(`${p.clean_sheets} clean sheets`); }
+    if (p.gc_pg && p.gc_pg <= 0.9) { score += 12; reasons.push(`Low goals conceded: ${p.gc_pg}/g`); }
+    if (p.aerial_pct > 68) { score += 8; reasons.push(`Strong aerial: ${p.aerial_pct}%`); }
+    if (p.pass_acc > 75) { score += 5; reasons.push(`Technical distributor: ${p.pass_acc}%`); }
+    if (p.age < 28) { score += 5; }
     if (p.age > 36) { score -= 10; flags.push(`Age concern: ${p.age}`); }
   } else if (isDefender) {
     // Match defensive style
@@ -1489,14 +1558,7 @@ function renderSquadPlayers() {
           <span>💰 ${fmtVal(p.value)}</span>
           ${p.height ? `<span>📏 ${p.height}cm</span>` : ''}
         </div>
-        <div class="stat-pills">
-          ${p.goals_pg > 0 ? `<div class="spill">⚽ ${p.goals_pg.toFixed(2)}/g</div>` : ''}
-          ${p.assists_pg > 0 ? `<div class="spill">🎯 ${p.assists_pg.toFixed(2)}/g</div>` : ''}
-          ${p.tackles_pg > 0 ? `<div class="spill">💪 ${p.tackles_pg.toFixed(1)} tkl/g</div>` : ''}
-          ${p.key_passes_pg > 0 ? `<div class="spill">🔑 ${p.key_passes_pg.toFixed(1)} kp/g</div>` : ''}
-          ${p.pass_acc ? `<div class="spill">📊 ${p.pass_acc}% pass</div>` : ''}
-          ${p.aerial_pct > 0 ? `<div class="spill">✈ ${p.aerial_pct}% aerial</div>` : ''}
-        </div>
+        <div class="stat-pills">${getPositionStats(p)}</div>
         ${reasons.map(r => `<div class="reason">${r}</div>`).join('')}
         ${flags.map(f => `<div class="pflag">${f}</div>`).join('')}
         ${(contextBoosts||[]).map(b => `<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${b.icon||'✓'}</span><span>${b.text}</span></div>`).join('')}
