@@ -573,6 +573,161 @@ function getSubposCompatibility(playerSubpos, requestedSubpos) {
 }
 
 // ═══════════════════════════════════════
+// PHASE 2 — CONTEXTUAL FACTORS
+// ═══════════════════════════════════════
+
+// Rival clubs — transfers between these are very unlikely
+const RIVALRIES = [
+  // Brazil
+  ['Flamengo','Fluminense'],['Flamengo','Vasco da Gama'],['Flamengo','Botafogo'],
+  ['Fluminense','Vasco da Gama'],['Fluminense','Botafogo'],['Vasco da Gama','Botafogo'],
+  ['Palmeiras','Corinthians'],['Palmeiras','São Paulo'],['Corinthians','São Paulo'],
+  ['Atlético Mineiro','Cruzeiro'],['Grêmio','Internacional'],
+  // Europe
+  ['Real Madrid','Barcelona'],['Real Madrid','Atlético Madrid'],['Barcelona','Atlético Madrid'],
+  ['Manchester United','Manchester City'],['Manchester United','Liverpool'],['Manchester City','Liverpool'],
+  ['Arsenal','Tottenham'],['Chelsea','Arsenal'],['Chelsea','Tottenham'],
+  ['AC Milan','Inter Milan'],['AC Milan','Juventus'],['Inter Milan','Juventus'],
+  ['Bayern Munich','Borussia Dortmund'],
+  ['River Plate','Boca Juniors'],
+  ['Celtic','Rangers'],
+  ['Ajax','Feyenoord'],['Ajax','PSV Eindhoven'],
+  ['Benfica','Sporting CP'],['Benfica','FC Porto'],['Sporting CP','FC Porto'],
+  ['Galatasaray','Fenerbahçe'],['Galatasaray','Beşiktaş'],
+];
+
+function areRivals(club1, club2) {
+  return RIVALRIES.some(([a,b]) =>
+    (a === club1 && b === club2) || (a === club2 && b === club1)
+  );
+}
+
+// Age-based factors
+function getAgeFactor(age, pos) {
+  if (pos === 'GK') {
+    if (age <= 28) return {mult:1.0, label:null};
+    if (age <= 33) return {mult:0.92, label:`Age ${age} — GK still prime`};
+    if (age <= 36) return {mult:0.80, label:`Age ${age} — declining years`};
+    return {mult:0.60, label:`Age ${age} — very high risk`};
+  }
+  if (age <= 23) return {mult:1.05, label:`Age ${age} — high upside potential`};
+  if (age <= 28) return {mult:1.0, label:null};
+  if (age <= 31) return {mult:0.95, label:null};
+  if (age <= 33) return {mult:0.85, label:`Age ${age} — declining window`};
+  if (age <= 35) return {mult:0.70, label:`Age ${age} — short-term signing only`};
+  return {mult:0.50, label:`Age ${age} — very high risk`};
+}
+
+// League level factor — how big a step up/down is this move?
+const LEAGUE_TIERS = {
+  premier_league:1, la_liga:1, bundesliga:1, serie_a_it:1, ligue_1:1,
+  serie_a:2, argentina:2, eredivisie:2, primeira_liga:2, scottish_prem:2,
+  super_lig:2, jupiler:2, saudi_pro:2,
+  serie_b:3, mls:3, liga_mx:3, j_league:3, k_league:3,
+  serie_c:4, colombia:3, chile:3, uruguay:3, ecuador:4, paraguay:4, peru:4,
+  egypt_pl:3, sa_psl:3, a_league:3, chinese_sl:3,
+};
+
+function getLeagueFactor(playerLeague, targetLeague) {
+  const pt = LEAGUE_TIERS[playerLeague] || 3;
+  const tt = LEAGUE_TIERS[targetLeague] || 3;
+  const diff = pt - tt; // positive = step up, negative = step down
+  if (diff >= 2) return {mult:0.75, label:`Big step up from ${playerLeague}`};
+  if (diff === 1) return {mult:0.90, label:`Step up in level`};
+  if (diff === 0) return {mult:1.0, label:null};
+  if (diff === -1) return {mult:0.92, label:`Step down in level`};
+  return {mult:0.80, label:`Significant step down`};
+}
+
+// Apply Phase 2 contextual factors — INFORMATIONAL ONLY, score stays pure
+// Score = stat fit. Flags = transfer context. These are separate things.
+function applyContextualFactors(baseScore, p, selectedTeam, targetLeague) {
+  const score = baseScore; // NEVER modify score here — keep it pure
+  const contextFlags = [];
+  const contextBoosts = [];
+
+  if (!p) return {score, contextFlags, contextBoosts};
+
+  // ── CURRENT PLAYER ──
+  if (selectedTeam && p.club === selectedTeam.name) {
+    contextBoosts.push({icon:'✓', text:'Current squad player', color:'var(--accent2)'});
+    return {score, contextFlags, contextBoosts};
+  }
+
+  // ── RIVAL CLUB WARNING ──
+  if (selectedTeam && areRivals(p.club, selectedTeam.name)) {
+    contextFlags.push({
+      icon:'⚔',
+      text:'Rival club — transfer politically sensitive',
+      color:'var(--red)',
+      tip:'Historically rare but not impossible (e.g. Figo, Higuaín)'
+    });
+  }
+
+  // ── AGE CONTEXT ──
+  const age = p.age;
+  const pos = p.pos;
+
+  if (age <= 18) {
+    contextBoosts.push({icon:'🌟', text:`Age ${age} — exceptional potential, generational talent window`, color:'var(--accent)'});
+  } else if (age <= 21) {
+    contextBoosts.push({icon:'⭐', text:`Age ${age} — high upside, 10+ peak years ahead`, color:'var(--accent)'});
+  } else if (age <= 24) {
+    contextBoosts.push({icon:'📈', text:`Age ${age} — entering prime years`, color:'var(--green)'});
+  } else if (age <= 28) {
+    // Prime — no comment needed, it's expected
+  } else if (age <= 30) {
+    contextFlags.push({icon:'📅', text:`Age ${age} — late prime, 4-6 strong years expected`, color:'var(--yellow)'});
+  } else if (age <= 32) {
+    contextFlags.push({icon:'⏳', text:`Age ${age} — consider 2-3 year contract max`, color:'var(--yellow)'});
+  } else if (age <= 34) {
+    contextFlags.push({icon:'⚠', text:`Age ${age} — short-term signing only, injury risk rising`, color:'var(--warn)'});
+  } else if (age <= 36) {
+    contextFlags.push({icon:'🔴', text:`Age ${age} — 1-year deal maximum, squad depth role`, color:'var(--red)'});
+  } else {
+    contextFlags.push({icon:'🔴', text:`Age ${age} — very high injury/retirement risk`, color:'var(--red)'});
+  }
+
+  // GK exception — they peak and last longer
+  if (pos === 'GK' && age >= 30 && age <= 36) {
+    // Override the flag with a softer one
+    contextFlags.pop();
+    contextFlags.push({icon:'🧤', text:`Age ${age} — GKs peak late, still viable at this age`, color:'var(--yellow)'});
+  }
+
+  // ── LEAGUE CONTEXT ──
+  if (targetLeague && p.league !== targetLeague) {
+    const pt = LEAGUE_TIERS[p.league] || 3;
+    const tt = LEAGUE_TIERS[targetLeague] || 3;
+    const diff = pt - tt;
+    if (diff >= 2) {
+      contextFlags.push({icon:'📊', text:`Big step up in level — adaptation period expected`, color:'var(--yellow)'});
+    } else if (diff === 1) {
+      contextFlags.push({icon:'📊', text:`Step up in league level — proven potential needed`, color:'var(--yellow)'});
+    } else if (diff <= -2) {
+      contextFlags.push({icon:'📊', text:`Significant step down — may be seeking exit`, color:'var(--muted)'});
+    }
+  }
+
+  // ── NATIONALITY / WORK PERMIT ──
+  if ((targetLeague === 'serie_a' || targetLeague === 'serie_b' || targetLeague === 'serie_c') && p.nat === 'Brazilian') {
+    contextBoosts.push({icon:'🇧🇷', text:'Brazilian — no work permit needed, simpler deal', color:'var(--accent2)'});
+  } else if ((targetLeague === 'premier_league') && !['English','Welsh','Scottish','Northern Irish','Irish'].includes(p.nat)) {
+    contextFlags.push({icon:'📋', text:'Non-British — work permit required', color:'var(--muted)'});
+  }
+
+  // ── VALUE vs POTENTIAL ──
+  if (age <= 22 && p.value >= 20000000) {
+    contextBoosts.push({icon:'💎', text:`High-value young talent — sell-on value strong`, color:'var(--accent)'});
+  }
+  if (age >= 32 && p.value <= 3000000) {
+    contextBoosts.push({icon:'💰', text:`Low cost experienced player — budget-friendly option`, color:'var(--green)'});
+  }
+
+  return {score, contextFlags, contextBoosts};
+}
+
+// ═══════════════════════════════════════
 // ALTERNATIVE POSITION DETECTION
 // ═══════════════════════════════════════
 function detectAltPositions(p) {
@@ -859,7 +1014,8 @@ function scorePlayer(p, profile, requestedSubpos) {
     score: Math.round(rawScore * 10) / 10, 
     reasons: reasons.slice(0,3), 
     flags: flags.slice(0,2),
-    altPositions
+    altPositions,
+    rawScore: Math.round(rawScore * 10) / 10
   };
 }
 
@@ -938,8 +1094,18 @@ function runAnalysis() {
   const requestedSubpos = subposMap2[posFil] || null;
 
   const ranked = filtered
-    .map(p => ({p, ...scorePlayer(p, profile, requestedSubpos)}))
-    .filter(m => m.score > 15)
+    .map(p => {
+      const scored = scorePlayer(p, profile, requestedSubpos);
+      const ctx = applyContextualFactors(scored.score, p, selectedTeam, currentLeague);
+      return {
+        p,
+        ...scored,
+        score: ctx.score,
+        contextFlags: ctx.contextFlags,
+        contextBoosts: ctx.contextBoosts
+      };
+    })
+    .filter(m => m.score > 10)
     .sort((a,b) => b.score - a.score)
     .slice(0, 15);
 
@@ -1048,6 +1214,8 @@ function runAnalysis() {
           </div>
           ${m.reasons.map(r => `<div class="reason">${r}</div>`).join('')}
           ${m.flags.map(f => `<div class="pflag">${f}</div>`).join('')}
+          ${(m.contextBoosts||[]).map(b => `<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${b.icon||'✓'}</span><span>${b.text}</span></div>`).join('')}
+          ${(m.contextFlags||[]).map(f => `<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px" title="${f.tip||''}"><span>${f.icon||'⚠'}</span><span>${f.text}</span></div>`).join('')}
           ${altPos && altPos.length ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${altPos.map(a=>`<div style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:var(--yellow)">🔄 Can play ${a.pos}</div>`).join('')}</div>` : ''}
         </div>
         <div class="score-blk">
@@ -1247,10 +1415,17 @@ function renderSquadPlayers() {
   const reqSubpos = subposMap3[posVal] || null;
 
   // Score each player for team fit
-  const scored = pool.map(p => ({
-    p,
-    ...scorePlayerForTeam(p, fanTeam, fanLeague, reqSubpos)
-  })).sort((a,b) => b.score - a.score).slice(0, 20);
+  const scored = pool.map(p => {
+    const base = scorePlayerForTeam(p, fanTeam, fanLeague, reqSubpos);
+    const ctx = applyContextualFactors(base.score, p, fanTeam, fanLeague);
+    return {
+      p,
+      ...base,
+      score: ctx.score,
+      contextFlags: ctx.contextFlags,
+      contextBoosts: ctx.contextBoosts
+    };
+  }).sort((a,b) => b.score - a.score).slice(0, 20);
 
   const teamLabel = fanTeam ? `for ${fanTeam.name}` : '(select a team for personalised scores)';
   document.getElementById('squad-count').textContent = `${scored.length} players shown ${teamLabel}`;
@@ -1258,7 +1433,7 @@ function renderSquadPlayers() {
   const posColors = {GK:'rgba(245,200,66,0.1)',DEF:'rgba(0,184,255,0.1)',MID:'rgba(0,229,160,0.1)',ATT:'rgba(255,107,53,0.1)'};
   const posTextColors = {GK:'var(--yellow)',DEF:'var(--accent2)',MID:'var(--accent)',ATT:'var(--warn)'};
 
-  document.getElementById('squad-list').innerHTML = scored.map(({p, score, reasons, flags, altPositions}, i) => {
+  document.getElementById('squad-list').innerHTML = scored.map(({p, score, reasons, flags, altPositions, contextFlags, contextBoosts}, i) => {
     const isCurrentPlayer = fanTeam && p.club === fanTeam.name;
     return `
     <div class="pcard" style="margin-bottom:8px;${isCurrentPlayer ? 'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.04);' : ''}">
@@ -1287,6 +1462,8 @@ function renderSquadPlayers() {
         </div>
         ${reasons.map(r => `<div class="reason">${r}</div>`).join('')}
         ${flags.map(f => `<div class="pflag">${f}</div>`).join('')}
+        ${(contextBoosts||[]).map(b => `<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${b.icon||'✓'}</span><span>${b.text}</span></div>`).join('')}
+        ${(contextFlags||[]).map(f => `<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px" title="${f.tip||''}"><span>${f.icon||'⚠'}</span><span>${f.text}</span></div>`).join('')}
         ${altPositions && altPositions.length ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${altPositions.map(a=>`<div style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:var(--yellow)">🔄 Can play ${a.pos}</div>`).join('')}</div>` : ''}
       </div>
       <div class="score-blk">
