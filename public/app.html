@@ -1925,7 +1925,7 @@ document.getElementById('playerLeagueSel').addEventListener('change',updateFilte
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:min(520px,92vw);max-height:85vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">Your Club</div>
-      <button id="modal-close-btn" onclick="closeTeamModal()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:4px;">✕</button>
+      <button id="modal-close-btn" onclick="skipTeamModal()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:4px;">✕</button>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Pick your main club and follow others to personalise your feed.</div>
 
@@ -1938,6 +1938,7 @@ document.getElementById('playerLeagueSel').addEventListener('change',updateFilte
     <div id="modal-following-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;min-height:32px;"></div>
 
     <button onclick="saveTeamSelection()" style="width:100%;background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">SAVE MY CLUB</button>
+    <button onclick="skipTeamModal()" style="width:100%;background:transparent;border:none;color:var(--muted);padding:10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;">Skip for now — I'll set this later</button>
   </div>
 </div>
 
@@ -2079,12 +2080,11 @@ function openTeamModal(){
 
 function closeTeamModal(){
   document.getElementById('team-modal').style.display='none';
-  // If first time and nothing selected, don't close
-  const selected = localStorage.getItem('sm_club_selected');
-  if(!selected){
-    document.getElementById('team-modal').style.display='flex';
-    alert('Please select your main club to continue!');
-  }
+}
+
+function skipTeamModal(){
+  localStorage.setItem('sm_club_selected','skipped');
+  closeTeamModal();
 }
 
 // ── PAGE NAVIGATION ──
@@ -2161,7 +2161,6 @@ function filterFeed(type,btn){
 }
 
 function scoreClr(s){return s>=75?'var(--green)':s>=50?'var(--yellow)':'var(--red)';}
-function scCls(s){return s>=75?'hi':s>=50?'mid':'lo';}
 
 function renderFeedNews(){
   const plan=currentUser?.plan||'free';
@@ -2243,7 +2242,7 @@ try{renderFeedNews();}catch(e){console.error('renderFeedNews:',e);}
 try{renderSidebar();}catch(e){console.error('renderSidebar:',e);}
 try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 
-// Show team modal on first login
+// Show team modal only on very first login (never shown before)
 const hasSelectedClub=localStorage.getItem('sm_club_selected');
 if(!hasSelectedClub){
   setTimeout(()=>{try{openTeamModal();}catch(e){console.error(e);}},400);
