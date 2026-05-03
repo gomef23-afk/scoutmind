@@ -493,7 +493,7 @@ if(!_cu){
     </div>
     <div class="feed-side-card">
       <div class="feed-side-title">My clubs</div>
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="showPage('hub')">
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="window.location.href='/community.html'">
         <div style="width:24px;height:24px;border-radius:5px;background:rgba(0,229,160,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⭐</div>
         <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:var(--text);" id="sidebar-my-club">Botafogo</div><div style="font-size:9px;color:var(--muted);">My club</div></div>
         <div style="font-size:9px;color:var(--accent);">Open →</div>
@@ -513,7 +513,7 @@ if(!_cu){
   <!-- Your club pinned top -->
   <div style="margin-bottom:22px;">
     <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Your club</div>
-    <div onclick="showPage('hub')" style="background:var(--bg2);border:1px solid rgba(0,229,160,0.2);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.5)'" onmouseout="this.style.borderColor='rgba(0,229,160,0.2)'">
+    <div onclick="window.location.href='/community.html'" style="background:var(--bg2);border:1px solid rgba(0,229,160,0.2);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.5)'" onmouseout="this.style.borderColor='rgba(0,229,160,0.2)'">
       <div style="height:48px;background:linear-gradient(135deg,#6b0000 0%,#c8000a 50%,#1a0000 100%);position:relative;overflow:hidden;">
         <div style="position:absolute;inset:0;opacity:0.07;background-image:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:8px 8px;"></div>
       </div>
@@ -552,7 +552,7 @@ if(!_cu){
 
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
 
-    <div onclick="showPage('hub')" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
+    <div onclick="window.location.href='/community.html'" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
         <div style="width:34px;height:34px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;">🌿</div>
         <div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--text);">Palmeiras</div><div style="font-size:10px;color:var(--muted);">Série A · 1st place</div></div>
@@ -570,7 +570,7 @@ if(!_cu){
       <div style="display:flex;gap:10px;"><div style="font-size:10px;color:var(--muted);">Goals/g <span style="color:var(--text);font-family:'DM Mono',monospace;">2.4</span></div><div style="font-size:10px;color:var(--muted);">Conc/g <span style="color:var(--text);font-family:'DM Mono',monospace;">0.8</span></div><div style="font-size:10px;color:var(--muted);">Pass <span style="color:var(--text);font-family:'DM Mono',monospace;">91%</span></div></div>
     </div>
 
-    <div onclick="showPage('hub')" style="background:var(--bg2);border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(0,229,160,0.15)';this.style.transform='none'">
+    <div onclick="window.location.href='/community.html'" style="background:var(--bg2);border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(0,229,160,0.15)';this.style.transform='none'">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
         <div style="width:34px;height:34px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;">⚽</div>
         <div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--text);">Botafogo</div><div style="font-size:10px;color:var(--muted);">Série A · 5th place</div></div>
@@ -2327,6 +2327,12 @@ try{renderFeedNews();}catch(e){console.error('renderFeedNews:',e);}
 try{renderSidebar();}catch(e){console.error('renderSidebar:',e);}
 try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 try{initProfile();}catch(e){console.error('initProfile:',e);}
+
+// Handle ?page= URL parameter (e.g. from community.html Feed link)
+(function(){
+  const urlPage = new URLSearchParams(window.location.search).get('page');
+  if(urlPage) try{showPage(urlPage);}catch(e){}
+})();
 
 function initProfile(){
   if(!currentUser) return;
