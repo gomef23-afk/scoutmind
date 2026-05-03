@@ -13,11 +13,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);text-decoration:none;}
 .logo span{color:var(--text);}
-.main-nav-btn{background:transparent;border:none;color:var(--muted);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;border-bottom:2px solid transparent;text-decoration:none;display:inline-block;}
-.main-nav-btn:hover{color:var(--text);}
-.main-nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.mnb{background:transparent;border:none;color:var(--muted);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;border-bottom:2px solid transparent;text-decoration:none;display:inline-block;}
+.mnb:hover{color:var(--text);}
+.mnb.active{color:var(--accent);border-bottom-color:var(--accent);}
 .nav-right{display:flex;align-items:center;gap:10px;}
-.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;}
+.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
 .plan-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);}
 .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
 .logout-btn:hover{border-color:var(--accent);color:var(--text);}
@@ -32,113 +32,92 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .ts-team{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:2px;}
 .ts-team:hover{background:rgba(255,255,255,0.04);}
 .ts-team.active{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);}
-.ts-team-name{font-size:13px;font-weight:500;}
-.ts-team-league{font-size:10px;color:var(--muted);}
+.ts-name{font-size:13px;font-weight:500;}
+.ts-pos{font-size:10px;color:var(--muted);}
 .ts-scroll{max-height:calc(100vh - 280px);overflow-y:auto;}
 .league-select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px;font-family:inherit;outline:none;margin-bottom:8px;}
-.team-stats-mini{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;}
-.tsm-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
-.tsm-val{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;}
-.tsm-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
-.team-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
-.badge-style{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--accent);}
-.badge-warn{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.2);color:var(--warn);}
-.comm-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px;overflow-x:auto;}
-.comm-tab{padding:9px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;white-space:nowrap;}
-.comm-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;}
+.sc{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
+.sv{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;}
+.sl{font-size:10px;color:var(--muted);margin-top:2px;}
+.tbadge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.bs{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--accent);}
+.bw{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.2);color:var(--warn);}
+.ctabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px;overflow-x:auto;}
+.ctab{padding:9px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.ctab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .poll-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;}
-.poll-question{font-size:15px;font-weight:600;margin-bottom:4px;}
-.poll-meta{font-size:11px;color:var(--muted);margin-bottom:14px;}
-.poll-option{margin-bottom:8px;cursor:pointer;}
-.poll-option-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
-.poll-option-label{font-size:13px;font-weight:500;}
-.poll-option-pct{font-size:12px;font-family:'DM Mono',monospace;color:var(--accent);}
-.poll-bar-bg{height:6px;background:var(--border);border-radius:3px;}
-.poll-bar-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .6s ease;}
-.poll-bar-fill.voted{background:var(--accent2);}
-.poll-voted-badge{font-size:10px;color:var(--accent);margin-left:6px;}
-.pf-label{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;}
-.pf-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:7px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;}
-.pf-input:focus{border-color:var(--accent);}
-.pf-btn{background:var(--accent);color:#000;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-.pf-cancel{background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-left:8px;}
-.analyst-post{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;transition:border-color .2s;}
-.analyst-post:hover{border-color:rgba(0,229,160,0.2);}
-.analyst-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
-.analyst-av{width:40px;height:40px;border-radius:50%;background:rgba(0,184,255,0.12);border:1.5px solid rgba(0,184,255,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent2);flex-shrink:0;}
-.analyst-name{font-size:14px;font-weight:600;}
-.analyst-credential{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);}
-.analyst-time{font-size:11px;color:var(--muted);}
-.analyst-body{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:12px;}
-.analyst-reactions{display:flex;gap:8px;}
-.react-btn{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;color:var(--text);}
-.react-btn:hover{border-color:var(--accent);background:rgba(0,229,160,0.06);}
-.group-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
-.group-card:hover{border-color:rgba(0,229,160,0.3);transform:translateX(3px);}
-.group-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.15);}
-.group-name{font-size:14px;font-weight:600;margin-bottom:3px;}
-.group-desc{font-size:11px;color:var(--muted);}
-.group-chat-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
-.group-chat-modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:min(660px,95vw);height:min(680px,90vh);display:flex;flex-direction:column;overflow:hidden;}
-.group-chat-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
-.group-chat-title{font-size:16px;font-weight:600;flex:1;}
-.group-chat-close{background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;}
-.group-chat-close:hover{color:var(--text);}
-.group-chat-messages{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;}
-.gchat-msg{display:flex;gap:10px;}
-.gchat-av{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;color:var(--accent);}
-.gchat-user{font-size:12px;font-weight:600;}
-.gchat-time{font-size:10px;color:var(--muted);margin-left:6px;}
-.gchat-text{font-size:13px;color:var(--muted);line-height:1.5;margin-top:3px;}
-.group-chat-input-row{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;}
-.gchat-input{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;transition:border .2s;}
-.gchat-input:focus{border-color:var(--accent);}
-.gchat-send{background:var(--accent);color:#000;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-.wish-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
-.wish-rank{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--muted);min-width:36px;line-height:1;}
-.wish-rank.top{color:var(--accent);}
-.wish-info{flex:1;}
-.wish-name{font-size:14px;font-weight:600;margin-bottom:2px;}
-.wish-meta{font-size:11px;color:var(--muted);}
-.wish-vote-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
-.wish-vote-btn:hover,.wish-vote-btn.voted{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
-.wish-count{font-size:11px;color:var(--muted);margin-top:4px;text-align:center;}
-.pro-gate{background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:10px;padding:16px;text-align:center;margin-top:10px;}
-.pro-gate-title{font-size:14px;font-weight:600;margin-bottom:4px;}
-.pro-gate-sub{font-size:12px;color:var(--muted);margin-bottom:12px;}
-.upgrade-btn{background:var(--accent);color:#000;border:none;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.poll-q{font-size:15px;font-weight:600;margin-bottom:4px;}
+.poll-m{font-size:11px;color:var(--muted);margin-bottom:14px;}
+.po{margin-bottom:8px;cursor:pointer;}
+.por{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.pol{font-size:13px;font-weight:500;}
+.pop{font-size:12px;font-family:'DM Mono',monospace;color:var(--accent);}
+.pbar{height:6px;background:var(--border);border-radius:3px;}
+.pbarfill{height:100%;border-radius:3px;background:var(--accent);transition:width .6s ease;}
+.pbarfill.v{background:var(--accent2);}
+.pvb{font-size:10px;color:var(--accent);margin-left:6px;}
+.pfi{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;}
+.pfinput{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:7px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;}
+.pfinput:focus{border-color:var(--accent);}
+.pfbtn{background:var(--accent);color:#000;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.pfcancel{background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-left:8px;}
+.apost{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;}
+.apost:hover{border-color:rgba(0,229,160,0.2);}
+.aav{width:40px;height:40px;border-radius:50%;background:rgba(0,184,255,0.12);border:1.5px solid rgba(0,184,255,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent2);flex-shrink:0;}
+.acred{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);}
+.rbtn{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;color:var(--text);}
+.rbtn:hover{border-color:var(--accent);background:rgba(0,229,160,0.06);}
+.gcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.gcard:hover{border-color:rgba(0,229,160,0.3);transform:translateX(3px);}
+.gicon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.15);}
+.gcov{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.gcmod{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:min(660px,95vw);height:min(680px,90vh);display:flex;flex-direction:column;overflow:hidden;}
+.gchead{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.gcmsgs{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;}
+.gcmsg{display:flex;gap:10px;}
+.gcav{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;color:var(--accent);}
+.gcinputrow{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.gcinput{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;}
+.gcinput:focus{border-color:var(--accent);}
+.gcsend{background:var(--accent);color:#000;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.wcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+.wrank{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--muted);min-width:36px;line-height:1;}
+.wrank.top{color:var(--accent);}
+.wvbtn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+.wvbtn:hover,.wvbtn.voted{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+.progate{background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:10px;padding:16px;text-align:center;margin-top:10px;}
+.upbtn{background:var(--accent);color:#000;border:none;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 .empty{text-align:center;padding:40px 20px;color:var(--muted);}
-.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:24px auto;}
+.sp{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:24px auto;}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:768px){.two-col{grid-template-columns:1fr;}.team-selector{position:static;}.ts-scroll{max-height:200px;}.team-stats-mini{grid-template-columns:repeat(2,1fr);}nav{padding:12px 16px;}.page{padding:14px;}}
+@media(max-width:768px){.two-col{grid-template-columns:1fr;}.team-selector{position:static;}.ts-scroll{max-height:200px;}.stats4{grid-template-columns:repeat(2,1fr);}nav{padding:12px 16px;}.page{padding:14px;}}
 </style>
 </head>
 <body>
 <script>
-const _cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
-if (!_cu) window.location.href = '/auth.html';
+const _cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
+if(!_cu)window.location.href='/auth.html';
 </script>
-
 <nav>
   <div style="display:flex;align-items:center;">
     <a class="logo" href="/app.html">Scout<span>Mind</span></a>
     <div style="display:flex;gap:2px;margin-left:28px;">
-      <a class="main-nav-btn" href="/app.html">Scout Mode</a>
-      <a class="main-nav-btn" href="/app.html?page=feed">Feed</a>
-      <a class="main-nav-btn active" href="/community.html">Communities</a>
+      <a class="mnb" href="/app.html">Scout Mode</a>
+      <a class="mnb" href="/app.html?page=feed">Feed</a>
+      <a class="mnb active" href="/community.html">Communities</a>
     </div>
   </div>
   <div class="nav-right">
-    <div class="user-badge" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div class="user-badge">
       <span class="live-dot"></span>
       <span id="nav-name" style="font-size:12px;font-weight:500"></span>
       <span id="nav-plan" class="plan-pill"></span>
     </div>
-    <div id="nav-avatar" onclick="window.location.href='/app.html'" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0;">?</div>
+    <div id="nav-av" onclick="window.location.href='/app.html'" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0;">?</div>
     <button class="logout-btn" onclick="logout()">Sign out</button>
   </div>
 </nav>
-
 <div class="page">
   <div style="margin-bottom:20px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:4px">Communities</div>
@@ -148,7 +127,7 @@ if (!_cu) window.location.href = '/auth.html';
     <div>
       <div class="team-selector">
         <div class="ts-title">Find Your Club</div>
-        <select class="league-select" id="comm-league" onchange="loadLeagueTeams()">
+        <select class="league-select" id="comm-league" onchange="loadLeague()">
           <option value="serie_a">🇧🇷 Série A</option>
           <option value="serie_b">🇧🇷 Série B</option>
           <option value="premier_league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
@@ -162,8 +141,8 @@ if (!_cu) window.location.href = '/auth.html';
           <option value="eredivisie">🇳🇱 Eredivisie</option>
           <option value="primeira_liga">🇵🇹 Primeira Liga</option>
         </select>
-        <input type="text" class="ts-search" id="comm-search" placeholder="Search teams..." oninput="filterCommTeams()">
-        <div class="ts-scroll" id="comm-team-list"></div>
+        <input type="text" class="ts-search" id="comm-search" placeholder="Search teams..." oninput="filterTeams()">
+        <div class="ts-scroll" id="comm-list"></div>
       </div>
     </div>
     <div id="comm-main">
@@ -175,357 +154,386 @@ if (!_cu) window.location.href = '/auth.html';
     </div>
   </div>
 </div>
-
-<!-- GROUP CHAT OVERLAY -->
-<div id="group-chat-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
-  <div class="group-chat-modal">
-    <div class="group-chat-header">
-      <div id="gchat-icon" style="font-size:22px;">💬</div>
+<div id="gcov" class="gcov" style="display:none;">
+  <div class="gcmod">
+    <div class="gchead">
+      <div id="gc-icon" style="font-size:22px;">💬</div>
       <div style="flex:1">
-        <div class="group-chat-title" id="gchat-name">Group</div>
-        <div id="gchat-desc" style="font-size:11px;color:var(--muted)"></div>
+        <div style="font-size:16px;font-weight:600" id="gc-name">Group</div>
+        <div style="font-size:11px;color:var(--muted)" id="gc-desc"></div>
       </div>
-      <button class="group-chat-close" onclick="closeGroupChat()">✕</button>
+      <button onclick="closeGC()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;">✕</button>
     </div>
-    <div class="group-chat-messages" id="gchat-messages"><div class="spinner"></div></div>
-    <div id="gchat-input-wrap" class="group-chat-input-row">
-      <input class="gchat-input" id="gchat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendGroupMessage()">
-      <button class="gchat-send" onclick="sendGroupMessage()">Send</button>
+    <div class="gcmsgs" id="gcmsgs"><div class="sp"></div></div>
+    <div id="gc-input-area" class="gcinputrow">
+      <input class="gcinput" id="gc-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="gcsend" onclick="sendMsg()">Send</button>
     </div>
   </div>
 </div>
-
 <script src="/leagues_data.js"></script>
 <script>
-// SUPABASE
-const _sb = window.supabase.createClient(
-  'https://kdhbpzooyjxcglbxbuya.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw'
-);
-
-// AUTH
-const cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
-const PLAN_NAMES = {free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro',analyst:'Analyst'};
-const isPro = cu && ['pro','club','clubpro','analyst'].includes(cu.plan);
-const isAnalyst = cu && cu.plan === 'analyst';
+var _sb=window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
+var cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
+var PNAMES={free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro',analyst:'Analyst'};
+var isPro=cu&&['pro','club','clubpro','analyst'].includes(cu.plan);
+var isAnalyst=cu&&cu.plan==='analyst';
 if(cu){
-  const name = cu.name || cu.email?.split('@')[0] || 'User';
-  document.getElementById('nav-name').textContent = name;
-  document.getElementById('nav-plan').textContent = PLAN_NAMES[cu.plan] || 'Scout Free';
-  const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  const av = document.getElementById('nav-avatar');
-  if(av) av.textContent = initials;
+  var nm=cu.name||cu.email.split('@')[0]||'User';
+  document.getElementById('nav-name').textContent=nm;
+  document.getElementById('nav-plan').textContent=PNAMES[cu.plan]||'Scout Free';
+  var ini=nm.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+  document.getElementById('nav-av').textContent=ini;
 }
-function logout(){ localStorage.removeItem('sm_current_user'); window.location.href='/auth.html'; }
-
-// STATE
-let activeTeam=null, activeLeague='serie_a', activeCommTab='polls';
-let activeGroupId=null, gchatPoll=null;
-const GROUP_ICONS=['🔴','💚','⚫','⭐','🔵','🟡','🔥','💪','🏆','🦁'];
-
-// TEAM LIST
-function loadLeagueTeams(){ activeLeague=document.getElementById('comm-league').value; filterCommTeams(); }
-function filterCommTeams(){
-  const q=document.getElementById('comm-search').value.toLowerCase();
-  const teams=(TEAMS[activeLeague]||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));
-  const filtered=q?teams.filter(t=>t.name.toLowerCase().includes(q)):teams;
-  const isActive=(t)=>activeTeam&&(t.id===activeTeam.id||t.name===activeTeam.name);
-  document.getElementById('comm-team-list').innerHTML=filtered.length===0
-    ?'<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">No teams found</div>'
-    :filtered.map(t=>`<div class="ts-team ${isActive(t)?'active ':\''}" onclick="selectCommTeam(${JSON.stringify(t.id||'')},'${t.name.replace(/'/g,'\\'')}','${activeLeague}')"><div><div class="ts-team-name">${t.name}</div><div class="ts-team-league">${t.pos||''}</div></div><div style="font-size:10px;color:var(--muted)">›</div></div>`).join('');
+function logout(){localStorage.removeItem('sm_current_user');window.location.href='/auth.html';}
+var AL='serie_a',AT=null,ATab='polls',AGid=null,GTimer=null;
+var GICONS=['🔴','💚','⚫','⭐','🔵','🟡','🔥','💪','🏆','🦁'];
+var _ft=[];
+function loadLeague(){AL=document.getElementById('comm-league').value;filterTeams();}
+function filterTeams(){
+  var q=document.getElementById('comm-search').value.toLowerCase();
+  var teams=(TEAMS[AL]||[]).slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+  _ft=q?teams.filter(function(t){return t.name.toLowerCase().includes(q);}):teams;
+  var el=document.getElementById('comm-list');
+  if(_ft.length===0){el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">No teams found</div>';return;}
+  var html='';
+  for(var i=0;i<_ft.length;i++){
+    var t=_ft[i];
+    var act=(AT&&(t.id===AT.id||t.name===AT.name))?'active':'';
+    html+='<div class="ts-team '+act+'" onclick="pickTeam('+i+')">'
+      +'<div><div class="ts-name">'+t.name+'</div><div class="ts-pos">'+(t.pos||'')+'</div></div>'
+      +'<div style="font-size:10px;color:var(--muted)">›</div></div>';
+  }
+  el.innerHTML=html;
 }
-function selectCommTeam(teamId,teamName,league){
-  const teams=TEAMS[league]||[];
-  activeTeam=teams.find(t=>t.id===teamId)||teams.find(t=>t.name===teamName);
-  activeLeague=league;
-  if(!activeTeam)return;
-  filterCommTeams();
+function pickTeam(i){
+  AT=_ft[i];
+  filterTeams();
   renderTeamPage();
 }
-
-// TEAM PAGE
 function renderTeamPage(){
-  if(!activeTeam)return;
-  const t=activeTeam;
-  const tk=t.id||(t.name.toLowerCase().replace(/\s+/g,'_'));
-  const av=LEAGUE_AVGS[activeLeague]||{};
-  const info=(typeof TEAM_INFO!=='undefined'&&(TEAM_INFO[tk]||TEAM_INFO[t.id]))||{};
-  const coach=(typeof COACHES!=='undefined'&&(COACHES[tk]||COACHES[t.id]))||{};
-  const ini=t.name.split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase();
-  const badges=[];
-  if(t.pos_pct>(av.pos||50)+5)badges.push({txt:'High Possession',cls:'badge-style'});
-  if(t.tk>(av.tk||18)+1)badges.push({txt:'High Press',cls:'badge-warn'});
-  if(t.gs>(av.gs||1.3)+0.2)badges.push({txt:'Strong Attack',cls:'badge-style'});
-  if(t.gc<(av.gc||1.3)-0.15)badges.push({txt:'Solid Defence',cls:'badge-style'});
-  const v=[];
-  if(t.gc>(av.gc||1.3)*1.2)v.push('defensive errors are a concern');
-  if(t.gs<(av.gs||1.3)*0.85)v.push('attacking output is below average');
-  if(t.aer<(av.aer||51)*0.9)v.push('aerial vulnerability at set pieces');
-  const verdict=v.length>0?`ScoutMind identifies ${v.slice(0,2).join(' and ')} as priority areas.`:`${t.name} are performing well across all key metrics this season.`;
-  document.getElementById('comm-main').innerHTML=`
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;">
-      <div style="height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>
-      <div style="padding:20px 22px;">
-        <div style="display:flex;align-items:center;gap:18px;margin-bottom:16px;">
-          <div style="width:64px;height:64px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${ini}</div></div>
-          <div style="flex:1">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;margin-bottom:4px">${info.fullName||t.name}</div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${[info.city,info.stadium,info.founded?'Est. '+info.founded:null].filter(Boolean).join(' · ')}</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <div style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--muted)">${(typeof LEAGUE_META!=='undefined'&&LEAGUE_META[activeLeague])?LEAGUE_META[activeLeague].flag+' '+LEAGUE_META[activeLeague].name:activeLeague}</div>
-              ${t.pos?`<div style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--muted)">${t.pos} in league</div>`:''}
-            </div>
-          </div>
-          ${info.instagram?`<a href="https://instagram.com/${info.instagram.replace('@','')}" target="_blank" style="text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;align-items:center;gap:4px;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-size:18px">📸</div><div style="font-size:10px;color:var(--muted)">${info.instagram}</div></a>`:''}
-        </div>
-        ${coach.name?`<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;margin-bottom:14px;"><div style="font-size:20px">👔</div><div><div style="font-size:13px;font-weight:600">${coach.name}</div><div style="font-size:11px;color:var(--muted)">Head Coach · Since ${coach.since}</div></div></div>`:''}
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">${badges.map(b=>`<div class="team-badge ${b.cls}">${b.txt}</div>`).join('')}</div>
-        <div class="team-stats-mini">
-          <div class="tsm-card"><div class="tsm-val" style="color:${t.gs>=(av.gs||1.3)?'var(--green)':'var(--red)'}">${t.gs||'—'}</div><div class="tsm-lbl">Goals/game</div></div>
-          <div class="tsm-card"><div class="tsm-val" style="color:${t.gc<=(av.gc||1.3)?'var(--green)':'var(--red)'}">${t.gc||'—'}</div><div class="tsm-lbl">Conceded/game</div></div>
-          <div class="tsm-card"><div class="tsm-val">${t.pa||'—'}%</div><div class="tsm-lbl">Pass accuracy</div></div>
-          <div class="tsm-card"><div class="tsm-val">${t.pos_pct||'—'}%</div><div class="tsm-lbl">Possession</div></div>
-        </div>
-      </div>
-      <div style="border-top:1px solid var(--border);padding:12px 22px;background:rgba(0,229,160,0.02)">
-        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s infinite"></span>ScoutMind Weekly Verdict</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.6">${verdict}</div>
-      </div>
-    </div>
-    <div class="comm-tabs">
-      <button class="comm-tab ${activeCommTab==='polls'?'active ':\''}" onclick="switchCommTab('polls',this)">🗳 Polls</button>
-      <button class="comm-tab ${activeCommTab==='analyst'?'active ':\''}" onclick="switchCommTab('analyst',this)">📊 Analyst Insights</button>
-      <button class="comm-tab ${activeCommTab==='groups'?'active ':\''}" onclick="switchCommTab('groups',this)">💬 Groups</button>
-      <button class="comm-tab ${activeCommTab==='wishlist'?'active ':\''}" onclick="switchCommTab('wishlist',this)">⭐ Transfer Wishlist</button>
-    </div>
-    <div id="comm-tab-content"></div>`;
-  renderCommTab();
+  if(!AT)return;
+  var t=AT;
+  var tk=t.id||(t.name.toLowerCase().replace(/\s+/g,'_'));
+  var av=LEAGUE_AVGS[AL]||{};
+  var info=(typeof TEAM_INFO!=='undefined'&&(TEAM_INFO[tk]||TEAM_INFO[t.id]))||{};
+  var coach=(typeof COACHES!=='undefined'&&(COACHES[tk]||COACHES[t.id]))||{};
+  var ini=t.name.split(' ').map(function(w){return w[0];}).join('').slice(0,3).toUpperCase();
+  var badges=[];
+  if(t.pos_pct>(av.pos||50)+5)badges.push({t:'High Possession',c:'bs'});
+  if(t.tk>(av.tk||18)+1)badges.push({t:'High Press',c:'bw'});
+  if(t.gs>(av.gs||1.3)+0.2)badges.push({t:'Strong Attack',c:'bs'});
+  if(t.gc<(av.gc||1.3)-0.15)badges.push({t:'Solid Defence',c:'bs'});
+  var vv=[];
+  if(t.gc>(av.gc||1.3)*1.2)vv.push('defensive errors are a concern');
+  if(t.gs<(av.gs||1.3)*0.85)vv.push('attacking output is below average');
+  if(t.aer<(av.aer||51)*0.9)vv.push('aerial vulnerability at set pieces');
+  var verdict=vv.length>0?'ScoutMind identifies '+vv.slice(0,2).join(' and ')+' as priority areas.':t.name+' are performing well across all key metrics this season.';
+  var lm=(typeof LEAGUE_META!=='undefined'&&LEAGUE_META[AL])?LEAGUE_META[AL].flag+' '+LEAGUE_META[AL].name:AL;
+  var gsClr=t.gs>=(av.gs||1.3)?'var(--green)':'var(--red)';
+  var gcClr=t.gc<=(av.gc||1.3)?'var(--green)':'var(--red)';
+  var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;">'
+    +'<div style="height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>'
+    +'<div style="padding:20px 22px;">'
+    +'<div style="display:flex;align-items:center;gap:18px;margin-bottom:16px;">'
+    +'<div style="width:64px;height:64px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--text)">'+ini+'</div></div>'
+    +'<div style="flex:1"><div style="font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:1px;margin-bottom:4px">'+(info.fullName||t.name)+'</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:6px">'+[info.city,info.stadium,info.founded?'Est. '+info.founded:null].filter(Boolean).join(' · ')+'</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+    +'<div style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--muted)">'+lm+'</div>'
+    +(t.pos?'<div style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--muted)">'+t.pos+' in league</div>':'')
+    +'</div></div>'
+    +(info.instagram?'<a href="https://instagram.com/'+info.instagram.replace('@','')+'\" target="_blank" style="text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-size:18px">📸</div><div style="font-size:10px;color:var(--muted)">'+info.instagram+'</div></a>':'')
+    +'</div>'
+    +(coach.name?'<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;margin-bottom:14px;"><div style="font-size:20px">👔</div><div><div style="font-size:13px;font-weight:600">'+coach.name+'</div><div style="font-size:11px;color:var(--muted)">Head Coach · Since '+coach.since+'</div></div></div>':'')
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">'+badges.map(function(b){return '<div class="tbadge '+b.c+'">'+b.t+'</div>';}).join('')+'</div>'
+    +'<div class="stats4">'
+    +'<div class="sc"><div class="sv" style="color:'+gsClr+'">'+(t.gs||'—')+'</div><div class="sl">Goals/game</div></div>'
+    +'<div class="sc"><div class="sv" style="color:'+gcClr+'">'+(t.gc||'—')+'</div><div class="sl">Conceded/game</div></div>'
+    +'<div class="sc"><div class="sv">'+(t.pa||'—')+'%</div><div class="sl">Pass accuracy</div></div>'
+    +'<div class="sc"><div class="sv">'+(t.pos_pct||'—')+'%</div><div class="sl">Possession</div></div>'
+    +'</div></div>'
+    +'<div style="border-top:1px solid var(--border);padding:12px 22px;background:rgba(0,229,160,0.02)">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s infinite"></span>ScoutMind Weekly Verdict</div>'
+    +'<div style="font-size:12px;color:var(--muted);line-height:1.6">'+verdict+'</div>'
+    +'</div></div>'
+    +'<div class="ctabs">'
+    +'<button class="ctab'+(ATab==='polls'?' active':'')+'" onclick="switchTab(\'polls\',this)">🗳 Polls</button>'
+    +'<button class="ctab'+(ATab==='analyst'?' active':'')+'" onclick="switchTab(\'analyst\',this)">📊 Analyst Insights</button>'
+    +'<button class="ctab'+(ATab==='groups'?' active':'')+'" onclick="switchTab(\'groups\',this)">💬 Groups</button>'
+    +'<button class="ctab'+(ATab==='wishlist'?' active':'')+'" onclick="switchTab(\'wishlist\',this)">⭐ Transfer Wishlist</button>'
+    +'</div><div id="ctc"></div>';
+  document.getElementById('comm-main').innerHTML=html;
+  renderTab();
 }
-
-function switchCommTab(tab,el){
-  activeCommTab=tab;
-  document.querySelectorAll('.comm-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  renderCommTab();
+function switchTab(tab,el){ATab=tab;document.querySelectorAll('.ctab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');renderTab();}
+function renderTab(){
+  var el=document.getElementById('ctc');
+  if(!el||!AT)return;
+  var tk=AT.id||(AT.name.toLowerCase().replace(/\s+/g,'_'));
+  if(ATab==='polls')doPolls(el,tk);
+  else if(ATab==='analyst')doAnalyst(el,tk);
+  else if(ATab==='groups')doGroups(el,tk);
+  else if(ATab==='wishlist')doWishlist(el,tk);
 }
-function renderCommTab(){
-  const el=document.getElementById('comm-tab-content');
-  if(!el||!activeTeam)return;
-  const tk=activeTeam.id||(activeTeam.name.toLowerCase().replace(/\s+/g,'_'));
-  if(activeCommTab==='polls')renderPolls(el,tk);
-  else if(activeCommTab==='analyst')renderAnalystInsights(el,tk);
-  else if(activeCommTab==='groups')renderGroups(el,tk);
-  else if(activeCommTab==='wishlist')renderWishlist(el,tk);
-}
-
-// POLLS
-function getTD(tk){const s=localStorage.getItem(`sm_comm_${tk}`);return s?JSON.parse(s):getDD(tk);}
-function saveTD(tk,d){localStorage.setItem(`sm_comm_${tk}`,JSON.stringify(d));}
+function getTD(tk){var s=localStorage.getItem('sm_comm_'+tk);return s?JSON.parse(s):getDD(tk);}
+function saveTD(tk,d){localStorage.setItem('sm_comm_'+tk,JSON.stringify(d));}
 function getDD(tk){
-  const D={
+  var D={
     flamengo:{polls:[{id:'p1',q:'Who should be our starting striker?',opts:['Pedro','Igor Jesus','New signing'],votes:[142,89,210],userVote:null,author:'ScoutMind',time:'2h ago'},{id:'p2',q:'Should Flamengo sell Gerson this summer?',opts:['Yes','No','Depends'],votes:[45,287,123],userVote:null,author:'ScoutMind',time:'1d ago'}],wishlist:[{name:'Julián Álvarez',club:'Atlético Madrid',pos:'ST',votes:234,userVoted:false},{name:'Nico Williams',club:'Athletic Bilbao',pos:'LW',votes:189,userVoted:false}]},
     palmeiras:{polls:[{id:'p1',q:'Is Estêvão ready to start every game?',opts:['Yes, 100%','Needs more time','Rotation is fine'],votes:[312,87,56],userVote:null,author:'ScoutMind',time:'3h ago'}],wishlist:[{name:'Florian Wirtz',club:'Bayer Leverkusen',pos:'CAM',votes:178,userVoted:false}]},
-    botafogo:{polls:[{id:'p1',q:'What position does Botafogo need most?',opts:['Striker','Centre-back','Midfielder','Goalkeeper'],votes:[120,98,75,45],userVote:null,author:'ScoutMind',time:'1d ago'}],wishlist:[{name:'Luiz Henrique',club:'Botafogo (renew)',pos:'LW',votes:289,userVoted:false},{name:'Thiago Almada',club:'Atlanta United',pos:'CAM',votes:156,userVoted:false}]},
+    botafogo:{polls:[{id:'p1',q:'What position does Botafogo need most?',opts:['Striker','Centre-back','Midfielder','Goalkeeper'],votes:[120,98,75,45],userVote:null,author:'ScoutMind',time:'1d ago'}],wishlist:[{name:'Luiz Henrique',club:'Botafogo (renew)',pos:'LW',votes:289,userVoted:false},{name:'Thiago Almada',club:'Atlanta United',pos:'CAM',votes:156,userVoted:false}]}
   };
   return D[tk]||{polls:[{id:'p1',q:'What position does this team need most?',opts:['Striker','Centre-back','Midfielder','Goalkeeper'],votes:[80,60,45,30],userVote:null,author:'ScoutMind',time:'1d ago'}],wishlist:[{name:'Suggest a signing',club:'Use the form below',pos:'???',votes:1,userVoted:false}]};
 }
-function renderPolls(el,tk){
-  const d=getTD(tk); let html='';
-  if(isPro){html+=`<button onclick="togglePF()" style="width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);padding:12px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s;margin-bottom:12px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ Create a Poll</button><div id="poll-form" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;"><div class="pf-label">Poll question</div><input class="pf-input" id="pf-q" placeholder="e.g. Who should we sign?"><div class="pf-label">Option 1</div><input class="pf-input" id="pf-o1" placeholder="Option A"><div class="pf-label">Option 2</div><input class="pf-input" id="pf-o2" placeholder="Option B"><div class="pf-label">Option 3 (optional)</div><input class="pf-input" id="pf-o3" placeholder="Option C"><button class="pf-btn" onclick="submitPoll('${tk}')">Create Poll</button><button class="pf-cancel" onclick="togglePF()">Cancel</button></div>`;}
-  else{html+=`<div class="pro-gate" style="margin-bottom:12px"><div class="pro-gate-title">Create Polls with Scout Pro</div><div class="pro-gate-sub">Scout Pro members can create polls for any team.</div><button class="upgrade-btn" onclick="window.location.href='/auth.html'">Upgrade — $9.99/mo</button></div>`;}
-  d.polls.forEach(p=>{
-    const tot=p.votes.reduce((a,b)=>a+b,0);
-    html+=`<div class="poll-card"><div class="poll-question">${p.q}</div><div class="poll-meta">by ${p.author} · ${p.time} · ${tot} votes</div>${p.opts.map((o,i)=>{const pct=tot>0?Math.round(p.votes[i]/tot*100):0;const v=p.userVote===i;return`<div class="poll-option" onclick="doVote('${tk}','${p.id}',${i})"><div class="poll-option-row"><div class="poll-option-label">${o}${v?'<span class="poll-voted-badge">✓ Your vote</span>':''}</div><div class="poll-option-pct">${pct}%</div></div><div class="poll-bar-bg"><div class="poll-bar-fill ${v?'voted ':\''}" style="width:${pct}%"></div></div></div>`;}).join('')}</div>`;
+function doPolls(el,tk){
+  var d=getTD(tk),html='';
+  if(isPro){
+    html+='<button onclick="tPF()" style="width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);padding:12px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:12px;">+ Create a Poll</button>';
+    html+='<div id="pform" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;">';
+    html+='<div class="pfi">Poll question</div><input class="pfinput" id="pfq" placeholder="e.g. Who should we sign?">';
+    html+='<div class="pfi">Option 1</div><input class="pfinput" id="pfo1" placeholder="Option A">';
+    html+='<div class="pfi">Option 2</div><input class="pfinput" id="pfo2" placeholder="Option B">';
+    html+='<div class="pfi">Option 3 (optional)</div><input class="pfinput" id="pfo3" placeholder="Option C">';
+    html+='<button class="pfbtn" onclick="subPoll(\''+tk+'\')">Create Poll</button>';
+    html+='<button class="pfcancel" onclick="tPF()">Cancel</button></div>';
+  }else{
+    html+='<div class="progate" style="margin-bottom:12px"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Create Polls with Scout Pro</div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Scout Pro members can create polls.</div><button class="upbtn" onclick="window.location.href=\'/auth.html\'">Upgrade — $9.99/mo</button></div>';
+  }
+  d.polls.forEach(function(p){
+    var tot=p.votes.reduce(function(a,b){return a+b;},0);
+    html+='<div class="poll-card"><div class="poll-q">'+p.q+'</div><div class="poll-m">by '+p.author+' · '+p.time+' · '+tot+' votes</div>';
+    p.opts.forEach(function(o,i){
+      var pct=tot>0?Math.round(p.votes[i]/tot*100):0;
+      var voted=p.userVote===i;
+      html+='<div class="po" onclick="doVote(\''+tk+'\',\''+p.id+'\','+i+')">';
+      html+='<div class="por"><div class="pol">'+o+(voted?'<span class="pvb">✓ Your vote</span>':'')+'</div><div class="pop">'+pct+'%</div></div>';
+      html+='<div class="pbar"><div class="pbarfill'+(voted?' v':'')+'" style="width:'+pct+'%"></div></div></div>';
+    });
+    html+='</div>';
   });
   el.innerHTML=html;
 }
-function togglePF(){const f=document.getElementById('poll-form');if(f)f.style.display=f.style.display==='none'?'block':'none';}
-function submitPoll(tk){const q=document.getElementById('pf-q').value.trim();const o1=document.getElementById('pf-o1').value.trim();const o2=document.getElementById('pf-o2').value.trim();const o3=document.getElementById('pf-o3').value.trim();if(!q||!o1||!o2){alert('Please fill in the question and at least 2 options.');return;}const d=getTD(tk);const opts=[o1,o2,...(o3?[o3]:[])];d.polls.unshift({id:'p'+Date.now(),q,opts,votes:opts.map(()=>0),userVote:null,author:cu.name||'Fan',time:'just now'});saveTD(tk,d);renderCommTab();}
-function doVote(tk,pid,idx){const d=getTD(tk);const p=d.polls.find(x=>x.id===pid);if(!p||p.userVote!==null)return;p.votes[idx]++;p.userVote=idx;saveTD(tk,d);renderCommTab();}
-
-// ANALYST INSIGHTS (Supabase)
-async function renderAnalystInsights(el,tk){
-  el.innerHTML='<div class="spinner"></div>';
-  const {data:posts,error}=await _sb.from('analyst_posts').select('*').eq('team_id',tk).order('created_at',{ascending:false});
-  let html='';
+function tPF(){var f=document.getElementById('pform');if(f)f.style.display=f.style.display==='none'?'block':'none';}
+function subPoll(tk){
+  var q=document.getElementById('pfq').value.trim();
+  var o1=document.getElementById('pfo1').value.trim();
+  var o2=document.getElementById('pfo2').value.trim();
+  var o3=document.getElementById('pfo3').value.trim();
+  if(!q||!o1||!o2){alert('Please fill in the question and at least 2 options.');return;}
+  var d=getTD(tk);
+  var opts=[o1,o2].concat(o3?[o3]:[]);
+  d.polls.unshift({id:'p'+Date.now(),q:q,opts:opts,votes:opts.map(function(){return 0;}),userVote:null,author:cu.name||'Fan',time:'just now'});
+  saveTD(tk,d);renderTab();
+}
+function doVote(tk,pid,idx){
+  var d=getTD(tk);
+  var p=d.polls.find(function(x){return x.id===pid;});
+  if(!p||p.userVote!==null)return;
+  p.votes[idx]++;p.userVote=idx;saveTD(tk,d);renderTab();
+}
+async function doAnalyst(el,tk){
+  el.innerHTML='<div class="sp"></div>';
+  var res=await _sb.from('analyst_posts').select('*').eq('team_id',tk).order('created_at',{ascending:false});
+  var posts=res.data,err=res.error;
+  var html='';
   if(isAnalyst){
-    html+=`<div style="background:var(--bg2);border:1px solid rgba(0,229,160,0.2);border-radius:12px;padding:18px;margin-bottom:18px;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:10px;">📊 Post an Insight</div>
-      <textarea id="analyst-input" placeholder="Share your tactical analysis, scouting report or professional insight..." style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;min-height:100px;margin-bottom:10px;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-      <button onclick="postInsight('${tk}')" style="background:var(--accent);color:#000;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Post Insight</button>
-    </div>`;
-  } else {
-    html+=`<div style="background:var(--bg2);border:1px solid rgba(0,184,255,0.15);border-radius:12px;padding:16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-      <div><div style="font-size:13px;font-weight:600;margin-bottom:3px">Want to post analyst insights?</div><div style="font-size:12px;color:var(--muted)">Licensed scouts, journalists and agents can apply for a verified badge.</div></div>
-      <a href="mailto:felipe@scoutmind.app?subject=Analyst Badge Application" style="background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">Apply for Badge →</a>
-    </div>`;
+    html+='<div style="background:var(--bg2);border:1px solid rgba(0,229,160,0.2);border-radius:12px;padding:18px;margin-bottom:18px;">'
+      +'<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:10px;">📊 Post an Insight</div>'
+      +'<textarea id="ai" placeholder="Share your tactical analysis, scouting report or professional insight..." style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;font-family:DM Sans,sans-serif;outline:none;resize:vertical;min-height:100px;margin-bottom:10px;"></textarea>'
+      +'<button onclick="postAI(\''+tk+'\')" style="background:var(--accent);color:#000;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Post Insight</button>'
+      +'</div>';
+  }else{
+    html+='<div style="background:var(--bg2);border:1px solid rgba(0,184,255,0.15);border-radius:12px;padding:16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">'
+      +'<div><div style="font-size:13px;font-weight:600;margin-bottom:3px">Want to post analyst insights?</div>'
+      +'<div style="font-size:12px;color:var(--muted)">Licensed scouts, journalists and agents can apply for a verified badge.</div></div>'
+      +'<a href="mailto:felipe@scoutmind.app?subject=Analyst Badge Application" style="background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">Apply for Badge →</a>'
+      +'</div>';
   }
-  if(error||!posts||posts.length===0){
-    html+=`<div class="empty"><div style="font-size:32px;margin-bottom:10px;opacity:.3">📊</div><div style="font-size:14px;opacity:.4;margin-bottom:6px">No analyst insights yet</div><div style="font-size:12px">Verified analysts post weekly tactical breakdowns here.</div></div>`;
-  } else {
-    posts.forEach(p=>{
-      const ini=p.user_name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-      const r=p.reactions||{fire:0,clap:0,mind_blown:0};
-      html+=`<div class="analyst-post">
-        <div class="analyst-header">
-          <div class="analyst-av">${ini}</div>
-          <div style="flex:1">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div class="analyst-name">${p.user_name}</div><span class="analyst-credential">${p.credential}</span></div>
-            <div class="analyst-time">${formatAgo(p.created_at)}</div>
-          </div>
-        </div>
-        <div class="analyst-body">${p.content.replace(/\n/g,'<br>')}</div>
-        <div class="analyst-reactions">
-          <button class="react-btn" onclick="reactPost('${p.id}','fire')">🔥 ${r.fire||0}</button>
-          <button class="react-btn" onclick="reactPost('${p.id}','clap')">👏 ${r.clap||0}</button>
-          <button class="react-btn" onclick="reactPost('${p.id}','mind_blown')">🤯 ${r.mind_blown||0}</button>
-        </div>
-      </div>`;
+  if(err||!posts||posts.length===0){
+    html+='<div class="empty"><div style="font-size:32px;margin-bottom:10px;opacity:.3">📊</div><div style="font-size:14px;opacity:.4;margin-bottom:6px">No analyst insights yet</div><div style="font-size:12px">Verified analysts post weekly tactical breakdowns here.</div></div>';
+  }else{
+    posts.forEach(function(p){
+      var ini=p.user_name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+      var r=p.reactions||{fire:0,clap:0,mind_blown:0};
+      html+='<div class="apost">'
+        +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'
+        +'<div class="aav">'+ini+'</div>'
+        +'<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:14px;font-weight:600">'+p.user_name+'</span><span class="acred">'+p.credential+'</span></div>'
+        +'<div style="font-size:11px;color:var(--muted)">'+ago(p.created_at)+'</div></div></div>'
+        +'<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:12px">'+p.content.replace(/\n/g,'<br>')+'</div>'
+        +'<div style="display:flex;gap:8px;">'
+        +'<button class="rbtn" onclick="reactAI(\''+p.id+'\',\'fire\')">🔥 '+(r.fire||0)+'</button>'
+        +'<button class="rbtn" onclick="reactAI(\''+p.id+'\',\'clap\')">👏 '+(r.clap||0)+'</button>'
+        +'<button class="rbtn" onclick="reactAI(\''+p.id+'\',\'mind_blown\')">🤯 '+(r.mind_blown||0)+'</button>'
+        +'</div></div>';
     });
   }
   el.innerHTML=html;
 }
-async function postInsight(tk){
-  const input=document.getElementById('analyst-input');
-  const content=input?.value?.trim();
+async function postAI(tk){
+  var inp=document.getElementById('ai');
+  var content=inp&&inp.value.trim();
   if(!content)return;
-  const {data:prof}=await _sb.from('profiles').select('credential').eq('id',cu.id).single();
-  const credential=prof?.credential||'Analyst';
-  const {error}=await _sb.from('analyst_posts').insert({team_id:tk,user_id:cu.id,user_name:cu.name||cu.email?.split('@')[0]||'Analyst',credential,content});
-  if(error){alert('Error posting. Please try again.');return;}
-  renderCommTab();
+  var prof=await _sb.from('profiles').select('credential').eq('id',cu.id).single();
+  var cred=(prof.data&&prof.data.credential)||'Analyst';
+  var ins=await _sb.from('analyst_posts').insert({team_id:tk,user_id:cu.id,user_name:cu.name||cu.email.split('@')[0],credential:cred,content:content});
+  if(ins.error){alert('Error posting. Please try again.');return;}
+  renderTab();
 }
-async function reactPost(postId,reaction){
-  const {data:p}=await _sb.from('analyst_posts').select('reactions').eq('id',postId).single();
-  if(!p)return;
-  const r=p.reactions||{fire:0,clap:0,mind_blown:0};
+async function reactAI(pid,reaction){
+  var pr=await _sb.from('analyst_posts').select('reactions').eq('id',pid).single();
+  if(!pr.data)return;
+  var r=pr.data.reactions||{fire:0,clap:0,mind_blown:0};
   r[reaction]=(r[reaction]||0)+1;
-  await _sb.from('analyst_posts').update({reactions:r}).eq('id',postId);
-  renderCommTab();
+  await _sb.from('analyst_posts').update({reactions:r}).eq('id',pid);
+  renderTab();
 }
-
-// GROUPS (Supabase)
-async function renderGroups(el,tk){
-  el.innerHTML='<div class="spinner"></div>';
-  const {data:groups,error}=await _sb.from('groups').select('*').eq('team_id',tk).order('created_at',{ascending:true});
-  let html='';
+async function doGroups(el,tk){
+  el.innerHTML='<div class="sp"></div>';
+  var res=await _sb.from('groups').select('*').eq('team_id',tk).order('created_at',{ascending:true});
+  var groups=res.data,err=res.error;
+  var html='';
   if(isPro){
-    html+=`<div id="cg-form" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;">
-      <div class="pf-label">Group name</div><input class="pf-input" id="cg-name" placeholder="e.g. Estrela Solitária Match Day">
-      <div class="pf-label">Description</div><input class="pf-input" id="cg-desc" placeholder="What is this group about?">
-      <button class="pf-btn" onclick="createGroup('${tk}')">Create Group</button>
-      <button class="pf-cancel" onclick="document.getElementById('cg-form').style.display='none'">Cancel</button>
-    </div>
-    <button onclick="document.getElementById('cg-form').style.display=document.getElementById('cg-form').style.display==='none'?'block':'none'" style="width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);padding:12px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s;margin-bottom:14px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ Create a Group</button>`;
+    html+='<div id="cgform" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;">'
+      +'<div class="pfi">Group name</div><input class="pfinput" id="cgname" placeholder="e.g. Estrela Solitária Match Day">'
+      +'<div class="pfi">Description</div><input class="pfinput" id="cgdesc" placeholder="What is this group about?">'
+      +'<button class="pfbtn" onclick="createG(\''+tk+'\')">Create Group</button>'
+      +'<button class="pfcancel" onclick="document.getElementById(\'cgform\').style.display=\'none\'">Cancel</button></div>'
+      +'<button onclick="var f=document.getElementById(\'cgform\');f.style.display=f.style.display===\'none\'?\'block\':\'none\';" style="width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);padding:12px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:14px;">+ Create a Group</button>';
   }
-  if(error||!groups||groups.length===0){
-    html+=`<div class="empty"><div style="font-size:32px;margin-bottom:10px;opacity:.3">💬</div><div style="font-size:14px;opacity:.4;margin-bottom:6px">No groups yet for this team</div><div style="font-size:12px">${isPro?'Create the first one above!':'Upgrade to Scout Pro to create a group.'}</div></div>`;
-    if(!isPro) html+=`<div class="pro-gate" style="margin-top:12px"><div class="pro-gate-title">Create the first group</div><div class="pro-gate-sub">Scout Pro members can create fan groups for any team.</div><button class="upgrade-btn" onclick="window.location.href='/auth.html'">Upgrade — $9.99/mo</button></div>`;
-  } else {
-    groups.forEach((g,i)=>{
-      const icon=GROUP_ICONS[i%GROUP_ICONS.length];
-      html+=`<div class="group-card" onclick="openGroup('${g.id}',${JSON.stringify(g.name)},'${icon}',${JSON.stringify(g.description||'')})">
-        <div class="group-icon">${icon}</div>
-        <div style="flex:1"><div class="group-name">${g.name}</div><div class="group-desc">${g.description||''}</div></div>
-        <div style="font-size:11px;color:var(--accent);white-space:nowrap">Open →</div>
-      </div>`;
+  if(err||!groups||groups.length===0){
+    html+='<div class="empty"><div style="font-size:32px;margin-bottom:10px;opacity:.3">💬</div><div style="font-size:14px;opacity:.4;margin-bottom:6px">No groups yet for this team</div><div style="font-size:12px">'+(isPro?'Create the first one above!':'Upgrade to Scout Pro to create a group.')+'</div></div>';
+    if(!isPro)html+='<div class="progate" style="margin-top:12px"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Create the first group</div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Scout Pro members can create fan groups for any team.</div><button class="upbtn" onclick="window.location.href=\'/auth.html\'">Upgrade — $9.99/mo</button></div>';
+  }else{
+    groups.forEach(function(g,i){
+      var icon=GICONS[i%GICONS.length];
+      var gid=g.id,gname=g.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'"),gdesc=(g.description||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      html+='<div class="gcard" onclick="openG(\''+gid+'\',\''+gname+'\',\''+icon+'\',\''+gdesc+'\')">'
+        +'<div class="gicon">'+icon+'</div>'
+        +'<div style="flex:1"><div style="font-size:14px;font-weight:600;margin-bottom:3px">'+g.name+'</div><div style="font-size:11px;color:var(--muted)">'+(g.description||'')+'</div></div>'
+        +'<div style="font-size:11px;color:var(--accent);white-space:nowrap">Open →</div></div>';
     });
   }
   el.innerHTML=html;
 }
-async function createGroup(tk){
-  const name=document.getElementById('cg-name')?.value?.trim();
-  const desc=document.getElementById('cg-desc')?.value?.trim();
+async function createG(tk){
+  var name=document.getElementById('cgname')&&document.getElementById('cgname').value.trim();
+  var desc=document.getElementById('cgdesc')&&document.getElementById('cgdesc').value.trim();
   if(!name){alert('Please enter a group name.');return;}
-  const {error}=await _sb.from('groups').insert({team_id:tk,name,description:desc,created_by:cu.id});
-  if(error){alert('Error creating group. Please try again.');return;}
-  renderCommTab();
+  var r=await _sb.from('groups').insert({team_id:tk,name:name,description:desc,created_by:cu.id});
+  if(r.error){alert('Error creating group. Please try again.');return;}
+  renderTab();
 }
-async function openGroup(groupId,groupName,icon,desc){
-  activeGroupId=groupId;
-  document.getElementById('gchat-name').textContent=groupName;
-  document.getElementById('gchat-desc').textContent=desc;
-  document.getElementById('gchat-icon').textContent=icon;
-  const ov=document.getElementById('group-chat-overlay');
-  ov.style.display='flex';
+function openG(gid,gname,icon,desc){
+  AGid=gid;
+  document.getElementById('gc-name').textContent=gname;
+  document.getElementById('gc-desc').textContent=desc;
+  document.getElementById('gc-icon').textContent=icon;
+  document.getElementById('gcov').style.display='flex';
   document.body.style.overflow='hidden';
   if(!isPro){
-    document.getElementById('gchat-input-wrap').innerHTML=`<div style="flex:1;text-align:center;padding:10px;font-size:12px;color:var(--muted);"><a href="/auth.html" style="color:var(--accent);font-weight:600">Upgrade to Scout Pro</a> to post in group chats. You can still read all messages.</div>`;
+    document.getElementById('gc-input-area').innerHTML='<div style="flex:1;text-align:center;padding:10px;font-size:12px;color:var(--muted);"><a href="/auth.html" style="color:var(--accent);font-weight:600">Upgrade to Scout Pro</a> to post in group chats.</div>';
   }
-  await loadMsgs();
-  gchatPoll=setInterval(loadMsgs,8000);
+  loadMsgs();
+  GTimer=setInterval(loadMsgs,8000);
 }
-function closeGroupChat(){
-  document.getElementById('group-chat-overlay').style.display='none';
-  document.body.style.overflow='';
-  if(gchatPoll)clearInterval(gchatPoll);
-  gchatPoll=null; activeGroupId=null;
-}
+function closeGC(){document.getElementById('gcov').style.display='none';document.body.style.overflow='';if(GTimer)clearInterval(GTimer);GTimer=null;AGid=null;}
 async function loadMsgs(){
-  if(!activeGroupId)return;
-  const {data:msgs}=await _sb.from('group_messages').select('*').eq('group_id',activeGroupId).order('created_at',{ascending:true}).limit(100);
-  const el=document.getElementById('gchat-messages');
+  if(!AGid)return;
+  var res=await _sb.from('group_messages').select('*').eq('group_id',AGid).order('created_at',{ascending:true}).limit(100);
+  var msgs=res.data;
+  var el=document.getElementById('gcmsgs');
   if(!el)return;
-  const atBot=el.scrollHeight-el.scrollTop<=el.clientHeight+80;
+  var atBot=el.scrollHeight-el.scrollTop<=el.clientHeight+80;
   if(!msgs||msgs.length===0){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No messages yet — be the first to say something!</div>';return;}
-  el.innerHTML=msgs.map(m=>{
-    const me=m.user_id===cu?.id;
-    const ini=m.user_name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    return `<div class="gchat-msg" style="${me?'flex-direction:row-reverse':''}">
-      <div class="gchat-av" style="${me?'background:rgba(0,229,160,0.15);color:var(--accent)':\''}">${ini}</div>
-      <div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;${me?'flex-direction:row-reverse':''}"><span class="gchat-user">${me?'You':m.user_name}</span><span class="gchat-time">${formatAgo(m.created_at)}</span></div>
-        <div class="gchat-text" style="background:${me?'rgba(0,229,160,0.08)':'var(--bg3)'};padding:8px 12px;border-radius:${me?'12px 4px 12px 12px':'4px 12px 12px 12px'};display:inline-block;max-width:80%">${m.content}</div>
-      </div>
-    </div>`;
-  }).join('');
+  var html='';
+  msgs.forEach(function(m){
+    var me=m.user_id===(cu&&cu.id);
+    var ini=m.user_name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+    html+='<div class="gcmsg" style="'+(me?'flex-direction:row-reverse':'')+'">'
+      +'<div class="gcav" style="'+(me?'background:rgba(0,229,160,0.15);color:var(--accent)':'')+'">'+(ini||'?')+'</div>'
+      +'<div>'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;'+(me?'flex-direction:row-reverse':'')+'">'
+      +'<span style="font-size:12px;font-weight:600">'+(me?'You':m.user_name)+'</span>'
+      +'<span style="font-size:10px;color:var(--muted)">'+ago(m.created_at)+'</span>'
+      +'</div>'
+      +'<div style="font-size:13px;color:var(--muted);background:'+(me?'rgba(0,229,160,0.08)':'var(--bg3)')+';padding:8px 12px;border-radius:'+(me?'12px 4px 12px 12px':'4px 12px 12px 12px')+';display:inline-block;max-width:80%">'+m.content+'</div>'
+      +'</div></div>';
+  });
+  el.innerHTML=html;
   if(atBot)el.scrollTop=el.scrollHeight;
 }
-async function sendGroupMessage(){
-  if(!activeGroupId||!isPro)return;
-  const inp=document.getElementById('gchat-input');
-  const content=inp?.value?.trim();
+async function sendMsg(){
+  if(!AGid||!isPro)return;
+  var inp=document.getElementById('gc-input');
+  var content=inp&&inp.value.trim();
   if(!content)return;
   inp.value='';
-  await _sb.from('group_messages').insert({group_id:activeGroupId,user_id:cu.id,user_name:cu.name||cu.email?.split('@')[0]||'Fan',content});
+  await _sb.from('group_messages').insert({group_id:AGid,user_id:cu.id,user_name:cu.name||cu.email.split('@')[0],content:content});
   await loadMsgs();
 }
-
-// WISHLIST
-function renderWishlist(el,tk){
-  const d=getTD(tk); let html=`<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Vote for the players you want your club to sign.</div>`;
-  d.wishlist.sort((a,b)=>b.votes-a.votes).forEach((p,i)=>{html+=`<div class="wish-card"><div class="wish-rank ${i<3?'top ':''}">${String(i+1).padStart(2,'0')}</div><div class="wish-info"><div class="wish-name">${p.name}</div><div class="wish-meta">📍 ${p.club} · ${p.pos}</div></div><div style="text-align:right"><button class="wish-vote-btn ${p.userVoted?'voted ':\''}" onclick="wishVote('${tk}',${i})">${p.userVoted?'✓ Voted':'▲ Want'}</button><div class="wish-count">${p.votes} votes</div></div></div>`;});
-  if(isPro){html+=`<div style="margin-top:14px"><div style="font-size:12px;color:var(--muted);margin-bottom:8px">Suggest a player:</div><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="wn" class="pf-input" style="margin:0;flex:2" placeholder="Player name"><input id="wc" class="pf-input" style="margin:0;flex:2" placeholder="Current club"><input id="wp" class="pf-input" style="margin:0;width:70px;flex:1" placeholder="Pos"><button class="pf-btn" onclick="addWish('${tk}')">Add</button></div></div>`;}
+function doWishlist(el,tk){
+  var d=getTD(tk);
+  var html='<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Vote for the players you want your club to sign.</div>';
+  var sorted=d.wishlist.slice().sort(function(a,b){return b.votes-a.votes;});
+  sorted.forEach(function(p,i){
+    html+='<div class="wcard">'
+      +'<div class="wrank'+(i<3?' top':'')+'">'+(i+1<10?'0'+(i+1):i+1)+'</div>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:600;margin-bottom:2px">'+p.name+'</div><div style="font-size:11px;color:var(--muted)">📍 '+p.club+' · '+p.pos+'</div></div>'
+      +'<div style="text-align:right"><button class="wvbtn'+(p.userVoted?' voted':'')+'" onclick="wVote(\''+tk+'\','+i+')">'+(p.userVoted?'✓ Voted':'▲ Want')+'</button><div style="font-size:11px;color:var(--muted);margin-top:4px">'+p.votes+' votes</div></div>'
+      +'</div>';
+  });
+  if(isPro){
+    html+='<div style="margin-top:14px"><div style="font-size:12px;color:var(--muted);margin-bottom:8px">Suggest a player:</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +'<input id="wn" class="pfinput" style="margin:0;flex:2" placeholder="Player name">'
+      +'<input id="wc" class="pfinput" style="margin:0;flex:2" placeholder="Current club">'
+      +'<input id="wp" class="pfinput" style="margin:0;width:70px;flex:1" placeholder="Pos">'
+      +'<button class="pfbtn" onclick="addW(\''+tk+'\')">Add</button></div></div>';
+  }
   el.innerHTML=html;
 }
-function wishVote(tk,i){const d=getTD(tk);const s=[...d.wishlist].sort((a,b)=>b.votes-a.votes);const p=s[i];if(!p)return;const o=d.wishlist.find(x=>x.name===p.name);if(!o||o.userVoted)return;o.votes++;o.userVoted=true;saveTD(tk,d);renderCommTab();}
-function addWish(tk){const n=document.getElementById('wn')?.value?.trim();const c=document.getElementById('wc')?.value?.trim();const p=document.getElementById('wp')?.value?.trim();if(!n||!c)return;const d=getTD(tk);d.wishlist.push({name:n,club:c,pos:p||'???',votes:1,userVoted:true});saveTD(tk,d);renderCommTab();}
-
-// UTILS
-function formatAgo(iso){
-  const s=(Date.now()-new Date(iso).getTime())/1000;
-  if(s<60)return'just now';
+function wVote(tk,i){
+  var d=getTD(tk);
+  var sorted=d.wishlist.slice().sort(function(a,b){return b.votes-a.votes;});
+  var p=sorted[i];if(!p)return;
+  var orig=d.wishlist.find(function(x){return x.name===p.name;});
+  if(!orig||orig.userVoted)return;
+  orig.votes++;orig.userVoted=true;saveTD(tk,d);renderTab();
+}
+function addW(tk){
+  var n=document.getElementById('wn')&&document.getElementById('wn').value.trim();
+  var c=document.getElementById('wc')&&document.getElementById('wc').value.trim();
+  var p=document.getElementById('wp')&&document.getElementById('wp').value.trim();
+  if(!n||!c)return;
+  var d=getTD(tk);
+  d.wishlist.push({name:n,club:c,pos:p||'???',votes:1,userVoted:true});
+  saveTD(tk,d);renderTab();
+}
+function ago(iso){
+  var s=(Date.now()-new Date(iso).getTime())/1000;
+  if(s<60)return 'just now';
   if(s<3600)return Math.floor(s/60)+'m ago';
   if(s<86400)return Math.floor(s/3600)+'h ago';
   return Math.floor(s/86400)+'d ago';
 }
-
-// INIT
-const _mc=JSON.parse(localStorage.getItem('sm_main_club')||'null');
-const CLM={flamengo:'serie_a',palmeiras:'serie_a',corinthians:'serie_a',botafogo:'serie_a',fluminense:'serie_a',atletico_mg:'serie_a',gremio:'serie_a',internacional:'serie_a',sao_paulo:'serie_a',cruzeiro:'serie_a',bahia:'serie_a',athletico_pr:'serie_a',real_madrid:'la_liga',barcelona:'la_liga',atletico_madrid:'la_liga',man_city:'premier_league',arsenal:'premier_league',liverpool:'premier_league',man_utd:'premier_league',chelsea:'premier_league',bayern:'bundesliga',dortmund:'bundesliga',leverkusen:'bundesliga',psg:'ligue_1',juventus:'serie_a_it',inter:'serie_a_it',milan:'serie_a_it',napoli:'serie_a_it',river:'argentina',boca:'argentina'};
+var _mc=JSON.parse(localStorage.getItem('sm_main_club')||'null');
+var CLM={flamengo:'serie_a',palmeiras:'serie_a',corinthians:'serie_a',botafogo:'serie_a',fluminense:'serie_a',atletico_mg:'serie_a',gremio:'serie_a',internacional:'serie_a',sao_paulo:'serie_a',cruzeiro:'serie_a',bahia:'serie_a',athletico_pr:'serie_a',real_madrid:'la_liga',barcelona:'la_liga',atletico_madrid:'la_liga',man_city:'premier_league',arsenal:'premier_league',liverpool:'premier_league',man_utd:'premier_league',chelsea:'premier_league',bayern:'bundesliga',dortmund:'bundesliga',leverkusen:'bundesliga',psg:'ligue_1',juventus:'serie_a_it',inter:'serie_a_it',milan:'serie_a_it',napoli:'serie_a_it',river:'argentina',boca:'argentina'};
 function init(){
   if(_mc){
-    let lg=CLM[_mc.id];
-    if(!lg&&_mc.league){const l=_mc.league.toLowerCase();if(l.includes('série a')||l.includes('serie a'))lg='serie_a';else if(l.includes('premier'))lg='premier_league';else if(l.includes('la liga'))lg='la_liga';else if(l.includes('bundesliga'))lg='bundesliga';else if(l.includes('ligue'))lg='ligue_1';else if(l.includes('serie a it'))lg='serie_a_it';else if(l.includes('argentina'))lg='argentina';}
+    var lg=CLM[_mc.id];
+    if(!lg&&_mc.league){var l=_mc.league.toLowerCase();if(l.includes('série a')||l.includes('serie a'))lg='serie_a';else if(l.includes('premier'))lg='premier_league';else if(l.includes('la liga'))lg='la_liga';else if(l.includes('bundesliga'))lg='bundesliga';else if(l.includes('ligue'))lg='ligue_1';else if(l.includes('serie a it'))lg='serie_a_it';else if(l.includes('argentina'))lg='argentina';}
     lg=lg||'serie_a';
-    const sel=document.getElementById('comm-league');
-    if(sel)sel.value=lg;
-    activeLeague=lg;
-    loadLeagueTeams();
-    selectCommTeam(_mc.id||'',_mc.name||'',lg);
-  } else {
-    loadLeagueTeams();
-    document.getElementById('comm-main').innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the left, or set your main club so it loads automatically every time.</div><button onclick="window.location.href='/app.html'" style="background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Set My Main Club</button></div>`;
+    var sel=document.getElementById('comm-league');if(sel)sel.value=lg;
+    AL=lg;
+    var teams=TEAMS[lg]||[];
+    AT=teams.find(function(t){return t.id===_mc.id;})||teams.find(function(t){return t.name===_mc.name;})||null;
+    filterTeams();
+    if(AT)renderTeamPage();
+  }else{
+    filterTeams();
+    document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div style="font-family:Bebas Neue,sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the left, or set your main club so it loads automatically every time.</div><button onclick="window.location.href=\'/app.html\'" style="background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Set My Main Club</button></div>';
   }
 }
 if(typeof TEAMS!=='undefined'){init();}else{window.addEventListener('load',init);}
