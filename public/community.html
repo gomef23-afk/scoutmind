@@ -12,11 +12,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);text-decoration:none;}
 .logo span{color:var(--text);}
-.nav-links{display:flex;gap:20px;align-items:center;}
-.nav-link{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s;}
-.nav-link:hover,.nav-link.active{color:var(--text);}
+.main-nav-btn{background:transparent;border:none;color:var(--muted);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;border-bottom:2px solid transparent;text-decoration:none;display:inline-block;}
+.main-nav-btn:hover{color:var(--text);}
+.main-nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
 .nav-right{display:flex;align-items:center;gap:10px;}
-.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
+.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;}
 .plan-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);}
 .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
 .logout-btn:hover{border-color:var(--accent);color:var(--text);}
@@ -102,7 +102,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .wish-count{font-size:11px;color:var(--muted);margin-top:4px;text-align:center;}
 .empty{text-align:center;padding:40px 20px;color:var(--muted);}
 .empty-icon{font-size:36px;margin-bottom:10px;opacity:.3;}
-@media(max-width:768px){.two-col{grid-template-columns:1fr;}.team-selector{position:static;}.ts-scroll{max-height:200px;}.team-stats-mini{grid-template-columns:repeat(2,1fr);}nav{padding:12px 16px;}.nav-links{display:none;}.page{padding:14px;}}
+@media(max-width:768px){.two-col{grid-template-columns:1fr;}.team-selector{position:static;}.ts-scroll{max-height:200px;}.team-stats-mini{grid-template-columns:repeat(2,1fr);}nav{padding:12px 16px;}.page{padding:14px;}}
 </style>
 </head>
 <body>
@@ -111,20 +111,22 @@ const _cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
 if (!_cu) window.location.href = '/auth.html';
 </script>
 <nav>
-  <a class="logo" href="/app.html">Scout<span>Mind</span></a>
-  <div class="nav-links">
-    <a class="nav-link" href="/app.html">Scout Mode</a>
-    <a class="nav-link" href="/app.html">Feed</a>
-    <a class="nav-link active" href="/community.html">Communities</a>
-    <a class="nav-link" href="/news.html">Transfer News</a>
+  <div style="display:flex;align-items:center;gap:0">
+    <a class="logo" href="/app.html">Scout<span>Mind</span></a>
+    <div style="display:flex;gap:2px;margin-left:28px;">
+      <a class="main-nav-btn" href="/app.html">Scout Mode</a>
+      <a class="main-nav-btn" href="/app.html">Feed</a>
+      <a class="main-nav-btn active" href="/community.html">Communities</a>
+      <a class="main-nav-btn" href="/news.html">Transfer News</a>
+    </div>
   </div>
   <div class="nav-right">
-    <div class="user-badge" onclick="window.location.href='/app.html#profile'" style="cursor:pointer;">
+    <div class="user-badge" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
       <span class="live-dot"></span>
       <span id="nav-name" style="font-size:12px;font-weight:500"></span>
       <span id="nav-plan" class="plan-pill"></span>
     </div>
-    <div id="nav-avatar" onclick="window.location.href='/app.html'" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0;">?</div>
+    <div id="nav-avatar" onclick="window.location.href='/app.html'" title="Go to profile" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s;flex-shrink:0;" onmouseover="this.style.background='rgba(0,229,160,0.25)'" onmouseout="this.style.background='rgba(0,229,160,0.15)'">?</div>
     <button class="logout-btn" onclick="logout()">Sign out</button>
   </div>
 </nav>
@@ -300,10 +302,10 @@ function renderWishlist(el,data){
 function wishVote(index){const data=getTeamData(activeTeam.id);const sorted=[...data.wishlist].sort((a,b)=>b.votes-a.votes);const player=sorted[index];if(!player)return;const orig=data.wishlist.find(p=>p.name===player.name);if(!orig||orig.userVoted)return;orig.votes++;orig.userVoted=true;saveTeamData(activeTeam.id,data);renderCommTab();}
 function addWish(){const name=document.getElementById('wish-name').value.trim();const club=document.getElementById('wish-club').value.trim();const pos=document.getElementById('wish-pos').value.trim();if(!name||!club)return;const data=getTeamData(activeTeam.id);data.wishlist.push({name,club,pos:pos||'???',votes:1,userVoted:true});saveTeamData(activeTeam.id,data);renderCommTab();}
 loadLeagueTeams();
+
 // Auto-select user's main club if set
 const _mainClub = JSON.parse(localStorage.getItem('sm_main_club')||'null');
 if(_mainClub){
-  // Map club IDs to their leagues
   const CLUB_LEAGUE_MAP = {
     flamengo:'serie_a',palmeiras:'serie_a',corinthians:'serie_a',botafogo:'serie_a',
     fluminense:'serie_a',atletico_mg:'serie_a',gremio:'serie_a',internacional:'serie_a',
@@ -316,16 +318,15 @@ if(_mainClub){
     river:'argentina',boca:'argentina',
   };
   const clubLeague = CLUB_LEAGUE_MAP[_mainClub.id] || 'serie_a';
-  // Set the league dropdown
   const leagueSelect = document.getElementById('comm-league');
   if(leagueSelect && clubLeague) leagueSelect.value = clubLeague;
-  setTimeout(()=>{ 
-    try{ 
+  setTimeout(()=>{
+    try{
       activeLeague = clubLeague;
       loadLeagueTeams();
-      selectCommTeam(_mainClub.id, clubLeague); 
-    } catch(e){ console.log('auto-select error:', e); } 
-  }, 400);
+      selectCommTeam(_mainClub.id, clubLeague);
+    } catch(e){ console.log('auto-select error:', e); }
+  }, 300);
 }
 </script>
 </body>
