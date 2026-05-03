@@ -119,11 +119,12 @@ if (!_cu) window.location.href = '/auth.html';
     <a class="nav-link" href="/news.html">Transfer News</a>
   </div>
   <div class="nav-right">
-    <div class="user-badge">
+    <div class="user-badge" onclick="window.location.href='/app.html#profile'" style="cursor:pointer;">
       <span class="live-dot"></span>
       <span id="nav-name" style="font-size:12px;font-weight:500"></span>
       <span id="nav-plan" class="plan-pill"></span>
     </div>
+    <div id="nav-avatar" onclick="window.location.href='/app.html'" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0;">?</div>
     <button class="logout-btn" onclick="logout()">Sign out</button>
   </div>
 </nav>
@@ -169,9 +170,13 @@ const cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
 const PLAN_NAMES = {free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro'};
 const isPro = cu && ['pro','club','clubpro'].includes(cu.plan);
 if (cu) {
-  document.getElementById('nav-name').textContent = cu.name || 'User';
+  const name = cu.name || cu.email?.split('@')[0] || 'User';
+  document.getElementById('nav-name').textContent = name;
   const planEl = document.getElementById('nav-plan');
   planEl.textContent = PLAN_NAMES[cu.plan] || 'Scout Free';
+  const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const avEl = document.getElementById('nav-avatar');
+  if(avEl) avEl.textContent = initials;
 }
 function logout() { localStorage.removeItem('sm_current_user'); window.location.href = '/auth.html'; }
 let activeTeam = null, activeLeague = 'serie_a', activeCommTab = 'polls';
@@ -298,8 +303,29 @@ loadLeagueTeams();
 // Auto-select user's main club if set
 const _mainClub = JSON.parse(localStorage.getItem('sm_main_club')||'null');
 if(_mainClub){
-  const leagueMap = {serie_a:'serie_a',premier_league:'premier_league',la_liga:'la_liga',bundesliga:'bundesliga'};
-  setTimeout(()=>{ try{ selectCommTeam(_mainClub.id, 'serie_a'); } catch(e){} }, 300);
+  // Map club IDs to their leagues
+  const CLUB_LEAGUE_MAP = {
+    flamengo:'serie_a',palmeiras:'serie_a',corinthians:'serie_a',botafogo:'serie_a',
+    fluminense:'serie_a',atletico_mg:'serie_a',gremio:'serie_a',internacional:'serie_a',
+    sao_paulo:'serie_a',cruzeiro:'serie_a',
+    real_madrid:'la_liga',barcelona:'la_liga',atletico_madrid:'la_liga',
+    man_city:'premier_league',arsenal:'premier_league',liverpool:'premier_league',
+    man_utd:'premier_league',chelsea:'premier_league',
+    bayern:'bundesliga',dortmund:'bundesliga',
+    psg:'ligue_1',juventus:'serie_a_it',inter:'serie_a_it',
+    river:'argentina',boca:'argentina',
+  };
+  const clubLeague = CLUB_LEAGUE_MAP[_mainClub.id] || 'serie_a';
+  // Set the league dropdown
+  const leagueSelect = document.getElementById('comm-league');
+  if(leagueSelect && clubLeague) leagueSelect.value = clubLeague;
+  setTimeout(()=>{ 
+    try{ 
+      activeLeague = clubLeague;
+      loadLeagueTeams();
+      selectCommTeam(_mainClub.id, clubLeague); 
+    } catch(e){ console.log('auto-select error:', e); } 
+  }, 400);
 }
 </script>
 </body>
