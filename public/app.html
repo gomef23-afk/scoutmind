@@ -129,6 +129,8 @@ hr{border:none;border-top:1px solid var(--border);}
 /* ── PAGES ── */
 .page{display:none;}
 .page.active{display:block;}
+#page-scout.active{display:block;}
+#page-scout.active .app{display:grid;}
 /* ── FEED PAGE ── */
 .feed-page{display:grid;grid-template-columns:1fr 300px;min-height:calc(100vh - 53px);}
 .feed-main{padding:20px 24px;border-right:1px solid var(--border);overflow-y:auto;}
@@ -2053,15 +2055,13 @@ function saveTeamSelection(){
 function applyClubSelection(){
   const mainClub = JSON.parse(localStorage.getItem('sm_main_club')||'null');
   if(!mainClub) return;
-  // Update sidebar
+  // Update sidebar only
   const sidebarEl = document.getElementById('sidebar-my-club');
   if(sidebarEl) sidebarEl.textContent = mainClub.name;
-  // Update clubs page banner
+  // Update clubs page banner name
   const clubNameEl = document.querySelector('.my-club-name');
   if(clubNameEl) clubNameEl.textContent = mainClub.name.toUpperCase();
-  // Update nav
-  const navClubBtn = document.getElementById('nav-clubs');
-  if(navClubBtn) navClubBtn.textContent = mainClub.name;
+  // DO NOT rename the nav — always stays "Clubs"
 }
 
 function openTeamModal(){
@@ -2239,15 +2239,14 @@ document.querySelectorAll('.league-filter-btn').forEach(btn=>{
 });
 
 // ── INIT ──
-renderFeedNews();
-renderSidebar();
-applyClubSelection();
+try{renderFeedNews();}catch(e){console.error('renderFeedNews:',e);}
+try{renderSidebar();}catch(e){console.error('renderSidebar:',e);}
+try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 
 // Show team modal on first login
 const hasSelectedClub=localStorage.getItem('sm_club_selected');
 if(!hasSelectedClub){
-  // Small delay so page renders first
-  setTimeout(()=>openTeamModal(),400);
+  setTimeout(()=>{try{openTeamModal();}catch(e){console.error(e);}},400);
 }
 </script>
 </body>
