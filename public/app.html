@@ -253,7 +253,28 @@ hr{border:none;border-top:1px solid var(--border);}
 .squad-player-name{flex:1;font-size:12px;font-weight:500;color:var(--text);}
 .squad-player-age{font-size:10px;color:var(--muted);}
 .squad-rating{font-size:12px;font-weight:700;font-family:'DM Mono',monospace;width:30px;text-align:right;}
-/* ── FILTER BUTTONS ── */
+/* ── PROFILE PAGE ── */
+.profile-page{max-width:680px;margin:0 auto;padding:32px 24px;}
+.profile-section{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
+.profile-section-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;}
+.profile-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.profile-row:last-child{border-bottom:none;}
+.profile-row-label{font-size:12px;color:var(--muted);}
+.profile-row-value{font-size:12px;font-weight:500;color:var(--text);}
+.profile-edit-btn{font-size:10px;padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.profile-edit-btn:hover{border-color:var(--accent);color:var(--accent);}
+.plan-card{background:var(--bg3);border:1px solid rgba(0,229,160,0.15);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.plan-card-name{font-size:14px;font-weight:700;color:var(--accent);}
+.plan-card-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+.upgrade-plan-btn{font-size:11px;font-weight:700;padding:7px 16px;background:var(--accent);color:#000;border:none;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.club-chip{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:7px;}
+.club-chip-emoji{font-size:18px;}
+.club-chip-name{flex:1;font-size:12px;font-weight:500;color:var(--text);}
+.club-chip-badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;}
+.danger-btn{font-size:11px;padding:7px 16px;background:transparent;border:1px solid rgba(255,69,96,0.3);color:var(--red);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.danger-btn:hover{background:rgba(255,69,96,0.08);}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:20px;background:transparent;border:none;font-family:'DM Sans',sans-serif;transition:color .2s;}
+.back-btn:hover{color:var(--accent);}
 .filter-btn{background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
 .filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
 /* ── NEWS TAGS ── */
@@ -359,11 +380,12 @@ if(!_cu){
       <button class="curr-btn" data-c="BRL" onclick="setCurrency('BRL')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">R$ BRL</button>
       <button class="curr-btn" data-c="GBP" onclick="setCurrency('GBP')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">£ GBP</button>
     </div>
-    <div class="user-badge">
+    <div class="user-badge" onclick="showPage('profile')" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
       <span class="live-dot"></span>
       <span id="nav-name" style="font-size:12px;font-weight:500"></span>
       <span id="nav-plan" class="plan-pill"></span>
     </div>
+    <div id="nav-avatar" onclick="showPage('profile')" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s;flex-shrink:0;" onmouseover="this.style.background='rgba(0,229,160,0.25)'" onmouseout="this.style.background='rgba(0,229,160,0.15)'">?</div>
     <button class="logout-btn" onclick="logout()">Sign out</button>
   </div>
 </nav>
@@ -723,6 +745,87 @@ if(!_cu){
     <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:14px 0 10px;">Recent results</div>
     <div class="hub-match-card"><div class="hub-match-comp">SÉRIE A · 29 APR</div><div class="hub-match-teams"><div class="hub-match-team">Flamengo</div><div class="hub-match-score" style="color:var(--accent);">2–0</div><div class="hub-match-team">Grêmio</div></div></div>
     <div class="hub-match-card"><div class="hub-match-comp">SÉRIE A · 24 APR</div><div class="hub-match-teams"><div class="hub-match-team">Internacional</div><div class="hub-match-score" style="color:var(--yellow);">1–1</div><div class="hub-match-team">Flamengo</div></div></div>
+  </div>
+</div>
+</div>
+
+<!-- PROFILE PAGE -->
+<div class="page" id="page-profile">
+<div class="profile-page">
+  <button class="back-btn" onclick="showPage('feed')">← Back to Feed</button>
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+    <div id="profile-avatar-big" style="width:60px;height:60px;border-radius:50%;background:rgba(0,229,160,0.15);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--accent);flex-shrink:0;">?</div>
+    <div>
+      <div id="profile-name-big" style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;"></div>
+      <div id="profile-email-big" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
+    </div>
+  </div>
+
+  <!-- Account Info -->
+  <div class="profile-section">
+    <div class="profile-section-title">Account</div>
+    <div class="profile-row">
+      <div class="profile-row-label">Name</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="profile-row-value" id="profile-name-val">—</div>
+        <button class="profile-edit-btn">Edit</button>
+      </div>
+    </div>
+    <div class="profile-row">
+      <div class="profile-row-label">Email</div>
+      <div class="profile-row-value" id="profile-email-val">—</div>
+    </div>
+    <div class="profile-row">
+      <div class="profile-row-label">Member since</div>
+      <div class="profile-row-value">May 2026</div>
+    </div>
+  </div>
+
+  <!-- Subscription -->
+  <div class="profile-section">
+    <div class="profile-section-title">Subscription</div>
+    <div class="plan-card">
+      <div>
+        <div class="plan-card-name" id="profile-plan-name">Scout Free</div>
+        <div class="plan-card-desc" id="profile-plan-desc">Basic analysis · Top 3 recommendations · No PDF export</div>
+      </div>
+      <button class="upgrade-plan-btn" onclick="window.location.href='/auth.html?tab=signup&plan=pro'">Upgrade to Pro</button>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.6;">
+      Scout Pro unlocks full player recommendations, PDF scouting reports, unlimited transfer news, and the ability to create fan groups.
+    </div>
+  </div>
+
+  <!-- My Clubs -->
+  <div class="profile-section">
+    <div class="profile-section-title">My clubs</div>
+    <div id="profile-clubs-list">
+      <div style="font-size:12px;color:var(--muted);padding:8px 0;">No club selected yet.</div>
+    </div>
+    <button onclick="openTeamModal()" style="margin-top:10px;font-size:11px;font-weight:600;padding:7px 16px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ Change / manage clubs</button>
+  </div>
+
+  <!-- Preferences -->
+  <div class="profile-section">
+    <div class="profile-section-title">Preferences</div>
+    <div class="profile-row">
+      <div class="profile-row-label">Default currency</div>
+      <div style="display:flex;gap:4px;">
+        <button onclick="setCurrency('EUR');highlightCurrPref('EUR')" id="pref-EUR" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--accent);background:rgba(0,229,160,0.1);color:var(--accent);cursor:pointer;font-family:inherit;">€ EUR</button>
+        <button onclick="setCurrency('USD');highlightCurrPref('USD')" id="pref-USD" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">$ USD</button>
+        <button onclick="setCurrency('BRL');highlightCurrPref('BRL')" id="pref-BRL" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">R$ BRL</button>
+        <button onclick="setCurrency('GBP');highlightCurrPref('GBP')" id="pref-GBP" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">£ GBP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="profile-section" style="border-color:rgba(255,69,96,0.15);">
+    <div class="profile-section-title" style="color:rgba(255,69,96,0.6);">Account actions</div>
+    <div class="profile-row">
+      <div class="profile-row-label">Sign out of ScoutMind</div>
+      <button class="danger-btn" onclick="logout()">Sign out</button>
+    </div>
   </div>
 </div>
 </div>
@@ -1921,7 +2024,7 @@ document.getElementById('playerLeagueSel').addEventListener('change',updateFilte
 </div><!-- close page-scout -->
 
 <!-- ── TEAM SELECTION MODAL ── -->
-<div id="team-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+<div id="team-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:min(520px,92vw);max-height:85vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">Your Club</div>
@@ -2040,6 +2143,8 @@ function unfollowClub(id){
   renderFollowingChips();
 }
 
+function _getModalKey(){return 'sm_club_selected_'+(currentUser?.id||'guest');}
+
 function saveTeamSelection(){
   if(!selectedMainClub){
     alert('Please select your main club first!');
@@ -2048,7 +2153,7 @@ function saveTeamSelection(){
   const mainClub = ALL_CLUBS.find(c=>c.id===selectedMainClub);
   localStorage.setItem('sm_main_club', JSON.stringify(mainClub));
   localStorage.setItem('sm_following_clubs', JSON.stringify(followingClubs));
-  localStorage.setItem('sm_club_selected', '1');
+  localStorage.setItem(_getModalKey(), '1');
   closeTeamModal();
   applyClubSelection();
 }
@@ -2066,7 +2171,6 @@ function applyClubSelection(){
 }
 
 function openTeamModal(){
-  // Load saved state
   const saved = JSON.parse(localStorage.getItem('sm_main_club')||'null');
   const savedFollowing = JSON.parse(localStorage.getItem('sm_following_clubs')||'[]');
   selectedMainClub = saved ? saved.id : null;
@@ -2083,7 +2187,7 @@ function closeTeamModal(){
 }
 
 function skipTeamModal(){
-  localStorage.setItem('sm_club_selected','skipped');
+  localStorage.setItem(_getModalKey(),'skipped');
   closeTeamModal();
 }
 
@@ -2095,6 +2199,7 @@ function showPage(id){
   if(pageEl)pageEl.classList.add('active');
   const navEl=document.getElementById('nav-'+id);
   if(navEl)navEl.classList.add('active');
+  if(id==='profile') try{renderProfileClubs();}catch(e){}
   window.scrollTo(0,0);
 }
 
@@ -2241,9 +2346,85 @@ document.querySelectorAll('.league-filter-btn').forEach(btn=>{
 try{renderFeedNews();}catch(e){console.error('renderFeedNews:',e);}
 try{renderSidebar();}catch(e){console.error('renderSidebar:',e);}
 try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
+try{initProfile();}catch(e){console.error('initProfile:',e);}
 
-// Show team modal only on very first login (never shown before)
-const hasSelectedClub=localStorage.getItem('sm_club_selected');
+function initProfile(){
+  if(!currentUser) return;
+  const name = currentUser.name || currentUser.email?.split('@')[0] || 'User';
+  const email = currentUser.email || '—';
+  const plan = currentUser.plan || 'free';
+  const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+
+  // Nav avatar
+  const navAv = document.getElementById('nav-avatar');
+  if(navAv) navAv.textContent = initials;
+
+  // Profile page
+  const setBig = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+  setBig('profile-avatar-big', initials);
+  setBig('profile-name-big', name.toUpperCase());
+  setBig('profile-email-big', email);
+  setBig('profile-name-val', name);
+  setBig('profile-email-val', email);
+
+  // Plan
+  const PLAN_LABELS = {
+    free: {name:'Scout Free', desc:'Basic analysis · Top 3 recommendations · No PDF export'},
+    pro:  {name:'Scout Pro',  desc:'Full analysis · Unlimited recommendations · PDF reports'},
+    club: {name:'Club Basic', desc:'Club dashboard · Recruitment reports · Team insights'},
+    clubpro: {name:'Club Pro', desc:'Full scouting suite · Custom reports · API access'},
+  };
+  const pl = PLAN_LABELS[plan] || PLAN_LABELS.free;
+  setBig('profile-plan-name', pl.name);
+  setBig('profile-plan-desc', pl.desc);
+  if(plan !== 'free'){
+    const btn = document.querySelector('.upgrade-plan-btn');
+    if(btn){ btn.textContent='Manage Plan'; btn.style.background='var(--bg3)'; btn.style.color='var(--text)'; btn.style.border='1px solid var(--border)'; }
+  }
+}
+
+function renderProfileClubs(){
+  const mainClub = JSON.parse(localStorage.getItem('sm_main_club')||'null');
+  const following = JSON.parse(localStorage.getItem('sm_following_clubs')||'[]');
+  const el = document.getElementById('profile-clubs-list');
+  if(!el) return;
+  if(!mainClub && !following.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">No club selected yet.</div>';
+    return;
+  }
+  let html = '';
+  if(mainClub){
+    html += `<div class="club-chip">
+      <span class="club-chip-emoji">${mainClub.emoji||'⚽'}</span>
+      <span class="club-chip-name">${mainClub.name}</span>
+      <span class="club-chip-badge c-pill-g">Main club</span>
+    </div>`;
+  }
+  following.forEach(id => {
+    const c = ALL_CLUBS.find(x=>x.id===id);
+    if(!c) return;
+    html += `<div class="club-chip">
+      <span class="club-chip-emoji">${c.emoji||'⚽'}</span>
+      <span class="club-chip-name">${c.name}</span>
+      <span class="club-chip-badge c-pill-b">Following</span>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function highlightCurrPref(c){
+  ['EUR','USD','BRL','GBP'].forEach(x=>{
+    const btn=document.getElementById('pref-'+x);
+    if(!btn) return;
+    if(x===c){btn.style.borderColor='var(--accent)';btn.style.background='rgba(0,229,160,0.1)';btn.style.color='var(--accent)';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='transparent';btn.style.color='var(--muted)';}
+  });
+}
+
+// Show team modal only on very first login per account
+const _userId = currentUser?.id || 'guest';
+const _modalKey = 'sm_club_selected_' + _userId;
+const hasSelectedClub = localStorage.getItem(_modalKey);
 if(!hasSelectedClub){
   setTimeout(()=>{try{openTeamModal();}catch(e){console.error(e);}},400);
 }
