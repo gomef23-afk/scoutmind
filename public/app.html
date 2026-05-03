@@ -199,9 +199,9 @@ hr{border:none;border-top:1px solid var(--border);}
 .club-explore-stat span{color:var(--text);font-family:'DM Mono',monospace;}
 /* ── CLUB HUB ── */
 .club-hub-page{min-height:calc(100vh - 53px);}
-.club-hub-banner{height:60px;background:linear-gradient(135deg,#6b0000 0%,#c8000a 50%,#1a0000 100%);position:relative;overflow:hidden;}
+.club-hub-banner{height:60px;background:linear-gradient(135deg,#6b0000 0%,#c8000a 50%,#1a0000 100%);position:relative;overflow:hidden;margin-bottom:0;}
 .club-hub-banner::after{content:'';position:absolute;inset:0;opacity:0.08;background-image:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:8px 8px;}
-.club-hub-info{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 22px;}
+.club-hub-info{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 22px;overflow:hidden;}
 .club-hub-info-row{display:flex;align-items:flex-end;gap:14px;padding-bottom:12px;margin-top:-22px;}
 .club-hub-crest{width:52px;height:52px;border-radius:10px;background:var(--bg3);border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
 .club-hub-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--text);}
@@ -251,6 +251,15 @@ hr{border:none;border-top:1px solid var(--border);}
 .squad-player-name{flex:1;font-size:12px;font-weight:500;color:var(--text);}
 .squad-player-age{font-size:10px;color:var(--muted);}
 .squad-rating{font-size:12px;font-weight:700;font-family:'DM Mono',monospace;width:30px;text-align:right;}
+/* ── FILTER BUTTONS ── */
+.filter-btn{background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+/* ── NEWS TAGS ── */
+.tag-transfer{background:rgba(0,229,160,0.1);color:var(--accent);}
+.tag-financial{background:rgba(0,184,255,0.1);color:var(--accent2);}
+.tag-injury{background:rgba(255,69,96,0.1);color:var(--red);}
+.tag-contract{background:rgba(245,200,66,0.1);color:var(--yellow);}
+.tag-rumor{background:rgba(255,107,53,0.1);color:var(--warn);}
 @media(max-width:768px){
   nav{padding:12px 16px;flex-wrap:wrap;gap:8px;}
   nav>div:first-child{order:1;}
@@ -361,100 +370,111 @@ if(!_cu){
 <div class="feed-page">
   <div class="feed-main">
     <div class="feed-tabs-bar">
-      <button class="ftab active">For you</button>
-      <button class="ftab">Following</button>
-      <button class="ftab">Transfer news</button>
-      <button class="ftab">Match day</button>
+      <button class="ftab active" onclick="showFeedTab('foryou',this)">For you</button>
+      <button class="ftab" onclick="showFeedTab('following',this)">Following</button>
+      <button class="ftab" onclick="showFeedTab('transfers',this)">Transfer news</button>
+      <button class="ftab" onclick="showFeedTab('matchday',this)">Match day</button>
     </div>
-    <!-- ScoutMind AI post -->
-    <div class="feed-post">
-      <div class="feed-post-header">
-        <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
-        <div><div class="feed-author">ScoutMind AI</div><div class="feed-submeta">Daily analysis · Série A · 2h ago</div></div>
-        <span class="feed-vbadge c-pill-o">Weakness Alert</span>
+
+    <!-- FOR YOU TAB — Transfer Intelligence format -->
+    <div id="feedtab-foryou">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Transfer Intelligence</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(0,229,160,0.1),rgba(0,184,255,0.1));border:1px solid rgba(0,229,160,0.2);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--accent);">⚡ AI-Powered</div>
       </div>
-      <div class="feed-body">Flamengo's aerial duel win rate dropped to 48% this week — 15 points below the Série A average. 3 of the last 5 goals conceded came directly from set pieces where they lost the aerial battle.</div>
-      <div class="feed-insight-box">
-        <div class="feed-insight-label">SCOUT INSIGHT</div>
-        <div class="feed-insight-body">A dominant aerial CB solves this immediately. 6 players fit within R$40M. <span style="color:var(--accent);cursor:pointer;" onclick="showPage('scout')">See recommendations →</span></div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;">
+        <button class="filter-btn active" onclick="filterFeed('all',this)">All News</button>
+        <button class="filter-btn" onclick="filterFeed('transfer',this)">🔄 Transfers</button>
+        <button class="filter-btn" onclick="filterFeed('rumor',this)">💬 Rumors</button>
+        <button class="filter-btn" onclick="filterFeed('contract',this)">📝 Contracts</button>
+        <button class="filter-btn" onclick="filterFeed('financial',this)">💰 Financial</button>
+        <button class="filter-btn" onclick="filterFeed('brazil',this)">🇧🇷 Brazil</button>
+        <button class="filter-btn" onclick="filterFeed('europe',this)">🏆 Europe</button>
       </div>
-      <div class="feed-actions">
-        <button class="feed-action-btn">♡ 1.2k</button>
-        <button class="feed-action-btn">↩ 341</button>
-        <button class="feed-action-btn">Save</button>
-      </div>
+      <div id="feed-news-main"></div>
     </div>
-    <!-- Verified analyst post -->
-    <div class="feed-post">
-      <div class="feed-post-header">
-        <div class="feed-av" style="background:rgba(0,184,255,0.12);color:var(--accent2);">JR</div>
-        <div><div class="feed-author">João Ricardo · ESPN Brasil</div><div class="feed-submeta">Verified analyst · 3h ago</div></div>
-        <span class="feed-vbadge c-pill-b">Analyst</span>
+
+    <!-- FOLLOWING TAB -->
+    <div id="feedtab-following" style="display:none;">
+      <div style="margin-bottom:14px;font-size:13px;color:var(--muted);">Posts from clubs and analysts you follow.</div>
+      <div class="feed-post">
+        <div class="feed-post-header">
+          <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
+          <div><div class="feed-author">ScoutMind AI · Botafogo</div><div class="feed-submeta">3h ago · Your club</div></div>
+          <span class="feed-vbadge c-pill-o">Weakness Alert</span>
+        </div>
+        <div class="feed-body">Botafogo's passing accuracy (79%) is 6 points below the Série A average. Their build-up play is being disrupted easily in the middle third — a technical CM would address this directly.</div>
+        <div class="feed-insight-box">
+          <div class="feed-insight-label">SCOUT INSIGHT</div>
+          <div class="feed-insight-body">4 players fit Botafogo's profile within R$25M. <span style="color:var(--accent);cursor:pointer;" onclick="showPage('scout')">See recommendations →</span></div>
+        </div>
+        <div class="feed-actions"><button class="feed-action-btn">♡ 892</button><button class="feed-action-btn">↩ 214</button><button class="feed-action-btn">Save</button></div>
       </div>
-      <div class="feed-body">Palmeiras' pressing intensity is statistically the highest in Série A right now — 8.3 PPDA. But they're showing fatigue signs in the last 20 minutes. Their xGA in the 70-90 minute window is nearly double their first-half numbers. This will matter in the Copa do Brasil knockouts.</div>
-      <div class="feed-actions">
-        <button class="feed-action-btn">♡ 847</button>
-        <button class="feed-action-btn">↩ 213</button>
-        <button class="feed-action-btn">Save</button>
-      </div>
-    </div>
-    <!-- Partner analyst post -->
-    <div class="feed-post">
-      <div class="feed-post-header">
-        <div class="feed-av" style="background:rgba(245,200,66,0.12);color:var(--yellow);">TF</div>
-        <div><div class="feed-author">The Football Analyst</div><div class="feed-submeta">Partner · 42k followers · 5h ago</div></div>
-        <span class="feed-vbadge c-pill-y">Partner</span>
-      </div>
-      <div class="feed-body">Why Botafogo's 4-3-3 is tactically broken right now — their wide midfielders are being asked to press AND provide width simultaneously. This creates massive gaps in transition that opponents are starting to exploit consistently. Full breakdown:</div>
-      <div class="feed-actions">
-        <button class="feed-action-btn">♡ 2.1k</button>
-        <button class="feed-action-btn">↩ 670</button>
-        <button class="feed-action-btn">Save</button>
-      </div>
-    </div>
-    <!-- AI post 2 -->
-    <div class="feed-post">
-      <div class="feed-post-header">
-        <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
-        <div><div class="feed-author">ScoutMind AI</div><div class="feed-submeta">Weekly Bundesliga digest · 8h ago</div></div>
-        <span class="feed-vbadge c-pill-g">Digest</span>
-      </div>
-      <div class="feed-body">Bayern Munich leads the Bundesliga in pass accuracy (93%) and xG (2.8/game) but their pressing has dropped 14% from last season. Harry Kane's off-ball movement is creating space but the midfield isn't capitalising on it consistently.</div>
-      <div class="feed-actions">
-        <button class="feed-action-btn">♡ 3.4k</button>
-        <button class="feed-action-btn">↩ 892</button>
-        <button class="feed-action-btn">Save</button>
+      <div class="feed-post">
+        <div class="feed-post-header">
+          <div class="feed-av" style="background:rgba(0,184,255,0.12);color:var(--accent2);">JR</div>
+          <div><div class="feed-author">João Ricardo · ESPN Brasil</div><div class="feed-submeta">Verified analyst · 5h ago</div></div>
+          <span class="feed-vbadge c-pill-b">Analyst</span>
+        </div>
+        <div class="feed-body">Botafogo's Luiz Henrique is the most underrated player in Série A right now. 0.42 goals + 0.31 assists per game, yet he doesn't get the recognition Vinicius Jr got at a similar age. Keep watching.</div>
+        <div class="feed-actions"><button class="feed-action-btn">♡ 1.4k</button><button class="feed-action-btn">↩ 388</button><button class="feed-action-btn">Save</button></div>
       </div>
     </div>
+
+    <!-- TRANSFER NEWS TAB -->
+    <div id="feedtab-transfers" style="display:none;">
+      <div style="margin-bottom:16px;font-size:13px;color:var(--muted);">Latest confirmed transfers and rumours with ScoutMind fit scores.</div>
+      <div id="feed-transfers-main"></div>
+    </div>
+
+    <!-- MATCH DAY TAB -->
+    <div id="feedtab-matchday" style="display:none;">
+      <div style="margin-bottom:14px;font-size:13px;color:var(--muted);">Live reactions, lineups and match analysis.</div>
+      <div class="feed-post" style="border-color:rgba(0,229,160,0.2);">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);margin-bottom:8px;">🔴 LIVE · SÉRIE A</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:16px;font-weight:700;color:var(--text);">Botafogo</div>
+          <div style="font-size:24px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);">1 – 0</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);">Fluminense</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">62' · Nilton Santos Stadium</div>
+        <div style="font-size:12px;color:#8892a4;">Luiz Henrique with the opener in the 38th minute. Botafogo pressing high and dominating possession (58%). Fluminense yet to register a shot on target.</div>
+      </div>
+      <div class="feed-post">
+        <div class="feed-post-header">
+          <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
+          <div><div class="feed-author">ScoutMind AI · Match Analysis</div><div class="feed-submeta">Live · Botafogo vs Fluminense</div></div>
+        </div>
+        <div class="feed-body">Botafogo's 4-3-3 is working perfectly today — Marlon Freitas is winning 78% of his ground duels and controlling the midfield. Their press is forcing Fluminense into long balls which they're winning aerially (71% success rate).</div>
+        <div class="feed-actions"><button class="feed-action-btn">♡ 2.3k</button><button class="feed-action-btn">↩ 541</button><button class="feed-action-btn">Save</button></div>
+      </div>
   </div>
   <div class="feed-side">
     <div class="feed-side-card">
-      <div class="feed-side-title">Trending clubs</div>
-      <div class="trending-row"><div><div class="trending-name">Flamengo</div><div class="trending-sub">4.2k posts today</div></div><div class="trending-up">↑ 12%</div></div>
-      <div class="trending-row"><div><div class="trending-name">Real Madrid</div><div class="trending-sub">12k posts today</div></div><div class="trending-up">↑ 31%</div></div>
-      <div class="trending-row"><div><div class="trending-name">Palmeiras</div><div class="trending-sub">3.1k posts today</div></div><div class="trending-up">↑ 8%</div></div>
-      <div class="trending-row"><div><div class="trending-name">Botafogo</div><div class="trending-sub">1.8k posts today</div></div><div class="trending-up">↑ 5%</div></div>
-      <div class="trending-row"><div><div class="trending-name">Arsenal</div><div class="trending-sub">6.7k posts today</div></div><div class="trending-up">↑ 18%</div></div>
+      <div class="feed-side-title">🔥 Hot Rumors</div>
+      <div id="feed-hot-rumors"></div>
+    </div>
+    <div class="feed-side-card">
+      <div class="feed-side-title">📊 Fit Score Index</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;">How well each rumoured signing solves the buying club's tactical weakness.</div>
+      <div id="feed-fit-index"></div>
     </div>
     <div class="feed-side-card">
       <div class="feed-side-title">Today's matches</div>
-      <div class="match-row-sm">
-        <div><div class="match-comp-sm">SÉRIE A · 21:00</div><div class="match-teams-sm">Flamengo <span style="color:var(--muted);font-size:10px;">vs</span> Corinthians</div></div>
-      </div>
-      <div class="match-row-sm">
-        <div><div class="match-comp-sm">PREMIER LEAGUE · 17:30</div><div class="match-teams-sm">Arsenal <span style="color:var(--muted);font-size:10px;">vs</span> Chelsea</div></div>
-      </div>
-      <div class="match-row-sm">
-        <div><div class="match-comp-sm">LA LIGA · 20:00</div><div class="match-teams-sm">Real Madrid <span style="color:var(--muted);font-size:10px;">vs</span> Sevilla</div></div>
-      </div>
+      <div class="match-row-sm"><div><div class="match-comp-sm">SÉRIE A · 21:00</div><div class="match-teams-sm">Botafogo <span style="color:var(--muted);font-size:10px;">vs</span> Fluminense</div></div></div>
+      <div class="match-row-sm"><div><div class="match-comp-sm">PREMIER LEAGUE · 17:30</div><div class="match-teams-sm">Arsenal <span style="color:var(--muted);font-size:10px;">vs</span> Chelsea</div></div></div>
+      <div class="match-row-sm"><div><div class="match-comp-sm">LA LIGA · 20:00</div><div class="match-teams-sm">Real Madrid <span style="color:var(--muted);font-size:10px;">vs</span> Sevilla</div></div></div>
     </div>
     <div class="feed-side-card">
-      <div class="feed-side-title">Featured analyst</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div class="feed-av" style="background:rgba(0,184,255,0.12);color:var(--accent2);width:36px;height:36px;font-size:12px;">JR</div>
-        <div><div style="font-size:12px;font-weight:600;color:var(--text);">João Ricardo</div><div style="font-size:10px;color:var(--muted);">ESPN Brasil · 180k followers</div></div>
+      <div class="feed-side-title">My clubs</div>
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="showPage('hub')">
+        <div style="width:24px;height:24px;border-radius:5px;background:rgba(0,229,160,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⭐</div>
+        <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:var(--text);" id="sidebar-my-club">Botafogo</div><div style="font-size:9px;color:var(--muted);">My club</div></div>
+        <div style="font-size:9px;color:var(--accent);">Open →</div>
       </div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.6;">Daily Série A breakdowns every morning at 8am. Tactical analysis you won't find anywhere else.</div>
+      <div style="padding:8px 0;text-align:center;">
+        <button onclick="openTeamModal()" style="font-size:10px;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Change my club</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1898,7 +1918,175 @@ document.getElementById('playerLeagueSel').addEventListener('change',updateFilte
 </script>
 </div><!-- close page-scout -->
 
+<!-- ── TEAM SELECTION MODAL ── -->
+<div id="team-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:min(520px,92vw);max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">Your Club</div>
+      <button id="modal-close-btn" onclick="closeTeamModal()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:4px;">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Pick your main club and follow others to personalise your feed.</div>
+
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Main club</div>
+    <input type="text" id="club-search" placeholder="Search clubs..." oninput="filterModalClubs()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:12px;transition:border .2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+
+    <div id="modal-club-list" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:320px;overflow-y:auto;margin-bottom:18px;"></div>
+
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Also following</div>
+    <div id="modal-following-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;min-height:32px;"></div>
+
+    <button onclick="saveTeamSelection()" style="width:100%;background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">SAVE MY CLUB</button>
+  </div>
+</div>
+
 <script>
+// ── ALL CLUBS FOR MODAL ──
+const ALL_CLUBS=[
+  {id:'flamengo',name:'Flamengo',league:'Série A',emoji:'🔴'},
+  {id:'palmeiras',name:'Palmeiras',league:'Série A',emoji:'💚'},
+  {id:'corinthians',name:'Corinthians',league:'Série A',emoji:'⬛'},
+  {id:'botafogo',name:'Botafogo',league:'Série A',emoji:'⭐'},
+  {id:'fluminense',name:'Fluminense',league:'Série A',emoji:'🟤'},
+  {id:'atletico_mg',name:'Atlético Mineiro',league:'Série A',emoji:'🖤'},
+  {id:'gremio',name:'Grêmio',league:'Série A',emoji:'🔵'},
+  {id:'internacional',name:'Internacional',league:'Série A',emoji:'🔴'},
+  {id:'sao_paulo',name:'São Paulo',league:'Série A',emoji:'🔴'},
+  {id:'cruzeiro',name:'Cruzeiro',league:'Série A',emoji:'🔵'},
+  {id:'real_madrid',name:'Real Madrid',league:'La Liga',emoji:'⭐'},
+  {id:'barcelona',name:'Barcelona',league:'La Liga',emoji:'💜'},
+  {id:'atletico_madrid',name:'Atlético Madrid',league:'La Liga',emoji:'🔴'},
+  {id:'man_city',name:'Manchester City',league:'Premier League',emoji:'🔵'},
+  {id:'arsenal',name:'Arsenal',league:'Premier League',emoji:'🔴'},
+  {id:'liverpool',name:'Liverpool',league:'Premier League',emoji:'🔴'},
+  {id:'man_utd',name:'Manchester United',league:'Premier League',emoji:'🔴'},
+  {id:'chelsea',name:'Chelsea',league:'Premier League',emoji:'🔵'},
+  {id:'bayern',name:'Bayern Munich',league:'Bundesliga',emoji:'🔴'},
+  {id:'dortmund',name:'Borussia Dortmund',league:'Bundesliga',emoji:'🟡'},
+  {id:'psg',name:'Paris Saint-Germain',league:'Ligue 1',emoji:'🔵'},
+  {id:'juventus',name:'Juventus',league:'Serie A IT',emoji:'⬛'},
+  {id:'inter',name:'Inter Milan',league:'Serie A IT',emoji:'🔵'},
+  {id:'river',name:'River Plate',league:'Argentina',emoji:'🔴'},
+  {id:'boca',name:'Boca Juniors',league:'Argentina',emoji:'💛'},
+];
+
+let selectedMainClub = null;
+let followingClubs = [];
+let modalFilter = '';
+
+function filterModalClubs(){
+  modalFilter = document.getElementById('club-search').value.toLowerCase();
+  renderModalClubs();
+}
+
+function renderModalClubs(){
+  const filtered = ALL_CLUBS.filter(c =>
+    c.name.toLowerCase().includes(modalFilter) ||
+    c.league.toLowerCase().includes(modalFilter)
+  );
+  document.getElementById('modal-club-list').innerHTML = filtered.map(c => {
+    const isMain = selectedMainClub === c.id;
+    const isFollowing = followingClubs.includes(c.id);
+    return `<div onclick="selectModalClub('${c.id}')" style="background:${isMain?'rgba(0,229,160,0.08)':isFollowing?'rgba(0,184,255,0.06)':'var(--bg3)'};border:1px solid ${isMain?'var(--accent)':isFollowing?'var(--accent2)':'var(--border)'};border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;">
+      <span style="font-size:16px;">${c.emoji}</span>
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:600;color:var(--text);">${c.name}</div>
+        <div style="font-size:9px;color:var(--muted);">${c.league}</div>
+      </div>
+      ${isMain?`<span style="font-size:9px;color:var(--accent);font-weight:700;">MAIN</span>`:''}
+      ${isFollowing&&!isMain?`<span style="font-size:9px;color:var(--accent2);font-weight:700;">+</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderFollowingChips(){
+  document.getElementById('modal-following-list').innerHTML = followingClubs.map(id => {
+    const c = ALL_CLUBS.find(x=>x.id===id);
+    if(!c)return '';
+    return `<div style="display:flex;align-items:center;gap:5px;background:rgba(0,184,255,0.08);border:1px solid rgba(0,184,255,0.2);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--accent2);">
+      ${c.emoji} ${c.name}
+      <span onclick="unfollowClub('${id}')" style="cursor:pointer;color:var(--muted);margin-left:3px;font-size:12px;">✕</span>
+    </div>`;
+  }).join('') || `<div style="font-size:11px;color:var(--muted);padding:6px 0;">Click clubs above to follow them too</div>`;
+}
+
+function selectModalClub(id){
+  if(selectedMainClub === id){
+    // Toggle to following if clicked again
+    if(!followingClubs.includes(id)) followingClubs.push(id);
+    selectedMainClub = null;
+  } else if(followingClubs.includes(id)){
+    // Already following — make it main club
+    followingClubs = followingClubs.filter(x=>x!==id);
+    if(selectedMainClub) followingClubs.push(selectedMainClub);
+    selectedMainClub = id;
+  } else {
+    // New club — set as main if none, else add to following
+    if(!selectedMainClub){
+      selectedMainClub = id;
+    } else {
+      followingClubs.push(id);
+    }
+  }
+  renderModalClubs();
+  renderFollowingChips();
+}
+
+function unfollowClub(id){
+  followingClubs = followingClubs.filter(x=>x!==id);
+  renderModalClubs();
+  renderFollowingChips();
+}
+
+function saveTeamSelection(){
+  if(!selectedMainClub){
+    alert('Please select your main club first!');
+    return;
+  }
+  const mainClub = ALL_CLUBS.find(c=>c.id===selectedMainClub);
+  localStorage.setItem('sm_main_club', JSON.stringify(mainClub));
+  localStorage.setItem('sm_following_clubs', JSON.stringify(followingClubs));
+  localStorage.setItem('sm_club_selected', '1');
+  closeTeamModal();
+  applyClubSelection();
+}
+
+function applyClubSelection(){
+  const mainClub = JSON.parse(localStorage.getItem('sm_main_club')||'null');
+  if(!mainClub) return;
+  // Update sidebar
+  const sidebarEl = document.getElementById('sidebar-my-club');
+  if(sidebarEl) sidebarEl.textContent = mainClub.name;
+  // Update clubs page banner
+  const clubNameEl = document.querySelector('.my-club-name');
+  if(clubNameEl) clubNameEl.textContent = mainClub.name.toUpperCase();
+  // Update nav
+  const navClubBtn = document.getElementById('nav-clubs');
+  if(navClubBtn) navClubBtn.textContent = mainClub.name;
+}
+
+function openTeamModal(){
+  // Load saved state
+  const saved = JSON.parse(localStorage.getItem('sm_main_club')||'null');
+  const savedFollowing = JSON.parse(localStorage.getItem('sm_following_clubs')||'[]');
+  selectedMainClub = saved ? saved.id : null;
+  followingClubs = savedFollowing;
+  document.getElementById('club-search').value = '';
+  modalFilter = '';
+  renderModalClubs();
+  renderFollowingChips();
+  document.getElementById('team-modal').style.display='flex';
+}
+
+function closeTeamModal(){
+  document.getElementById('team-modal').style.display='none';
+  // If first time and nothing selected, don't close
+  const selected = localStorage.getItem('sm_club_selected');
+  if(!selected){
+    document.getElementById('team-modal').style.display='flex';
+    alert('Please select your main club to continue!');
+  }
+}
+
 // ── PAGE NAVIGATION ──
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1909,6 +2097,19 @@ function showPage(id){
   if(navEl)navEl.classList.add('active');
   window.scrollTo(0,0);
 }
+
+// ── FEED TABS ──
+function showFeedTab(id,btn){
+  ['foryou','following','transfers','matchday'].forEach(t=>{
+    const el=document.getElementById('feedtab-'+t);
+    if(el)el.style.display='none';
+  });
+  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+  const target=document.getElementById('feedtab-'+id);
+  if(target)target.style.display='block';
+  if(btn)btn.classList.add('active');
+}
+
 // ── HUB SUB TABS ──
 function showHubTab(id,btn){
   ['feed','squad','groups','matches'].forEach(t=>{
@@ -1920,13 +2121,134 @@ function showHubTab(id,btn){
   if(target)target.style.display=id==='feed'?'grid':'block';
   if(btn)btn.classList.add('active');
 }
-// League filter buttons (clubs page)
+
+// ── TRANSFER NEWS DATA ──
+const FEED_NEWS=[
+  {id:1,type:'transfer',region:'europe',tag:'Transfer',tagClass:'tag-transfer',date:'May 3, 2026',title:'Gyökeres Transfer Confirmed — Sporting to Real Madrid for €100M',excerpt:'Viktor Gyökeres completes his move to Real Madrid after a stunning 2025/26 season at Sporting CP where he scored 42 goals in all competitions.',featured:true,analysis:{verdict:'Excellent fit. Madrid needed a pure striker after Mbappé drifted wide. Gyökeres\' aerial ability (60%) and shot volume (3.0/g) directly address their finishing weakness.',players:[{name:'Viktor Gyökeres',club:'Sporting → Real Madrid',score:91},{name:'Kylian Mbappé',club:'Already at Madrid',score:78}]}},
+  {id:2,type:'rumor',region:'brazil',tag:'Rumor',tagClass:'tag-rumor',date:'May 3, 2026',title:'Flamengo Eye Julián Álvarez as Pedro Replacement',excerpt:'Reports from Rio suggest Flamengo are monitoring Julián Álvarez at Atlético Madrid after Pedro picked up a knee injury.',analysis:{verdict:'High fit. Álvarez\'s pressing intensity and goals per game (0.50) match Flamengo\'s high-energy style. Budget may be the only obstacle at €90M.',players:[{name:'Julián Álvarez',club:'Atlético Madrid',score:88},{name:'Germán Cano',club:'Fluminense (cheaper alt)',score:71}]}},
+  {id:3,type:'contract',region:'europe',tag:'Contract',tagClass:'tag-contract',date:'May 2, 2026',title:'Mohamed Salah Signs Liverpool Extension Until 2028',excerpt:'Mohamed Salah ends speculation over his future by agreeing a two-year extension with Liverpool. The Egyptian will remain at Anfield until 2028.',analysis:{verdict:'Justified. Salah still contributes 0.55 goals and 0.40 assists per game at 33. Liverpool\'s system is built around his positioning.',players:[{name:'Mohamed Salah',club:'Liverpool (Extended)',score:86}]}},
+  {id:4,type:'transfer',region:'brazil',tag:'Transfer',tagClass:'tag-transfer',date:'May 2, 2026',title:'Palmeiras Complete Signing of Argentine CB for €14M',excerpt:'Palmeiras confirm the signing of 22-year-old Argentine centre-back from Racing Club in a deal worth €14M.',analysis:{verdict:'Good value. Palmeiras\' aerial duel rate is above average, but adding a young CB with high ceiling makes sense long-term.',players:[{name:'Young CB signing',club:'Racing → Palmeiras',score:79},{name:'Murilo',club:'Palmeiras (incumbent)',score:84}]}},
+  {id:5,type:'financial',region:'europe',tag:'Financial',tagClass:'tag-financial',date:'May 1, 2026',title:'Chelsea\'s Summer Budget Confirmed at €250M',excerpt:'Chelsea confirm a record summer transfer budget following strong commercial revenue growth. Four positions targeted.',analysis:{verdict:'Data agrees. Chelsea\'s goals scored are strong but pass accuracy under pressure suggests a ball-playing CM is the priority.',players:[{name:'Florian Wirtz',club:'Bayer Leverkusen (rumored)',score:88},{name:'Pedri',club:'Barcelona (rumored)',score:82}]}},
+  {id:6,type:'rumor',region:'brazil',tag:'Rumor',tagClass:'tag-rumor',date:'May 1, 2026',title:'Botafogo Linked with Colombian Winger from Atlético Nacional',excerpt:'Botafogo in advanced talks with Atlético Nacional over a Colombian winger who has 8 goals and 11 assists this season.',analysis:{verdict:'Potentially strong fit. Botafogo rely on Luiz Henrique and Savarino. Adding quality width fits their attack-minded system.',players:[{name:'Jhon Arias',club:'Fluminense (comparable)',score:82},{name:'Cucho Hernández',club:'Columbus Crew',score:65}]}},
+  {id:7,type:'contract',region:'europe',tag:'Contract',tagClass:'tag-contract',date:'Apr 30, 2026',title:'Lamine Yamal Extended Until 2031 — €1B Release Clause',excerpt:'Barcelona secure Yamal\'s long-term future with a new contract until 2031, reportedly including a €1 billion release clause.',analysis:{verdict:'Absolutely. Yamal\'s stats are historically unusual for an 18-year-old: 0.35 goals and 0.45 assists per game with 3.5 key passes.',players:[{name:'Lamine Yamal',club:'Barcelona',score:96}]}},
+  {id:8,type:'transfer',region:'brazil',tag:'Transfer',tagClass:'tag-transfer',date:'Apr 30, 2026',title:'Fluminense Agree Fee for Experienced LB from Europe',excerpt:'Fluminense close to completing signing of an experienced left-back from Ligue 1 to replace Marcelo, set to retire.',analysis:{verdict:'Urgent need. Fluminense\'s high possession style demands a technical LB who can overlap and maintain width.',players:[{name:'Caio Henrique',club:'AS Monaco (rumored)',score:86},{name:'Vanderson',club:'AS Monaco (alt)',score:72}]}},
+];
+
+const HOT_RUMORS=[
+  {player:'Florian Wirtz',from:'Leverkusen',to:'Chelsea',prob:78,probClass:'hi'},
+  {player:'Julián Álvarez',from:'Atlético',to:'Flamengo',prob:42,probClass:'mid'},
+  {player:'Dušan Vlahović',from:'Juventus',to:'Arsenal',prob:65,probClass:'mid'},
+  {player:'Gyökeres',from:'Sporting',to:'Real Madrid',prob:95,probClass:'hi'},
+  {player:'Osimhen',from:'Napoli',to:'PSG',prob:55,probClass:'mid'},
+  {player:'Lautaro',from:'Inter',to:'Man City',prob:28,probClass:'lo'},
+];
+
+const FIT_INDEX=[
+  {signing:'Wirtz → Chelsea',fit:88},
+  {signing:'Álvarez → Flamengo',fit:88},
+  {signing:'Vlahović → Arsenal',fit:72},
+  {signing:'Gyökeres → Real Madrid',fit:91},
+  {signing:'Osimhen → PSG',fit:68},
+];
+
+let currentFeedFilter='all';
+
+function filterFeed(type,btn){
+  currentFeedFilter=type;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderFeedNews();
+}
+
+function scoreClr(s){return s>=75?'var(--green)':s>=50?'var(--yellow)':'var(--red)';}
+function scCls(s){return s>=75?'hi':s>=50?'mid':'lo';}
+
+function renderFeedNews(){
+  const plan=currentUser?.plan||'free';
+  let filtered=FEED_NEWS.filter(n=>{
+    if(currentFeedFilter==='all')return true;
+    if(currentFeedFilter==='brazil')return n.region==='brazil';
+    if(currentFeedFilter==='europe')return n.region==='europe';
+    return n.type===currentFeedFilter;
+  });
+  const freeLimit=3;
+  const canSeeAll=plan!=='free';
+  let html='';
+  filtered.forEach((n,i)=>{
+    const locked=!canSeeAll&&i>=freeLimit;
+    html+=`<div style="background:var(--bg2);border:1px solid ${n.featured?'rgba(0,229,160,0.2)':'var(--border)'};border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;${locked?'opacity:0.4;filter:blur(3px);pointer-events:none;':''}">
+      <div style="padding:16px 18px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;" class="${n.tagClass}">${n.tag}</span>
+          <span style="font-size:10px;padding:2px 8px;background:rgba(255,255,255,0.04);border-radius:10px;color:var(--muted);">${n.region==='brazil'?'🇧🇷 Brazil':'🌍 Europe'}</span>
+          <span style="font-size:11px;color:var(--muted);">${n.date}</span>
+        </div>
+        <div style="font-size:${n.featured?'16px':'14px'};font-weight:600;line-height:1.4;margin-bottom:8px;">${n.title}</div>
+        <div style="font-size:${n.featured?'13px':'12px'};color:var(--muted);line-height:1.6;margin-bottom:${n.analysis?'12px':'0'}">${n.excerpt}</div>
+        ${n.analysis?`<div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;"></span>ScoutMind Analysis</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;">${n.analysis.verdict}</div>
+          ${n.analysis.players.map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div><div style="font-size:12px;font-weight:500;">${p.name}</div><div style="font-size:11px;color:var(--muted);">${p.club}</div></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:60px;height:4px;background:var(--border);border-radius:2px;"><div style="width:${p.score}%;height:100%;border-radius:2px;background:${scoreClr(p.score)};"></div></div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${scoreClr(p.score)};">${p.score}%</div>
+            </div>
+          </div>`).join('')}
+        </div>`:''}
+      </div>
+    </div>`;
+  });
+  if(!canSeeAll&&filtered.length>freeLimit){
+    html+=`<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.2);border-radius:12px;padding:20px;text-align:center;margin-top:6px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:6px;">Upgrade to See All Stories</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Scout Pro includes unlimited transfer news, AI fit analysis for every rumor, and contract expiry alerts.</div>
+      <button onclick="window.location.href='/auth.html'" style="background:var(--accent);color:#000;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Upgrade to Scout Pro — $9.99/mo</button>
+    </div>`;
+  }
+  const el=document.getElementById('feed-news-main');
+  if(el)el.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories found.</div>';
+
+  // Also render transfer tab same content
+  const tEl=document.getElementById('feed-transfers-main');
+  if(tEl)tEl.innerHTML=html;
+}
+
+function renderSidebar(){
+  const hr=document.getElementById('feed-hot-rumors');
+  if(hr)hr.innerHTML=HOT_RUMORS.map(r=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;min-width:44px;color:${r.probClass==='hi'?'var(--green)':r.probClass==='mid'?'var(--yellow)':'var(--red)'};">${r.prob}%</div>
+    <div><div style="font-size:12px;line-height:1.5;">${r.player}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.from} → ${r.to}</div></div>
+  </div>`).join('');
+  const fi=document.getElementById('feed-fit-index');
+  if(fi)fi.innerHTML=FIT_INDEX.map(f=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div style="font-size:12px;flex:1;padding-right:10px;">${f.signing}</div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div style="width:60px;height:4px;background:var(--border);border-radius:2px;"><div style="width:${f.fit}%;height:100%;border-radius:2px;background:${scoreClr(f.fit)};"></div></div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${scoreClr(f.fit)};">${f.fit}%</div>
+    </div>
+  </div>`).join('');
+}
+
+// ── LEAGUE FILTER BUTTONS ──
 document.querySelectorAll('.league-filter-btn').forEach(btn=>{
   btn.addEventListener('click',function(){
     document.querySelectorAll('.league-filter-btn').forEach(b=>b.classList.remove('active'));
     this.classList.add('active');
   });
 });
+
+// ── INIT ──
+renderFeedNews();
+renderSidebar();
+applyClubSelection();
+
+// Show team modal on first login
+const hasSelectedClub=localStorage.getItem('sm_club_selected');
+if(!hasSelectedClub){
+  // Small delay so page renders first
+  setTimeout(()=>openTeamModal(),400);
+}
 </script>
 </body>
 </html>
