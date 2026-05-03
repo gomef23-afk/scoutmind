@@ -117,7 +117,6 @@ if (!_cu) window.location.href = '/auth.html';
       <a class="main-nav-btn" href="/app.html">Scout Mode</a>
       <a class="main-nav-btn" href="/app.html">Feed</a>
       <a class="main-nav-btn active" href="/community.html">Communities</a>
-      <a class="main-nav-btn" href="/news.html">Transfer News</a>
     </div>
   </div>
   <div class="nav-right">
@@ -305,28 +304,39 @@ loadLeagueTeams();
 
 // Auto-select user's main club if set
 const _mainClub = JSON.parse(localStorage.getItem('sm_main_club')||'null');
+const CLUB_LEAGUE_MAP = {
+  flamengo:'serie_a',palmeiras:'serie_a',corinthians:'serie_a',botafogo:'serie_a',
+  fluminense:'serie_a',atletico_mg:'serie_a',gremio:'serie_a',internacional:'serie_a',
+  sao_paulo:'serie_a',cruzeiro:'serie_a',bahia:'serie_a',athletico_pr:'serie_a',
+  real_madrid:'la_liga',barcelona:'la_liga',atletico_madrid:'la_liga',
+  sevilla:'la_liga',real_sociedad:'la_liga',
+  man_city:'premier_league',arsenal:'premier_league',liverpool:'premier_league',
+  man_utd:'premier_league',chelsea:'premier_league',tottenham:'premier_league',
+  newcastle:'premier_league',aston_villa:'premier_league',
+  bayern:'bundesliga',dortmund:'bundesliga',leverkusen:'bundesliga',
+  psg:'ligue_1',lyon:'ligue_1',marseille:'ligue_1',
+  juventus:'serie_a_it',inter:'serie_a_it',milan:'serie_a_it',napoli:'serie_a_it',
+  river:'argentina',boca:'argentina',
+};
 if(_mainClub){
-  const CLUB_LEAGUE_MAP = {
-    flamengo:'serie_a',palmeiras:'serie_a',corinthians:'serie_a',botafogo:'serie_a',
-    fluminense:'serie_a',atletico_mg:'serie_a',gremio:'serie_a',internacional:'serie_a',
-    sao_paulo:'serie_a',cruzeiro:'serie_a',
-    real_madrid:'la_liga',barcelona:'la_liga',atletico_madrid:'la_liga',
-    man_city:'premier_league',arsenal:'premier_league',liverpool:'premier_league',
-    man_utd:'premier_league',chelsea:'premier_league',
-    bayern:'bundesliga',dortmund:'bundesliga',
-    psg:'ligue_1',juventus:'serie_a_it',inter:'serie_a_it',
-    river:'argentina',boca:'argentina',
-  };
   const clubLeague = CLUB_LEAGUE_MAP[_mainClub.id] || 'serie_a';
   const leagueSelect = document.getElementById('comm-league');
-  if(leagueSelect && clubLeague) leagueSelect.value = clubLeague;
+  if(leagueSelect) leagueSelect.value = clubLeague;
+  activeLeague = clubLeague;
+  loadLeagueTeams();
+  // Select after teams are rendered
   setTimeout(()=>{
-    try{
-      activeLeague = clubLeague;
-      loadLeagueTeams();
-      selectCommTeam(_mainClub.id, clubLeague);
-    } catch(e){ console.log('auto-select error:', e); }
-  }, 300);
+    try{ selectCommTeam(_mainClub.id, clubLeague); } catch(e){}
+  }, 100);
+} else {
+  // No main club set — show prompt in main area
+  document.getElementById('comm-main').innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Choose Your Club</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the left, or set your main club to auto-load it every time you visit.</div>
+      <button onclick="window.location.href='/app.html'" style="background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Set My Main Club</button>
+    </div>`;
 }
 </script>
 </body>
