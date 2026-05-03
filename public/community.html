@@ -115,7 +115,7 @@ if (!_cu) window.location.href = '/auth.html';
     <a class="logo" href="/app.html">Scout<span>Mind</span></a>
     <div style="display:flex;gap:2px;margin-left:28px;">
       <a class="main-nav-btn" href="/app.html">Scout Mode</a>
-      <a class="main-nav-btn" href="/app.html">Feed</a>
+      <a class="main-nav-btn" href="/app.html?page=feed">Feed</a>
       <a class="main-nav-btn active" href="/community.html">Communities</a>
     </div>
   </div>
@@ -207,7 +207,9 @@ function filterCommTeams() {
 }
 function selectCommTeam(teamId, league) {
   const teams = TEAMS[league] || [];
-  activeTeam = teams.find(t => t.id === teamId);
+  // Try matching by id first, then by name (case-insensitive) as fallback
+  activeTeam = teams.find(t => t.id === teamId) 
+             || teams.find(t => t.name && t.name.toLowerCase() === teamId.replace(/_/g,' ').toLowerCase());
   activeLeague = league;
   if (!activeTeam) return;
   filterCommTeams();
@@ -215,9 +217,12 @@ function selectCommTeam(teamId, league) {
 }
 function renderTeamPage() {
   if (!activeTeam) return;
-  const t = activeTeam, av = LEAGUE_AVGS[activeLeague] || {}, data = getTeamData(t.id);
-  const info = typeof TEAM_INFO !== 'undefined' ? (TEAM_INFO[t.id] || {}) : {};
-  const coach = typeof COACHES !== 'undefined' ? (COACHES[t.id] || {}) : {};
+  const t = activeTeam;
+  // Use id if available, otherwise derive key from name
+  const teamKey = t.id || (t.name ? t.name.toLowerCase().replace(/\s+/g,'_') : 'unknown');
+  const av = LEAGUE_AVGS[activeLeague] || {}, data = getTeamData(teamKey);
+  const info = typeof TEAM_INFO !== 'undefined' ? (TEAM_INFO[teamKey] || TEAM_INFO[t.id] || {}) : {};
+  const coach = typeof COACHES !== 'undefined' ? (COACHES[teamKey] || COACHES[t.id] || {}) : {};
   const initials = t.name.split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase();
   const badges = [];
   if(t.pos_pct>(av.pos||50)+5)badges.push({txt:'High Possession',cls:'badge-style'});
@@ -319,7 +324,23 @@ const CLUB_LEAGUE_MAP = {
 
 function initCommunity() {
   if(_mainClub){
-    const clubLeague = CLUB_LEAGUE_MAP[_mainClub.id] || 'serie_a';
+    // Strategy 1: use CLUB_LEAGUE_MAP by id
+    let clubLeague = CLUB_LEAGUE_MAP[_mainClub.id];
+    
+    // Strategy 2: use the league stored in sm_main_club object itself
+    if(!clubLeague && _mainClub.league){
+      const leagueDisplay = _mainClub.league.toLowerCase();
+      if(leagueDisplay.includes('série a') || leagueDisplay.includes('serie a')) clubLeague = 'serie_a';
+      else if(leagueDisplay.includes('premier')) clubLeague = 'premier_league';
+      else if(leagueDisplay.includes('la liga')) clubLeague = 'la_liga';
+      else if(leagueDisplay.includes('bundesliga')) clubLeague = 'bundesliga';
+      else if(leagueDisplay.includes('ligue')) clubLeague = 'ligue_1';
+      else if(leagueDisplay.includes('serie a it') || leagueDisplay.includes('serie a italy')) clubLeague = 'serie_a_it';
+      else if(leagueDisplay.includes('argentina')) clubLeague = 'argentina';
+    }
+    
+    clubLeague = clubLeague || 'serie_a';
+    
     const leagueSelect = document.getElementById('comm-league');
     if(leagueSelect) leagueSelect.value = clubLeague;
     activeLeague = clubLeague;
