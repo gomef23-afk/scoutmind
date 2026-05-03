@@ -114,7 +114,7 @@ if(!_cu)window.location.href='/auth.html';
       <span id="nav-name" style="font-size:12px;font-weight:500"></span>
       <span id="nav-plan" class="plan-pill"></span>
     </div>
-    <div id="nav-av" onclick="window.location.href='/app.html'" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0;">?</div>
+    <div id="nav-av" onclick="window.location.href='/app.html?page=profile'" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0;">?</div>
     <button class="logout-btn" onclick="logout()">Sign out</button>
   </div>
 </nav>
@@ -151,6 +151,50 @@ if(!_cu)window.location.href='/auth.html';
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;opacity:.35;margin-bottom:6px">Select Your Club</div>
         <div style="font-size:13px">Pick a team from the left to see their community</div>
       </div>
+    </div>
+  </div>
+</div>
+<!-- BADGE APPLICATION MODAL -->
+<div id="badge-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+  <div style="background:var(--bg2);border:1px solid rgba(0,184,255,0.25);border-radius:16px;width:min(540px,95vw);max-height:90vh;overflow-y:auto;padding:28px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Apply for Analyst Badge</div>
+      <button onclick="closeBadgeModal()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;">✕</button>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;">The Analyst badge is <strong style="color:var(--accent)">free</strong> and reserved for verified football professionals. We review every application manually and get back within 48 hours.</div>
+    <div id="badge-form-wrap">
+      <div class="pfi">Your name</div>
+      <input id="ba-name" class="pfinput" placeholder="Full name">
+      <div class="pfi">Email address</div>
+      <input id="ba-email" type="email" class="pfinput" placeholder="your@email.com">
+      <div class="pfi">Your role</div>
+      <select id="ba-role" class="pfinput">
+        <option value="">Select your role...</option>
+        <option>Football Journalist</option>
+        <option>Licensed Scout</option>
+        <option>FIFA Agent</option>
+        <option>Club Director / DoF</option>
+        <option>TV/Radio Analyst</option>
+        <option>Former Professional Player</option>
+        <option>Other</option>
+      </select>
+      <div class="pfi">Organisation / Affiliation</div>
+      <input id="ba-org" class="pfinput" placeholder="e.g. ESPN Brasil, Flamengo FC, Independent">
+      <div class="pfi" style="margin-top:4px;">Brief bio <span style="font-weight:400;color:var(--muted)">(tell us about your experience)</span></div>
+      <textarea id="ba-bio" placeholder="e.g. I've covered Série A for ESPN Brasil for 8 years..." style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;min-height:90px;margin-bottom:18px;"></textarea>
+      <div style="background:rgba(0,184,255,0.06);border:1px solid rgba(0,184,255,0.15);border-radius:8px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:1.8;">
+        ✓ Completely free — no payment required<br>
+        ✓ Post insights in any team's community<br>
+        ✓ Your name + verified credential badge on every post<br>
+        ✓ Applications reviewed within 48 hours
+      </div>
+      <button onclick="submitBadgeApp()" style="width:100%;background:var(--accent2);color:#000;border:none;padding:13px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">SUBMIT APPLICATION</button>
+    </div>
+    <div id="badge-success" style="display:none;text-align:center;padding:20px 0;">
+      <div style="font-size:48px;margin-bottom:16px;">✅</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Application Submitted!</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;">We'll review it and get back to you within 48 hours. Once approved, you'll be able to post analyst insights across all team communities.</div>
+      <button onclick="closeBadgeModal()" style="background:var(--accent);color:#000;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Done</button>
     </div>
   </div>
 </div>
@@ -346,8 +390,8 @@ async function doAnalyst(el,tk){
   }else{
     html+='<div style="background:var(--bg2);border:1px solid rgba(0,184,255,0.15);border-radius:12px;padding:16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">'
       +'<div><div style="font-size:13px;font-weight:600;margin-bottom:3px">Want to post analyst insights?</div>'
-      +'<div style="font-size:12px;color:var(--muted)">Licensed scouts, journalists and agents can apply for a verified badge.</div></div>'
-      +'<a href="mailto:felipe@scoutmind.app?subject=Analyst Badge Application" style="background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">Apply for Badge →</a>'
+      +'<div style="font-size:12px;color:var(--muted)">Licensed scouts, journalists and agents can apply for a free verified badge.</div></div>'
+      +'<button onclick="openBadgeModal()" style="background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;white-space:nowrap;">Apply for Badge →</button>'
       +'</div>';
   }
   if(err||!posts||posts.length===0){
@@ -535,6 +579,48 @@ function init(){
     filterTeams();
     document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div style="font-family:Bebas Neue,sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the left, or set your main club so it loads automatically every time.</div><button onclick="window.location.href=\'/app.html\'" style="background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Set My Main Club</button></div>';
   }
+}
+function openBadgeModal(){
+  // Pre-fill name and email from logged-in user
+  var nameEl=document.getElementById('ba-name');
+  var emailEl=document.getElementById('ba-email');
+  if(nameEl&&cu&&cu.name)nameEl.value=cu.name;
+  if(emailEl&&cu&&cu.email)emailEl.value=cu.email;
+  document.getElementById('badge-form-wrap').style.display='block';
+  document.getElementById('badge-success').style.display='none';
+  document.getElementById('badge-modal').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeBadgeModal(){
+  document.getElementById('badge-modal').style.display='none';
+  document.body.style.overflow='';
+}
+async function submitBadgeApp(){
+  var name=document.getElementById('ba-name').value.trim();
+  var email=document.getElementById('ba-email').value.trim();
+  var role=document.getElementById('ba-role').value;
+  var org=document.getElementById('ba-org').value.trim();
+  var bio=document.getElementById('ba-bio').value.trim();
+  if(!name||!email||!role||!org||!bio){
+    alert('Please fill in all fields before submitting.');return;
+  }
+  var btn=document.querySelector('#badge-form-wrap button:last-child');
+  if(btn){btn.textContent='Submitting...';btn.disabled=true;}
+  var r=await _sb.from('badge_applications').insert({
+    user_id:cu?cu.id:null,
+    user_name:name,
+    email:email,
+    role:role,
+    organisation:org,
+    bio:bio
+  });
+  if(r.error){
+    alert('Error submitting. Please try again.');
+    if(btn){btn.textContent='SUBMIT APPLICATION';btn.disabled=false;}
+    return;
+  }
+  document.getElementById('badge-form-wrap').style.display='none';
+  document.getElementById('badge-success').style.display='block';
 }
 if(typeof TEAMS!=='undefined'){init();}else{window.addEventListener('load',init);}
 </script>
