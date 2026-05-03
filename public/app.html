@@ -132,9 +132,9 @@ hr{border:none;border-top:1px solid var(--border);}
 #page-scout.active{display:block;}
 #page-scout.active .app{display:grid;}
 /* ── FEED PAGE ── */
-.feed-page{display:grid;grid-template-columns:1fr 300px;min-height:calc(100vh - 53px);}
-.feed-main{padding:20px 24px;border-right:1px solid var(--border);overflow-y:auto;}
-.feed-side{padding:20px 20px;overflow-y:auto;}
+.feed-page{display:grid;grid-template-columns:1fr 300px;min-height:calc(100vh - 53px);align-items:start;}
+.feed-main{padding:20px 24px;border-right:1px solid var(--border);}
+.feed-side{padding:20px 16px;position:sticky;top:53px;max-height:calc(100vh - 53px);overflow-y:auto;}
 .feed-tabs-bar{display:flex;gap:2px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:0;}
 .ftab{background:transparent;border:none;color:var(--muted);padding:8px 14px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px;}
 .ftab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -2258,19 +2258,15 @@ function filterFeed(type,btn){
 function scoreClr(s){return s>=75?'var(--green)':s>=50?'var(--yellow)':'var(--red)';}
 
 function renderFeedNews(){
-  const plan=currentUser?.plan||'free';
-  let filtered=FEED_NEWS.filter(n=>{
+  const filtered=FEED_NEWS.filter(n=>{
     if(currentFeedFilter==='all')return true;
     if(currentFeedFilter==='brazil')return n.region==='brazil';
     if(currentFeedFilter==='europe')return n.region==='europe';
     return n.type===currentFeedFilter;
   });
-  const freeLimit=3;
-  const canSeeAll=plan!=='free';
   let html='';
   filtered.forEach((n,i)=>{
-    const locked=!canSeeAll&&i>=freeLimit;
-    html+=`<div style="background:var(--bg2);border:1px solid ${n.featured?'rgba(0,229,160,0.2)':'var(--border)'};border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;${locked?'opacity:0.4;filter:blur(3px);pointer-events:none;':''}">
+    html+=`<div style="background:var(--bg2);border:1px solid ${n.featured?'rgba(0,229,160,0.2)':'var(--border)'};border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;">
       <div style="padding:16px 18px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
           <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;" class="${n.tagClass}">${n.tag}</span>
@@ -2293,13 +2289,6 @@ function renderFeedNews(){
       </div>
     </div>`;
   });
-  if(!canSeeAll&&filtered.length>freeLimit){
-    html+=`<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.2);border-radius:12px;padding:20px;text-align:center;margin-top:6px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:6px;">Upgrade to See All Stories</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Scout Pro includes unlimited transfer news, AI fit analysis for every rumor, and contract expiry alerts.</div>
-      <button onclick="window.location.href='/auth.html'" style="background:var(--accent);color:#000;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Upgrade to Scout Pro — $9.99/mo</button>
-    </div>`;
-  }
   const el=document.getElementById('feed-news-main');
   if(el)el.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories found.</div>';
 
