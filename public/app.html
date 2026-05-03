@@ -395,14 +395,13 @@ if(!_cu){
 <div class="feed-page">
   <div class="feed-main">
     <div class="feed-tabs-bar">
-      <button class="ftab active" onclick="showFeedTab('foryou',this)">For you</button>
-      <button class="ftab" onclick="showFeedTab('following',this)">Following</button>
-      <button class="ftab" onclick="showFeedTab('transfers',this)">Transfer news</button>
+      <button class="ftab active" onclick="showFeedTab('transfers',this)">Transfer news</button>
+      <button class="ftab" onclick="showFeedTab('foryou',this)">For you</button>
       <button class="ftab" onclick="showFeedTab('matchday',this)">Match day</button>
     </div>
 
-    <!-- FOR YOU TAB — Transfer Intelligence format -->
-    <div id="feedtab-foryou">
+    <!-- TRANSFER NEWS TAB — first and default, full Transfer Intelligence format -->
+    <div id="feedtab-transfers">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Transfer Intelligence</div>
         <div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(0,229,160,0.1),rgba(0,184,255,0.1));border:1px solid rgba(0,229,160,0.2);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--accent);">⚡ AI-Powered</div>
@@ -419,9 +418,8 @@ if(!_cu){
       <div id="feed-news-main"></div>
     </div>
 
-    <!-- FOLLOWING TAB -->
-    <div id="feedtab-following" style="display:none;">
-      <div style="margin-bottom:14px;font-size:13px;color:var(--muted);">Posts from clubs and analysts you follow.</div>
+    <!-- FOR YOU TAB — posts from your clubs and analysts -->
+    <div id="feedtab-foryou" style="display:none;">
       <div class="feed-post">
         <div class="feed-post-header">
           <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
@@ -444,12 +442,15 @@ if(!_cu){
         <div class="feed-body">Botafogo's Luiz Henrique is the most underrated player in Série A right now. 0.42 goals + 0.31 assists per game, yet he doesn't get the recognition Vinicius Jr got at a similar age. Keep watching.</div>
         <div class="feed-actions"><button class="feed-action-btn">♡ 1.4k</button><button class="feed-action-btn">↩ 388</button><button class="feed-action-btn">Save</button></div>
       </div>
-    </div>
-
-    <!-- TRANSFER NEWS TAB -->
-    <div id="feedtab-transfers" style="display:none;">
-      <div style="margin-bottom:16px;font-size:13px;color:var(--muted);">Latest confirmed transfers and rumours with ScoutMind fit scores.</div>
-      <div id="feed-transfers-main"></div>
+      <div class="feed-post">
+        <div class="feed-post-header">
+          <div class="feed-av" style="background:rgba(245,200,66,0.12);color:var(--yellow);">TF</div>
+          <div><div class="feed-author">The Football Analyst</div><div class="feed-submeta">Partner · 42k followers · 5h ago</div></div>
+          <span class="feed-vbadge c-pill-y">Partner</span>
+        </div>
+        <div class="feed-body">Why Botafogo's 4-3-3 is tactically broken right now — their wide midfielders are being asked to press AND provide width simultaneously. This creates massive gaps in transition that opponents are starting to exploit consistently.</div>
+        <div class="feed-actions"><button class="feed-action-btn">♡ 2.1k</button><button class="feed-action-btn">↩ 670</button><button class="feed-action-btn">Save</button></div>
+      </div>
     </div>
 
     <!-- MATCH DAY TAB -->
@@ -2196,7 +2197,7 @@ function showPage(id){
 
 // ── FEED TABS ──
 function showFeedTab(id,btn){
-  ['foryou','following','transfers','matchday'].forEach(t=>{
+  ['transfers','foryou','matchday'].forEach(t=>{
     const el=document.getElementById('feedtab-'+t);
     if(el)el.style.display='none';
   });
