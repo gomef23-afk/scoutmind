@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="/leagues_data.js"></script>
 <script src="/players_data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{--bg:#07090f;--bg2:#0d1117;--bg3:#141b27;--accent:#00e5a0;--accent2:#00b8ff;--warn:#ff6b35;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;--red:#ff4560;--yellow:#f5c842;--green:#00e5a0;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -980,6 +981,298 @@ function runAnalysis(){
   document.getElementById('resEmpty').style.display='none';
   document.getElementById('resContent').innerHTML=html;
   document.getElementById('resContent').style.display='block';
+
+  // Show download button
+  let dlBtn=document.getElementById('pdf-download-btn');
+  if(!dlBtn){
+    dlBtn=document.createElement('div');
+    dlBtn.id='pdf-download-btn';
+    dlBtn.style.cssText='margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;';
+    dlBtn.innerHTML=`
+      <button onclick="downloadScoutReport()" style="display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+        <span style="font-size:16px">📄</span> Download Scouting Report (PDF)
+      </button>
+      <span style="font-size:11px;color:var(--muted)">Professional report ready to share with clubs</span>`;
+    document.getElementById('tab-results').appendChild(dlBtn);
+  }
+}
+
+// ── PDF SCOUTING REPORT GENERATOR ──
+function downloadScoutReport(){
+  if(!selectedTeam){return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,H=297;
+  const date=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+
+  // ── COLOURS ──
+  const C={
+    bg:[7,9,15],
+    bg2:[13,17,23],
+    bg3:[20,27,39],
+    accent:[0,229,160],
+    accent2:[0,184,255],
+    warn:[255,107,53],
+    red:[255,69,96],
+    yellow:[245,200,66],
+    text:[237,242,247],
+    muted:[90,106,133],
+    border:[26,37,64],
+    white:[255,255,255],
+  };
+
+  // helpers
+  const setFill=([r,g,b])=>doc.setFillColor(r,g,b);
+  const setTxt=([r,g,b])=>doc.setTextColor(r,g,b);
+  const setDraw=([r,g,b])=>doc.setDrawColor(r,g,b);
+
+  // ── PAGE 1 BACKGROUND ──
+  setFill(C.bg); doc.rect(0,0,W,H,'F');
+
+  // accent top bar
+  setFill(C.accent); doc.rect(0,0,W,1.5,'F');
+
+  // ── HEADER ──
+  setFill(C.bg2); doc.rect(0,1.5,W,38,'F');
+
+  // SCOUTMIND logo text
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(22);
+  setTxt(C.accent);
+  doc.text('SCOUT',14,22);
+  doc.setFontSize(22);
+  setTxt(C.text);
+  doc.text('MIND',44,22);
+
+  // Report label
+  doc.setFontSize(8);
+  doc.setFont('helvetica','normal');
+  setTxt(C.muted);
+  doc.text('TACTICAL SCOUTING REPORT',14,28);
+
+  // Team name right side
+  doc.setFontSize(16);
+  doc.setFont('helvetica','bold');
+  setTxt(C.text);
+  const teamName=selectedTeam.name.toUpperCase();
+  doc.text(teamName,W-14,20,{align:'right'});
+
+  // League + date
+  doc.setFontSize(8);
+  doc.setFont('helvetica','normal');
+  setTxt(C.muted);
+  const leagueName=(typeof LEAGUE_META!=='undefined'&&LEAGUE_META[currentLeague])?LEAGUE_META[currentLeague].name+' 2026':currentLeague.replace(/_/g,' ').toUpperCase()+' 2026';
+  doc.text(leagueName+' · Generated '+date,W-14,27,{align:'right'});
+
+  // Confidential badge
+  setFill(C.bg3); doc.roundedRect(W-50,31,36,7,1,1,'F');
+  setTxt(C.muted);
+  doc.setFontSize(7);
+  doc.text('CONFIDENTIAL',W-32,35.5,{align:'center'});
+
+  // ── WEAKNESS BANNER ──
+  const flags=detectWeaknesses();
+  const zoneSc={};
+  flags.forEach(f=>{zoneSc[f.zone]=(zoneSc[f.zone]||0)+(f.severity==='major'?2:1);});
+  const priOrder=['goalkeeper','defense','attack','midfield'];
+  const priZone=Object.entries(zoneSc).sort((a,b)=>b[1]-a[1]||priOrder.indexOf(a[0])-priOrder.indexOf(b[0]))[0]?.[0]||'attack';
+  const priType=flags.find(f=>f.zone===priZone)?.type||'Low attack output';
+
+  let y=46;
+  setFill(C.bg3); doc.roundedRect(14,y,W-28,18,2,2,'F');
+  setDraw(C.warn); doc.setLineWidth(0.3); doc.roundedRect(14,y,W-28,18,2,2,'S');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  setTxt(C.warn);
+  doc.text('PRIMARY WEAKNESS DETECTED',18,y+6);
+  doc.setFontSize(13); doc.setFont('helvetica','bold');
+  setTxt(C.text);
+  doc.text(priType.toUpperCase(),18,y+14);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  setTxt(C.muted);
+  doc.text(`Zone: ${priZone.toUpperCase()} · ${flags.length} flag${flags.length!==1?'s':''} detected`,W-18,y+14,{align:'right'});
+
+  // ── WEAKNESS FLAGS ROW ──
+  y+=24;
+  if(flags.length){
+    let fx=14;
+    flags.slice(0,5).forEach(f=>{
+      const col=f.severity==='major'?C.red:C.yellow;
+      const label=`${f.severity.toUpperCase()}: ${f.type} (${f.deficit}% vs avg)`;
+      const tw=doc.getTextWidth(label)+8;
+      setFill(f.severity==='major'?[40,10,15]:[40,35,5]);
+      doc.roundedRect(fx,y,tw,6,1,1,'F');
+      setTxt(col); doc.setFontSize(6.5); doc.setFont('helvetica','bold');
+      doc.text(label,fx+4,y+4);
+      fx+=tw+4;
+      if(fx>W-20){return;}
+    });
+    y+=12;
+  }
+
+  // ── STATS GRID ──
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  setTxt(C.accent);
+  doc.text('TEAM STATISTICS VS LEAGUE AVERAGE',14,y);
+  y+=5;
+
+  const av=LEAGUE_AVGS[currentLeague]||{};
+  const stats=[
+    {lbl:'Goals Conceded/Game', val:gv('s_gc'), avg:av.gc, lb:true},
+    {lbl:'Tackles/Game',        val:gv('s_tk'), avg:av.tk, lb:false},
+    {lbl:'Pass Accuracy %',     val:gv('s_pa'), avg:av.pa, lb:false},
+    {lbl:'Goals Scored/Game',   val:gv('s_gs'), avg:av.gs, lb:false},
+    {lbl:'Shots on Target/Game',val:gv('s_sot'),avg:av.sot,lb:false},
+    {lbl:'Aerial Duels Won %',  val:gv('s_aer'),avg:av.aer,lb:false},
+  ].filter(s=>s.val>0&&s.avg>0);
+
+  const barW=80,barH=3.5,lblW=52,valW=16;
+  stats.forEach(s=>{
+    const good=s.lb?s.val<=s.avg:s.val>=s.avg;
+    const def=s.lb?(s.val-s.avg)/s.avg:(s.avg-s.val)/s.avg;
+    const col=good?C.accent:def>0.35?C.red:C.yellow;
+    const pct=Math.min(100,s.val/(Math.max(s.val,s.avg)*1.2)*100);
+    const avgPct=Math.min(100,s.avg/(Math.max(s.val,s.avg)*1.2)*100);
+
+    setTxt(C.muted); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    doc.text(s.lbl,14,y+barH-0.5);
+    // bar bg
+    setFill(C.border); doc.rect(14+lblW,y,barW,barH,'F');
+    // bar fill
+    setFill(col); doc.rect(14+lblW,y,barW*pct/100,barH,'F');
+    // avg line
+    setFill(C.muted); doc.rect(14+lblW+barW*avgPct/100-0.5,y-1,1,barH+2,'F');
+    // value
+    setTxt(col); doc.setFont('helvetica','bold'); doc.setFontSize(7);
+    doc.text(String(s.val),14+lblW+barW+3,y+barH-0.5);
+    y+=7;
+  });
+
+  doc.setFontSize(6); setTxt(C.muted); doc.setFont('helvetica','normal');
+  doc.text('Bar = club · Grey line = league average',14,y);
+  y+=8;
+
+  // ── PLAYER RECOMMENDATIONS ──
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  setTxt(C.accent);
+  doc.text('PLAYER RECOMMENDATIONS',14,y);
+  y+=2;
+  setFill(C.border); doc.rect(14,y,W-28,0.3,'F');
+  y+=5;
+
+  // get ranked players from current analysis
+  const weaknessToPos={'Goalkeeper weakness':['GK'],'Defensive errors':['DEF'],'Aerial vulnerability':['DEF'],'Poor tackling':['DEF','MID'],'Lack of creativity':['MID'],'Poor passing':['MID','DEF'],'Poor finishing':['ATT'],'Low attack output':['ATT','MID'],'Poor shot volume':['MID','ATT']};
+  const targetPos=weaknessToPos[priType]||['ATT','DEF','MID','GK'];
+  const profile=getProfile(priType,null);
+  const plLeague=document.getElementById('playerLeagueSel').value;
+  const minAge=parseInt(document.getElementById('minAge').value)||0;
+  const maxAge=parseInt(document.getElementById('maxAge').value)||99;
+  const budget=parseFloat(document.getElementById('budgetMax').value)||Infinity;
+  const minApps=parseInt(document.getElementById('minApps').value)||0;
+  const pool=plLeague==='ALL'?PLAYERS_VALID:PLAYERS_VALID.filter(p=>p.league===plLeague);
+  const ranked=pool.filter(p=>p.age>=minAge&&p.age<=maxAge&&p.value<=budget&&p.apps>=minApps&&targetPos.includes(p.pos))
+    .map(p=>{const scored=scorePlayer(p,profile,null);const ctx=applyContextualFactors(scored.score,p,selectedTeam,currentLeague);return{p,...scored,score:ctx.score,contextFlags:ctx.contextFlags,contextBoosts:ctx.contextBoosts};})
+    .filter(m=>m.score>10).sort((a,b)=>b.score-a.score).slice(0,8);
+
+  ranked.forEach((m,i)=>{
+    if(y>H-30){doc.addPage();setFill(C.bg);doc.rect(0,0,W,H,'F');y=15;}
+    const p=m.p,sc=m.score;
+    const scCol=sc>=70?C.accent:sc>=45?C.yellow:C.red;
+    const isTop=i<3;
+
+    // card bg
+    setFill(C.bg2); doc.roundedRect(14,y,W-28,22,1.5,1.5,'F');
+    if(isTop){setDraw(C.accent);doc.setLineWidth(0.3);doc.roundedRect(14,y,W-28,22,1.5,1.5,'S');}
+
+    // rank
+    doc.setFont('helvetica','bold'); doc.setFontSize(16);
+    setTxt(isTop?C.accent:C.muted);
+    doc.text(String(i+1).padStart(2,'0'),19,y+14);
+
+    // name + position badge
+    doc.setFont('helvetica','bold'); doc.setFontSize(10);
+    setTxt(C.text);
+    doc.text(p.name,32,y+8);
+
+    // pos badge
+    const posLbl=p.subpos||p.pos;
+    const badgeW=doc.getTextWidth(posLbl)+4;
+    setFill(C.bg3); doc.roundedRect(32,y+10,badgeW,5,1,1,'F');
+    setTxt(C.accent2); doc.setFontSize(6.5); doc.setFont('helvetica','bold');
+    doc.text(posLbl,34,y+14);
+
+    // meta info
+    doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    setTxt(C.muted);
+    const meta=`${p.club}  ·  ${p.nat}  ·  Age ${p.age}  ·  ${p.apps} apps  ·  ${fmtVal(p.value)}`;
+    doc.text(meta,32+badgeW+4,y+14);
+
+    // reasons
+    doc.setFontSize(6.5); setTxt(C.accent);
+    const reasons=m.reasons.slice(0,2).map(r=>'✓ '+r).join('   ');
+    if(reasons)doc.text(reasons,32,y+20);
+
+    // context flags inline
+    if(m.contextFlags&&m.contextFlags.length){
+      doc.setFontSize(6.5); setTxt(C.warn);
+      const ctxTxt=m.contextFlags.slice(0,1).map(f=>f.icon+' '+f.text).join('  ');
+      const rw=doc.getTextWidth(reasons||'');
+      if(reasons)doc.text('   '+ctxTxt,32+rw+4,y+20);
+      else doc.text(ctxTxt,32,y+20);
+    }
+
+    // score circle
+    const cx=W-22,cy=y+11,r=8;
+    setFill(C.bg3); doc.circle(cx,cy,r,'F');
+    setTxt(scCol); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.text(String(sc)+'%',cx,cy+1.5,{align:'center'});
+    doc.setFontSize(5.5); setTxt(C.muted); doc.setFont('helvetica','normal');
+    doc.text('MATCH',cx,cy+6,{align:'center'});
+
+    // score arc (simple bar under circle)
+    setFill(C.border); doc.rect(cx-r,cy+r+1,r*2,1.5,'F');
+    setFill(scCol); doc.rect(cx-r,cy+r+1,r*2*sc/100,1.5,'F');
+
+    y+=26;
+  });
+
+  // ── IDEAL PROFILE BOX ──
+  if(y<H-50&&profile){
+    y+=2;
+    setFill(C.bg3); doc.roundedRect(14,y,W-28,28,2,2,'F');
+    setDraw([0,80,55]); doc.setLineWidth(0.3); doc.roundedRect(14,y,W-28,28,2,2,'S');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7);
+    setTxt(C.accent);
+    doc.text('IDEAL PLAYER PROFILE',18,y+6);
+    doc.setFontSize(11); setTxt(C.text);
+    doc.text(profile.pos,18,y+13);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); setTxt(C.muted);
+    const roleLines=doc.splitTextToSize(profile.role,W-40);
+    doc.text(roleLines,18,y+19);
+    // stat requirements
+    let sx=18,sy=y+25;
+    Object.entries(profile.stats).forEach(([k,v])=>{
+      const lbl=`${k.replace(/_pg$/,'/g').replace(/_/g,' ')} ≥ ${v}`;
+      const tw=doc.getTextWidth(lbl)+6;
+      setFill(C.bg2); doc.roundedRect(sx,sy-4,tw,5,1,1,'F');
+      setTxt(C.accent); doc.setFontSize(6.5); doc.setFont('helvetica','bold');
+      doc.text(lbl,sx+3,sy);
+      sx+=tw+4;
+      if(sx>W-30){sy+=7;sx=18;}
+    });
+    y+=35;
+  }
+
+  // ── FOOTER ──
+  setFill(C.bg2); doc.rect(0,H-14,W,14,'F');
+  setFill(C.accent); doc.rect(0,H-14,W,0.5,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(7);
+  setTxt(C.muted);
+  doc.text('ScoutMind · Tactical Intelligence Platform · scoutmind.app',14,H-7);
+  doc.text(`Page 1 · ${date} · Confidential`,W-14,H-7,{align:'right'});
+
+  // ── SAVE ──
+  const fname=`ScoutMind_${selectedTeam.name.replace(/\s+/g,'_')}_Report_${new Date().toISOString().slice(0,10)}.pdf`;
+  doc.save(fname);
 }
 function showTab(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
