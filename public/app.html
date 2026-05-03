@@ -455,26 +455,8 @@ if(!_cu){
 
     <!-- MATCH DAY TAB -->
     <div id="feedtab-matchday" style="display:none;">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;">Your clubs · Today</div>
-      <div class="feed-post" style="border-color:rgba(0,229,160,0.2);">
-        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);margin-bottom:8px;">🔴 LIVE · SÉRIE A</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-size:16px;font-weight:700;color:var(--text);">Botafogo</div>
-          <div style="font-size:24px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);">1 – 0</div>
-          <div style="font-size:16px;font-weight:700;color:var(--text);">Fluminense</div>
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">62' · Nilton Santos Stadium</div>
-        <div style="font-size:12px;color:#8892a4;">Luiz Henrique with the opener in the 38th minute. Botafogo pressing high and dominating possession (58%). Fluminense yet to register a shot on target.</div>
-      </div>
-      <div class="feed-post">
-        <div class="feed-post-header">
-          <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
-          <div><div class="feed-author">ScoutMind AI · Match Analysis</div><div class="feed-submeta">Live · Botafogo vs Fluminense</div></div>
-        </div>
-        <div class="feed-body">Botafogo's 4-3-3 is working perfectly today — Marlon Freitas is winning 78% of his ground duels and controlling the midfield. Their press is forcing Fluminense into long balls which they're winning aerially (71% success rate).</div>
-        <div class="feed-actions"><button class="feed-action-btn">♡ 2.3k</button><button class="feed-action-btn">↩ 541</button><button class="feed-action-btn">Save</button></div>
-      </div>
-  </div>
+      <div id="matchday-content"></div>
+    </div>
 </div><!-- /feed-main -->
   <div class="feed-side">
     <div class="feed-side-card">
@@ -2205,6 +2187,113 @@ function showFeedTab(id,btn){
   const target=document.getElementById('feedtab-'+id);
   if(target)target.style.display='block';
   if(btn)btn.classList.add('active');
+  if(id==='matchday') try{renderMatchDay();}catch(e){}
+}
+
+// ── MATCH DAY ──
+const ALL_MATCHES = [
+  // YOUR CLUBS (Botafogo) — will be pinned to top if in following
+  {comp:'SÉRIE A',compTier:6,flag:'🇧🇷',time:'21:00',home:'Botafogo',away:'Fluminense',status:'live',minute:'62',score:'1 – 0',teams:['botafogo','fluminense'],analysis:'Luiz Henrique with the opener in the 38th minute. Botafogo pressing high and dominating possession (58%). Fluminense yet to register a shot on target.'},
+  // UCL
+  {comp:'CHAMPIONS LEAGUE',compTier:1,flag:'🏆',time:'20:00',home:'Real Madrid',away:'Bayern Munich',status:'upcoming',teams:['real_madrid','bayern']},
+  {comp:'CHAMPIONS LEAGUE',compTier:1,flag:'🏆',time:'20:00',home:'Arsenal',away:'PSG',status:'upcoming',teams:['arsenal','psg']},
+  // Premier League
+  {comp:'PREMIER LEAGUE',compTier:2,flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',time:'17:30',home:'Chelsea',away:'Man City',status:'upcoming',teams:['chelsea','man_city']},
+  {comp:'PREMIER LEAGUE',compTier:2,flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',time:'15:00',home:'Liverpool',away:'Man Utd',status:'finished',score:'2 – 1',teams:['liverpool','man_utd']},
+  // La Liga
+  {comp:'LA LIGA',compTier:3,flag:'🇪🇸',time:'20:00',home:'Barcelona',away:'Atlético Madrid',status:'live',minute:'44',score:'1 – 1',teams:['barcelona','atletico_madrid']},
+  {comp:'LA LIGA',compTier:3,flag:'🇪🇸',time:'22:00',home:'Sevilla',away:'Real Madrid',status:'upcoming',teams:['sevilla','real_madrid']},
+  // Bundesliga
+  {comp:'BUNDESLIGA',compTier:4,flag:'🇩🇪',time:'15:30',home:'Bayern Munich',away:'Dortmund',status:'finished',score:'3 – 1',teams:['bayern','dortmund']},
+  // Serie A Italy
+  {comp:'SERIE A',compTier:5,flag:'🇮🇹',time:'18:00',home:'Juventus',away:'Inter',status:'finished',score:'0 – 2',teams:['juventus','inter']},
+  {comp:'SERIE A',compTier:5,flag:'🇮🇹',time:'20:45',home:'Napoli',away:'Milan',status:'upcoming',teams:['napoli','milan']},
+  // Série A Brazil
+  {comp:'SÉRIE A',compTier:6,flag:'🇧🇷',time:'19:00',home:'Flamengo',away:'Palmeiras',status:'live',minute:'71',score:'0 – 1',teams:['flamengo','palmeiras']},
+  {comp:'SÉRIE A',compTier:6,flag:'🇧🇷',time:'21:00',home:'Corinthians',away:'São Paulo',status:'upcoming',teams:['corinthians','sao_paulo']},
+  {comp:'SÉRIE A',compTier:6,flag:'🇧🇷',time:'21:00',home:'Grêmio',away:'Internacional',status:'upcoming',teams:['gremio','internacional']},
+  // Copa Libertadores
+  {comp:'COPA LIBERTADORES',compTier:2,flag:'🌎',time:'21:30',home:'River Plate',away:'Boca Juniors',status:'upcoming',teams:['river','boca']},
+  // Ligue 1
+  {comp:'LIGUE 1',compTier:5,flag:'🇫🇷',time:'21:00',home:'PSG',away:'Lyon',status:'finished',score:'4 – 0',teams:['psg','lyon']},
+];
+
+function renderMatchDay() {
+  const el = document.getElementById('matchday-content');
+  if (!el) return;
+
+  // Get user's clubs
+  const mainClub = JSON.parse(localStorage.getItem('sm_main_club') || 'null');
+  const following = JSON.parse(localStorage.getItem('sm_following_clubs') || '[]');
+  const myClubs = new Set(following);
+  if (mainClub) myClubs.add(mainClub.id);
+
+  // Split into my matches and other matches
+  const myMatches = ALL_MATCHES.filter(m => m.teams && m.teams.some(t => myClubs.has(t)));
+  const otherMatches = ALL_MATCHES.filter(m => !m.teams || !m.teams.some(t => myClubs.has(t)));
+
+  // Sort others by: live first, then tier, then time
+  const statusOrder = {live: 0, upcoming: 1, finished: 2};
+  otherMatches.sort((a, b) => {
+    if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
+    if (a.compTier !== b.compTier) return a.compTier - b.compTier;
+    return (a.time || '').localeCompare(b.time || '');
+  });
+
+  let html = '';
+
+  // My clubs section
+  if (myMatches.length > 0) {
+    html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;"></span>Your Clubs · Today</div>';
+    myMatches.forEach(m => { html += matchCard(m, true); });
+  }
+
+  // All other matches grouped by competition
+  if (otherMatches.length > 0) {
+    html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:18px 0 12px;">All Matches · Today</div>';
+    let lastComp = '';
+    otherMatches.forEach(m => {
+      if (m.comp !== lastComp) {
+        if (lastComp) html += '</div>';
+        html += '<div style="margin-bottom:14px;">';
+        html += '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;">' + m.flag + ' ' + m.comp + '</div>';
+        lastComp = m.comp;
+      }
+      html += matchCard(m, false);
+    });
+    if (lastComp) html += '</div>';
+  }
+
+  el.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--muted)">No matches scheduled for today.</div>';
+}
+
+function matchCard(m, featured) {
+  const isLive = m.status === 'live';
+  const isFinished = m.status === 'finished';
+  const borderColor = featured ? 'rgba(0,229,160,0.25)' : isLive ? 'rgba(0,229,160,0.15)' : 'var(--border)';
+  let statusBadge = '';
+  if (isLive) statusBadge = '<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(0,229,160,0.1);padding:2px 8px;border-radius:10px;animation:blink 2s infinite;">🔴 LIVE ' + (m.minute ? m.minute + "'" : '') + '</span>';
+  else if (isFinished) statusBadge = '<span style="font-size:9px;font-weight:700;color:var(--muted)">FT</span>';
+  else statusBadge = '<span style="font-size:9px;color:var(--muted)">' + (m.time || '') + '</span>';
+
+  let html = '<div style="background:var(--bg2);border:1px solid ' + borderColor + ';border-radius:12px;padding:14px 16px;margin-bottom:8px;">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">';
+  html += '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted)">' + m.flag + ' ' + m.comp + '</div>';
+  html += statusBadge + '</div>';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
+  html += '<div style="font-size:' + (featured ? '16px' : '14px') + ';font-weight:' + (featured ? '700' : '600') + ';color:var(--text);flex:1">' + m.home + '</div>';
+  if (m.score) {
+    html += '<div style="font-size:' + (featured ? '22px' : '18px') + ';font-weight:700;font-family:\'DM Mono\',monospace;color:' + (isLive ? 'var(--accent)' : 'var(--text)') + ';padding:0 16px">' + m.score + '</div>';
+  } else {
+    html += '<div style="font-size:12px;color:var(--muted);padding:0 16px">vs</div>';
+  }
+  html += '<div style="font-size:' + (featured ? '16px' : '14px') + ';font-weight:' + (featured ? '700' : '600') + ';color:var(--text);flex:1;text-align:right">' + m.away + '</div>';
+  html += '</div>';
+  if (featured && m.analysis) {
+    html += '<div style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;padding-top:10px;border-top:1px solid var(--border)">' + m.analysis + '</div>';
+  }
+  html += '</div>';
+  return html;
 }
 
 // ── HUB SUB TABS ──
