@@ -4,42 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ScoutMind — Sign In</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;color:#00e5a0;margin-bottom:8px;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;color:#00e5a0;margin-bottom:6px;}
 .logo span{color:#edf2f7;}
-.tagline{font-size:13px;color:#5a6a85;margin-bottom:32px;text-align:center;}
+.tagline{font-size:13px;color:#5a6a85;margin-bottom:32px;}
 .card{background:#0d1117;border:1px solid #1a2540;border-radius:16px;padding:32px;width:100%;max-width:420px;}
-.tabs{display:flex;border-bottom:1px solid #1a2540;margin-bottom:24px;}
-.tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;color:#5a6a85;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
-.tab.active{color:#00e5a0;border-bottom-color:#00e5a0;}
-.form-group{margin-bottom:16px;}
-label{display:block;font-size:11px;font-weight:600;color:#5a6a85;letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;}
-input,select{width:100%;background:#141b27;border:1px solid #1a2540;color:#edf2f7;padding:10px 14px;border-radius:8px;font-size:14px;font-family:inherit;outline:none;transition:border .2s;}
-input:focus,select:focus{border-color:#00e5a0;}
-select option{background:#0d1117;}
-.submit-btn{width:100%;background:#00e5a0;color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:8px;letter-spacing:0.5px;}
-.submit-btn:hover{background:#00ffb3;}
-.submit-btn:disabled{opacity:0.5;cursor:not-allowed;}
-.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:#5a6a85;font-size:12px;}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:#1a2540;}
-.demo-btn{width:100%;background:transparent;border:1px solid #1a2540;color:#5a6a85;padding:10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;}
-.demo-btn:hover{border-color:#5a6a85;color:#edf2f7;}
-.error-msg{background:rgba(255,69,96,0.1);border:1px solid rgba(255,69,96,0.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#ff4560;margin-bottom:16px;display:none;}
-.success-msg{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:#00e5a0;margin-bottom:16px;display:none;}
+.tabs{display:flex;border-bottom:1px solid #1a2540;margin-bottom:24px;gap:0;}
+.tab-btn{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:600;color:#5a6a85;cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.tab-btn.active{color:#00e5a0;border-bottom:2px solid #00e5a0;}
+.form-section{display:none;}
+.form-section.active{display:block;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:11px;font-weight:600;color:#5a6a85;letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;}
+.field input{width:100%;background:#141b27;border:1px solid #1a2540;color:#edf2f7;padding:11px 14px;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;}
+.field input:focus{border-color:#00e5a0;}
+.btn-primary{width:100%;background:#00e5a0;color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;}
+.btn-primary:hover{background:#00ffb3;}
+.divider{text-align:center;color:#5a6a85;font-size:12px;margin:14px 0;position:relative;}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:#1a2540;}
+.divider::before{left:0;} .divider::after{right:0;}
+.btn-demo{width:100%;background:transparent;border:1px solid #1a2540;color:#5a6a85;padding:10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-demo:hover{border-color:#5a6a85;color:#edf2f7;}
+.msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
+.msg.error{background:rgba(255,69,96,0.1);border:1px solid rgba(255,69,96,0.3);color:#ff4560;}
+.msg.success{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:#00e5a0;}
 .plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
-.plan-card{border:1px solid #1a2540;border-radius:8px;padding:12px;cursor:pointer;transition:all .2s;}
-.plan-card:hover,.plan-card.selected{border-color:#00e5a0;background:rgba(0,229,160,0.05);}
-.plan-card-name{font-size:13px;font-weight:700;margin-bottom:2px;}
-.plan-card-price{font-size:11px;color:#5a6a85;}
-.plan-card-badge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;background:rgba(0,229,160,0.1);color:#00e5a0;display:inline-block;margin-bottom:4px;}
-.back-link{color:#5a6a85;font-size:12px;text-align:center;margin-top:16px;cursor:pointer;}
-.back-link:hover{color:#edf2f7;}
-.loading{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,0.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
-@keyframes spin{to{transform:rotate(360deg)}}
+.plan-opt{border:1px solid #1a2540;border-radius:8px;padding:11px 12px;cursor:pointer;}
+.plan-opt:hover,.plan-opt.sel{border-color:#00e5a0;background:rgba(0,229,160,0.05);}
+.plan-name{font-size:13px;font-weight:700;}
+.plan-price{font-size:11px;color:#5a6a85;margin-top:2px;}
+.back{text-align:center;margin-top:14px;font-size:12px;color:#5a6a85;cursor:pointer;}
+.back:hover{color:#edf2f7;}
 </style>
 </head>
 <body>
@@ -49,243 +47,181 @@ select option{background:#0d1117;}
 
 <div class="card">
   <div class="tabs">
-    <div class="tab active" id="tab-login" onclick="showTab('login')">Sign In</div>
-    <div class="tab" id="tab-register" onclick="showTab('register')">Create Account</div>
+    <button class="tab-btn active" id="btn-login" onclick="switchTab('login')">Sign In</button>
+    <button class="tab-btn" id="btn-register" onclick="switchTab('register')">Create Account</button>
   </div>
 
-  <!-- Error / Success messages -->
-  <div class="error-msg" id="error-msg"></div>
-  <div class="success-msg" id="success-msg"></div>
+  <div class="msg error" id="msg-error"></div>
+  <div class="msg success" id="msg-success"></div>
 
-  <!-- LOGIN FORM -->
-  <div id="form-login">
-    <div class="form-group">
+  <!-- LOGIN -->
+  <div class="form-section active" id="sec-login">
+    <div class="field">
       <label>Email</label>
-      <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
+      <input type="email" id="l-email" placeholder="your@email.com">
     </div>
-    <div class="form-group">
+    <div class="field">
       <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
-    <button class="submit-btn" onclick="handleLogin()" id="login-btn">Sign In</button>
+    <button class="btn-primary" onclick="doLogin()" id="l-btn">Sign In</button>
     <div class="divider">or</div>
-    <button class="demo-btn" onclick="loginDemo()">👁 Preview as Demo User (no account needed)</button>
+    <button class="btn-demo" onclick="doDemo()">👁 Preview as Demo User (no account needed)</button>
   </div>
 
-  <!-- REGISTER FORM -->
-  <div id="form-register" style="display:none">
-    <div class="form-group">
+  <!-- REGISTER -->
+  <div class="form-section" id="sec-register">
+    <div class="field">
       <label>Full name</label>
-      <input type="text" id="reg-name" placeholder="Your name">
+      <input type="text" id="r-name" placeholder="Your name">
     </div>
-    <div class="form-group">
+    <div class="field">
       <label>Email</label>
-      <input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email">
+      <input type="email" id="r-email" placeholder="your@email.com">
     </div>
-    <div class="form-group">
+    <div class="field">
       <label>Password</label>
-      <input type="password" id="reg-password" placeholder="Min. 8 characters" autocomplete="new-password">
+      <input type="password" id="r-pass" placeholder="Min. 8 characters">
     </div>
-    <div class="form-group">
-      <label>Choose your plan</label>
+    <div class="field">
+      <label>Choose plan</label>
       <div class="plan-grid">
-        <div class="plan-card selected" onclick="selectPlan('free',this)">
-          <div class="plan-card-badge">Free</div>
-          <div class="plan-card-name">Scout Free</div>
-          <div class="plan-card-price">$0 forever</div>
+        <div class="plan-opt sel" onclick="pickPlan('free',this)">
+          <div class="plan-name">Scout Free</div>
+          <div class="plan-price">$0 forever</div>
         </div>
-        <div class="plan-card" onclick="selectPlan('pro',this)">
-          <div class="plan-card-badge">Popular</div>
-          <div class="plan-card-name">Scout Pro</div>
-          <div class="plan-card-price">$9.99/month</div>
+        <div class="plan-opt" onclick="pickPlan('pro',this)">
+          <div class="plan-name">Scout Pro</div>
+          <div class="plan-price">$9.99/month</div>
         </div>
-        <div class="plan-card" onclick="selectPlan('club',this)">
-          <div class="plan-card-name">Club Basic</div>
-          <div class="plan-card-price">$49/month</div>
+        <div class="plan-opt" onclick="pickPlan('club',this)">
+          <div class="plan-name">Club Basic</div>
+          <div class="plan-price">$49/month</div>
         </div>
-        <div class="plan-card" onclick="selectPlan('clubpro',this)">
-          <div class="plan-card-name">Club Pro</div>
-          <div class="plan-card-price">$199/month</div>
+        <div class="plan-opt" onclick="pickPlan('clubpro',this)">
+          <div class="plan-name">Club Pro</div>
+          <div class="plan-price">$199/month</div>
         </div>
       </div>
-      <input type="hidden" id="reg-plan" value="free">
     </div>
-    <button class="submit-btn" onclick="handleRegister()" id="register-btn">Create Account</button>
+    <button class="btn-primary" onclick="doRegister()" id="r-btn">Create Account</button>
     <div class="divider">or</div>
-    <button class="demo-btn" onclick="loginDemo()">👁 Preview as Demo User</button>
+    <button class="btn-demo" onclick="doDemo()">👁 Preview as Demo User</button>
   </div>
 
-  <div class="back-link" onclick="window.location.href='/'">← Back to scoutmind.app</div>
+  <div class="back" onclick="window.location.href='/'">← Back to scoutmind.app</div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ── SUPABASE CONFIG ──
-const SUPABASE_URL = 'https://kdhbpzooyjxcglbxbuya.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var SURL = 'https://kdhbpzooyjxcglbxbuya.supabase.co';
+var SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
+var sb = supabase.createClient(SURL, SKEY);
+var plan = 'free';
 
-// ── PLAN SELECTION ──
-let selectedPlan = 'free';
-function selectPlan(plan, el) {
-  selectedPlan = plan;
-  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  document.getElementById('reg-plan').value = plan;
-}
-
-// ── TAB SWITCHING ──
-function showTab(tab) {
-  var formLogin = document.getElementById('form-login');
-  var formReg = document.getElementById('form-register');
-  var tabLogin = document.getElementById('tab-login');
-  var tabReg = document.getElementById('tab-register');
-  if (!formLogin || !formReg) return;
-  formLogin.style.display = tab === 'login' ? 'block' : 'none';
-  formReg.style.display = tab === 'register' ? 'block' : 'none';
-  tabLogin.classList.toggle('active', tab === 'login');
-  tabReg.classList.toggle('active', tab === 'register');
-  hideMessages();
-}
-
-// ── URL PARAMS ──
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('tab') === 'signup') showTab('register');
-if (urlParams.get('plan')) {
-  const planCards = document.querySelectorAll('.plan-card');
-  planCards.forEach(c => {
-    if (c.querySelector('.plan-card-name')?.textContent?.toLowerCase().includes(urlParams.get('plan'))) {
-      selectPlan(urlParams.get('plan'), c);
-    }
-  });
-}
-
-// ── MESSAGES ──
-function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg;
-  el.style.display = 'block';
-  document.getElementById('success-msg').style.display = 'none';
-}
-function showSuccess(msg) {
-  const el = document.getElementById('success-msg');
-  el.textContent = msg;
-  el.style.display = 'block';
-  document.getElementById('error-msg').style.display = 'none';
-}
-function hideMessages() {
-  document.getElementById('error-msg').style.display = 'none';
-  document.getElementById('success-msg').style.display = 'none';
-}
-
-// ── LOGIN ──
-async function handleLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  if (!email || !password) return showError('Please fill in all fields.');
-
-  const btn = document.getElementById('login-btn');
-  btn.innerHTML = '<span class="loading"></span>Signing in...';
-  btn.disabled = true;
-
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    showError(error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message);
-    btn.innerHTML = 'Sign In';
-    btn.disabled = false;
-    return;
-  }
-
-  // Get user profile from our profiles table
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', data.user.id)
-    .single();
-
-  // Store in localStorage for app to use
-  localStorage.setItem('sm_current_user', JSON.stringify({
-    id: data.user.id,
-    email: data.user.email,
-    name: profile?.name || data.user.email.split('@')[0],
-    plan: profile?.plan || 'free'
-  }));
-
-  window.location.href = '/app.html';
-}
-
-// ── REGISTER ──
-async function handleRegister() {
-  const name = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const password = document.getElementById('reg-password').value;
-  const plan = document.getElementById('reg-plan').value;
-
-  if (!name || !email || !password) return showError('Please fill in all fields.');
-  if (password.length < 8) return showError('Password must be at least 8 characters.');
-
-  const btn = document.getElementById('register-btn');
-  btn.innerHTML = '<span class="loading"></span>Creating account...';
-  btn.disabled = true;
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { name, plan } }
-  });
-
-  if (error) {
-    showError(error.message);
-    btn.innerHTML = 'Create Account';
-    btn.disabled = false;
-    return;
-  }
-
-  // Create profile in our profiles table
-  if (data.user) {
-    await supabase.from('profiles').upsert({
-      id: data.user.id,
-      name,
-      plan,
-      email,
-      created_at: new Date().toISOString()
-    });
-
-    localStorage.setItem('sm_current_user', JSON.stringify({
-      id: data.user.id,
-      email,
-      name,
-      plan
-    }));
-  }
-
-  showSuccess('Account created! Check your email to verify, then sign in.');
-  btn.innerHTML = 'Create Account';
-  btn.disabled = false;
-
-  // If email verification not required, go straight to app
-  if (data.session) {
-    setTimeout(() => window.location.href = '/app.html', 1500);
-  }
-}
-
-// ── DEMO LOGIN ──
-function loginDemo() {
-  localStorage.setItem('sm_current_user', JSON.stringify({
-    id: 'demo',
-    email: 'demo@scoutmind.app',
-    name: 'Demo User',
-    plan: 'pro'
-  }));
-  window.location.href = '/app.html';
-}
-
-// ── CHECK IF ALREADY LOGGED IN ──
-supabase.auth.getSession().then(function(result) {
-  if (result.data && result.data.session) {
+// Check if already logged in
+sb.auth.getSession().then(function(res) {
+  if (res.data && res.data.session) {
     window.location.href = '/app.html';
   }
 });
+
+// Check URL params
+var params = new URLSearchParams(window.location.search);
+if (params.get('tab') === 'signup') switchTab('register');
+if (params.get('plan')) pickPlanByName(params.get('plan'));
+
+function switchTab(tab) {
+  document.getElementById('sec-login').className = 'form-section' + (tab==='login'?' active':'');
+  document.getElementById('sec-register').className = 'form-section' + (tab==='register'?' active':'');
+  document.getElementById('btn-login').className = 'tab-btn' + (tab==='login'?' active':'');
+  document.getElementById('btn-register').className = 'tab-btn' + (tab==='register'?' active':'');
+  clearMsgs();
+}
+
+function pickPlan(p, el) {
+  plan = p;
+  document.querySelectorAll('.plan-opt').forEach(function(o){ o.classList.remove('sel'); });
+  el.classList.add('sel');
+}
+
+function pickPlanByName(p) {
+  plan = p;
+  var opts = document.querySelectorAll('.plan-opt');
+  opts.forEach(function(o){ o.classList.remove('sel'); });
+  var idx = {free:0,pro:1,club:2,clubpro:3}[p];
+  if (idx !== undefined && opts[idx]) opts[idx].classList.add('sel');
+}
+
+function showError(msg) {
+  var el = document.getElementById('msg-error');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('msg-success').style.display = 'none';
+}
+function showSuccess(msg) {
+  var el = document.getElementById('msg-success');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('msg-error').style.display = 'none';
+}
+function clearMsgs() {
+  document.getElementById('msg-error').style.display = 'none';
+  document.getElementById('msg-success').style.display = 'none';
+}
+
+function saveUser(id, email, name, userPlan) {
+  localStorage.setItem('sm_current_user', JSON.stringify({
+    id: id, email: email, name: name, plan: userPlan || 'free'
+  }));
+}
+
+async function doLogin() {
+  var email = document.getElementById('l-email').value.trim();
+  var pass = document.getElementById('l-pass').value;
+  if (!email || !pass) return showError('Please fill in all fields.');
+  var btn = document.getElementById('l-btn');
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  var res = await sb.auth.signInWithPassword({email: email, password: pass});
+  if (res.error) {
+    showError(res.error.message === 'Invalid login credentials' ? 'Wrong email or password.' : res.error.message);
+    btn.textContent = 'Sign In'; btn.disabled = false;
+    return;
+  }
+  var profRes = await sb.from('profiles').select('*').eq('id', res.data.user.id).single();
+  var prof = profRes.data;
+  saveUser(res.data.user.id, email, prof ? prof.name : email.split('@')[0], prof ? prof.plan : 'free');
+  window.location.href = '/app.html';
+}
+
+async function doRegister() {
+  var name = document.getElementById('r-name').value.trim();
+  var email = document.getElementById('r-email').value.trim();
+  var pass = document.getElementById('r-pass').value;
+  if (!name || !email || !pass) return showError('Please fill in all fields.');
+  if (pass.length < 8) return showError('Password must be at least 8 characters.');
+  var btn = document.getElementById('r-btn');
+  btn.textContent = 'Creating account...'; btn.disabled = true;
+  var res = await sb.auth.signUp({email: email, password: pass, options: {data: {name: name, plan: plan}}});
+  if (res.error) {
+    showError(res.error.message);
+    btn.textContent = 'Create Account'; btn.disabled = false;
+    return;
+  }
+  if (res.data.user) {
+    await sb.from('profiles').upsert({id: res.data.user.id, name: name, email: email, plan: plan, created_at: new Date().toISOString()});
+    saveUser(res.data.user.id, email, name, plan);
+  }
+  if (res.data.session) {
+    window.location.href = '/app.html';
+  } else {
+    showSuccess('Account created! Check your email to verify, then sign in.');
+    btn.textContent = 'Create Account'; btn.disabled = false;
+  }
+}
+
+function doDemo() {
+  saveUser('demo', 'demo@scoutmind.app', 'Demo User', 'pro');
+  window.location.href = '/app.html';
+}
 </script>
 </body>
 </html>
