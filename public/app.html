@@ -122,6 +122,135 @@ hr{border:none;border-top:1px solid var(--border);}
 .upgrade-btn{display:inline-block;margin-top:6px;background:var(--accent);color:#000;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
 .curr-btn.active{background:var(--accent)!important;color:#000!important;}
 .curr-btn:hover:not(.active){color:var(--text)!important;}
+/* ── MAIN NAV BUTTONS ── */
+.main-nav-btn{background:transparent;border:none;color:var(--muted);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;border-bottom:2px solid transparent;}
+.main-nav-btn:hover{color:var(--text);}
+.main-nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+/* ── PAGES ── */
+.page{display:none;}
+.page.active{display:block;}
+/* ── FEED PAGE ── */
+.feed-page{display:grid;grid-template-columns:1fr 300px;min-height:calc(100vh - 53px);}
+.feed-main{padding:20px 24px;border-right:1px solid var(--border);overflow-y:auto;}
+.feed-side{padding:20px 20px;overflow-y:auto;}
+.feed-tabs-bar{display:flex;gap:2px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:0;}
+.ftab{background:transparent;border:none;color:var(--muted);padding:8px 14px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.ftab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.feed-post{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;transition:border-color .2s;}
+.feed-post:hover{border-color:rgba(0,229,160,0.2);}
+.feed-post-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.feed-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.feed-author{font-size:12px;font-weight:600;color:var(--text);}
+.feed-submeta{font-size:10px;color:var(--muted);margin-top:1px;}
+.feed-vbadge{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;margin-left:auto;}
+.feed-body{font-size:12px;color:#8892a4;line-height:1.7;margin-bottom:10px;}
+.feed-insight-box{background:var(--bg3);border-left:2px solid var(--accent);padding:8px 12px;border-radius:0 8px 8px 0;margin-bottom:10px;}
+.feed-insight-label{font-size:9px;color:var(--accent);font-weight:700;letter-spacing:1px;margin-bottom:3px;}
+.feed-insight-body{font-size:11px;color:var(--text);line-height:1.5;}
+.feed-actions{display:flex;gap:16px;}
+.feed-action-btn{background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;transition:color .2s;}
+.feed-action-btn:hover{color:var(--accent);}
+.feed-side-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;}
+.feed-side-title{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
+.trending-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);}
+.trending-row:last-child{border-bottom:none;}
+.trending-name{font-size:11px;color:var(--text);font-weight:500;}
+.trending-sub{font-size:9px;color:var(--muted);}
+.trending-up{font-size:10px;color:var(--accent);}
+.match-row-sm{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+.match-row-sm:last-child{border-bottom:none;}
+.match-comp-sm{font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:3px;}
+.match-teams-sm{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);}
+/* ── CLUBS PAGE ── */
+.clubs-page{min-height:calc(100vh - 53px);padding:20px 28px;}
+.my-club-banner-wrap{border-radius:12px;overflow:hidden;border:1px solid rgba(0,229,160,0.2);margin-bottom:20px;cursor:pointer;transition:border-color .2s;}
+.my-club-banner-wrap:hover{border-color:rgba(0,229,160,0.5);}
+.my-club-banner{height:56px;background:linear-gradient(135deg,#6b0000 0%,#c8000a 50%,#1a0000 100%);position:relative;overflow:hidden;}
+.my-club-banner::after{content:'';position:absolute;inset:0;opacity:0.08;background-image:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:8px 8px;}
+.my-club-body{background:var(--bg2);padding:14px 16px;display:flex;align-items:center;gap:14px;}
+.my-club-crest{width:52px;height:52px;border-radius:10px;background:var(--bg3);border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:24px;margin-top:-28px;flex-shrink:0;}
+.my-club-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text);}
+.my-club-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.my-club-badges{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
+.c-pill{font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;}
+.c-pill-g{background:rgba(0,229,160,0.1);color:var(--accent);border:1px solid rgba(0,229,160,0.2);}
+.c-pill-b{background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);}
+.c-pill-y{background:rgba(245,200,66,0.1);color:var(--yellow);border:1px solid rgba(245,200,66,0.2);}
+.c-pill-r{background:rgba(255,69,96,0.1);color:var(--red);border:1px solid rgba(255,69,96,0.2);}
+.c-pill-o{background:rgba(255,107,53,0.1);color:var(--warn);border:1px solid rgba(255,107,53,0.2);}
+.my-club-stats-row{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg3);border-top:1px solid var(--border);}
+.my-club-stat{padding:10px 0;text-align:center;border-right:1px solid var(--border);}
+.my-club-stat:last-child{border-right:none;}
+.my-club-stat-val{font-size:16px;font-weight:700;font-family:'DM Mono',monospace;}
+.my-club-stat-lbl{font-size:8px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:1px;}
+.explore-section-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;}
+.league-filter-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.league-filter-btn{font-size:11px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.league-filter-btn.active,.league-filter-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--accent);}
+.clubs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.club-explore-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;}
+.club-explore-card:hover{border-color:rgba(0,229,160,0.3);transform:translateY(-2px);}
+.club-explore-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.club-explore-crest{width:36px;height:36px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.club-explore-name{font-size:12px;font-weight:600;color:var(--text);}
+.club-explore-league{font-size:10px;color:var(--muted);margin-top:1px;}
+.club-explore-stats{display:flex;gap:10px;margin-top:8px;}
+.club-explore-stat{font-size:10px;color:var(--muted);}
+.club-explore-stat span{color:var(--text);font-family:'DM Mono',monospace;}
+/* ── CLUB HUB ── */
+.club-hub-page{min-height:calc(100vh - 53px);}
+.club-hub-banner{height:60px;background:linear-gradient(135deg,#6b0000 0%,#c8000a 50%,#1a0000 100%);position:relative;overflow:hidden;}
+.club-hub-banner::after{content:'';position:absolute;inset:0;opacity:0.08;background-image:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:8px 8px;}
+.club-hub-info{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 22px;}
+.club-hub-info-row{display:flex;align-items:flex-end;gap:14px;padding-bottom:12px;margin-top:-22px;}
+.club-hub-crest{width:52px;height:52px;border-radius:10px;background:var(--bg3);border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.club-hub-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--text);}
+.club-hub-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.club-hub-btns{display:flex;gap:7px;margin-left:auto;padding-bottom:4px;}
+.hub-follow-btn{font-size:11px;font-weight:700;padding:6px 16px;background:var(--accent);color:#000;border:none;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.hub-outline-btn{font-size:11px;padding:6px 14px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.hub-outline-btn:hover{border-color:var(--accent);color:var(--text);}
+.club-hub-stats-bar{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);background:var(--bg2);}
+.hub-stat{padding:10px 0;text-align:center;border-right:1px solid var(--border);}
+.hub-stat:last-child{border-right:none;}
+.hub-stat-val{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;}
+.hub-stat-lbl{font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:1px;text-transform:uppercase;}
+.hub-badges-row{display:flex;gap:5px;padding:10px 22px;border-bottom:1px solid var(--border);background:var(--bg2);flex-wrap:wrap;}
+.hub-sub-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);padding:0 22px;}
+.hub-sub-tab{font-size:12px;font-weight:500;padding:10px 16px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;background:transparent;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;transition:color .2s;}
+.hub-sub-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.hub-content{display:grid;grid-template-columns:1fr 280px;}
+.hub-main{padding:18px 22px;border-right:1px solid var(--border);}
+.hub-side{padding:18px 18px;}
+.hub-post{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;transition:border-color .2s;}
+.hub-post:hover{border-color:rgba(0,229,160,0.15);}
+.hub-post-header{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.hub-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.hub-author{font-size:12px;font-weight:600;color:var(--text);}
+.hub-submeta{font-size:10px;color:var(--muted);margin-top:1px;}
+.hub-vbadge{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;margin-left:auto;}
+.hub-body{font-size:12px;color:#8892a4;line-height:1.7;margin-bottom:9px;}
+.hub-actions{display:flex;gap:14px;}
+.hub-act{background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .2s;}
+.hub-act:hover{color:var(--accent);}
+.hub-side-lbl{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.hub-groups-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:7px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .2s;}
+.hub-groups-card:hover{border-color:rgba(0,229,160,0.2);}
+.hub-groups-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.hub-groups-name{font-size:11px;font-weight:500;color:var(--text);}
+.hub-groups-meta{font-size:9px;color:var(--muted);margin-top:1px;}
+.hub-groups-count{font-size:10px;color:var(--accent);margin-left:auto;font-family:'DM Mono',monospace;}
+.hub-match-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:7px;}
+.hub-match-comp{font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:5px;}
+.hub-match-teams{display:flex;align-items:center;justify-content:space-between;}
+.hub-match-team{font-size:11px;font-weight:500;color:var(--text);}
+.hub-match-score{font-size:13px;font-weight:700;font-family:'DM Mono',monospace;}
+.squad-table-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.squad-num{font-size:11px;color:var(--muted);width:20px;text-align:center;}
+.squad-pos-badge{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;}
+.squad-player-name{flex:1;font-size:12px;font-weight:500;color:var(--text);}
+.squad-player-age{font-size:10px;color:var(--muted);}
+.squad-rating{font-size:12px;font-weight:700;font-family:'DM Mono',monospace;width:30px;text-align:right;}
 @media(max-width:768px){
   nav{padding:12px 16px;flex-wrap:wrap;gap:8px;}
   nav>div:first-child{order:1;}
@@ -204,10 +333,13 @@ if(!_cu){
 
 <!-- NAV -->
 <nav>
-  <div style="display:flex;align-items:center;gap:20px">
+  <div style="display:flex;align-items:center;gap:0">
     <div class="logo">Scout<span>Mind</span></div>
-    <a href="/news.html" style="font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">📰 Transfer News</a>
-    <a href="/community.html" style="font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">👥 Community</a>
+    <div style="display:flex;gap:2px;margin-left:28px;">
+      <button class="main-nav-btn active" id="nav-feed" onclick="showPage('feed')">Feed</button>
+      <button class="main-nav-btn" id="nav-clubs" onclick="showPage('clubs')">Clubs</button>
+      <button class="main-nav-btn" id="nav-scout" onclick="showPage('scout')">Scout Mode</button>
+    </div>
   </div>
   <div class="nav-right">
     <div style="display:flex;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px;">
@@ -225,6 +357,356 @@ if(!_cu){
   </div>
 </nav>
 
+<div class="page active" id="page-feed">
+<div class="feed-page">
+  <div class="feed-main">
+    <div class="feed-tabs-bar">
+      <button class="ftab active">For you</button>
+      <button class="ftab">Following</button>
+      <button class="ftab">Transfer news</button>
+      <button class="ftab">Match day</button>
+    </div>
+    <!-- ScoutMind AI post -->
+    <div class="feed-post">
+      <div class="feed-post-header">
+        <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
+        <div><div class="feed-author">ScoutMind AI</div><div class="feed-submeta">Daily analysis · Série A · 2h ago</div></div>
+        <span class="feed-vbadge c-pill-o">Weakness Alert</span>
+      </div>
+      <div class="feed-body">Flamengo's aerial duel win rate dropped to 48% this week — 15 points below the Série A average. 3 of the last 5 goals conceded came directly from set pieces where they lost the aerial battle.</div>
+      <div class="feed-insight-box">
+        <div class="feed-insight-label">SCOUT INSIGHT</div>
+        <div class="feed-insight-body">A dominant aerial CB solves this immediately. 6 players fit within R$40M. <span style="color:var(--accent);cursor:pointer;" onclick="showPage('scout')">See recommendations →</span></div>
+      </div>
+      <div class="feed-actions">
+        <button class="feed-action-btn">♡ 1.2k</button>
+        <button class="feed-action-btn">↩ 341</button>
+        <button class="feed-action-btn">Save</button>
+      </div>
+    </div>
+    <!-- Verified analyst post -->
+    <div class="feed-post">
+      <div class="feed-post-header">
+        <div class="feed-av" style="background:rgba(0,184,255,0.12);color:var(--accent2);">JR</div>
+        <div><div class="feed-author">João Ricardo · ESPN Brasil</div><div class="feed-submeta">Verified analyst · 3h ago</div></div>
+        <span class="feed-vbadge c-pill-b">Analyst</span>
+      </div>
+      <div class="feed-body">Palmeiras' pressing intensity is statistically the highest in Série A right now — 8.3 PPDA. But they're showing fatigue signs in the last 20 minutes. Their xGA in the 70-90 minute window is nearly double their first-half numbers. This will matter in the Copa do Brasil knockouts.</div>
+      <div class="feed-actions">
+        <button class="feed-action-btn">♡ 847</button>
+        <button class="feed-action-btn">↩ 213</button>
+        <button class="feed-action-btn">Save</button>
+      </div>
+    </div>
+    <!-- Partner analyst post -->
+    <div class="feed-post">
+      <div class="feed-post-header">
+        <div class="feed-av" style="background:rgba(245,200,66,0.12);color:var(--yellow);">TF</div>
+        <div><div class="feed-author">The Football Analyst</div><div class="feed-submeta">Partner · 42k followers · 5h ago</div></div>
+        <span class="feed-vbadge c-pill-y">Partner</span>
+      </div>
+      <div class="feed-body">Why Botafogo's 4-3-3 is tactically broken right now — their wide midfielders are being asked to press AND provide width simultaneously. This creates massive gaps in transition that opponents are starting to exploit consistently. Full breakdown:</div>
+      <div class="feed-actions">
+        <button class="feed-action-btn">♡ 2.1k</button>
+        <button class="feed-action-btn">↩ 670</button>
+        <button class="feed-action-btn">Save</button>
+      </div>
+    </div>
+    <!-- AI post 2 -->
+    <div class="feed-post">
+      <div class="feed-post-header">
+        <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
+        <div><div class="feed-author">ScoutMind AI</div><div class="feed-submeta">Weekly Bundesliga digest · 8h ago</div></div>
+        <span class="feed-vbadge c-pill-g">Digest</span>
+      </div>
+      <div class="feed-body">Bayern Munich leads the Bundesliga in pass accuracy (93%) and xG (2.8/game) but their pressing has dropped 14% from last season. Harry Kane's off-ball movement is creating space but the midfield isn't capitalising on it consistently.</div>
+      <div class="feed-actions">
+        <button class="feed-action-btn">♡ 3.4k</button>
+        <button class="feed-action-btn">↩ 892</button>
+        <button class="feed-action-btn">Save</button>
+      </div>
+    </div>
+  </div>
+  <div class="feed-side">
+    <div class="feed-side-card">
+      <div class="feed-side-title">Trending clubs</div>
+      <div class="trending-row"><div><div class="trending-name">Flamengo</div><div class="trending-sub">4.2k posts today</div></div><div class="trending-up">↑ 12%</div></div>
+      <div class="trending-row"><div><div class="trending-name">Real Madrid</div><div class="trending-sub">12k posts today</div></div><div class="trending-up">↑ 31%</div></div>
+      <div class="trending-row"><div><div class="trending-name">Palmeiras</div><div class="trending-sub">3.1k posts today</div></div><div class="trending-up">↑ 8%</div></div>
+      <div class="trending-row"><div><div class="trending-name">Botafogo</div><div class="trending-sub">1.8k posts today</div></div><div class="trending-up">↑ 5%</div></div>
+      <div class="trending-row"><div><div class="trending-name">Arsenal</div><div class="trending-sub">6.7k posts today</div></div><div class="trending-up">↑ 18%</div></div>
+    </div>
+    <div class="feed-side-card">
+      <div class="feed-side-title">Today's matches</div>
+      <div class="match-row-sm">
+        <div><div class="match-comp-sm">SÉRIE A · 21:00</div><div class="match-teams-sm">Flamengo <span style="color:var(--muted);font-size:10px;">vs</span> Corinthians</div></div>
+      </div>
+      <div class="match-row-sm">
+        <div><div class="match-comp-sm">PREMIER LEAGUE · 17:30</div><div class="match-teams-sm">Arsenal <span style="color:var(--muted);font-size:10px;">vs</span> Chelsea</div></div>
+      </div>
+      <div class="match-row-sm">
+        <div><div class="match-comp-sm">LA LIGA · 20:00</div><div class="match-teams-sm">Real Madrid <span style="color:var(--muted);font-size:10px;">vs</span> Sevilla</div></div>
+      </div>
+    </div>
+    <div class="feed-side-card">
+      <div class="feed-side-title">Featured analyst</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div class="feed-av" style="background:rgba(0,184,255,0.12);color:var(--accent2);width:36px;height:36px;font-size:12px;">JR</div>
+        <div><div style="font-size:12px;font-weight:600;color:var(--text);">João Ricardo</div><div style="font-size:10px;color:var(--muted);">ESPN Brasil · 180k followers</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;">Daily Série A breakdowns every morning at 8am. Tactical analysis you won't find anywhere else.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CLUBS PAGE -->
+<div class="page" id="page-clubs">
+<div class="clubs-page">
+  <div style="margin-bottom:16px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Your club</div>
+    <div class="my-club-banner-wrap" onclick="showPage('hub')">
+      <div class="my-club-banner"></div>
+      <div class="my-club-body">
+        <div class="my-club-crest">🔴</div>
+        <div style="flex:1;">
+          <div class="my-club-name">FLAMENGO</div>
+          <div class="my-club-sub">Série A · Rio de Janeiro · 42.8k followers on ScoutMind</div>
+          <div class="my-club-badges">
+            <span class="c-pill c-pill-o">High Press</span>
+            <span class="c-pill c-pill-b">Strong Attack</span>
+            <span class="c-pill c-pill-r">Aerial Weakness</span>
+            <span class="c-pill c-pill-y">3rd · Série A</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--accent);flex-shrink:0;padding-left:10px;">Open →</div>
+      </div>
+      <div class="my-club-stats-row">
+        <div class="my-club-stat"><div class="my-club-stat-val" style="color:var(--accent);">3rd</div><div class="my-club-stat-lbl">Position</div></div>
+        <div class="my-club-stat"><div class="my-club-stat-val">38</div><div class="my-club-stat-lbl">Points</div></div>
+        <div class="my-club-stat"><div class="my-club-stat-val">1.8</div><div class="my-club-stat-lbl">Goals/g</div></div>
+        <div class="my-club-stat"><div class="my-club-stat-val" style="color:var(--red);">1.4</div><div class="my-club-stat-lbl">Conceded/g</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="explore-section-title">Explore clubs</div>
+  <div class="league-filter-row">
+    <button class="league-filter-btn active">All</button>
+    <button class="league-filter-btn">🇧🇷 Série A</button>
+    <button class="league-filter-btn">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</button>
+    <button class="league-filter-btn">🇪🇸 La Liga</button>
+    <button class="league-filter-btn">🇩🇪 Bundesliga</button>
+    <button class="league-filter-btn">🇦🇷 Argentina</button>
+  </div>
+  <div class="clubs-grid">
+    <div class="club-explore-card" onclick="showPage('hub')">
+      <div class="club-explore-top">
+        <div class="club-explore-crest">💚</div>
+        <div><div class="club-explore-name">Palmeiras</div><div class="club-explore-league">Série A · 1st place</div></div>
+        <span class="c-pill c-pill-g" style="margin-left:auto;font-size:8px;">No weakness</span>
+      </div>
+      <div class="club-explore-stats">
+        <div class="club-explore-stat">Goals/g <span>2.1</span></div>
+        <div class="club-explore-stat">Conc/g <span>0.9</span></div>
+        <div class="club-explore-stat">Pass <span>87%</span></div>
+      </div>
+    </div>
+    <div class="club-explore-card">
+      <div class="club-explore-top">
+        <div class="club-explore-crest">⭐</div>
+        <div><div class="club-explore-name">Real Madrid</div><div class="club-explore-league">La Liga · 1st place</div></div>
+        <span class="c-pill c-pill-y" style="margin-left:auto;font-size:8px;">Minor flag</span>
+      </div>
+      <div class="club-explore-stats">
+        <div class="club-explore-stat">Goals/g <span>2.4</span></div>
+        <div class="club-explore-stat">Conc/g <span>0.8</span></div>
+        <div class="club-explore-stat">Pass <span>91%</span></div>
+      </div>
+    </div>
+    <div class="club-explore-card">
+      <div class="club-explore-top">
+        <div class="club-explore-crest">💙</div>
+        <div><div class="club-explore-name">Botafogo</div><div class="club-explore-league">Série A · 5th place</div></div>
+        <span class="c-pill c-pill-o" style="margin-left:auto;font-size:8px;">Weakness</span>
+      </div>
+      <div class="club-explore-stats">
+        <div class="club-explore-stat">Goals/g <span>1.4</span></div>
+        <div class="club-explore-stat">Conc/g <span>1.2</span></div>
+        <div class="club-explore-stat">Pass <span>79%</span></div>
+      </div>
+    </div>
+    <div class="club-explore-card">
+      <div class="club-explore-top">
+        <div class="club-explore-crest">💜</div>
+        <div><div class="club-explore-name">Barcelona</div><div class="club-explore-league">La Liga · 2nd place</div></div>
+        <span class="c-pill c-pill-g" style="margin-left:auto;font-size:8px;">No weakness</span>
+      </div>
+      <div class="club-explore-stats">
+        <div class="club-explore-stat">Goals/g <span>2.2</span></div>
+        <div class="club-explore-stat">Conc/g <span>0.9</span></div>
+        <div class="club-explore-stat">Pass <span>89%</span></div>
+      </div>
+    </div>
+    <div class="club-explore-card">
+      <div class="club-explore-top">
+        <div class="club-explore-crest">🔴</div>
+        <div><div class="club-explore-name">Arsenal</div><div class="club-explore-league">Premier League · 2nd</div></div>
+        <span class="c-pill c-pill-y" style="margin-left:auto;font-size:8px;">Minor flag</span>
+      </div>
+      <div class="club-explore-stats">
+        <div class="club-explore-stat">Goals/g <span>2.0</span></div>
+        <div class="club-explore-stat">Conc/g <span>0.8</span></div>
+        <div class="club-explore-stat">Pass <span>88%</span></div>
+      </div>
+    </div>
+    <div class="club-explore-card">
+      <div class="club-explore-top">
+        <div class="club-explore-crest">🏆</div>
+        <div><div class="club-explore-name">River Plate</div><div class="club-explore-league">Argentina · 1st place</div></div>
+        <span class="c-pill c-pill-g" style="margin-left:auto;font-size:8px;">No weakness</span>
+      </div>
+      <div class="club-explore-stats">
+        <div class="club-explore-stat">Goals/g <span>1.9</span></div>
+        <div class="club-explore-stat">Conc/g <span>0.7</span></div>
+        <div class="club-explore-stat">Pass <span>83%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CLUB HUB PAGE (Flamengo) -->
+<div class="page" id="page-hub">
+<div class="club-hub-page">
+  <div class="club-hub-banner"></div>
+  <div class="club-hub-info">
+    <div class="club-hub-info-row">
+      <div class="club-hub-crest">🔴</div>
+      <div style="flex:1;padding-bottom:4px;">
+        <div class="club-hub-name">FLAMENGO</div>
+        <div class="club-hub-sub">Série A · Rio de Janeiro · Est. 1895 · 42.8k followers on ScoutMind</div>
+      </div>
+      <div class="club-hub-btns">
+        <button class="hub-follow-btn">✓ Following</button>
+        <button class="hub-outline-btn" onclick="showPage('scout')">Scout this team</button>
+        <button class="hub-outline-btn">Share</button>
+      </div>
+    </div>
+  </div>
+  <div class="hub-badges-row">
+    <span class="c-pill c-pill-o">High Press</span>
+    <span class="c-pill c-pill-b">Strong Attack</span>
+    <span class="c-pill c-pill-r">Aerial Weakness</span>
+    <span class="c-pill c-pill-y">3rd · Série A</span>
+    <span class="c-pill c-pill-g">Coach: Filipe Luís</span>
+  </div>
+  <div class="club-hub-stats-bar">
+    <div class="hub-stat"><div class="hub-stat-val" style="color:var(--accent);">3rd</div><div class="hub-stat-lbl">Position</div></div>
+    <div class="hub-stat"><div class="hub-stat-val">38</div><div class="hub-stat-lbl">Points</div></div>
+    <div class="hub-stat"><div class="hub-stat-val">1.8</div><div class="hub-stat-lbl">Goals/g</div></div>
+    <div class="hub-stat"><div class="hub-stat-val" style="color:var(--red);">1.4</div><div class="hub-stat-lbl">Conceded/g</div></div>
+    <div class="hub-stat"><div class="hub-stat-val">84%</div><div class="hub-stat-lbl">Pass acc.</div></div>
+  </div>
+  <div class="hub-sub-tabs">
+    <button class="hub-sub-tab active" onclick="showHubTab('feed',this)">Feed</button>
+    <button class="hub-sub-tab" onclick="showHubTab('squad',this)">Squad</button>
+    <button class="hub-sub-tab" onclick="showHubTab('groups',this)">Groups</button>
+    <button class="hub-sub-tab" onclick="showHubTab('matches',this)">Matches</button>
+  </div>
+  <!-- HUB FEED TAB -->
+  <div id="hubtab-feed" class="hub-content">
+    <div class="hub-main">
+      <div class="hub-post">
+        <div class="hub-post-header">
+          <div class="hub-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
+          <div><div class="hub-author">ScoutMind AI</div><div class="hub-submeta">2h ago · Auto analysis</div></div>
+          <span class="hub-vbadge c-pill-o">Weakness Alert</span>
+        </div>
+        <div class="hub-body">Flamengo's aerial duel win rate has dropped to 48% — 15 points below the Série A average. This has directly contributed to 3 of the last 5 goals conceded from set pieces.</div>
+        <div class="feed-insight-box">
+          <div class="feed-insight-label">SCOUT INSIGHT</div>
+          <div class="feed-insight-body">A dominant aerial CB solves this. 6 players fit within R$40M. <span style="color:var(--accent);cursor:pointer;" onclick="showPage('scout')">See recommendations →</span></div>
+        </div>
+        <div class="hub-actions"><button class="hub-act">♡ 1.2k</button><button class="hub-act">↩ 341</button><button class="hub-act">Save</button></div>
+      </div>
+      <div class="hub-post">
+        <div class="hub-post-header">
+          <div class="hub-av" style="background:rgba(0,184,255,0.12);color:var(--accent2);">JR</div>
+          <div><div class="hub-author">João Ricardo · ESPN Brasil</div><div class="hub-submeta">4h ago · Verified analyst</div></div>
+          <span class="hub-vbadge c-pill-b">Analyst</span>
+        </div>
+        <div class="hub-body">Filipe Luís needs to address the set piece issue before the Copa do Brasil. Flamengo have conceded from corners in 4 of the last 6 games — the zonal marking setup isn't working. A man-marking tweak could be the immediate fix.</div>
+        <div class="hub-actions"><button class="hub-act">♡ 634</button><button class="hub-act">↩ 128</button><button class="hub-act">Save</button></div>
+      </div>
+      <div class="hub-post">
+        <div class="hub-post-header">
+          <div class="hub-av" style="background:rgba(245,200,66,0.12);color:var(--yellow);">TF</div>
+          <div><div class="hub-author">The Football Analyst</div><div class="hub-submeta">Yesterday · Partner</div></div>
+          <span class="hub-vbadge c-pill-y">Partner</span>
+        </div>
+        <div class="hub-body">De la Cruz is quietly having one of the best midfield seasons in South America. 2.4 key passes per game, 87% pass accuracy, top 3 in progressive carries in Série A. Flamengo need to tie him down to a new contract immediately.</div>
+        <div class="hub-actions"><button class="hub-act">♡ 2.3k</button><button class="hub-act">↩ 512</button><button class="hub-act">Save</button></div>
+      </div>
+    </div>
+    <div class="hub-side">
+      <div class="hub-side-lbl">Next match</div>
+      <div class="hub-match-card">
+        <div class="hub-match-comp">SÉRIE A · TODAY 21:00</div>
+        <div class="hub-match-teams"><div class="hub-match-team">Flamengo</div><div style="font-size:10px;color:var(--muted);">vs</div><div class="hub-match-team">Corinthians</div></div>
+        <div style="font-size:9px;color:var(--accent);margin-top:4px;">Maracanã · Rio de Janeiro</div>
+      </div>
+      <div class="hub-side-lbl" style="margin-top:14px;">Top groups</div>
+      <div class="hub-groups-card"><div class="hub-groups-icon" style="background:rgba(255,69,96,0.1);">🔥</div><div><div class="hub-groups-name">Nação Rubro-Negra</div><div class="hub-groups-meta">Official fans · Public</div></div><div class="hub-groups-count">12.4k</div></div>
+      <div class="hub-groups-card"><div class="hub-groups-icon" style="background:rgba(0,229,160,0.1);">📊</div><div><div class="hub-groups-name">Fla Data Nerds</div><div class="hub-groups-meta">Stats & analysis</div></div><div class="hub-groups-count">3.1k</div></div>
+      <div class="hub-groups-card"><div class="hub-groups-icon" style="background:rgba(0,184,255,0.1);">🌎</div><div><div class="hub-groups-name">Fla Internacional</div><div class="hub-groups-meta">Fans outside Brazil</div></div><div class="hub-groups-count">8.7k</div></div>
+      <div class="hub-side-lbl" style="margin-top:14px;">Club info</div>
+      <div style="font-size:11px;color:var(--muted);line-height:2.2;">
+        <div>👔 Filipe Luís · Head Coach</div>
+        <div>🏟 Maracanã · 78,838 capacity</div>
+        <div style="color:var(--accent);cursor:pointer;">@Flamengo · Instagram ↗</div>
+      </div>
+    </div>
+  </div>
+  <!-- HUB SQUAD TAB -->
+  <div id="hubtab-squad" style="display:none;padding:18px 22px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">Current squad · 2026</div>
+    <div class="squad-table-row"><div class="squad-num">1</div><div class="squad-pos-badge" style="background:rgba(0,229,160,0.1);color:var(--accent);">GK</div><div class="squad-player-name">Rossi</div><div class="squad-player-age">29 yrs</div><div class="squad-rating" style="color:var(--accent);">87</div></div>
+    <div class="squad-table-row"><div class="squad-num">3</div><div class="squad-pos-badge" style="background:rgba(0,184,255,0.1);color:var(--accent2);">CB</div><div class="squad-player-name">Léo Pereira</div><div class="squad-player-age">27 yrs</div><div class="squad-rating" style="color:var(--accent);">84</div></div>
+    <div class="squad-table-row"><div class="squad-num">5</div><div class="squad-pos-badge" style="background:rgba(0,184,255,0.1);color:var(--accent2);">CB</div><div class="squad-player-name">David Luiz</div><div class="squad-player-age">37 yrs</div><div class="squad-rating" style="color:var(--yellow);">78</div></div>
+    <div class="squad-table-row"><div class="squad-num">6</div><div class="squad-pos-badge" style="background:rgba(0,184,255,0.1);color:var(--accent2);">LB</div><div class="squad-player-name">Ayrton Lucas</div><div class="squad-player-age">26 yrs</div><div class="squad-rating" style="color:var(--accent);">82</div></div>
+    <div class="squad-table-row"><div class="squad-num">8</div><div class="squad-pos-badge" style="background:rgba(0,229,160,0.1);color:var(--accent);">CM</div><div class="squad-player-name">De la Cruz</div><div class="squad-player-age">26 yrs</div><div class="squad-rating" style="color:var(--accent);">86</div></div>
+    <div class="squad-table-row"><div class="squad-num">10</div><div class="squad-pos-badge" style="background:rgba(0,229,160,0.1);color:var(--accent);">CAM</div><div class="squad-player-name">Arrascaeta</div><div class="squad-player-age">30 yrs</div><div class="squad-rating" style="color:var(--accent);">88</div></div>
+    <div class="squad-table-row"><div class="squad-num">11</div><div class="squad-pos-badge" style="background:rgba(255,107,53,0.1);color:var(--warn);">LW</div><div class="squad-player-name">Gerson</div><div class="squad-player-age">27 yrs</div><div class="squad-rating" style="color:var(--accent);">85</div></div>
+    <div class="squad-table-row"><div class="squad-num">9</div><div class="squad-pos-badge" style="background:rgba(255,107,53,0.1);color:var(--warn);">ST</div><div class="squad-player-name">Pedro</div><div class="squad-player-age">27 yrs</div><div class="squad-rating" style="color:var(--accent);">87</div></div>
+    <div style="padding:10px 0;text-align:center;font-size:11px;color:var(--muted);cursor:pointer;">Show full squad (26 players) ↓</div>
+  </div>
+  <!-- HUB GROUPS TAB -->
+  <div id="hubtab-groups" style="display:none;padding:18px 22px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">Fan groups · 14 active</div>
+    <div class="hub-groups-card"><div class="hub-groups-icon" style="background:rgba(255,69,96,0.1);">🔥</div><div><div class="hub-groups-name">Nação Rubro-Negra</div><div class="hub-groups-meta">Official fan community · Public</div></div><div class="hub-groups-count">12.4k</div></div>
+    <div class="hub-groups-card"><div class="hub-groups-icon" style="background:rgba(0,229,160,0.1);">📊</div><div><div class="hub-groups-name">Fla Data Nerds</div><div class="hub-groups-meta">Stats & Scout analysis · Public</div></div><div class="hub-groups-count">3.1k</div></div>
+    <div class="hub-groups-card"><div class="hub-groups-icon" style="background:rgba(0,184,255,0.1);">🌎</div><div><div class="hub-groups-name">Fla Internacional</div><div class="hub-groups-meta">Fans outside Brazil · Public</div></div><div class="hub-groups-count">8.7k</div></div>
+    <div class="hub-groups-card"><div class="hub-groups-icon" style="background:rgba(245,200,66,0.1);">🏆</div><div><div class="hub-groups-name">Mengão Match Day</div><div class="hub-groups-meta">Live match reactions · Public</div></div><div class="hub-groups-count">21k</div></div>
+    <div style="background:var(--bg3);border:1px dashed var(--border);border-radius:12px;padding:16px;text-align:center;margin-top:6px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Create a group</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Build your own Flamengo community. Scout Pro subscribers can create verified groups.</div>
+      <button style="font-size:11px;font-weight:700;padding:7px 18px;background:var(--accent);color:#000;border:none;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;">Upgrade to create</button>
+    </div>
+  </div>
+  <!-- HUB MATCHES TAB -->
+  <div id="hubtab-matches" style="display:none;padding:18px 22px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Upcoming</div>
+    <div class="hub-match-card"><div class="hub-match-comp">SÉRIE A · TODAY 21:00</div><div class="hub-match-teams"><div class="hub-match-team">Flamengo</div><div style="font-size:10px;color:var(--muted);">vs</div><div class="hub-match-team">Corinthians</div></div><div style="font-size:9px;color:var(--accent);margin-top:3px;">Maracanã</div></div>
+    <div class="hub-match-card"><div class="hub-match-comp">COPA DO BRASIL · 08 MAY</div><div class="hub-match-teams"><div class="hub-match-team">Athletico-PR</div><div style="font-size:10px;color:var(--muted);">vs</div><div class="hub-match-team">Flamengo</div></div></div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:14px 0 10px;">Recent results</div>
+    <div class="hub-match-card"><div class="hub-match-comp">SÉRIE A · 29 APR</div><div class="hub-match-teams"><div class="hub-match-team">Flamengo</div><div class="hub-match-score" style="color:var(--accent);">2–0</div><div class="hub-match-team">Grêmio</div></div></div>
+    <div class="hub-match-card"><div class="hub-match-comp">SÉRIE A · 24 APR</div><div class="hub-match-teams"><div class="hub-match-team">Internacional</div><div class="hub-match-score" style="color:var(--yellow);">1–1</div><div class="hub-match-team">Flamengo</div></div></div>
+  </div>
+</div>
+</div>
+
+<!-- SCOUT MODE PAGE (existing app wrapped) -->
+<div class="page" id="page-scout">
 <div class="app">
   <button id="sidebar-toggle" onclick="toggleSidebar()" style="display:none;position:fixed;bottom:24px;right:24px;z-index:200;background:var(--accent);color:#000;border:none;border-radius:50%;width:52px;height:52px;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(0,229,160,0.4);font-family:inherit;">⚙</button>
   <div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:150;"></div>
@@ -1413,6 +1895,38 @@ function selectTeamWrapped(id){
 renderTeamList('');
 document.getElementById('playerLeagueSel').addEventListener('change',updateFilterCount);
 ['minAge','maxAge','budgetMax','minApps','posFil'].forEach(id=>{document.getElementById(id).addEventListener('input',updateFilterCount);});
+</script>
+</div><!-- close page-scout -->
+
+<script>
+// ── PAGE NAVIGATION ──
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.main-nav-btn').forEach(b=>b.classList.remove('active'));
+  const pageEl=document.getElementById('page-'+id);
+  if(pageEl)pageEl.classList.add('active');
+  const navEl=document.getElementById('nav-'+id);
+  if(navEl)navEl.classList.add('active');
+  window.scrollTo(0,0);
+}
+// ── HUB SUB TABS ──
+function showHubTab(id,btn){
+  ['feed','squad','groups','matches'].forEach(t=>{
+    const el=document.getElementById('hubtab-'+t);
+    if(el)el.style.display='none';
+  });
+  document.querySelectorAll('.hub-sub-tab').forEach(b=>b.classList.remove('active'));
+  const target=document.getElementById('hubtab-'+id);
+  if(target)target.style.display=id==='feed'?'grid':'block';
+  if(btn)btn.classList.add('active');
+}
+// League filter buttons (clubs page)
+document.querySelectorAll('.league-filter-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.league-filter-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
 </script>
 </body>
 </html>
