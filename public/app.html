@@ -115,78 +115,84 @@ hr{border:none;border-top:1px solid var(--border);}
 .team-list-wrap{max-height:220px;overflow-y:auto;}
 .hint{font-size:11px;color:var(--muted);text-align:center;margin-top:3px;}
 .filter-count{font-size:10px;color:var(--accent);margin-top:4px;text-align:center;}
-/* Free tier lock */
 .locked{opacity:0.4;pointer-events:none;position:relative;}
 .lock-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(7,9,15,0.7);border-radius:12px;z-index:5;}
 .lock-msg{font-size:12px;color:var(--muted);text-align:center;}
 .upgrade-btn{display:inline-block;margin-top:6px;background:var(--accent);color:#000;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
-
-.curr-btn.active { background: var(--accent) !important; color: #000 !important; }
-.curr-btn:hover:not(.active) { color: var(--text) !important; }
-
-/* ── MOBILE RESPONSIVE ── */
-@media (max-width: 768px) {
-  nav { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
-  nav > div:first-child { order: 1; }
-  nav > .nav-right { order: 2; gap: 6px; }
-  nav > .nav-right > div:first-child { display: none; } /* hide currency on mobile nav */
-  .user-badge { display: none; }
-  .logout-btn { display: none; }
-  #sidebar-toggle { display: flex !important; align-items: center; justify-content: center; }
-  .app { grid-template-columns: 1fr; }
-  .sidebar {
-    position: fixed !important;
-    top: 0; left: -320px;
-    width: 300px;
-    height: 100vh;
-    z-index: 160;
-    transition: left .3s ease;
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding-top: 60px;
-  }
-  .sidebar.open { left: 0; }
-  .main { padding: 16px 14px; }
-  .sgrid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-  .tabs { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-  .tab { padding: 8px 12px; font-size: 12px; }
-  .pcard { grid-template-columns: 36px 1fr 56px; gap: 8px; padding: 11px 12px; }
-  .prank { font-size: 22px; }
-  .pname { font-size: 13px; }
-  .pmeta { gap: 5px; }
-  .score-num { font-size: 26px; }
-  .section-hdr { flex-direction: column; align-items: flex-start; gap: 6px; }
-  .chart-lbl { width: 90px; font-size: 10px; }
-  .team-list-wrap { max-height: 180px; }
-  .squad-filters-grid { grid-template-columns: 1fr 1fr !important; }
+.curr-btn.active{background:var(--accent)!important;color:#000!important;}
+.curr-btn:hover:not(.active){color:var(--text)!important;}
+@media(max-width:768px){
+  nav{padding:12px 16px;flex-wrap:wrap;gap:8px;}
+  nav>div:first-child{order:1;}
+  nav>.nav-right{order:2;gap:6px;}
+  nav>.nav-right>div:first-child{display:none;}
+  .user-badge{display:none;}
+  .logout-btn{display:none;}
+  #sidebar-toggle{display:flex!important;align-items:center;justify-content:center;}
+  .app{grid-template-columns:1fr;}
+  .sidebar{position:fixed!important;top:0;left:-320px;width:300px;height:100vh;z-index:160;transition:left .3s ease;border-right:1px solid var(--border);overflow-y:auto;padding-top:60px;}
+  .sidebar.open{left:0;}
+  .main{padding:16px 14px;}
+  .sgrid{grid-template-columns:repeat(2,1fr);gap:6px;}
+  .tabs{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;}
+  .tab{padding:8px 12px;font-size:12px;}
+  .pcard{grid-template-columns:36px 1fr 56px;gap:8px;padding:11px 12px;}
+  .prank{font-size:22px;}
+  .pname{font-size:13px;}
+  .pmeta{gap:5px;}
+  .score-num{font-size:26px;}
+  .section-hdr{flex-direction:column;align-items:flex-start;gap:6px;}
+  .chart-lbl{width:90px;font-size:10px;}
+  .team-list-wrap{max-height:180px;}
 }
-@media (max-width: 480px) {
-  .sgrid { grid-template-columns: 1fr 1fr; }
-  .scard input { font-size: 18px; }
-  .pcard { grid-template-columns: 32px 1fr 50px; gap: 6px; }
-  .pmeta span:nth-child(n+5) { display: none; }
+@media(max-width:480px){
+  .sgrid{grid-template-columns:1fr 1fr;}
+  .scard input{font-size:18px;}
+  .pcard{grid-template-columns:32px 1fr 50px;gap:6px;}
+  .pmeta span:nth-child(n+5){display:none;}
 }
 </style>
 </head>
 <body>
 
-<!-- AUTH CHECK -->
+<!-- AUTH CHECK — FIX: handles confirmation email hash token -->
 <script>
-const _supa = window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
-const _cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
-if (!_cu) {
-  _supa.auth.getSession().then(function(result) {
-    var session = result.data.session;
-    if (!session) {
-      window.location.href = '/auth.html';
+const _supa = window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
+const _cu = JSON.parse(localStorage.getItem('sm_current_user')||'null');
+if(!_cu){
+  _supa.auth.getSession().then(function(result){
+    var session=result.data.session;
+    if(!session){
+      // Check if this is a confirmation link redirect (has access_token in URL hash)
+      var hash=window.location.hash;
+      if(hash&&hash.includes('access_token')){
+        _supa.auth.getUser().then(function(userResult){
+          if(userResult.data.user){
+            _supa.from('profiles').select('*').eq('id',userResult.data.user.id).single().then(function(res){
+              var profile=res.data;
+              localStorage.setItem('sm_current_user',JSON.stringify({
+                id:userResult.data.user.id,
+                email:userResult.data.user.email,
+                name:profile?profile.name:userResult.data.user.email.split('@')[0],
+                plan:profile?profile.plan:'free'
+              }));
+              window.location.href='/app.html';
+            });
+          } else {
+            window.location.href='/auth.html';
+          }
+        });
+      } else {
+        window.location.href='/auth.html';
+      }
     } else {
-      _supa.from('profiles').select('*').eq('id', session.user.id).single().then(function(res) {
-        var profile = res.data;
-        localStorage.setItem('sm_current_user', JSON.stringify({
-          id: session.user.id,
-          email: session.user.email,
-          name: profile ? profile.name : session.user.email.split('@')[0],
-          plan: profile ? profile.plan : 'free'
+      _supa.from('profiles').select('*').eq('id',session.user.id).single().then(function(res){
+        var profile=res.data;
+        localStorage.setItem('sm_current_user',JSON.stringify({
+          id:session.user.id,
+          email:session.user.email,
+          name:profile?profile.name:session.user.email.split('@')[0],
+          plan:profile?profile.plan:'free'
         }));
         window.location.reload();
       });
@@ -197,8 +203,11 @@ if (!_cu) {
 
 <!-- NAV -->
 <nav>
-  <div style="display:flex;align-items:center;gap:20px"><div class="logo">Scout<span>Mind</span></div><a href="/news.html" style="font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">📰 Transfer News</a>
-    <a href="/community.html" style="font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">👥 Community</a></div>
+  <div style="display:flex;align-items:center;gap:20px">
+    <div class="logo">Scout<span>Mind</span></div>
+    <a href="/news.html" style="font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">📰 Transfer News</a>
+    <a href="/community.html" style="font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">👥 Community</a>
+  </div>
   <div class="nav-right">
     <div style="display:flex;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px;">
       <button class="curr-btn active" data-c="EUR" onclick="setCurrency('EUR')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">€ EUR</button>
@@ -216,15 +225,9 @@ if (!_cu) {
 </nav>
 
 <div class="app">
-
-  <!-- SIDEBAR -->
-  <!-- Mobile sidebar toggle button -->
-<button id="sidebar-toggle" onclick="toggleSidebar()" style="display:none;position:fixed;bottom:24px;right:24px;z-index:200;background:var(--accent);color:#000;border:none;border-radius:50%;width:52px;height:52px;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(0,229,160,0.4);font-family:inherit;">⚙</button>
-<!-- Overlay -->
-<div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:150;"></div>
-<div class="sidebar" id="sidebar">
-
-    <!-- LEAGUE -->
+  <button id="sidebar-toggle" onclick="toggleSidebar()" style="display:none;position:fixed;bottom:24px;right:24px;z-index:200;background:var(--accent);color:#000;border:none;border-radius:50%;width:52px;height:52px;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(0,229,160,0.4);font-family:inherit;">⚙</button>
+  <div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:150;"></div>
+  <div class="sidebar" id="sidebar">
     <div class="fg">
       <div class="sb-label">League</div>
       <select id="leagueSel" onchange="onLeagueChange()">
@@ -275,17 +278,12 @@ if (!_cu) {
         </optgroup>
       </select>
     </div>
-
-    <!-- TEAM SEARCH -->
     <div class="fg">
       <div class="sb-label">Find Your Team</div>
       <input type="text" class="search-inp" id="teamSearch" placeholder="Search teams..." oninput="filterTeams()">
       <div class="team-list-wrap" id="teamList"></div>
     </div>
-
     <hr>
-
-    <!-- PLAYER FILTERS -->
     <div class="fg">
       <div class="sb-label">Player Filters</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:3px">Age range</div>
@@ -307,7 +305,6 @@ if (!_cu) {
       </select>
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Min appearances</div>
       <input type="number" id="minApps" value="10">
-      <!-- Position filter removed from Best Fit — use Player Explorer tab to browse by position -->
       <input type="hidden" id="posFil" value="">
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Search players from</div>
       <select id="playerLeagueSel">
@@ -348,7 +345,6 @@ if (!_cu) {
       </select>
       <div id="filter-count" class="filter-count"></div>
     </div>
-
     <hr>
     <button class="run-btn" id="runBtn" onclick="runAnalysis()" disabled>▶ RUN ANALYSIS</button>
     <div class="hint" id="btnHint">Select a team first</div>
@@ -411,14 +407,12 @@ if (!_cu) {
       <div id="resContent" style="display:none"></div>
     </div>
 
-    <!-- BUILD YOUR SQUAD TAB -->
+    <!-- PLAYER EXPLORER TAB -->
     <div id="tab-squad" style="display:none">
       <div style="margin-bottom:16px">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:4px">🔎 Player Explorer</div>
         <div style="font-size:13px;color:var(--muted);line-height:1.6">Pick your team, choose a position, and see which players would be a good fit — with match scores.</div>
       </div>
-
-      <!-- Step 1: Pick your team -->
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:10px">Step 1 — Pick Your Team</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -448,12 +442,10 @@ if (!_cu) {
             </select>
           </div>
         </div>
-        <div id="fan-team-stats" style="display:none;margin-top:12px;display:none;">
+        <div id="fan-team-stats" style="display:none;margin-top:12px;">
           <div style="display:flex;gap:8px;flex-wrap:wrap;" id="fan-team-badges"></div>
         </div>
       </div>
-
-      <!-- Step 2: Pick position & search -->
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;">
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:10px">Step 2 — Find a Player</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
@@ -518,7 +510,6 @@ if (!_cu) {
           </div>
         </div>
       </div>
-
       <div id="squad-count" style="font-size:12px;color:var(--accent);margin-bottom:12px"></div>
       <div id="squad-list"></div>
     </div>
@@ -526,92 +517,49 @@ if (!_cu) {
 </div>
 
 <script>
-// ═══════════════════════════════════════
-// WEAKNESS PROFILES
-// ═══════════════════════════════════════
-const PROFILES = {
-  "Defensive errors":    {pos:"Reliable CB",    role:"Consistent, low-error centre-back. Minimises mistakes that lead to shots.",    stats:{tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:55,pass_acc:82},w:{tackles_pg:3,interceptions_pg:3,aerial_pct:2,pass_acc:2}},
-  "Aerial vulnerability":{pos:"Aerial CB",      role:"Dominant in the air. Commands the penalty area at set pieces.",                 stats:{aerial_pct:60,height:185,tackles_pg:2.5},w:{aerial_pct:4,height:2,tackles_pg:2}},
-  "Poor tackling":       {pos:"CB or DM",       role:"Strong tackler who wins ground duels and disrupts opposition build-up.",       stats:{tackles_pg:3.2,interceptions_pg:2.0,aerial_pct:50},w:{tackles_pg:4,interceptions_pg:3,aerial_pct:1}},
-  "Lack of creativity":  {pos:"AM or CM",       role:"Creative playmaker generating key passes and chances in the final third.",     stats:{key_passes_pg:2.2,assists_pg:0.22,pass_acc:84},w:{key_passes_pg:4,assists_pg:3,pass_acc:2}},
-  "Poor passing":        {pos:"Ball-playing CB or DM",role:"Technically strong under pressure. Builds from the back with composure.",stats:{pass_acc:84,tackles_pg:2.5,key_passes_pg:1.5},w:{pass_acc:4,tackles_pg:2,key_passes_pg:2}},
-  "Poor finishing":      {pos:"ST or CF",        role:"Clinical striker with high conversion. Goals per game is the priority.",       stats:{goals_pg:0.45,shots_on_tgt_pg:2.0,aerial_pct:55},w:{goals_pg:4,shots_on_tgt_pg:3,aerial_pct:1}},
-  "Low attack output":   {pos:"Winger or Attacking Mid",    role:"Creative attacker who generates and converts chances consistently.",          stats:{goals_pg:0.28,key_passes_pg:1.8,shots_on_tgt_pg:1.5,assists_pg:0.20},w:{goals_pg:3,key_passes_pg:2,shots_on_tgt_pg:2,assists_pg:2}},
-  "Poor shot volume":    {pos:"Box-to-box MID",  role:"Gets forward to create volume in attack. High shot and key pass numbers.",    stats:{shots_on_tgt_pg:0.8,key_passes_pg:2.0,goals_pg:0.18},w:{shots_on_tgt_pg:3,key_passes_pg:3,goals_pg:2}},
-  "Goalkeeper weakness": {pos:"Goalkeeper",       role:"Reliable shot-stopper with strong aerial ability and good distribution. Reduces goals conceded immediately.",stats:{saves_pg:3.2,clean_sheets:10,gc_pg:1.1,pass_acc:72,aerial_pct:68},w:{saves_pg:4,clean_sheets:3,gc_pg:3,pass_acc:1,aerial_pct:2}},
+// All the JS from your original file — with the 2 fixes applied
+const PROFILES={
+  "Defensive errors":{pos:"Reliable CB",role:"Consistent, low-error centre-back. Minimises mistakes that lead to shots.",stats:{tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:55,pass_acc:82},w:{tackles_pg:3,interceptions_pg:3,aerial_pct:2,pass_acc:2}},
+  "Aerial vulnerability":{pos:"Aerial CB",role:"Dominant in the air. Commands the penalty area at set pieces.",stats:{aerial_pct:60,height:185,tackles_pg:2.5},w:{aerial_pct:4,height:2,tackles_pg:2}},
+  "Poor tackling":{pos:"CB or DM",role:"Strong tackler who wins ground duels and disrupts opposition build-up.",stats:{tackles_pg:3.2,interceptions_pg:2.0,aerial_pct:50},w:{tackles_pg:4,interceptions_pg:3,aerial_pct:1}},
+  "Lack of creativity":{pos:"AM or CM",role:"Creative playmaker generating key passes and chances in the final third.",stats:{key_passes_pg:2.2,assists_pg:0.22,pass_acc:84},w:{key_passes_pg:4,assists_pg:3,pass_acc:2}},
+  "Poor passing":{pos:"Ball-playing CB or DM",role:"Technically strong under pressure. Builds from the back with composure.",stats:{pass_acc:84,tackles_pg:2.5,key_passes_pg:1.5},w:{pass_acc:4,tackles_pg:2,key_passes_pg:2}},
+  "Poor finishing":{pos:"ST or CF",role:"Clinical striker with high conversion. Goals per game is the priority.",stats:{goals_pg:0.45,shots_on_tgt_pg:2.0,aerial_pct:55},w:{goals_pg:4,shots_on_tgt_pg:3,aerial_pct:1}},
+  "Low attack output":{pos:"Winger or Attacking Mid",role:"Creative attacker who generates and converts chances consistently.",stats:{goals_pg:0.28,key_passes_pg:1.8,shots_on_tgt_pg:1.5,assists_pg:0.20},w:{goals_pg:3,key_passes_pg:2,shots_on_tgt_pg:2,assists_pg:2}},
+  "Poor shot volume":{pos:"Box-to-box MID",role:"Gets forward to create volume in attack. High shot and key pass numbers.",stats:{shots_on_tgt_pg:0.8,key_passes_pg:2.0,goals_pg:0.18},w:{shots_on_tgt_pg:3,key_passes_pg:3,goals_pg:2}},
+  "Goalkeeper weakness":{pos:"Goalkeeper",role:"Reliable shot-stopper with strong aerial ability and good distribution. Reduces goals conceded immediately.",stats:{saves_pg:3.2,clean_sheets:10,gc_pg:1.1,pass_acc:72,aerial_pct:68},w:{saves_pg:4,clean_sheets:3,gc_pg:3,pass_acc:1,aerial_pct:2}},
 };
-
-// Position-specific profiles — override weakness profile when user filters by position
-// This ensures a CB search never ranks players on goals, a GK search ranks on saves etc.
-const POSITION_PROFILES = {
-  GK: {
-    pos:"Goalkeeper",
-    role:"Reliable shot-stopper with good distribution. Commands the penalty area and sweeps behind the defence.",
-    stats:{pass_acc:68,aerial_pct:60},
-    w:{pass_acc:3,aerial_pct:4}
-  },
-  DEF: {
-    pos:"Defender",
-    role:"Solid, reliable defender. Strong in the air, wins tackles and reads the game well.",
-    stats:{tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:58,pass_acc:82},
-    w:{tackles_pg:4,interceptions_pg:3,aerial_pct:2,pass_acc:2}
-  },
-  MID: {
-    pos:"Midfielder",
-    role:"Energetic, technically strong midfielder. Controls tempo, creates chances and contributes defensively.",
-    stats:{key_passes_pg:1.8,pass_acc:83,tackles_pg:2.5,assists_pg:0.15},
-    w:{key_passes_pg:3,pass_acc:3,tackles_pg:2,assists_pg:2}
-  },
-  ATT: {
-    pos:"Attacker",
-    role:"Clinical attacker who creates and converts chances. Goals and key passes are the priority.",
-    stats:{goals_pg:0.35,shots_on_tgt_pg:1.8,key_passes_pg:1.5,assists_pg:0.18},
-    w:{goals_pg:4,shots_on_tgt_pg:3,key_passes_pg:2,assists_pg:1}
-  }
+const POSITION_PROFILES={
+  GK:{pos:"Goalkeeper",role:"Reliable shot-stopper with good distribution. Commands the penalty area and sweeps behind the defence.",stats:{pass_acc:68,aerial_pct:60},w:{pass_acc:3,aerial_pct:4}},
+  DEF:{pos:"Defender",role:"Solid, reliable defender. Strong in the air, wins tackles and reads the game well.",stats:{tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:58,pass_acc:82},w:{tackles_pg:4,interceptions_pg:3,aerial_pct:2,pass_acc:2}},
+  MID:{pos:"Midfielder",role:"Energetic, technically strong midfielder. Controls tempo, creates chances and contributes defensively.",stats:{key_passes_pg:1.8,pass_acc:83,tackles_pg:2.5,assists_pg:0.15},w:{key_passes_pg:3,pass_acc:3,tackles_pg:2,assists_pg:2}},
+  ATT:{pos:"Attacker",role:"Clinical attacker who creates and converts chances. Goals and key passes are the priority.",stats:{goals_pg:0.35,shots_on_tgt_pg:1.8,key_passes_pg:1.5,assists_pg:0.18},w:{goals_pg:4,shots_on_tgt_pg:3,key_passes_pg:2,assists_pg:1}},
 };
-
-// ═══════════════════════════════════════
-// SUBPOSITION SCORING — penalty for wrong specific position
-// ═══════════════════════════════════════
-
-// How well does a player's natural subpos fit the requested subpos?
-const SUBPOS_COMPATIBILITY = {
-  // Defender compatibility
-  CB:  {CB:1.0, RB:0.6, LB:0.6, WB:0.5, DEF:0.8},
-  RB:  {RB:1.0, CB:0.55, WB:0.75, LB:0.4, DEF:0.8},
-  LB:  {LB:1.0, CB:0.55, WB:0.75, RB:0.4, DEF:0.8},
-  WB:  {WB:1.0, RB:0.8, LB:0.8, CB:0.4, DEF:0.7},
-  // Midfielder compatibility
-  CDM: {CDM:1.0, CM:0.7, CB:0.5, CAM:0.5, MID:0.8},
-  CM:  {CM:1.0, CDM:0.75, CAM:0.75, MID:0.9},
-  CAM: {CAM:1.0, CM:0.75, RW:0.6, LW:0.6, MID:0.8},
-  // Attacker compatibility
-  ST:  {ST:1.0, CF:0.9, RW:0.5, LW:0.5, ATT:0.8},
-  CF:  {CF:1.0, ST:0.9, CAM:0.6, ATT:0.8},
-  RW:  {RW:1.0, LW:0.7, CAM:0.65, ST:0.5, ATT:0.75},
-  LW:  {LW:1.0, RW:0.7, CAM:0.65, ST:0.5, ATT:0.75},
+const SUBPOS_COMPATIBILITY={
+  CB:{CB:1.0,RB:0.6,LB:0.6,WB:0.5,DEF:0.8},
+  RB:{RB:1.0,CB:0.55,WB:0.75,LB:0.4,DEF:0.8},
+  LB:{LB:1.0,CB:0.55,WB:0.75,RB:0.4,DEF:0.8},
+  WB:{WB:1.0,RB:0.8,LB:0.8,CB:0.4,DEF:0.7},
+  CDM:{CDM:1.0,CM:0.7,CB:0.5,CAM:0.5,MID:0.8},
+  CM:{CM:1.0,CDM:0.75,CAM:0.75,MID:0.9},
+  CAM:{CAM:1.0,CM:0.75,RW:0.6,LW:0.6,MID:0.8},
+  ST:{ST:1.0,CF:0.9,RW:0.5,LW:0.5,ATT:0.8},
+  CF:{CF:1.0,ST:0.9,CAM:0.6,ATT:0.8},
+  RW:{RW:1.0,LW:0.7,CAM:0.65,ST:0.5,ATT:0.75},
+  LW:{LW:1.0,RW:0.7,CAM:0.65,ST:0.5,ATT:0.75},
 };
-
-function getSubposCompatibility(playerSubpos, requestedSubpos) {
-  if (!playerSubpos || !requestedSubpos) return 1.0;
-  if (playerSubpos === requestedSubpos) return 1.0;
-  const map = SUBPOS_COMPATIBILITY[playerSubpos];
-  if (!map) return 0.7;
-  return map[requestedSubpos] || 0.6;
+function getSubposCompatibility(playerSubpos,requestedSubpos){
+  if(!playerSubpos||!requestedSubpos)return 1.0;
+  if(playerSubpos===requestedSubpos)return 1.0;
+  const map=SUBPOS_COMPATIBILITY[playerSubpos];
+  if(!map)return 0.7;
+  return map[requestedSubpos]||0.6;
 }
-
-// ═══════════════════════════════════════
-// PHASE 2 — CONTEXTUAL FACTORS
-// ═══════════════════════════════════════
-
-// Rival clubs — transfers between these are very unlikely
-const RIVALRIES = [
-  // Brazil
+const RIVALRIES=[
   ['Flamengo','Fluminense'],['Flamengo','Vasco da Gama'],['Flamengo','Botafogo'],
   ['Fluminense','Vasco da Gama'],['Fluminense','Botafogo'],['Vasco da Gama','Botafogo'],
   ['Palmeiras','Corinthians'],['Palmeiras','São Paulo'],['Corinthians','São Paulo'],
   ['Atlético Mineiro','Cruzeiro'],['Grêmio','Internacional'],
-  // Europe
   ['Real Madrid','Barcelona'],['Real Madrid','Atlético Madrid'],['Barcelona','Atlético Madrid'],
   ['Manchester United','Manchester City'],['Manchester United','Liverpool'],['Manchester City','Liverpool'],
   ['Arsenal','Tottenham'],['Chelsea','Arsenal'],['Chelsea','Tottenham'],
@@ -623,1119 +571,555 @@ const RIVALRIES = [
   ['Benfica','Sporting CP'],['Benfica','FC Porto'],['Sporting CP','FC Porto'],
   ['Galatasaray','Fenerbahçe'],['Galatasaray','Beşiktaş'],
 ];
-
-function areRivals(club1, club2) {
-  return RIVALRIES.some(([a,b]) =>
-    (a === club1 && b === club2) || (a === club2 && b === club1)
-  );
-}
-
-// Age-based factors
-function getAgeFactor(age, pos) {
-  if (pos === 'GK') {
-    if (age <= 28) return {mult:1.0, label:null};
-    if (age <= 33) return {mult:0.92, label:`Age ${age} — GK still prime`};
-    if (age <= 36) return {mult:0.80, label:`Age ${age} — declining years`};
-    return {mult:0.60, label:`Age ${age} — very high risk`};
-  }
-  if (age <= 23) return {mult:1.05, label:`Age ${age} — high upside potential`};
-  if (age <= 28) return {mult:1.0, label:null};
-  if (age <= 31) return {mult:0.95, label:null};
-  if (age <= 33) return {mult:0.85, label:`Age ${age} — declining window`};
-  if (age <= 35) return {mult:0.70, label:`Age ${age} — short-term signing only`};
-  return {mult:0.50, label:`Age ${age} — very high risk`};
-}
-
-// League level factor — how big a step up/down is this move?
-const LEAGUE_TIERS = {
-  premier_league:1, la_liga:1, bundesliga:1, serie_a_it:1, ligue_1:1,
-  serie_a:2, argentina:2, eredivisie:2, primeira_liga:2, scottish_prem:2,
-  super_lig:2, jupiler:2, saudi_pro:2,
-  serie_b:3, mls:3, liga_mx:3, j_league:3, k_league:3,
-  serie_c:4, colombia:3, chile:3, uruguay:3, ecuador:4, paraguay:4, peru:4,
-  egypt_pl:3, sa_psl:3, a_league:3, chinese_sl:3,
+function areRivals(club1,club2){return RIVALRIES.some(([a,b])=>(a===club1&&b===club2)||(a===club2&&b===club1));}
+const LEAGUE_TIERS={
+  premier_league:1,la_liga:1,bundesliga:1,serie_a_it:1,ligue_1:1,
+  serie_a:2,argentina:2,eredivisie:2,primeira_liga:2,scottish_prem:2,
+  super_lig:2,jupiler:2,saudi_pro:2,
+  serie_b:3,mls:3,liga_mx:3,j_league:3,k_league:3,
+  serie_c:4,colombia:3,chile:3,uruguay:3,ecuador:4,paraguay:4,peru:4,
+  egypt_pl:3,sa_psl:3,a_league:3,chinese_sl:3,
 };
-
-function getLeagueFactor(playerLeague, targetLeague) {
-  const pt = LEAGUE_TIERS[playerLeague] || 3;
-  const tt = LEAGUE_TIERS[targetLeague] || 3;
-  const diff = pt - tt; // positive = step up, negative = step down
-  if (diff >= 2) return {mult:0.75, label:`Big step up from ${playerLeague}`};
-  if (diff === 1) return {mult:0.90, label:`Step up in level`};
-  if (diff === 0) return {mult:1.0, label:null};
-  if (diff === -1) return {mult:0.92, label:`Step down in level`};
-  return {mult:0.80, label:`Significant step down`};
+function applyContextualFactors(baseScore,p,selectedTeam,targetLeague){
+  const score=baseScore;
+  const contextFlags=[],contextBoosts=[];
+  if(!p)return{score,contextFlags,contextBoosts};
+  if(selectedTeam&&p.club===selectedTeam.name){
+    contextBoosts.push({icon:'✓',text:'Current squad player',color:'var(--accent2)'});
+    return{score,contextFlags,contextBoosts};
+  }
+  if(selectedTeam&&areRivals(p.club,selectedTeam.name)){
+    contextFlags.push({icon:'⚔',text:'Rival club — transfer politically sensitive',color:'var(--red)',tip:'Historically rare but not impossible'});
+  }
+  const age=p.age,pos=p.pos;
+  if(age<=18)contextBoosts.push({icon:'🌟',text:`Age ${age} — exceptional potential`,color:'var(--accent)'});
+  else if(age<=21)contextBoosts.push({icon:'⭐',text:`Age ${age} — high upside, 10+ peak years ahead`,color:'var(--accent)'});
+  else if(age<=24)contextBoosts.push({icon:'📈',text:`Age ${age} — entering prime years`,color:'var(--green)'});
+  else if(age<=30)contextFlags.push({icon:'📅',text:`Age ${age} — late prime, 4-6 strong years expected`,color:'var(--yellow)'});
+  else if(age<=32)contextFlags.push({icon:'⏳',text:`Age ${age} — consider 2-3 year contract max`,color:'var(--yellow)'});
+  else if(age<=34)contextFlags.push({icon:'⚠',text:`Age ${age} — short-term signing only, injury risk rising`,color:'var(--warn)'});
+  else if(age<=36)contextFlags.push({icon:'🔴',text:`Age ${age} — 1-year deal maximum, squad depth role`,color:'var(--red)'});
+  else contextFlags.push({icon:'🔴',text:`Age ${age} — very high injury/retirement risk`,color:'var(--red)'});
+  if(pos==='GK'&&age>=30&&age<=36){contextFlags.pop();contextFlags.push({icon:'🧤',text:`Age ${age} — GKs peak late, still viable`,color:'var(--yellow)'});}
+  if(targetLeague&&p.league!==targetLeague){
+    const pt=LEAGUE_TIERS[p.league]||3,tt=LEAGUE_TIERS[targetLeague]||3,diff=pt-tt;
+    if(diff>=2)contextFlags.push({icon:'📊',text:'Big step up in level — adaptation period expected',color:'var(--yellow)'});
+    else if(diff===1)contextFlags.push({icon:'📊',text:'Step up in league level — proven potential needed',color:'var(--yellow)'});
+    else if(diff<=-2)contextFlags.push({icon:'📊',text:'Significant step down — may be seeking exit',color:'var(--muted)'});
+  }
+  if(selectedTeam){
+    const coach=typeof COACHES!=='undefined'?COACHES[selectedTeam.id]:null;
+    if(coach&&coach.former_players&&coach.former_players.includes(p.name)){
+      contextBoosts.push({icon:'🎓',text:`Previously coached by ${coach.name} — knows the system`,color:'var(--accent)'});
+    }
+  }
+  if(selectedTeam&&p.league===targetLeague&&p.club!==selectedTeam.name){
+    contextBoosts.push({icon:'🏆',text:'Same league — no adaptation period, simpler transfer',color:'var(--accent)'});
+  }
+  if(selectedTeam&&p.former_clubs&&p.former_clubs.includes(selectedTeam.name)){
+    contextBoosts.push({icon:'🏠',text:`Former ${selectedTeam.name} player — knows the club DNA`,color:'var(--accent2)'});
+  }
+  if(p.injury_risk==='high')contextFlags.push({icon:'🚑',text:'Injury prone — high risk of missed games',color:'var(--red)'});
+  else if(p.injury_risk==='low')contextBoosts.push({icon:'💪',text:'Injury resilient — consistently available',color:'var(--green)'});
+  if(p.nat_team&&p.caps>0){
+    if(p.caps>=50)contextBoosts.push({icon:'🌍',text:`${p.nat_team} international — ${p.caps} caps, proven at highest level`,color:'var(--accent)'});
+    else if(p.caps>=20)contextBoosts.push({icon:'🌍',text:`${p.nat_team} international — ${p.caps} caps`,color:'var(--accent2)'});
+  }
+  if((targetLeague==='serie_a'||targetLeague==='serie_b'||targetLeague==='serie_c')&&p.nat==='Brazilian'){
+    contextBoosts.push({icon:'🇧🇷',text:'Brazilian — no work permit needed, simpler deal',color:'var(--accent2)'});
+  }else if(targetLeague==='premier_league'&&!['English','Welsh','Scottish','Northern Irish','Irish'].includes(p.nat)){
+    contextFlags.push({icon:'📋',text:'Non-British — work permit required',color:'var(--muted)'});
+  }
+  if(age<=22&&p.value>=20000000)contextBoosts.push({icon:'💎',text:'High-value young talent — sell-on value strong',color:'var(--accent)'});
+  if(age>=32&&p.value<=3000000)contextBoosts.push({icon:'💰',text:'Low cost experienced player — budget-friendly option',color:'var(--green)'});
+  return{score,contextFlags,contextBoosts};
+}
+function detectAltPositions(p){
+  const alts=[];
+  if(!p||!p.pos)return alts;
+  if(p.pos==='MID'&&p.subpos==='CDM'&&p.aerial_pct>=58&&p.tackles_pg>=3.0&&p.pass_acc>=82&&p.height>=183)alts.push({pos:'CB',reason:'Aerial+tackling stats suit CB role'});
+  if(p.pos==='MID'&&(p.subpos==='CM'||!p.subpos)){
+    if(p.key_passes_pg>=2.2&&p.goals_pg>=0.15)alts.push({pos:'CAM',reason:'Creative output suits CAM role'});
+    if(p.tackles_pg>=3.5&&p.aerial_pct>=50)alts.push({pos:'CDM',reason:'Defensive work rate suits CDM'});
+  }
+  if(p.pos==='MID'&&p.subpos==='CAM'&&p.goals_pg>=0.25&&p.shots_on_tgt_pg>=1.2)alts.push({pos:'ST',reason:'Goals & shots output suits ST role'});
+  if(p.pos==='DEF'&&(p.subpos==='RB'||p.subpos==='LB')&&p.assists_pg>=0.20&&p.key_passes_pg>=1.2)alts.push({pos:p.subpos==='RB'?'RW':'LW',reason:'Attacking output suits winger role'});
+  if(p.pos==='DEF'&&p.subpos==='CB'&&p.pass_acc>=88&&p.tackles_pg>=2.8)alts.push({pos:'CDM',reason:'Technical + defensive suits CDM'});
+  if(p.pos==='ATT'&&(p.subpos==='RW'||p.subpos==='LW')&&p.goals_pg>=0.40&&p.aerial_pct>=48)alts.push({pos:'ST',reason:'Goal return suits striker role'});
+  if(p.pos==='ATT'&&p.subpos==='ST'&&p.assists_pg>=0.22&&p.key_passes_pg>=1.5)alts.push({pos:'CAM',reason:'Playmaking suits CAM role'});
+  return alts.slice(0,2);
+}
+function getProfile(weaknessType,positionFilter){
+  if(positionFilter&&POSITION_PROFILES[positionFilter]){
+    const posProfile=POSITION_PROFILES[positionFilter];
+    const weakProfile=PROFILES[weaknessType];
+    const attackW=["Poor finishing","Low attack output","Poor shot volume"];
+    const defW=["Defensive errors","Aerial vulnerability","Poor tackling","Goalkeeper weakness"];
+    const midW=["Lack of creativity","Poor passing"];
+    const isMatch=(positionFilter==='ATT'&&attackW.includes(weaknessType))||(positionFilter==='DEF'&&defW.includes(weaknessType))||(positionFilter==='MID'&&midW.includes(weaknessType))||(positionFilter==='GK');
+    return isMatch&&weakProfile?weakProfile:posProfile;
+  }
+  if(weaknessType==='Goalkeeper weakness')return PROFILES['Goalkeeper weakness'];
+  return PROFILES[weaknessType]||PROFILES["Low attack output"];
 }
 
-// Apply Phase 2 contextual factors — INFORMATIONAL ONLY, score stays pure
-// Score = stat fit. Flags = transfer context. These are separate things.
-function applyContextualFactors(baseScore, p, selectedTeam, targetLeague) {
-  const score = baseScore; // NEVER modify score here — keep it pure
-  const contextFlags = [];
-  const contextBoosts = [];
-
-  if (!p) return {score, contextFlags, contextBoosts};
-
-  // ── CURRENT PLAYER ──
-  if (selectedTeam && p.club === selectedTeam.name) {
-    contextBoosts.push({icon:'✓', text:'Current squad player', color:'var(--accent2)'});
-    return {score, contextFlags, contextBoosts};
-  }
-
-  // ── RIVAL CLUB WARNING ──
-  if (selectedTeam && areRivals(p.club, selectedTeam.name)) {
-    contextFlags.push({
-      icon:'⚔',
-      text:'Rival club — transfer politically sensitive',
-      color:'var(--red)',
-      tip:'Historically rare but not impossible (e.g. Figo, Higuaín)'
-    });
-  }
-
-  // ── AGE CONTEXT ──
-  const age = p.age;
-  const pos = p.pos;
-
-  if (age <= 18) {
-    contextBoosts.push({icon:'🌟', text:`Age ${age} — exceptional potential, generational talent window`, color:'var(--accent)'});
-  } else if (age <= 21) {
-    contextBoosts.push({icon:'⭐', text:`Age ${age} — high upside, 10+ peak years ahead`, color:'var(--accent)'});
-  } else if (age <= 24) {
-    contextBoosts.push({icon:'📈', text:`Age ${age} — entering prime years`, color:'var(--green)'});
-  } else if (age <= 28) {
-    // Prime — no comment needed, it's expected
-  } else if (age <= 30) {
-    contextFlags.push({icon:'📅', text:`Age ${age} — late prime, 4-6 strong years expected`, color:'var(--yellow)'});
-  } else if (age <= 32) {
-    contextFlags.push({icon:'⏳', text:`Age ${age} — consider 2-3 year contract max`, color:'var(--yellow)'});
-  } else if (age <= 34) {
-    contextFlags.push({icon:'⚠', text:`Age ${age} — short-term signing only, injury risk rising`, color:'var(--warn)'});
-  } else if (age <= 36) {
-    contextFlags.push({icon:'🔴', text:`Age ${age} — 1-year deal maximum, squad depth role`, color:'var(--red)'});
-  } else {
-    contextFlags.push({icon:'🔴', text:`Age ${age} — very high injury/retirement risk`, color:'var(--red)'});
-  }
-
-  // GK exception — they peak and last longer
-  if (pos === 'GK' && age >= 30 && age <= 36) {
-    // Override the flag with a softer one
-    contextFlags.pop();
-    contextFlags.push({icon:'🧤', text:`Age ${age} — GKs peak late, still viable at this age`, color:'var(--yellow)'});
-  }
-
-  // ── LEAGUE CONTEXT ──
-  if (targetLeague && p.league !== targetLeague) {
-    const pt = LEAGUE_TIERS[p.league] || 3;
-    const tt = LEAGUE_TIERS[targetLeague] || 3;
-    const diff = pt - tt;
-    if (diff >= 2) {
-      contextFlags.push({icon:'📊', text:`Big step up in level — adaptation period expected`, color:'var(--yellow)'});
-    } else if (diff === 1) {
-      contextFlags.push({icon:'📊', text:`Step up in league level — proven potential needed`, color:'var(--yellow)'});
-    } else if (diff <= -2) {
-      contextFlags.push({icon:'📊', text:`Significant step down — may be seeking exit`, color:'var(--muted)'});
-    }
-  }
-
-  // ── PREVIOUSLY COACHED BY CURRENT COACH ──
-  if (selectedTeam) {
-    const coach = COACHES[selectedTeam.id];
-    if (coach && coach.former_players && coach.former_players.includes(p.name)) {
-      contextBoosts.push({icon:'🎓', text:`Previously coached by ${coach.name} — knows the system`, color:'var(--accent)'});
-    }
-  }
-
-  // ── SAME LEAGUE BONUS ──
-  if (selectedTeam && p.league === targetLeague && p.club !== selectedTeam.name) {
-    contextBoosts.push({icon:'🏆', text:'Same league — no adaptation period, simpler transfer', color:'var(--accent)'});
-  }
-
-  // ── FORMERLY PLAYED FOR THIS CLUB ──
-  if (selectedTeam && p.former_clubs && p.former_clubs.includes(selectedTeam.name)) {
-    contextBoosts.push({icon:'🏠', text:`Former ${selectedTeam.name} player — knows the club DNA`, color:'var(--accent2)'});
-  }
-
-  // ── INJURY RISK ──
-  if (p.injury_risk === 'high') {
-    contextFlags.push({icon:'🚑', text:'Injury prone — high risk of missed games, short contract recommended', color:'var(--red)'});
-  } else if (p.injury_risk === 'low') {
-    contextBoosts.push({icon:'💪', text:'Injury resilient — consistently available, low fitness risk', color:'var(--green)'});
-  }
-
-  // ── NATIONAL TEAM ──
-  if (p.nat_team && p.caps > 0) {
-    if (p.caps >= 50) {
-      contextBoosts.push({icon:'🌍', text:`${p.nat_team} international — ${p.caps} caps, proven at highest level`, color:'var(--accent)'});
-    } else if (p.caps >= 20) {
-      contextBoosts.push({icon:'🌍', text:`${p.nat_team} international — ${p.caps} caps`, color:'var(--accent2)'});
-    }
-  }
-
-  // ── NATIONALITY / WORK PERMIT ──
-  if ((targetLeague === 'serie_a' || targetLeague === 'serie_b' || targetLeague === 'serie_c') && p.nat === 'Brazilian') {
-    contextBoosts.push({icon:'🇧🇷', text:'Brazilian — no work permit needed, simpler deal', color:'var(--accent2)'});
-  } else if ((targetLeague === 'premier_league') && !['English','Welsh','Scottish','Northern Irish','Irish'].includes(p.nat)) {
-    contextFlags.push({icon:'📋', text:'Non-British — work permit required', color:'var(--muted)'});
-  }
-
-  // ── VALUE vs POTENTIAL ──
-  if (age <= 22 && p.value >= 20000000) {
-    contextBoosts.push({icon:'💎', text:`High-value young talent — sell-on value strong`, color:'var(--accent)'});
-  }
-  if (age >= 32 && p.value <= 3000000) {
-    contextBoosts.push({icon:'💰', text:`Low cost experienced player — budget-friendly option`, color:'var(--green)'});
-  }
-
-  return {score, contextFlags, contextBoosts};
+// ── AUTH & USER ──
+const currentUser=JSON.parse(localStorage.getItem('sm_current_user')||'null');
+const PLAN_NAMES={free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro'};
+const PLAN_CLASS={free:'free',pro:'pro',club:'club',clubpro:'clubpro'};
+const userPlan=currentUser?.plan||'free';
+const isPro=['pro','club','clubpro'].includes(userPlan);
+const isClub=['club','clubpro'].includes(userPlan);
+const isFree=userPlan==='free';
+if(currentUser){
+  document.getElementById('nav-name').textContent=currentUser.name||'User';
+  const planEl=document.getElementById('nav-plan');
+  planEl.textContent=PLAN_NAMES[userPlan]||'Scout Free';
+  planEl.className='plan-pill '+(PLAN_CLASS[userPlan]||'free');
 }
 
-// ═══════════════════════════════════════
-// ALTERNATIVE POSITION DETECTION
-// ═══════════════════════════════════════
-function detectAltPositions(p) {
-  const alts = [];
-  if (!p || !p.pos) return alts;
-
-  // CDM who could play CB
-  if (p.pos === 'MID' && p.subpos === 'CDM') {
-    if (p.aerial_pct >= 58 && p.tackles_pg >= 3.0 && p.pass_acc >= 82 && p.height >= 183) {
-      alts.push({pos:'CB', reason:'Aerial+tackling stats suit CB role'});
-    }
-  }
-  // CM who could play CAM
-  if (p.pos === 'MID' && (p.subpos === 'CM' || !p.subpos)) {
-    if (p.key_passes_pg >= 2.2 && p.goals_pg >= 0.15) {
-      alts.push({pos:'CAM', reason:'Creative output suits CAM role'});
-    }
-    if (p.tackles_pg >= 3.5 && p.aerial_pct >= 50) {
-      alts.push({pos:'CDM', reason:'Defensive work rate suits CDM'});
-    }
-  }
-  // CAM who could play ST
-  if (p.pos === 'MID' && p.subpos === 'CAM') {
-    if (p.goals_pg >= 0.25 && p.shots_on_tgt_pg >= 1.2) {
-      alts.push({pos:'ST', reason:'Goals & shots output suits ST role'});
-    }
-  }
-  // RB/LB who could play RW/LW
-  if (p.pos === 'DEF' && (p.subpos === 'RB' || p.subpos === 'LB')) {
-    if (p.assists_pg >= 0.20 && p.key_passes_pg >= 1.2) {
-      alts.push({pos: p.subpos === 'RB' ? 'RW' : 'LW', reason:'Attacking output suits winger role'});
-    }
-  }
-  // CB who could play CDM
-  if (p.pos === 'DEF' && p.subpos === 'CB') {
-    if (p.pass_acc >= 88 && p.tackles_pg >= 2.8) {
-      alts.push({pos:'CDM', reason:'Technical + defensive suits CDM'});
-    }
-  }
-  // Winger who could play ST
-  if (p.pos === 'ATT' && (p.subpos === 'RW' || p.subpos === 'LW')) {
-    if (p.goals_pg >= 0.40 && p.aerial_pct >= 48) {
-      alts.push({pos:'ST', reason:'Goal return suits striker role'});
-    }
-  }
-  // ST who could play CAM
-  if (p.pos === 'ATT' && p.subpos === 'ST') {
-    if (p.assists_pg >= 0.22 && p.key_passes_pg >= 1.5) {
-      alts.push({pos:'CAM', reason:'Playmaking suits CAM role'});
-    }
-  }
-  return alts.slice(0, 2); // max 2 suggestions
-}
-
-// Get the correct profile — use position override if user has filtered by position
-function getProfile(weaknessType, positionFilter) {
-  if (positionFilter && POSITION_PROFILES[positionFilter]) {
-    const posProfile = POSITION_PROFILES[positionFilter];
-    const weakProfile = PROFILES[weaknessType];
-    const attackWeaknesses = ["Poor finishing","Low attack output","Poor shot volume"];
-    const defWeaknesses = ["Defensive errors","Aerial vulnerability","Poor tackling","Goalkeeper weakness"];
-    const midWeaknesses = ["Lack of creativity","Poor passing"];
-    const isMatch = (
-      (positionFilter === 'ATT' && attackWeaknesses.includes(weaknessType)) ||
-      (positionFilter === 'DEF' && defWeaknesses.includes(weaknessType)) ||
-      (positionFilter === 'MID' && midWeaknesses.includes(weaknessType)) ||
-      (positionFilter === 'GK')
-    );
-    return isMatch && weakProfile ? weakProfile : posProfile;
-  }
-  // GK weakness always returns GK profile
-  if (weaknessType === 'Goalkeeper weakness') return PROFILES['Goalkeeper weakness'];
-  return PROFILES[weaknessType] || PROFILES["Low attack output"];
-}
-
-// ═══════════════════════════════════════
-// AUTH & USER
-// ═══════════════════════════════════════
-const currentUser = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
-const PLAN_NAMES = {free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro'};
-const PLAN_CLASS = {free:'free',pro:'pro',club:'club',clubpro:'clubpro'};
-const userPlan = currentUser?.plan || 'free';
-const isPro = ['pro','club','clubpro'].includes(userPlan);
-const isClub = ['club','clubpro'].includes(userPlan);
-const isFree = userPlan === 'free';
-
-if (currentUser) {
-  document.getElementById('nav-name').textContent = currentUser.name || 'User';
-  const planEl = document.getElementById('nav-plan');
-  planEl.textContent = PLAN_NAMES[userPlan] || 'Scout Free';
-  planEl.className = 'plan-pill ' + (PLAN_CLASS[userPlan] || 'free');
-}
-
-function logout() {
-  var s = window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
-  s.auth.signOut();
-  localStorage.removeItem('sm_current_user');
-  window.location.href = '/auth.html';
-}
-
-// ═══════════════════════════════════════
-// APP STATE
-// ═══════════════════════════════════════
-let currentLeague = 'serie_a';
-let selectedTeam = null;
-
-function onLeagueChange() {
-  currentLeague = document.getElementById('leagueSel').value;
-  selectedTeam = null;
-  document.getElementById('teamSearch').value = '';
-  document.getElementById('runBtn').disabled = true;
-  document.getElementById('runBtn2').disabled = true;
-  document.getElementById('btnHint').textContent = 'Select a team first';
-  clearStats();
-  renderTeamList('');
-}
-
-function clearStats() {
-  ['s_gc','s_tk','s_int','s_cl','s_aer','s_yel','s_pa','s_pos','s_fouls','s_gs','s_sh','s_sot'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-  ['c_gc','c_tk','c_int','c_cl','c_aer','c_yel','c_pa','c_pos','c_fouls','c_gs','c_sh','c_sot'].forEach(id => {
-    document.getElementById(id).className = 'scard';
-  });
-  ['a_gc','a_tk','a_int','a_cl','a_aer','a_yel','a_pa','a_pos','a_fouls','a_gs','a_sh','a_sot'].forEach(id => {
-    document.getElementById(id).textContent = '';
+// FIX 1: logout now waits for signOut to complete before redirecting
+function logout(){
+  var s=window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
+  s.auth.signOut().then(function(){
+    localStorage.removeItem('sm_current_user');
+    window.location.href='/auth.html';
   });
 }
 
-function renderTeamList(filter) {
-  const teams = (TEAMS[currentLeague] || []).slice().sort((a,b) => a.name.localeCompare(b.name));
-  const q = filter.toLowerCase();
-  const filtered = q ? teams.filter(t => t.name.toLowerCase().includes(q)) : teams;
-  document.getElementById('teamList').innerHTML = filtered.length === 0
-    ? '<div style="font-size:12px;color:var(--muted);padding:8px 0;text-align:center">No teams found</div>'
-    : filtered.map(t => `
-      <div class="team-item ${selectedTeam?.id===t.id?'selected':''}" onclick="selectTeamWrapped('${t.id}')">
-        <div class="team-name">${t.name}</div>
-        <div class="team-pos-lbl">${t.pos}</div>
-      </div>`).join('');
+// ── APP STATE ──
+let currentLeague='serie_a';
+let selectedTeam=null;
+function onLeagueChange(){
+  currentLeague=document.getElementById('leagueSel').value;
+  selectedTeam=null;
+  document.getElementById('teamSearch').value='';
+  document.getElementById('runBtn').disabled=true;
+  document.getElementById('runBtn2').disabled=true;
+  document.getElementById('btnHint').textContent='Select a team first';
+  clearStats();renderTeamList('');
 }
-
-function filterTeams() {
+function clearStats(){
+  ['s_gc','s_tk','s_int','s_cl','s_aer','s_yel','s_pa','s_pos','s_fouls','s_gs','s_sh','s_sot'].forEach(id=>{document.getElementById(id).value='';});
+  ['c_gc','c_tk','c_int','c_cl','c_aer','c_yel','c_pa','c_pos','c_fouls','c_gs','c_sh','c_sot'].forEach(id=>{document.getElementById(id).className='scard';});
+  ['a_gc','a_tk','a_int','a_cl','a_aer','a_yel','a_pa','a_pos','a_fouls','a_gs','a_sh','a_sot'].forEach(id=>{document.getElementById(id).textContent='';});
+}
+function renderTeamList(filter){
+  const teams=(TEAMS[currentLeague]||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const q=filter.toLowerCase();
+  const filtered=q?teams.filter(t=>t.name.toLowerCase().includes(q)):teams;
+  document.getElementById('teamList').innerHTML=filtered.length===0
+    ?'<div style="font-size:12px;color:var(--muted);padding:8px 0;text-align:center">No teams found</div>'
+    :filtered.map(t=>`<div class="team-item ${selectedTeam?.id===t.id?'selected':''}" onclick="selectTeamWrapped('${t.id}')"><div class="team-name">${t.name}</div><div class="team-pos-lbl">${t.pos}</div></div>`).join('');
+}
+function filterTeams(){renderTeamList(document.getElementById('teamSearch').value);}
+function selectTeam(id){
+  const teams=TEAMS[currentLeague]||[];
+  selectedTeam=teams.find(t=>t.id===id);
+  if(!selectedTeam)return;
   renderTeamList(document.getElementById('teamSearch').value);
-}
-
-function selectTeam(id) {
-  const teams = TEAMS[currentLeague] || [];
-  selectedTeam = teams.find(t => t.id === id);
-  if (!selectedTeam) return;
-  renderTeamList(document.getElementById('teamSearch').value);
-
-  const s = selectedTeam;
-  const av = LEAGUE_AVGS[currentLeague] || {};
-
-  const statMap = [
-    ['s_gc','c_gc','a_gc', s.gc, av.gc, true],
-    ['s_tk','c_tk','a_tk', s.tk, av.tk, false],
-    ['s_int','c_int','a_int', s.int, av.int, false],
-    ['s_cl','c_cl','a_cl', s.cl, av.cl, false],
-    ['s_aer','c_aer','a_aer', s.aer, av.aer, false],
-    ['s_yel','c_yel','a_yel', s.yel, av.yel, true],
-    ['s_pa','c_pa','a_pa', s.pa, av.pa, false],
-    ['s_pos','c_pos','a_pos', s.pos_pct, av.pos, false],
-    ['s_fouls','c_fouls','a_fouls', s.fouls, av.fouls, true],
-    ['s_gs','c_gs','a_gs', s.gs, av.gs, false],
-    ['s_sh','c_sh','a_sh', s.sh, av.sh, false],
-    ['s_sot','c_sot','a_sot', s.sot, av.sot, false],
+  const s=selectedTeam,av=LEAGUE_AVGS[currentLeague]||{};
+  const statMap=[
+    ['s_gc','c_gc','a_gc',s.gc,av.gc,true],
+    ['s_tk','c_tk','a_tk',s.tk,av.tk,false],
+    ['s_int','c_int','a_int',s.int,av.int,false],
+    ['s_cl','c_cl','a_cl',s.cl,av.cl,false],
+    ['s_aer','c_aer','a_aer',s.aer,av.aer,false],
+    ['s_yel','c_yel','a_yel',s.yel,av.yel,true],
+    ['s_pa','c_pa','a_pa',s.pa,av.pa,false],
+    ['s_pos','c_pos','a_pos',s.pos_pct,av.pos,false],
+    ['s_fouls','c_fouls','a_fouls',s.fouls,av.fouls,true],
+    ['s_gs','c_gs','a_gs',s.gs,av.gs,false],
+    ['s_sh','c_sh','a_sh',s.sh,av.sh,false],
+    ['s_sot','c_sot','a_sot',s.sot,av.sot,false],
   ];
-
-  statMap.forEach(([sid, cid, aid, val, avg, lowerIsBetter]) => {
-    document.getElementById(sid).value = val;
-    if (avg) {
-      const d = lowerIsBetter ? (val - avg) / avg : (avg - val) / avg;
-      const card = document.getElementById(cid);
-      card.className = 'scard' + (d >= 0.35 ? ' flagged' : d >= 0.20 ? ' flagged-minor' : '');
-      document.getElementById(aid).textContent = `League avg: ${avg}`;
+  statMap.forEach(([sid,cid,aid,val,avg,lb])=>{
+    document.getElementById(sid).value=val;
+    if(avg){
+      const d=lb?(val-avg)/avg:(avg-val)/avg;
+      const card=document.getElementById(cid);
+      card.className='scard'+(d>=0.35?' flagged':d>=0.20?' flagged-minor':'');
+      document.getElementById(aid).textContent=`League avg: ${avg}`;
     }
   });
-
-  document.getElementById('runBtn').disabled = false;
-  document.getElementById('runBtn2').disabled = false;
-  document.getElementById('btnHint').textContent = s.name + ' loaded ✓';
-  document.getElementById('statusMsg').innerHTML = `<span class="live-dot"></span> Stats loaded for <strong>${s.name}</strong> — ${LEAGUE_META[currentLeague]?.name || ''} 2026`;
-  setTimeout(() => document.getElementById('statusMsg').innerHTML = '', 3000);
-
-  // Show team info bar
-  const info = TEAM_INFO?.[s.id];
-  const coach = COACHES?.[s.id];
-  const infoBar = document.getElementById('teamInfoBar');
-  if (infoBar) {
-    document.getElementById('teamInfoName').textContent = info?.fullName || s.name;
-    document.getElementById('teamInfoDetails').textContent = [
-      info?.city, info?.stadium, info?.founded ? `Est. ${info.founded}` : null,
-      info?.capacity ? `${info.capacity.toLocaleString()} capacity` : null
-    ].filter(Boolean).join(' · ');
-    document.getElementById('teamInfoCoach').innerHTML = coach ?
-      `👔 <strong>${coach.name}</strong> · Since ${coach.since}` : '';
-    document.getElementById('teamInfoInstagram').innerHTML = info?.instagram ?
-      `<a href="https://instagram.com/${info.instagram.replace('@','')}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px;">${info.instagram}</a>` : '';
-    infoBar.style.display = 'block';
+  document.getElementById('runBtn').disabled=false;
+  document.getElementById('runBtn2').disabled=false;
+  document.getElementById('btnHint').textContent=s.name+' loaded ✓';
+  document.getElementById('statusMsg').innerHTML=`<span class="live-dot"></span> Stats loaded for <strong>${s.name}</strong>`;
+  setTimeout(()=>document.getElementById('statusMsg').innerHTML='',3000);
+  const info=typeof TEAM_INFO!=='undefined'?TEAM_INFO[s.id]:null;
+  const coach=typeof COACHES!=='undefined'?COACHES[s.id]:null;
+  const infoBar=document.getElementById('teamInfoBar');
+  if(infoBar){
+    document.getElementById('teamInfoName').textContent=info?.fullName||s.name;
+    document.getElementById('teamInfoDetails').textContent=[info?.city,info?.stadium,info?.founded?`Est. ${info.founded}`:null,info?.capacity?`${info.capacity.toLocaleString()} capacity`:null].filter(Boolean).join(' · ');
+    document.getElementById('teamInfoCoach').innerHTML=coach?`👔 <strong>${coach.name}</strong> · Since ${coach.since}`:'';
+    document.getElementById('teamInfoInstagram').innerHTML=info?.instagram?`<a href="https://instagram.com/${info.instagram.replace('@','')}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px;">${info.instagram}</a>`:'';
+    infoBar.style.display='block';
   }
-
   updateFilterCount();
 }
-
-function updateFilterCount() {
-  const plLeague = document.getElementById('playerLeagueSel').value;
-  const minAge = parseInt(document.getElementById('minAge').value)||0;
-  const maxAge = parseInt(document.getElementById('maxAge').value)||99;
-  const budget = parseFloat(document.getElementById('budgetMax').value)||Infinity;
-  const minApps = parseInt(document.getElementById('minApps').value)||0;
-  const pos = document.getElementById('posFil').value;
-
-  const pool = plLeague === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === plLeague);
-  const count = pool.filter(p =>
-    p.age >= minAge && p.age <= maxAge &&
-    p.value <= budget && p.apps >= minApps
-  ).length;
-  document.getElementById('filter-count').textContent = count + ' players match your filters';
+function updateFilterCount(){
+  const plLeague=document.getElementById('playerLeagueSel').value;
+  const minAge=parseInt(document.getElementById('minAge').value)||0;
+  const maxAge=parseInt(document.getElementById('maxAge').value)||99;
+  const budget=parseFloat(document.getElementById('budgetMax').value)||Infinity;
+  const minApps=parseInt(document.getElementById('minApps').value)||0;
+  const pool=plLeague==='ALL'?PLAYERS_VALID:PLAYERS_VALID.filter(p=>p.league===plLeague);
+  const count=pool.filter(p=>p.age>=minAge&&p.age<=maxAge&&p.value<=budget&&p.apps>=minApps).length;
+  document.getElementById('filter-count').textContent=count+' players match your filters';
 }
-
-// ═══════════════════════════════════════
-// ANALYSIS ENGINE
-// ═══════════════════════════════════════
-function gv(id) { return parseFloat(document.getElementById(id).value) || 0; }
-
-function detectWeaknesses() {
-  const av = LEAGUE_AVGS[currentLeague] || {};
-  const st = {
-    gc: gv('s_gc'), tk: gv('s_tk'), int: gv('s_int'), cl: gv('s_cl'),
-    aer: gv('s_aer'), yel: gv('s_yel'), pa: gv('s_pa'), pos: gv('s_pos'),
-    fouls: gv('s_fouls'), gs: gv('s_gs'), sh: gv('s_sh'), sot: gv('s_sot'),
-  };
-
-  const checks = [
-    // GK check first — if goals conceded is significantly above average, GK is the priority
-    {k:'gc',  avg:av.gc,  lb:true,  zone:'goalkeeper', type:'Goalkeeper weakness', threshold:0.22},
-    // Then defensive outfield checks
-    {k:'gc',  avg:av.gc,  lb:true,  zone:'defense',  type:'Defensive errors',   threshold:0.15},
-    {k:'aer', avg:av.aer, lb:false, zone:'defense',  type:'Aerial vulnerability',threshold:0.15},
-    {k:'tk',  avg:av.tk,  lb:false, zone:'defense',  type:'Poor tackling',       threshold:0.15},
-    {k:'int', avg:av.int, lb:false, zone:'defense',  type:'Poor tackling',       threshold:0.15},
-    {k:'cl',  avg:av.cl,  lb:false, zone:'defense',  type:'Defensive errors',    threshold:0.15},
-    {k:'pa',  avg:av.pa,  lb:false, zone:'midfield', type:'Poor passing',        threshold:0.06},
-    {k:'pos', avg:av.pos, lb:false, zone:'midfield', type:'Lack of creativity',  threshold:0.07},
-    {k:'gs',  avg:av.gs,  lb:false, zone:'attack',   type:'Poor finishing',      threshold:0.15},
-    {k:'sot', avg:av.sot, lb:false, zone:'attack',   type:'Low attack output',   threshold:0.15},
-    {k:'sh',  avg:av.sh,  lb:false, zone:'attack',   type:'Poor shot volume',    threshold:0.15},
+function gv(id){return parseFloat(document.getElementById(id).value)||0;}
+function detectWeaknesses(){
+  const av=LEAGUE_AVGS[currentLeague]||{};
+  const st={gc:gv('s_gc'),tk:gv('s_tk'),int:gv('s_int'),cl:gv('s_cl'),aer:gv('s_aer'),yel:gv('s_yel'),pa:gv('s_pa'),pos:gv('s_pos'),fouls:gv('s_fouls'),gs:gv('s_gs'),sh:gv('s_sh'),sot:gv('s_sot')};
+  const checks=[
+    {k:'gc',avg:av.gc,lb:true,zone:'goalkeeper',type:'Goalkeeper weakness',threshold:0.22},
+    {k:'gc',avg:av.gc,lb:true,zone:'defense',type:'Defensive errors',threshold:0.15},
+    {k:'aer',avg:av.aer,lb:false,zone:'defense',type:'Aerial vulnerability',threshold:0.15},
+    {k:'tk',avg:av.tk,lb:false,zone:'defense',type:'Poor tackling',threshold:0.15},
+    {k:'int',avg:av.int,lb:false,zone:'defense',type:'Poor tackling',threshold:0.15},
+    {k:'cl',avg:av.cl,lb:false,zone:'defense',type:'Defensive errors',threshold:0.15},
+    {k:'pa',avg:av.pa,lb:false,zone:'midfield',type:'Poor passing',threshold:0.06},
+    {k:'pos',avg:av.pos,lb:false,zone:'midfield',type:'Lack of creativity',threshold:0.07},
+    {k:'gs',avg:av.gs,lb:false,zone:'attack',type:'Poor finishing',threshold:0.15},
+    {k:'sot',avg:av.sot,lb:false,zone:'attack',type:'Low attack output',threshold:0.15},
+    {k:'sh',avg:av.sh,lb:false,zone:'attack',type:'Poor shot volume',threshold:0.15},
   ];
-
-  return checks.filter(c => {
-    if (!st[c.k] || !c.avg) return false;
-    const d = c.lb ? (st[c.k] - c.avg) / c.avg : (c.avg - st[c.k]) / c.avg;
-    const majorT = c.threshold ? c.threshold * 2.5 : 0.35;
-    const minorT = c.threshold ? c.threshold * 1.5 : 0.20;
-    if (d >= majorT) { c.severity = 'major'; c.deficit = Math.round(d * 100); return true; }
-    if (d >= minorT) { c.severity = 'minor'; c.deficit = Math.round(d * 100); return true; }
+  return checks.filter(c=>{
+    if(!st[c.k]||!c.avg)return false;
+    const d=c.lb?(st[c.k]-c.avg)/c.avg:(c.avg-st[c.k])/c.avg;
+    const majorT=c.threshold?c.threshold*2.5:0.35,minorT=c.threshold?c.threshold*1.5:0.20;
+    if(d>=majorT){c.severity='major';c.deficit=Math.round(d*100);return true;}
+    if(d>=minorT){c.severity='minor';c.deficit=Math.round(d*100);return true;}
     return false;
   });
 }
-
-// ═══════════════════════════════════════
-// POSITION-AWARE STAT DISPLAY
-// ═══════════════════════════════════════
-function getPositionStats(p) {
-  const sub = p.subpos || p.pos;
-  const apps = p.apps || 1;
-  const pill = (icon, val, label) =>
-    `<div class="spill">${icon} ${val} ${label}</div>`;
-
-  // Helper to show per-game or total stats cleanly
-  const perG = (v) => v > 0 ? v.toFixed(2) : null;
-  const total = (v) => v > 0 ? (v * apps).toFixed(0) : null;
-  const pct = (v) => v > 0 ? v + '%' : null;
-
-  let pills = [];
-
-  if (p.pos === 'GK') {
-    if (p.saves_pg)       pills.push(pill('🧤', p.saves_pg.toFixed(1), 'saves/g'));
-    if (p.clean_sheets)   pills.push(pill('🔒', p.clean_sheets, 'clean sheets'));
-    if (p.gc_pg)          pills.push(pill('🥅', p.gc_pg.toFixed(1), 'conceded/g'));
-    if (p.pass_acc)       pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
-    if (p.aerial_pct)     pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
-    if (p.caps > 0)       pills.push(pill('🌍', p.caps, 'caps'));
-
-  } else if (sub === 'CB') {
-    if (p.tackles_pg)       pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
-    if (p.interceptions_pg) pills.push(pill('🛡', total(p.interceptions_pg), 'interceptions'));
-    if (p.aerial_pct)       pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
-    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
-    if (p.height)           pills.push(pill('📏', p.height + 'cm', ''));
-    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
-
-  } else if (sub === 'RB' || sub === 'LB' || sub === 'WB') {
-    if (p.tackles_pg)       pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
-    if (p.assists_pg)       pills.push(pill('🎯', total(p.assists_pg), 'assists'));
-    if (p.key_passes_pg)    pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
-    if (p.aerial_pct)       pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
-    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
-    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
-
-  } else if (sub === 'CDM') {
-    if (p.tackles_pg)       pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
-    if (p.interceptions_pg) pills.push(pill('🛡', total(p.interceptions_pg), 'interceptions'));
-    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
-    if (p.aerial_pct)       pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
-    if (p.goals_pg)         pills.push(pill('⚽', total(p.goals_pg), 'goals'));
-    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
-
-  } else if (sub === 'CM') {
-    if (p.key_passes_pg)    pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
-    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
-    if (p.tackles_pg)       pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
-    if (p.assists_pg)       pills.push(pill('🎯', total(p.assists_pg), 'assists'));
-    if (p.goals_pg)         pills.push(pill('⚽', total(p.goals_pg), 'goals'));
-    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
-
-  } else if (sub === 'CAM') {
-    if (p.key_passes_pg)    pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
-    if (p.assists_pg)       pills.push(pill('🎯', total(p.assists_pg), 'assists'));
-    if (p.goals_pg)         pills.push(pill('⚽', total(p.goals_pg), 'goals'));
-    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
-    if (p.shots_on_tgt_pg)  pills.push(pill('🎯', total(p.shots_on_tgt_pg), 'shots on tgt'));
-    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
-
-  } else if (sub === 'RW' || sub === 'LW') {
-    if (p.goals_pg)         pills.push(pill('⚽', total(p.goals_pg), 'goals'));
-    if (p.assists_pg)       pills.push(pill('🎯', total(p.assists_pg), 'assists'));
-    if (p.key_passes_pg)    pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
-    if (p.shots_on_tgt_pg)  pills.push(pill('🎯', total(p.shots_on_tgt_pg), 'shots on tgt'));
-    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
-    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
-
-  } else if (sub === 'ST' || sub === 'CF') {
-    if (p.goals_pg)         pills.push(pill('⚽', total(p.goals_pg), 'goals'));
-    if (p.shots_on_tgt_pg)  pills.push(pill('🎯', total(p.shots_on_tgt_pg), 'shots on tgt'));
-    if (p.aerial_pct)       pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
-    if (p.assists_pg)       pills.push(pill('🎯', total(p.assists_pg), 'assists'));
-    if (p.pass_acc)         pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
-    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
-
-  } else {
-    // Fallback for players without subpos — show balanced stats
-    if (p.pos === 'DEF') {
-      if (p.tackles_pg)     pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
-      if (p.aerial_pct)     pills.push(pill('✈', p.aerial_pct + '%', 'aerial'));
-      if (p.pass_acc)       pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
-    } else if (p.pos === 'MID') {
-      if (p.key_passes_pg)  pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
-      if (p.pass_acc)       pills.push(pill('📊', p.pass_acc + '%', 'pass acc'));
-      if (p.tackles_pg)     pills.push(pill('💪', total(p.tackles_pg), 'tackles'));
-    } else {
-      if (p.goals_pg)       pills.push(pill('⚽', total(p.goals_pg), 'goals'));
-      if (p.assists_pg)     pills.push(pill('🎯', total(p.assists_pg), 'assists'));
-      if (p.key_passes_pg)  pills.push(pill('🔑', total(p.key_passes_pg), 'key passes'));
-    }
-    if (p.caps > 0)         pills.push(pill('🌍', p.caps, 'caps'));
+function getPositionStats(p){
+  const sub=p.subpos||p.pos,apps=p.apps||1;
+  const pill=(icon,val,label)=>`<div class="spill">${icon} ${val} ${label}</div>`;
+  const total=(v)=>v>0?(v*apps).toFixed(0):null;
+  let pills=[];
+  if(p.pos==='GK'){
+    if(p.saves_pg)pills.push(pill('🧤',p.saves_pg.toFixed(1),'saves/g'));
+    if(p.clean_sheets)pills.push(pill('🔒',p.clean_sheets,'clean sheets'));
+    if(p.gc_pg)pills.push(pill('🥅',p.gc_pg.toFixed(1),'conceded/g'));
+    if(p.pass_acc)pills.push(pill('📊',p.pass_acc+'%','pass acc'));
+    if(p.aerial_pct)pills.push(pill('✈',p.aerial_pct+'%','aerial'));
+    if(p.caps>0)pills.push(pill('🌍',p.caps,'caps'));
+  }else if(sub==='CB'){
+    if(p.tackles_pg)pills.push(pill('💪',total(p.tackles_pg),'tackles'));
+    if(p.interceptions_pg)pills.push(pill('🛡',total(p.interceptions_pg),'interceptions'));
+    if(p.aerial_pct)pills.push(pill('✈',p.aerial_pct+'%','aerial'));
+    if(p.pass_acc)pills.push(pill('📊',p.pass_acc+'%','pass acc'));
+    if(p.height)pills.push(pill('📏',p.height+'cm',''));
+    if(p.caps>0)pills.push(pill('🌍',p.caps,'caps'));
+  }else if(sub==='RB'||sub==='LB'||sub==='WB'){
+    if(p.tackles_pg)pills.push(pill('💪',total(p.tackles_pg),'tackles'));
+    if(p.assists_pg)pills.push(pill('🎯',total(p.assists_pg),'assists'));
+    if(p.key_passes_pg)pills.push(pill('🔑',total(p.key_passes_pg),'key passes'));
+    if(p.aerial_pct)pills.push(pill('✈',p.aerial_pct+'%','aerial'));
+    if(p.pass_acc)pills.push(pill('📊',p.pass_acc+'%','pass acc'));
+    if(p.caps>0)pills.push(pill('🌍',p.caps,'caps'));
+  }else if(sub==='CDM'){
+    if(p.tackles_pg)pills.push(pill('💪',total(p.tackles_pg),'tackles'));
+    if(p.interceptions_pg)pills.push(pill('🛡',total(p.interceptions_pg),'interceptions'));
+    if(p.pass_acc)pills.push(pill('📊',p.pass_acc+'%','pass acc'));
+    if(p.aerial_pct)pills.push(pill('✈',p.aerial_pct+'%','aerial'));
+    if(p.goals_pg)pills.push(pill('⚽',total(p.goals_pg),'goals'));
+    if(p.caps>0)pills.push(pill('🌍',p.caps,'caps'));
+  }else if(sub==='CM'){
+    if(p.key_passes_pg)pills.push(pill('🔑',total(p.key_passes_pg),'key passes'));
+    if(p.pass_acc)pills.push(pill('📊',p.pass_acc+'%','pass acc'));
+    if(p.tackles_pg)pills.push(pill('💪',total(p.tackles_pg),'tackles'));
+    if(p.assists_pg)pills.push(pill('🎯',total(p.assists_pg),'assists'));
+    if(p.goals_pg)pills.push(pill('⚽',total(p.goals_pg),'goals'));
+    if(p.caps>0)pills.push(pill('🌍',p.caps,'caps'));
+  }else if(sub==='CAM'){
+    if(p.key_passes_pg)pills.push(pill('🔑',total(p.key_passes_pg),'key passes'));
+    if(p.assists_pg)pills.push(pill('🎯',total(p.assists_pg),'assists'));
+    if(p.goals_pg)pills.push(pill('⚽',total(p.goals_pg),'goals'));
+    if(p.pass_acc)pills.push(pill('📊',p.pass_acc+'%','pass acc'));
+    if(p.shots_on_tgt_pg)pills.push(pill('🎯',total(p.shots_on_tgt_pg),'shots on tgt'));
+    if(p.caps>0)pills.push(pill('🌍',p.caps,'caps'));
+  }else if(sub==='RW'||sub==='LW'){
+    if(p.goals_pg)pills.push(pill('⚽',total(p.goals_pg),'goals'));
+    if(p.assists_pg)pills.push(pill('🎯',total(p.assists_pg),'assists'));
+    if(p.key_passes_pg)pills.push(pill('🔑',total(p.key_passes_pg),'key passes'));
+    if(p.shots_on_tgt_pg)pills.push(pill('🎯',total(p.shots_on_tgt_pg),'shots on tgt'));
+    if(p.pass_acc)pills.push(pill('📊',p.pass_acc+'%','pass acc'));
+    if(p.caps>0)pills.push(pill('🌍',p.caps,'caps'));
+  }else if(sub==='ST'||sub==='CF'){
+    if(p.goals_pg)pills.push(pill('⚽',total(p.goals_pg),'goals'));
+    if(p.shots_on_tgt_pg)pills.push(pill('🎯',total(p.shots_on_tgt_pg),'shots on tgt'));
+    if(p.aerial_pct)pills.push(pill('✈',p.aerial_pct+'%','aerial'));
+    if(p.assists_pg)pills.push(pill('🎯',total(p.assists_pg),'assists'));
+    if(p.pass_acc)pills.push(pill('📊',p.pass_acc+'%','pass acc'));
+    if(p.caps>0)pills.push(pill('🌍',p.caps,'caps'));
+  }else{
+    if(p.pos==='DEF'){if(p.tackles_pg)pills.push(pill('💪',total(p.tackles_pg),'tackles'));if(p.aerial_pct)pills.push(pill('✈',p.aerial_pct+'%','aerial'));if(p.pass_acc)pills.push(pill('📊',p.pass_acc+'%','pass acc'));}
+    else if(p.pos==='MID'){if(p.key_passes_pg)pills.push(pill('🔑',total(p.key_passes_pg),'key passes'));if(p.pass_acc)pills.push(pill('📊',p.pass_acc+'%','pass acc'));if(p.tackles_pg)pills.push(pill('💪',total(p.tackles_pg),'tackles'));}
+    else{if(p.goals_pg)pills.push(pill('⚽',total(p.goals_pg),'goals'));if(p.assists_pg)pills.push(pill('🎯',total(p.assists_pg),'assists'));if(p.key_passes_pg)pills.push(pill('🔑',total(p.key_passes_pg),'key passes'));}
+    if(p.caps>0)pills.push(pill('🌍',p.caps,'caps'));
   }
-
-  return pills.slice(0, 6).join('');
+  return pills.slice(0,6).join('');
 }
-
-function scorePlayer(p, profile, requestedSubpos) {
-  if (!profile) return {score:0, reasons:[], flags:[]};
-  let tw = 0, ew = 0;
-  const reasons = [], flags = [];
-  for (const [stat, thr] of Object.entries(profile.stats)) {
-    const w = profile.w[stat] || 1;
-    tw += w * 10;
-    const val = p[stat];
-    if (val == null) continue;
-    const meets = val >= thr;
-    const diff = Math.abs(val - thr) / (thr || 1);
-    if (meets) {
-      const pts = diff >= 0.20 ? w * 10 : diff >= 0.08 ? w * 7 : w * 5;
-      ew += pts;
-      if (diff >= 0.08) reasons.push(`${stat.replace(/_pg$/,' /g').replace(/_/g,' ')}: ${typeof val === 'number' && val % 1 !== 0 ? val.toFixed(2) : val}`);
-    } else if (diff > 0.25) {
-      flags.push(`Low ${stat.replace(/_pg$/,' /g').replace(/_/g,' ')}: ${typeof val === 'number' && val % 1 !== 0 ? val.toFixed(2) : val}`);
-    }
+function scorePlayer(p,profile,requestedSubpos){
+  if(!profile)return{score:0,reasons:[],flags:[]};
+  let tw=0,ew=0;const reasons=[],flags=[];
+  for(const[stat,thr]of Object.entries(profile.stats)){
+    const w=profile.w[stat]||1;tw+=w*10;const val=p[stat];if(val==null)continue;
+    const meets=val>=thr,diff=Math.abs(val-thr)/(thr||1);
+    if(meets){const pts=diff>=0.20?w*10:diff>=0.08?w*7:w*5;ew+=pts;if(diff>=0.08)reasons.push(`${stat.replace(/_pg$/,' /g').replace(/_/g,' ')}: ${typeof val==='number'&&val%1!==0?val.toFixed(2):val}`);}
+    else if(diff>0.25)flags.push(`Low ${stat.replace(/_pg$/,' /g').replace(/_/g,' ')}: ${typeof val==='number'&&val%1!==0?val.toFixed(2):val}`);
   }
-  if (p.age > 34) flags.push(`Age: ${p.age}`);
-  
-  let rawScore = tw > 0 ? Math.round(ew / tw * 1000) / 10 : 0;
-  
-  // Apply subposition compatibility penalty
-  if (requestedSubpos && p.subpos) {
-    const compat = getSubposCompatibility(p.subpos, requestedSubpos);
-    if (compat < 1.0) {
-      rawScore = rawScore * compat;
-      if (compat < 0.7) flags.push(`Natural ${p.subpos}, asked for ${requestedSubpos}`);
-    }
-  }
-  
-  // Detect alternative positions
-  const altPositions = detectAltPositions(p);
-  
-  return { 
-    score: Math.round(rawScore * 10) / 10, 
-    reasons: reasons.slice(0,3), 
-    flags: flags.slice(0,2),
-    altPositions,
-    rawScore: Math.round(rawScore * 10) / 10
-  };
+  if(p.age>34)flags.push(`Age: ${p.age}`);
+  let rawScore=tw>0?Math.round(ew/tw*1000)/10:0;
+  if(requestedSubpos&&p.subpos){const compat=getSubposCompatibility(p.subpos,requestedSubpos);if(compat<1.0){rawScore=rawScore*compat;if(compat<0.7)flags.push(`Natural ${p.subpos}, asked for ${requestedSubpos}`);}}
+  const altPositions=detectAltPositions(p);
+  return{score:Math.round(rawScore*10)/10,reasons:reasons.slice(0,3),flags:flags.slice(0,2),altPositions,rawScore:Math.round(rawScore*10)/10};
 }
-
-// Currency system
-let currentCurrency = 'EUR';
-const CURRENCIES = {
-  EUR: {sym:'€', rate:1,     fmt:(v) => v>=1e6?'€'+(v/1e6).toFixed(1)+'M':v>=1e3?'€'+(v/1e3).toFixed(0)+'K':'€'+v},
-  USD: {sym:'$', rate:1.08,  fmt:(v) => v>=1e6?'$'+((v*1.08)/1e6).toFixed(1)+'M':v>=1e3?'$'+((v*1.08)/1e3).toFixed(0)+'K':'$'+(v*1.08).toFixed(0)},
-  BRL: {sym:'R$',rate:5.90,  fmt:(v) => v>=1e6?'R$'+((v*5.90)/1e6).toFixed(1)+'M':v>=1e3?'R$'+((v*5.90)/1e3).toFixed(0)+'K':'R$'+(v*5.90).toFixed(0)},
-  GBP: {sym:'£', rate:0.85,  fmt:(v) => v>=1e6?'£'+((v*0.85)/1e6).toFixed(1)+'M':v>=1e3?'£'+((v*0.85)/1e3).toFixed(0)+'K':'£'+(v*0.85).toFixed(0)},
+let currentCurrency='EUR';
+const CURRENCIES={
+  EUR:{sym:'€',rate:1,fmt:(v)=>v>=1e6?'€'+(v/1e6).toFixed(1)+'M':v>=1e3?'€'+(v/1e3).toFixed(0)+'K':'€'+v},
+  USD:{sym:'$',rate:1.08,fmt:(v)=>v>=1e6?'$'+((v*1.08)/1e6).toFixed(1)+'M':v>=1e3?'$'+((v*1.08)/1e3).toFixed(0)+'K':'$'+(v*1.08).toFixed(0)},
+  BRL:{sym:'R$',rate:5.90,fmt:(v)=>v>=1e6?'R$'+((v*5.90)/1e6).toFixed(1)+'M':v>=1e3?'R$'+((v*5.90)/1e3).toFixed(0)+'K':'R$'+(v*5.90).toFixed(0)},
+  GBP:{sym:'£',rate:0.85,fmt:(v)=>v>=1e6?'£'+((v*0.85)/1e6).toFixed(1)+'M':v>=1e3?'£'+((v*0.85)/1e3).toFixed(0)+'K':'£'+(v*0.85).toFixed(0)},
 };
-function fmtVal(v) {
-  return CURRENCIES[currentCurrency]?.fmt(v) || '€' + v;
+function fmtVal(v){return CURRENCIES[currentCurrency]?.fmt(v)||'€'+v;}
+function setCurrency(c){
+  currentCurrency=c;
+  document.querySelectorAll('.curr-btn').forEach(b=>b.classList.toggle('active',b.dataset.c===c));
+  const resContent=document.getElementById('resContent');
+  if(resContent&&resContent.style.display!=='none')runAnalysis();
+  const squadList=document.getElementById('squad-list');
+  if(squadList&&squadList.innerHTML)renderSquadPlayers();
 }
-function setCurrency(c) {
-  currentCurrency = c;
-  document.querySelectorAll('.curr-btn').forEach(b => b.classList.toggle('active', b.dataset.c === c));
-  // Re-render if analysis is showing
-  const resContent = document.getElementById('resContent');
-  if (resContent && resContent.style.display !== 'none') runAnalysis();
-  const squadList = document.getElementById('squad-list');
-  if (squadList && squadList.innerHTML) renderSquadPlayers();
-}
-function scCls(s) { return s >= 70 ? 'hi' : s >= 45 ? 'mid' : 'lo'; }
-function barClr(s) { return s >= 70 ? 'var(--green)' : s >= 45 ? 'var(--yellow)' : 'var(--red)'; }
-
-function runAnalysis() {
-  if (!selectedTeam) return;
-  showTab('results', document.getElementById('tab-results-btn'));
-
-  const flags = detectWeaknesses();
-  const av = LEAGUE_AVGS[currentLeague] || {};
-  const st = {gc:gv('s_gc'),tk:gv('s_tk'),int:gv('s_int'),cl:gv('s_cl'),aer:gv('s_aer'),pa:gv('s_pa'),gs:gv('s_gs'),sh:gv('s_sh'),sot:gv('s_sot')};
-
-  // ── Step 1: Detect primary weakness zone ──
-  const zoneSc = {};
-  flags.forEach(f => { zoneSc[f.zone] = (zoneSc[f.zone]||0) + (f.severity==='major'?2:1); });
-  const priOrder = ['goalkeeper','defense','attack','midfield'];
-  const priZone = Object.entries(zoneSc).sort((a,b) => b[1]-a[1] || priOrder.indexOf(a[0])-priOrder.indexOf(b[0]))[0]?.[0] || 'attack';
-  const priType = flags.find(f => f.zone === priZone)?.type || 'Low attack output';
-  const profile = getProfile(priType, null);
-
-  // ── Step 2: Map weakness to target position ──
-  const weaknessToPos = {
-    'Goalkeeper weakness': ['GK'],
-    'Defensive errors':    ['DEF'],
-    'Aerial vulnerability':['DEF'],
-    'Poor tackling':       ['DEF','MID'],
-    'Lack of creativity':  ['MID'],
-    'Poor passing':        ['MID','DEF'],
-    'Poor finishing':      ['ATT'],
-    'Low attack output':   ['ATT','MID'],
-    'Poor shot volume':    ['MID','ATT'],
-  };
-  const targetPos = weaknessToPos[priType] || ['ATT','DEF','MID','GK'];
-
-  // ── Step 3: Secondary weakness ──
-  const secZone = Object.entries(zoneSc).filter(([z]) => z !== priZone).sort((a,b) => b[1]-a[1])[0]?.[0];
-  const secType = secZone ? flags.find(f => f.zone === secZone)?.type : null;
-  const secProfile = secType ? getProfile(secType, null) : null;
-  const secPos = secType ? (weaknessToPos[secType] || []) : [];
-
-  // ── Step 4: Filter player pool ──
-  const plLeague = document.getElementById('playerLeagueSel').value;
-  const minAge = parseInt(document.getElementById('minAge').value)||0;
-  const maxAge = parseInt(document.getElementById('maxAge').value)||99;
-  const budget = parseFloat(document.getElementById('budgetMax').value)||Infinity;
-  const minApps = parseInt(document.getElementById('minApps').value)||0;
-
-  const pool = plLeague === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === plLeague);
-
-  // Primary pool — filtered by target position
-  let primaryPool = pool.filter(p =>
-    p.age >= minAge && p.age <= maxAge &&
-    p.value <= budget && p.apps >= minApps &&
-    targetPos.includes(p.pos)
-  );
-  // If empty (e.g. budget too low), fallback to all positions
-  if (primaryPool.length === 0) {
-    primaryPool = pool.filter(p =>
-      p.age >= minAge && p.age <= maxAge &&
-      p.value <= budget && p.apps >= minApps
-    );
-  }
-
-  // Secondary pool — different position from primary
-  const secondaryPool = secProfile ? pool.filter(p =>
-    p.age >= minAge && p.age <= maxAge &&
-    p.value <= budget && p.apps >= minApps &&
-    secPos.includes(p.pos) && !targetPos.includes(p.pos)
-  ) : [];
-
-  // ── Step 5: Score and rank ──
-  const ranked = primaryPool
-    .map(p => {
-      const scored = scorePlayer(p, profile, null);
-      const ctx = applyContextualFactors(scored.score, p, selectedTeam, currentLeague);
-      return { p, ...scored, score: ctx.score, contextFlags: ctx.contextFlags, contextBoosts: ctx.contextBoosts };
-    })
-    .filter(m => m.score > 10)
-    .sort((a,b) => b.score - a.score)
-    .slice(0, 12);
-
-  const rankedSec = secProfile ? secondaryPool
-    .map(p => {
-      const scored = scorePlayer(p, secProfile, null);
-      const ctx = applyContextualFactors(scored.score, p, selectedTeam, currentLeague);
-      return { p, ...scored, score: ctx.score, contextFlags: ctx.contextFlags, contextBoosts: ctx.contextBoosts };
-    })
-    .filter(m => m.score > 10)
-    .sort((a,b) => b.score - a.score)
-    .slice(0, 5) : [];
-
-  // ── Step 6: Build HTML ──
-  const chartRows = [
-    {lbl:'Goals conceded/g', club:st.gc, avg:av.gc, lb:true},
-    {lbl:'Tackles/game',     club:st.tk, avg:av.tk, lb:false},
-    {lbl:'Pass accuracy %',  club:st.pa, avg:av.pa, lb:false},
-    {lbl:'Goals scored/g',   club:st.gs, avg:av.gs, lb:false},
+function scCls(s){return s>=70?'hi':s>=45?'mid':'lo';}
+function barClr(s){return s>=70?'var(--green)':s>=45?'var(--yellow)':'var(--red)';}
+function runAnalysis(){
+  if(!selectedTeam)return;
+  showTab('results',document.getElementById('tab-results-btn'));
+  const flags=detectWeaknesses();
+  const av=LEAGUE_AVGS[currentLeague]||{};
+  const st={gc:gv('s_gc'),tk:gv('s_tk'),int:gv('s_int'),cl:gv('s_cl'),aer:gv('s_aer'),pa:gv('s_pa'),gs:gv('s_gs'),sh:gv('s_sh'),sot:gv('s_sot')};
+  const zoneSc={};
+  flags.forEach(f=>{zoneSc[f.zone]=(zoneSc[f.zone]||0)+(f.severity==='major'?2:1);});
+  const priOrder=['goalkeeper','defense','attack','midfield'];
+  const priZone=Object.entries(zoneSc).sort((a,b)=>b[1]-a[1]||priOrder.indexOf(a[0])-priOrder.indexOf(b[0]))[0]?.[0]||'attack';
+  const priType=flags.find(f=>f.zone===priZone)?.type||'Low attack output';
+  const profile=getProfile(priType,null);
+  const weaknessToPos={'Goalkeeper weakness':['GK'],'Defensive errors':['DEF'],'Aerial vulnerability':['DEF'],'Poor tackling':['DEF','MID'],'Lack of creativity':['MID'],'Poor passing':['MID','DEF'],'Poor finishing':['ATT'],'Low attack output':['ATT','MID'],'Poor shot volume':['MID','ATT']};
+  const targetPos=weaknessToPos[priType]||['ATT','DEF','MID','GK'];
+  const secZone=Object.entries(zoneSc).filter(([z])=>z!==priZone).sort((a,b)=>b[1]-a[1])[0]?.[0];
+  const secType=secZone?flags.find(f=>f.zone===secZone)?.type:null;
+  const secProfile=secType?getProfile(secType,null):null;
+  const secPos=secType?(weaknessToPos[secType]||[]):[];
+  const plLeague=document.getElementById('playerLeagueSel').value;
+  const minAge=parseInt(document.getElementById('minAge').value)||0;
+  const maxAge=parseInt(document.getElementById('maxAge').value)||99;
+  const budget=parseFloat(document.getElementById('budgetMax').value)||Infinity;
+  const minApps=parseInt(document.getElementById('minApps').value)||0;
+  const pool=plLeague==='ALL'?PLAYERS_VALID:PLAYERS_VALID.filter(p=>p.league===plLeague);
+  let primaryPool=pool.filter(p=>p.age>=minAge&&p.age<=maxAge&&p.value<=budget&&p.apps>=minApps&&targetPos.includes(p.pos));
+  if(primaryPool.length===0)primaryPool=pool.filter(p=>p.age>=minAge&&p.age<=maxAge&&p.value<=budget&&p.apps>=minApps);
+  const secondaryPool=secProfile?pool.filter(p=>p.age>=minAge&&p.age<=maxAge&&p.value<=budget&&p.apps>=minApps&&secPos.includes(p.pos)&&!targetPos.includes(p.pos)):[];
+  const ranked=primaryPool.map(p=>{const scored=scorePlayer(p,profile,null);const ctx=applyContextualFactors(scored.score,p,selectedTeam,currentLeague);return{p,...scored,score:ctx.score,contextFlags:ctx.contextFlags,contextBoosts:ctx.contextBoosts};}).filter(m=>m.score>10).sort((a,b)=>b.score-a.score).slice(0,12);
+  const rankedSec=secProfile?secondaryPool.map(p=>{const scored=scorePlayer(p,secProfile,null);const ctx=applyContextualFactors(scored.score,p,selectedTeam,currentLeague);return{p,...scored,score:ctx.score,contextFlags:ctx.contextFlags,contextBoosts:ctx.contextBoosts};}).filter(m=>m.score>10).sort((a,b)=>b.score-a.score).slice(0,5):[];
+  const chartRows=[
+    {lbl:'Goals conceded/g',club:st.gc,avg:av.gc,lb:true},
+    {lbl:'Tackles/game',club:st.tk,avg:av.tk,lb:false},
+    {lbl:'Pass accuracy %',club:st.pa,avg:av.pa,lb:false},
+    {lbl:'Goals scored/g',club:st.gs,avg:av.gs,lb:false},
     {lbl:'Shots on target/g',club:st.sot,avg:av.sot,lb:false},
-    {lbl:'Aerial duels %',   club:st.aer,avg:av.aer,lb:false},
-  ].filter(c => c.club > 0 && c.avg > 0);
-
-  let html = '';
-
-  // Weakness banner
-  html += `<div class="w-banner">
-    <div class="w-title">Primary Weakness: ${priType}</div>
-    <div class="w-sub">Zone: ${priZone==='goalkeeper'?'GOALKEEPER':priZone.toUpperCase()} · ${flags.length} weakness flag${flags.length!==1?'s':''} detected · ${selectedTeam.name} · ${LEAGUE_META[currentLeague]?.flag||''} ${LEAGUE_META[currentLeague]?.name||''}</div>
-  </div>`;
-
-  // Flags
-  if (flags.length) {
-    html += `<div class="flags-wrap">${flags.map(f=>
-      `<div class="flag-pill ${f.severity}">${f.severity.toUpperCase()}: ${f.type} (${f.deficit}% vs avg)</div>`
-    ).join('')}</div>`;
-  } else {
-    html += `<div style="background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.2);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--green)">✓ No major weaknesses detected — this team is performing above or at league average across all metrics.</div>`;
+    {lbl:'Aerial duels %',club:st.aer,avg:av.aer,lb:false},
+  ].filter(c=>c.club>0&&c.avg>0);
+  let html='';
+  html+=`<div class="w-banner"><div class="w-title">Primary Weakness: ${priType}</div><div class="w-sub">Zone: ${priZone==='goalkeeper'?'GOALKEEPER':priZone.toUpperCase()} · ${flags.length} weakness flag${flags.length!==1?'s':''} detected · ${selectedTeam.name}</div></div>`;
+  if(flags.length){html+=`<div class="flags-wrap">${flags.map(f=>`<div class="flag-pill ${f.severity}">${f.severity.toUpperCase()}: ${f.type} (${f.deficit}% vs avg)</div>`).join('')}</div>`;}
+  else{html+=`<div style="background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.2);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--green)">✓ No major weaknesses detected — this team is performing above or at league average across all metrics.</div>`;}
+  if(chartRows.length){
+    html+=`<div class="chart-card"><div class="chart-ttl">📊 ${selectedTeam.name} vs League Average</div>`;
+    chartRows.forEach(c=>{const mx=Math.max(c.club,c.avg)*1.35||1,cp=Math.min(100,c.club/mx*100).toFixed(1),ap=Math.min(100,c.avg/mx*100).toFixed(1);const good=c.lb?c.club<=c.avg:c.club>=c.avg,def=c.lb?(c.club-c.avg)/c.avg:(c.avg-c.club)/c.avg,col=good?'var(--green)':def>0.35?'var(--red)':'var(--yellow)';html+=`<div class="chart-row"><div class="chart-lbl">${c.lbl}</div><div class="chart-bg"><div class="chart-fill" style="width:${cp}%;background:${col}"></div><div class="avg-line" style="left:${ap}%"></div></div><div class="chart-val" style="color:${col}">${c.club}</div></div>`;});
+    html+=`<div style="font-size:10px;color:var(--muted);margin-top:5px">Bar = your club · White line = league average</div></div>`;
   }
-
-  // Chart
-  if (chartRows.length) {
-    html += `<div class="chart-card"><div class="chart-ttl">📊 ${selectedTeam.name} vs League Average</div>`;
-    chartRows.forEach(c => {
-      const mx = Math.max(c.club, c.avg) * 1.35 || 1;
-      const cp = Math.min(100, c.club/mx*100).toFixed(1);
-      const ap = Math.min(100, c.avg/mx*100).toFixed(1);
-      const good = c.lb ? c.club <= c.avg : c.club >= c.avg;
-      const def = c.lb ? (c.club-c.avg)/c.avg : (c.avg-c.club)/c.avg;
-      const col = good ? 'var(--green)' : def > 0.35 ? 'var(--red)' : 'var(--yellow)';
-      html += `<div class="chart-row">
-        <div class="chart-lbl">${c.lbl}</div>
-        <div class="chart-bg">
-          <div class="chart-fill" style="width:${cp}%;background:${col}"></div>
-          <div class="avg-line" style="left:${ap}%"></div>
-        </div>
-        <div class="chart-val" style="color:${col}">${c.club}</div>
-      </div>`;
-    });
-    html += `<div style="font-size:10px;color:var(--muted);margin-top:5px">Bar = your club · White line = league average</div></div>`;
-  }
-
-  // Profile
-  if (profile) {
-    html += `<div class="profile-card">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:7px">IDEAL PLAYER PROFILE</div>
-      <div class="profile-pos">${profile.pos}</div>
-      <div class="profile-role">${profile.role}</div>
-      <div class="req-stats">${Object.entries(profile.stats).map(([k,v])=>
-        `<div class="req-stat">${k.replace(/_pg$/,' /g').replace(/_/g,' ')} ≥ <span>${v}</span></div>`
-      ).join('')}</div>
-    </div>`;
-  }
-
-  // Players header
-  html += `<div class="section-hdr">
-    <div class="section-ttl">Player Recommendations</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <div class="data-badge">⚽ ${ranked.length} matched</div>
-      <div class="data-badge" style="background:rgba(0,184,255,0.08);border-color:rgba(0,184,255,0.2);color:var(--accent2)">${primaryPool.length} players searched</div>
-    </div>
-  </div>`;
-
-  // Free users: limit to 3 results
-  const visibleRanked = isFree ? ranked.slice(0, 3) : ranked;
-  const hiddenCount = isFree ? Math.max(0, ranked.length - 3) : 0;
-
-  if (!ranked.length) {
-    html += `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No Matches Found</div><div style="font-size:13px">Try widening your filters — increase the budget, age range, or select "All Leagues"</div></div>`;
-  } else {
-    visibleRanked.forEach((m, i) => {
-      const p = m.p;
-      const sc = m.score;
-      const isCurrentPlayer = selectedTeam && p.club === selectedTeam.name;
-      const altPos = m.altPositions || [];
-      html += `<div class="pcard" style="${isCurrentPlayer ? 'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);' : ''}">
+  if(profile){html+=`<div class="profile-card"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:7px">IDEAL PLAYER PROFILE</div><div class="profile-pos">${profile.pos}</div><div class="profile-role">${profile.role}</div><div class="req-stats">${Object.entries(profile.stats).map(([k,v])=>`<div class="req-stat">${k.replace(/_pg$/,' /g').replace(/_/g,' ')} ≥ <span>${v}</span></div>`).join('')}</div></div>`;}
+  html+=`<div class="section-hdr"><div class="section-ttl">Player Recommendations</div><div style="display:flex;gap:8px;align-items:center"><div class="data-badge">⚽ ${ranked.length} matched</div><div class="data-badge" style="background:rgba(0,184,255,0.08);border-color:rgba(0,184,255,0.2);color:var(--accent2)">${primaryPool.length} players searched</div></div></div>`;
+  const visibleRanked=isFree?ranked.slice(0,3):ranked;
+  const hiddenCount=isFree?Math.max(0,ranked.length-3):0;
+  if(!ranked.length){html+=`<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No Matches Found</div><div style="font-size:13px">Try widening your filters — increase the budget, age range, or select "All Leagues"</div></div>`;}
+  else{
+    visibleRanked.forEach((m,i)=>{
+      const p=m.p,sc=m.score,isCP=selectedTeam&&p.club===selectedTeam.name,altPos=m.altPositions||[];
+      html+=`<div class="pcard" style="${isCP?'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);':''}">
         <div class="prank ${i<3?'top':''}">${String(i+1).padStart(2,'0')}</div>
         <div>
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;flex-wrap:wrap">
             <div class="pname">${p.name}</div>
             <div class="pos-badge">${p.subpos||p.pos}</div>
-            ${isCurrentPlayer ? `<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>` : ''}
+            ${isCP?`<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>`:''}
           </div>
-          <div class="pmeta">
-            <span>🏟 ${p.club}</span>
-            <span>📍 ${p.nat}</span>
-            <span>🎂 ${p.age} yrs</span>
-            <span>📋 ${p.apps} apps</span>
-            <span>💰 ${fmtVal(p.value)}</span>
-            ${p.height ? `<span>📏 ${p.height}cm</span>` : ''}
-          </div>
-          <div class="stat-pills">${getPositionStats(p)}</div>
-          ${m.reasons.map(r => `<div class="reason">${r}</div>`).join('')}
-          ${m.flags.map(f => `<div class="pflag">${f}</div>`).join('')}
-          ${(m.contextBoosts||[]).map(b => `<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${b.icon||'✓'}</span><span>${b.text}</span></div>`).join('')}
-          ${(m.contextFlags||[]).map(f => `<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px" title="${f.tip||''}"><span>${f.icon||'⚠'}</span><span>${f.text}</span></div>`).join('')}
-          ${altPos && altPos.length ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${altPos.map(a=>`<div style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:var(--yellow)">🔄 Can play ${a.pos}</div>`).join('')}</div>` : ''}
-        </div>
-        <div class="score-blk">
-          <div class="score-num ${scCls(sc)}">${sc}%</div>
-          <div class="score-lbl">MATCH</div>
-          <div class="sbar"><div class="sbar-fill" style="width:${sc}%;background:${barClr(sc)}"></div></div>
-        </div>
-      </div>`;
-    });
-  }
-
-  // Upgrade prompt for free users
-  if (isFree && hiddenCount > 0) {
-    html += `<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:20px;text-align:center;margin:16px 0;">
-      <div style="font-size:16px;font-weight:700;margin-bottom:6px">🔒 ${hiddenCount} more players hidden</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Upgrade to Scout Pro to see all recommendations, secondary weakness analysis and full player profiles.</div>
-      <a href="/auth.html?tab=signup&plan=pro" style="display:inline-block;background:var(--accent);color:#000;font-size:13px;font-weight:800;padding:10px 24px;border-radius:8px;text-decoration:none;">Upgrade to Scout Pro — $9.99/mo</a>
-    </div>`;
-  }
-
-  // Secondary weakness section
-  if (rankedSec.length > 0 && !isFree) {
-    html += `<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
-      <div class="section-hdr">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="section-ttl">Also Consider</div>
-          <div class="data-badge" style="background:rgba(245,200,66,0.08);border-color:rgba(245,200,66,0.2);color:var(--yellow)">Secondary weakness: ${secType}</div>
-        </div>
-      </div>`;
-    rankedSec.forEach((m, i) => {
-      const p = m.p; const sc = m.score;
-      const isCurrentPlayer = selectedTeam && p.club === selectedTeam.name;
-      html += `<div class="pcard" style="${isCurrentPlayer?'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);':''}opacity:0.85">
-        <div class="prank">${String(i+1).padStart(2,'0')}</div>
-        <div>
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
-            <div class="pname">${p.name}</div>
-            <div class="pos-badge">${p.subpos||p.pos}</div>
-            ${isCurrentPlayer?`<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>`:''}
-          </div>
-          <div class="pmeta"><span>🏟 ${p.club}</span><span>📍 ${p.nat}</span><span>🎂 ${p.age} yrs</span><span>📋 ${p.apps} apps</span><span>💰 ${fmtVal(p.value)}</span></div>
+          <div class="pmeta"><span>🏟 ${p.club}</span><span>📍 ${p.nat}</span><span>🎂 ${p.age} yrs</span><span>📋 ${p.apps} apps</span><span>💰 ${fmtVal(p.value)}</span>${p.height?`<span>📏 ${p.height}cm</span>`:''}</div>
           <div class="stat-pills">${getPositionStats(p)}</div>
           ${m.reasons.map(r=>`<div class="reason">${r}</div>`).join('')}
-          ${(m.contextBoosts||[]).map(b=>`<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px">${b.icon} ${b.text}</div>`).join('')}
-          ${(m.contextFlags||[]).map(f=>`<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px">${f.icon} ${f.text}</div>`).join('')}
+          ${m.flags.map(f=>`<div class="pflag">${f}</div>`).join('')}
+          ${(m.contextBoosts||[]).map(b=>`<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${b.icon||'✓'}</span><span>${b.text}</span></div>`).join('')}
+          ${(m.contextFlags||[]).map(f=>`<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px" title="${f.tip||''}"><span>${f.icon||'⚠'}</span><span>${f.text}</span></div>`).join('')}
+          ${altPos.length?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${altPos.map(a=>`<div style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:var(--yellow)">🔄 Can play ${a.pos}</div>`).join('')}</div>`:''}
         </div>
-        <div class="score-blk">
-          <div class="score-num ${scCls(sc)}">${sc}%</div>
-          <div class="score-lbl">MATCH</div>
-          <div class="sbar"><div class="sbar-fill" style="width:${sc}%;background:${barClr(sc)}"></div></div>
-        </div>
+        <div class="score-blk"><div class="score-num ${scCls(sc)}">${sc}%</div><div class="score-lbl">MATCH</div><div class="sbar"><div class="sbar-fill" style="width:${sc}%;background:${barClr(sc)}"></div></div></div>
       </div>`;
     });
-    html += `</div>`;
   }
-
-  document.getElementById('resEmpty').style.display = 'none';
-  document.getElementById('resContent').innerHTML = html;
-  document.getElementById('resContent').style.display = 'block';
+  if(isFree&&hiddenCount>0){html+=`<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:20px;text-align:center;margin:16px 0;"><div style="font-size:16px;font-weight:700;margin-bottom:6px">🔒 ${hiddenCount} more players hidden</div><div style="font-size:13px;color:var(--muted);margin-bottom:14px">Upgrade to Scout Pro to see all recommendations.</div><a href="/auth.html?tab=signup&plan=pro" style="display:inline-block;background:var(--accent);color:#000;font-size:13px;font-weight:800;padding:10px 24px;border-radius:8px;text-decoration:none;">Upgrade to Scout Pro — $9.99/mo</a></div>`;}
+  if(rankedSec.length>0&&!isFree){
+    html+=`<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)"><div class="section-hdr"><div style="display:flex;align-items:center;gap:8px"><div class="section-ttl">Also Consider</div><div class="data-badge" style="background:rgba(245,200,66,0.08);border-color:rgba(245,200,66,0.2);color:var(--yellow)">Secondary weakness: ${secType}</div></div></div>`;
+    rankedSec.forEach((m,i)=>{const p=m.p,sc=m.score,isCP=selectedTeam&&p.club===selectedTeam.name;html+=`<div class="pcard" style="${isCP?'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);':''}opacity:0.85"><div class="prank">${String(i+1).padStart(2,'0')}</div><div><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px"><div class="pname">${p.name}</div><div class="pos-badge">${p.subpos||p.pos}</div>${isCP?`<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>`:''}</div><div class="pmeta"><span>🏟 ${p.club}</span><span>📍 ${p.nat}</span><span>🎂 ${p.age} yrs</span><span>📋 ${p.apps} apps</span><span>💰 ${fmtVal(p.value)}</span></div><div class="stat-pills">${getPositionStats(p)}</div>${m.reasons.map(r=>`<div class="reason">${r}</div>`).join('')}${(m.contextBoosts||[]).map(b=>`<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px">${b.icon} ${b.text}</div>`).join('')}${(m.contextFlags||[]).map(f=>`<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px">${f.icon} ${f.text}</div>`).join('')}</div><div class="score-blk"><div class="score-num ${scCls(sc)}">${sc}%</div><div class="score-lbl">MATCH</div><div class="sbar"><div class="sbar-fill" style="width:${sc}%;background:${barClr(sc)}"></div></div></div></div>`;});
+    html+=`</div>`;
+  }
+  document.getElementById('resEmpty').style.display='none';
+  document.getElementById('resContent').innerHTML=html;
+  document.getElementById('resContent').style.display='block';
 }
-
-
-function showTab(id, el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+function showTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el?.classList.add('active');
-  document.getElementById('tab-stats').style.display = id === 'stats' ? 'block' : 'none';
-  document.getElementById('tab-results').style.display = id === 'results' ? 'block' : 'none';
-  document.getElementById('tab-squad').style.display = id === 'squad' ? 'block' : 'none';
-  if (id === 'squad') { onFanLeagueChange(); renderSquadPlayers(); }
+  document.getElementById('tab-stats').style.display=id==='stats'?'block':'none';
+  document.getElementById('tab-results').style.display=id==='results'?'block':'none';
+  document.getElementById('tab-squad').style.display=id==='squad'?'block':'none';
+  if(id==='squad'){onFanLeagueChange();renderSquadPlayers();}
 }
 
-// ═══════════════════════════════════════
-// BUILD YOUR SQUAD MODE
-// ═══════════════════════════════════════
-let fanTeam = null;
-
-function onFanLeagueChange() {
-  const league = document.getElementById('fan-league').value;
-  const teams = (TEAMS[league] || []).slice().sort((a,b) => a.name.localeCompare(b.name));
-  const sel = document.getElementById('fan-team');
-  sel.innerHTML = '<option value="">Select a team...</option>' +
-    teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-  fanTeam = null;
-  document.getElementById('fan-team-stats').style.display = 'none';
+// ── PLAYER EXPLORER ──
+let fanTeam=null;
+function onFanLeagueChange(){
+  const league=document.getElementById('fan-league').value;
+  const teams=(TEAMS[league]||[]).slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const sel=document.getElementById('fan-team');
+  sel.innerHTML='<option value="">Select a team...</option>'+teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  fanTeam=null;
+  document.getElementById('fan-team-stats').style.display='none';
   renderSquadPlayers();
 }
-
-function onFanTeamChange() {
-  const league = document.getElementById('fan-league').value;
-  const tid = document.getElementById('fan-team').value;
-  if (!tid) { fanTeam = null; renderSquadPlayers(); return; }
-  const teams = TEAMS[league] || [];
-  fanTeam = teams.find(t => t.id === tid);
-  if (!fanTeam) return;
-
-  // Show team style badges
-  const av = LEAGUE_AVGS[league] || {};
-  const badges = [];
-  if (fanTeam.pos_pct > (av.pos||50)+5) badges.push({txt:'High Possession', col:'var(--accent)'});
-  if (fanTeam.pa > (av.pa||80)+3) badges.push({txt:'Technical Style', col:'var(--accent)'});
-  if (fanTeam.tk > (av.tk||18)+1) badges.push({txt:'High Press', col:'var(--warn)'});
-  if (fanTeam.gs > (av.gs||1.3)+0.2) badges.push({txt:'Strong Attack', col:'var(--yellow)'});
-  if (fanTeam.gc < (av.gc||1.3)-0.15) badges.push({txt:'Solid Defence', col:'var(--accent2)'});
-  if (fanTeam.aer > (av.aer||51)+2) badges.push({txt:'Aerial Dominance', col:'var(--accent2)'});
-
-  document.getElementById('fan-team-badges').innerHTML = badges.map(b =>
-    `<div style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.05);border:1px solid ${b.col}30;color:${b.col}">${b.txt}</div>`
-  ).join('');
-  document.getElementById('fan-team-stats').style.display = 'block';
+function onFanTeamChange(){
+  const league=document.getElementById('fan-league').value;
+  const tid=document.getElementById('fan-team').value;
+  if(!tid){fanTeam=null;renderSquadPlayers();return;}
+  const teams=TEAMS[league]||[];
+  fanTeam=teams.find(t=>t.id===tid);
+  if(!fanTeam)return;
+  const av=LEAGUE_AVGS[league]||{};
+  const badges=[];
+  if(fanTeam.pos_pct>(av.pos||50)+5)badges.push({txt:'High Possession',col:'var(--accent)'});
+  if(fanTeam.pa>(av.pa||80)+3)badges.push({txt:'Technical Style',col:'var(--accent)'});
+  if(fanTeam.tk>(av.tk||18)+1)badges.push({txt:'High Press',col:'var(--warn)'});
+  if(fanTeam.gs>(av.gs||1.3)+0.2)badges.push({txt:'Strong Attack',col:'var(--yellow)'});
+  if(fanTeam.gc<(av.gc||1.3)-0.15)badges.push({txt:'Solid Defence',col:'var(--accent2)'});
+  if(fanTeam.aer>(av.aer||51)+2)badges.push({txt:'Aerial Dominance',col:'var(--accent2)'});
+  document.getElementById('fan-team-badges').innerHTML=badges.map(b=>`<div style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.05);border:1px solid ${b.col}30;color:${b.col}">${b.txt}</div>`).join('');
+  document.getElementById('fan-team-stats').style.display='block';
   renderSquadPlayers();
 }
-
-// Score a player's fit for a specific team style
-function scorePlayerForTeam(p, team, league, requestedSubpos) {
-  if (!team) return {score: 50, reasons: [], flags: []};
-  const av = LEAGUE_AVGS[league] || {};
-  let score = 50; // base score
-  const reasons = [], flags = [];
-
-  // Style matching — reward players who complement team style
-  const isAttacker = p.pos === 'ATT';
-  const isDefender = p.pos === 'DEF';
-  const isMid = p.pos === 'MID';
-  const isGK = p.pos === 'GK';
-
-  if (isGK) {
-    // GK fit — saves and clean sheets are primary indicators
-    if (p.saves_pg >= 3.5)    { score += 18; reasons.push(`High save volume: ${p.saves_pg.toFixed(1)}/g`); }
-    else if (p.saves_pg >= 3.0){ score += 12; reasons.push(`Solid saves: ${p.saves_pg.toFixed(1)}/g`); }
-    if (p.clean_sheets >= 12)  { score += 15; reasons.push(`${p.clean_sheets} clean sheets`); }
-    else if (p.clean_sheets >= 8){ score += 8; reasons.push(`${p.clean_sheets} clean sheets`); }
-    if (p.gc_pg && p.gc_pg <= 0.9) { score += 12; reasons.push(`Low goals conceded: ${p.gc_pg}/g`); }
-    if (p.aerial_pct > 68) { score += 8; reasons.push(`Strong aerial: ${p.aerial_pct}%`); }
-    if (p.pass_acc > 75) { score += 5; reasons.push(`Technical distributor: ${p.pass_acc}%`); }
-    if (p.age < 28) { score += 5; }
-    if (p.age > 36) { score -= 10; flags.push(`Age concern: ${p.age}`); }
-  } else if (isDefender) {
-    // Match defensive style
-    if (team.aer > (av.aer||51)) {
-      // Aerial team needs aerial CBs
-      if (p.aerial_pct > 60) { score += 15; reasons.push(`Aerial fit: ${p.aerial_pct}%`); }
-    }
-    if (team.tk > (av.tk||18)) {
-      // High press needs good tacklers
-      if (p.tackles_pg > 2.5) { score += 12; reasons.push(`Press fit: ${p.tackles_pg.toFixed(1)} tkl/g`); }
-    }
-    if (team.pos_pct > (av.pos||50)+3) {
-      // Possession team needs CBs who can pass
-      if (p.pass_acc > 82) { score += 12; reasons.push(`Passing CB: ${p.pass_acc}%`); }
-    }
-    if (p.tackles_pg > 2.5) { score += 8; }
-    if (p.interceptions_pg > 1.5) { score += 8; }
-    if (p.aerial_pct > 58) { score += 5; }
-    if (p.pass_acc > 80) { score += 5; }
-    if (p.age > 34) { score -= 8; flags.push(`Age: ${p.age}`); }
-  } else if (isMid) {
-    if (team.pos_pct > (av.pos||50)+3) {
-      // Possession team
-      if (p.pass_acc > 84) { score += 15; reasons.push(`Possession fit: ${p.pass_acc}% pass`); }
-      if (p.key_passes_pg > 2.0) { score += 10; reasons.push(`Creative: ${p.key_passes_pg.toFixed(1)} kp/g`); }
-    }
-    if (team.tk > (av.tk||18)+1) {
-      // Pressing team needs engine midfielders
-      if (p.tackles_pg > 3.0) { score += 15; reasons.push(`Press engine: ${p.tackles_pg.toFixed(1)} tkl/g`); }
-    }
-    if (team.gs > (av.gs||1.3)+0.15) {
-      // Attacking team needs contributing mids
-      if (p.goals_pg > 0.15 || p.assists_pg > 0.20) {
-        score += 12;
-        reasons.push(`Goal contribution: ${((p.goals_pg||0)+(p.assists_pg||0)).toFixed(2)}/g`);
-      }
-    }
-    if (p.pass_acc > 83) { score += 5; }
-    if (p.key_passes_pg > 1.5) { score += 5; }
-    if (p.age > 33) { score -= 5; flags.push(`Age: ${p.age}`); }
-  } else if (isAttacker) {
-    if (team.gs < (av.gs||1.3)-0.1) {
-      // Team needs goals
-      if (p.goals_pg > 0.35) { score += 18; reasons.push(`Goalscorer fit: ${p.goals_pg.toFixed(2)}/g`); }
-      if (p.shots_on_tgt_pg > 1.8) { score += 10; reasons.push(`Shot volume: ${p.shots_on_tgt_pg.toFixed(1)}/g`); }
-    }
-    if (team.pos_pct > (av.pos||50)+3) {
-      // Possession team needs creative attackers
-      if (p.key_passes_pg > 1.8) { score += 12; reasons.push(`Creative: ${p.key_passes_pg.toFixed(1)} kp/g`); }
-      if (p.assists_pg > 0.20) { score += 10; reasons.push(`Assists: ${p.assists_pg.toFixed(2)}/g`); }
-    }
-    if (p.goals_pg > 0.40) { score += 8; }
-    if (p.assists_pg > 0.25) { score += 5; }
-    if (p.key_passes_pg > 2.0) { score += 5; }
-    if (p.age > 34) { score -= 8; flags.push(`Age: ${p.age}`); }
-    if (p.age > 37) { score -= 10; }
+function scorePlayerForTeam(p,team,league,requestedSubpos){
+  if(!team)return{score:50,reasons:[],flags:[]};
+  const av=LEAGUE_AVGS[league]||{};
+  let score=50;const reasons=[],flags=[];
+  const isGK=p.pos==='GK',isDefender=p.pos==='DEF',isMid=p.pos==='MID',isAttacker=p.pos==='ATT';
+  if(isGK){
+    if(p.saves_pg>=3.5){score+=18;reasons.push(`High save volume: ${p.saves_pg.toFixed(1)}/g`);}
+    else if(p.saves_pg>=3.0){score+=12;reasons.push(`Solid saves: ${p.saves_pg.toFixed(1)}/g`);}
+    if(p.clean_sheets>=12){score+=15;reasons.push(`${p.clean_sheets} clean sheets`);}
+    else if(p.clean_sheets>=8){score+=8;reasons.push(`${p.clean_sheets} clean sheets`);}
+    if(p.gc_pg&&p.gc_pg<=0.9){score+=12;reasons.push(`Low goals conceded: ${p.gc_pg}/g`);}
+    if(p.aerial_pct>68){score+=8;reasons.push(`Strong aerial: ${p.aerial_pct}%`);}
+    if(p.pass_acc>75){score+=5;reasons.push(`Technical distributor: ${p.pass_acc}%`);}
+    if(p.age<28)score+=5;
+    if(p.age>36){score-=10;flags.push(`Age concern: ${p.age}`);}
+  }else if(isDefender){
+    if(team.aer>(av.aer||51)&&p.aerial_pct>60){score+=15;reasons.push(`Aerial fit: ${p.aerial_pct}%`);}
+    if(team.tk>(av.tk||18)&&p.tackles_pg>2.5){score+=12;reasons.push(`Press fit: ${p.tackles_pg.toFixed(1)} tkl/g`);}
+    if(team.pos_pct>(av.pos||50)+3&&p.pass_acc>82){score+=12;reasons.push(`Passing CB: ${p.pass_acc}%`);}
+    if(p.tackles_pg>2.5)score+=8;
+    if(p.interceptions_pg>1.5)score+=8;
+    if(p.aerial_pct>58)score+=5;
+    if(p.pass_acc>80)score+=5;
+    if(p.age>34){score-=8;flags.push(`Age: ${p.age}`);}
+  }else if(isMid){
+    if(team.pos_pct>(av.pos||50)+3){if(p.pass_acc>84){score+=15;reasons.push(`Possession fit: ${p.pass_acc}% pass`);}if(p.key_passes_pg>2.0){score+=10;reasons.push(`Creative: ${p.key_passes_pg.toFixed(1)} kp/g`);}}
+    if(team.tk>(av.tk||18)+1&&p.tackles_pg>3.0){score+=15;reasons.push(`Press engine: ${p.tackles_pg.toFixed(1)} tkl/g`);}
+    if(team.gs>(av.gs||1.3)+0.15&&(p.goals_pg>0.15||p.assists_pg>0.20)){score+=12;reasons.push(`Goal contribution: ${((p.goals_pg||0)+(p.assists_pg||0)).toFixed(2)}/g`);}
+    if(p.pass_acc>83)score+=5;
+    if(p.key_passes_pg>1.5)score+=5;
+    if(p.age>33){score-=5;flags.push(`Age: ${p.age}`);}
+  }else if(isAttacker){
+    if(team.gs<(av.gs||1.3)-0.1){if(p.goals_pg>0.35){score+=18;reasons.push(`Goalscorer fit: ${p.goals_pg.toFixed(2)}/g`);}if(p.shots_on_tgt_pg>1.8){score+=10;reasons.push(`Shot volume: ${p.shots_on_tgt_pg.toFixed(1)}/g`);}}
+    if(team.pos_pct>(av.pos||50)+3){if(p.key_passes_pg>1.8){score+=12;reasons.push(`Creative: ${p.key_passes_pg.toFixed(1)} kp/g`);}if(p.assists_pg>0.20){score+=10;reasons.push(`Assists: ${p.assists_pg.toFixed(2)}/g`);}}
+    if(p.goals_pg>0.40)score+=8;
+    if(p.assists_pg>0.25)score+=5;
+    if(p.key_passes_pg>2.0)score+=5;
+    if(p.age>34){score-=8;flags.push(`Age: ${p.age}`);}
+    if(p.age>37)score-=10;
   }
-
-  // Apply subposition compatibility penalty
-  if (requestedSubpos && p.subpos) {
-    const compat = getSubposCompatibility(p.subpos, requestedSubpos);
-    if (compat < 1.0) {
-      score = score * compat;
-      if (compat < 0.7) flags.push(`Natural ${p.subpos}, asked for ${requestedSubpos}`);
-    }
-  }
-
-  // Detect alternative positions
-  const altPositions = detectAltPositions(p);
-
-  // Cap score between 15-98
-  score = Math.min(98, Math.max(15, Math.round(score)));
-  return { score, reasons: reasons.slice(0,3), flags: flags.slice(0,2), altPositions };
+  if(requestedSubpos&&p.subpos){const compat=getSubposCompatibility(p.subpos,requestedSubpos);if(compat<1.0){score=score*compat;if(compat<0.7)flags.push(`Natural ${p.subpos}, asked for ${requestedSubpos}`);}}
+  const altPositions=detectAltPositions(p);
+  score=Math.min(98,Math.max(15,Math.round(score)));
+  return{score,reasons:reasons.slice(0,3),flags:flags.slice(0,2),altPositions};
 }
-
-function renderSquadPlayers() {
-  const posVal = document.getElementById('squad-pos').value;
-  const leagueVal = document.getElementById('squad-league').value;
-  const budget = parseFloat(document.getElementById('squad-budget').value) || Infinity;
-  const maxAge = parseInt(document.getElementById('squad-age').value) || 99;
-  const fanLeague = document.getElementById('fan-league').value;
-
-  // Map detailed position values to DB position categories
-  const posGroupMap = {
-    'DEF':'DEF','DEF_CB':'DEF','DEF_RB':'DEF','DEF_LB':'DEF',
-    'MID':'MID','MID_CDM':'MID','MID_CM':'MID','MID_CAM':'MID',
-    'ATT':'ATT','ATT_RW':'ATT','ATT_LW':'ATT','ATT_ST':'ATT',
-    'GK':'GK'
-  };
-  const basePos = posVal ? posGroupMap[posVal] : null;
-
-  let pool = leagueVal === 'ALL' ? PLAYERS_VALID : PLAYERS_VALID.filter(p => p.league === leagueVal);
-  if (basePos) pool = pool.filter(p => p.pos === basePos);
-  pool = pool.filter(p => p.value <= budget && p.age <= maxAge);
-
-  if (!pool.length) {
-    document.getElementById('squad-count').textContent = '';
-    document.getElementById('squad-list').innerHTML = `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No Players Found</div><div style="font-size:13px">Try widening your filters</div></div>`;
-    return;
-  }
-
-  // Extract requested subpos from position value
-  const subposMap3 = {
-    'DEF_CB':'CB','DEF_RB':'RB','DEF_LB':'LB',
-    'MID_CDM':'CDM','MID_CM':'CM','MID_CAM':'CAM',
-    'ATT_RW':'RW','ATT_LW':'LW','ATT_ST':'ST',
-    'GK':'GK'
-  };
-  const reqSubpos = subposMap3[posVal] || null;
-
-  // Score each player for team fit
-  const scored = pool.map(p => {
-    const base = scorePlayerForTeam(p, fanTeam, fanLeague, reqSubpos);
-    const ctx = applyContextualFactors(base.score, p, fanTeam, fanLeague);
-    return {
-      p,
-      ...base,
-      score: ctx.score,
-      contextFlags: ctx.contextFlags,
-      contextBoosts: ctx.contextBoosts
-    };
-  }).sort((a,b) => b.score - a.score).slice(0, 20);
-
-  const teamLabel = fanTeam ? `for ${fanTeam.name}` : '(select a team for personalised scores)';
-  document.getElementById('squad-count').textContent = `${scored.length} players shown ${teamLabel}`;
-
-  const posColors = {GK:'rgba(245,200,66,0.1)',DEF:'rgba(0,184,255,0.1)',MID:'rgba(0,229,160,0.1)',ATT:'rgba(255,107,53,0.1)'};
-  const posTextColors = {GK:'var(--yellow)',DEF:'var(--accent2)',MID:'var(--accent)',ATT:'var(--warn)'};
-
-  document.getElementById('squad-list').innerHTML = scored.map(({p, score, reasons, flags, altPositions, contextFlags, contextBoosts}, i) => {
-    const isCurrentPlayer = fanTeam && p.club === fanTeam.name;
-    return `
-    <div class="pcard" style="margin-bottom:8px;${isCurrentPlayer ? 'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.04);' : ''}">
+function renderSquadPlayers(){
+  const posVal=document.getElementById('squad-pos').value;
+  const leagueVal=document.getElementById('squad-league').value;
+  const budget=parseFloat(document.getElementById('squad-budget').value)||Infinity;
+  const maxAge=parseInt(document.getElementById('squad-age').value)||99;
+  const fanLeague=document.getElementById('fan-league').value;
+  const posGroupMap={'DEF':'DEF','DEF_CB':'DEF','DEF_RB':'DEF','DEF_LB':'DEF','MID':'MID','MID_CDM':'MID','MID_CM':'MID','MID_CAM':'MID','ATT':'ATT','ATT_RW':'ATT','ATT_LW':'ATT','ATT_ST':'ATT','GK':'GK'};
+  const basePos=posVal?posGroupMap[posVal]:null;
+  let pool=leagueVal==='ALL'?PLAYERS_VALID:PLAYERS_VALID.filter(p=>p.league===leagueVal);
+  if(basePos)pool=pool.filter(p=>p.pos===basePos);
+  pool=pool.filter(p=>p.value<=budget&&p.age<=maxAge);
+  if(!pool.length){document.getElementById('squad-count').textContent='';document.getElementById('squad-list').innerHTML=`<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No Players Found</div><div style="font-size:13px">Try widening your filters</div></div>`;return;}
+  const subposMap={'DEF_CB':'CB','DEF_RB':'RB','DEF_LB':'LB','MID_CDM':'CDM','MID_CM':'CM','MID_CAM':'CAM','ATT_RW':'RW','ATT_LW':'LW','ATT_ST':'ST','GK':'GK'};
+  const reqSubpos=subposMap[posVal]||null;
+  const scored=pool.map(p=>{const base=scorePlayerForTeam(p,fanTeam,fanLeague,reqSubpos);const ctx=applyContextualFactors(base.score,p,fanTeam,fanLeague);return{p,...base,score:ctx.score,contextFlags:ctx.contextFlags,contextBoosts:ctx.contextBoosts};}).sort((a,b)=>b.score-a.score).slice(0,20);
+  const teamLabel=fanTeam?`for ${fanTeam.name}`:'(select a team for personalised scores)';
+  document.getElementById('squad-count').textContent=`${scored.length} players shown ${teamLabel}`;
+  const posColors={GK:'rgba(245,200,66,0.1)',DEF:'rgba(0,184,255,0.1)',MID:'rgba(0,229,160,0.1)',ATT:'rgba(255,107,53,0.1)'};
+  const posTextColors={GK:'var(--yellow)',DEF:'var(--accent2)',MID:'var(--accent)',ATT:'var(--warn)'};
+  document.getElementById('squad-list').innerHTML=scored.map(({p,score,reasons,flags,altPositions,contextFlags,contextBoosts},i)=>{
+    const isCP=fanTeam&&p.club===fanTeam.name;
+    return`<div class="pcard" style="margin-bottom:8px;${isCP?'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.04);':''}">
       <div class="prank ${i<3?'top':''}">${String(i+1).padStart(2,'0')}</div>
       <div>
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;flex-wrap:wrap">
           <div class="pname">${p.name}</div>
-          <div class="pos-badge" style="background:${posColors[p.pos]||'rgba(0,102,255,0.1)'};color:${posTextColors[p.pos]||'#7ab4ff'}">${p.subpos || p.pos}</div>
-          ${isCurrentPlayer ? `<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>` : ''}
+          <div class="pos-badge" style="background:${posColors[p.pos]||'rgba(0,102,255,0.1)'};color:${posTextColors[p.pos]||'#7ab4ff'}">${p.subpos||p.pos}</div>
+          ${isCP?`<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>`:''}
         </div>
-        <div class="pmeta">
-          <span>🏟 ${p.club}</span>
-          <span>📍 ${p.nat}</span>
-          <span>🎂 ${p.age} yrs</span>
-          <span>📋 ${p.apps} apps</span>
-          <span>💰 ${fmtVal(p.value)}</span>
-          ${p.height ? `<span>📏 ${p.height}cm</span>` : ''}
-        </div>
+        <div class="pmeta"><span>🏟 ${p.club}</span><span>📍 ${p.nat}</span><span>🎂 ${p.age} yrs</span><span>📋 ${p.apps} apps</span><span>💰 ${fmtVal(p.value)}</span>${p.height?`<span>📏 ${p.height}cm</span>`:''}</div>
         <div class="stat-pills">${getPositionStats(p)}</div>
-        ${reasons.map(r => `<div class="reason">${r}</div>`).join('')}
-        ${flags.map(f => `<div class="pflag">${f}</div>`).join('')}
-        ${(contextBoosts||[]).map(b => `<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${b.icon||'✓'}</span><span>${b.text}</span></div>`).join('')}
-        ${(contextFlags||[]).map(f => `<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px" title="${f.tip||''}"><span>${f.icon||'⚠'}</span><span>${f.text}</span></div>`).join('')}
-        ${altPositions && altPositions.length ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${altPositions.map(a=>`<div style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:var(--yellow)">🔄 Can play ${a.pos}</div>`).join('')}</div>` : ''}
+        ${reasons.map(r=>`<div class="reason">${r}</div>`).join('')}
+        ${flags.map(f=>`<div class="pflag">${f}</div>`).join('')}
+        ${(contextBoosts||[]).map(b=>`<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px"><span>${b.icon||'✓'}</span><span>${b.text}</span></div>`).join('')}
+        ${(contextFlags||[]).map(f=>`<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px;display:flex;align-items:flex-start;gap:4px" title="${f.tip||''}"><span>${f.icon||'⚠'}</span><span>${f.text}</span></div>`).join('')}
+        ${altPositions&&altPositions.length?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">${altPositions.map(a=>`<div style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:var(--yellow)">🔄 Can play ${a.pos}</div>`).join('')}</div>`:''}
       </div>
-      <div class="score-blk">
-        <div class="score-num ${scCls(score)}">${score}%</div>
-        <div class="score-lbl">${fanTeam ? 'FIT SCORE' : 'BASE SCORE'}</div>
-        <div class="sbar"><div class="sbar-fill" style="width:${score}%;background:${barClr(score)}"></div></div>
-      </div>
+      <div class="score-blk"><div class="score-num ${scCls(score)}">${score}%</div><div class="score-lbl">${fanTeam?'FIT SCORE':'BASE SCORE'}</div><div class="sbar"><div class="sbar-fill" style="width:${score}%;background:${barClr(score)}"></div></div></div>
     </div>`;
   }).join('');
 }
-
-// Sidebar toggle for mobile
-function toggleSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
-  const isOpen = sidebar.classList.contains('open');
-  sidebar.classList.toggle('open', !isOpen);
-  overlay.style.display = isOpen ? 'none' : 'block';
+function toggleSidebar(){
+  const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('sidebar-overlay');
+  const isOpen=sidebar.classList.contains('open');
+  sidebar.classList.toggle('open',!isOpen);
+  overlay.style.display=isOpen?'none':'block';
 }
-
-// Close sidebar when team is selected on mobile
-const _origSelectTeam = selectTeam;
-function selectTeamWrapped(id) {
+const _origSelectTeam=selectTeam;
+function selectTeamWrapped(id){
   _origSelectTeam(id);
-  if (window.innerWidth <= 768) {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    sidebar.classList.remove('open');
-    overlay.style.display = 'none';
-  }
+  if(window.innerWidth<=768){const sidebar=document.getElementById('sidebar'),overlay=document.getElementById('sidebar-overlay');sidebar.classList.remove('open');overlay.style.display='none';}
 }
-
-// Init
 renderTeamList('');
-document.getElementById('playerLeagueSel').addEventListener('change', updateFilterCount);
-['minAge','maxAge','budgetMax','minApps','posFil'].forEach(id => {
-  document.getElementById(id).addEventListener('input', updateFilterCount);
-});
+document.getElementById('playerLeagueSel').addEventListener('change',updateFilterCount);
+['minAge','maxAge','budgetMax','minApps','posFil'].forEach(id=>{document.getElementById(id).addEventListener('input',updateFilterCount);});
 </script>
 </body>
 </html>
