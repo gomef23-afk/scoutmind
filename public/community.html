@@ -342,7 +342,7 @@ function doPolls(el,tk){
     html+='<button class="pfbtn" onclick="subPoll(\''+tk+'\')">Create Poll</button>';
     html+='<button class="pfcancel" onclick="tPF()">Cancel</button></div>';
   }else{
-    html+='<div class="progate" style="margin-bottom:12px"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Create Polls with Scout Pro</div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Scout Pro members can create polls.</div><button class="upbtn" onclick="window.location.href=\'/auth.html\'">Upgrade — $9.99/mo</button></div>';
+    html+='<div class="progate" style="margin-bottom:12px"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Create Polls with Scout Pro</div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Scout Pro members can create polls.</div><button class="upbtn" onclick="window.location.href=\'/auth.html\'">Upgrade — $6.99/mo</button></div>';
   }
   d.polls.forEach(function(p){
     var tot=p.votes.reduce(function(a,b){return a+b;},0);
@@ -448,7 +448,7 @@ async function doGroups(el,tk){
   }
   if(err||!groups||groups.length===0){
     html+='<div class="empty"><div style="font-size:32px;margin-bottom:10px;opacity:.3">💬</div><div style="font-size:14px;opacity:.4;margin-bottom:6px">No groups yet for this team</div><div style="font-size:12px">'+(isPro?'Create the first one above!':'Upgrade to Scout Pro to create a group.')+'</div></div>';
-    if(!isPro)html+='<div class="progate" style="margin-top:12px"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Create the first group</div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Scout Pro members can create fan groups for any team.</div><button class="upbtn" onclick="window.location.href=\'/auth.html\'">Upgrade — $9.99/mo</button></div>';
+    if(!isPro)html+='<div class="progate" style="margin-top:12px"><div style="font-size:14px;font-weight:600;margin-bottom:4px">Create the first group</div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">Scout Pro members can create fan groups for any team.</div><button class="upbtn" onclick="window.location.href=\'/auth.html\'">Upgrade — $6.99/mo</button></div>';
   }else{
     groups.forEach(function(g,i){
       var icon=GICONS[i%GICONS.length];
@@ -476,9 +476,6 @@ function openG(gid,gname,icon,desc){
   document.getElementById('gc-icon').textContent=icon;
   document.getElementById('gcov').style.display='flex';
   document.body.style.overflow='hidden';
-  if(!isPro){
-    document.getElementById('gc-input-area').innerHTML='<div style="flex:1;text-align:center;padding:10px;font-size:12px;color:var(--muted);"><a href="/auth.html" style="color:var(--accent);font-weight:600">Upgrade to Scout Pro</a> to post in group chats.</div>';
-  }
   loadMsgs();
   GTimer=setInterval(loadMsgs,8000);
 }
@@ -509,7 +506,7 @@ async function loadMsgs(){
   if(atBot)el.scrollTop=el.scrollHeight;
 }
 async function sendMsg(){
-  if(!AGid||!isPro)return;
+  if(!AGid)return;
   var inp=document.getElementById('gc-input');
   var content=inp&&inp.value.trim();
   if(!content)return;
