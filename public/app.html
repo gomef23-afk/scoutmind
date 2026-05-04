@@ -153,6 +153,22 @@ hr{border:none;border-top:1px solid var(--border);}
 .feed-actions{display:flex;gap:16px;}
 .feed-action-btn{background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;transition:color .2s;}
 .feed-action-btn:hover{color:var(--accent);}
+.comment-section{border-top:1px solid var(--border);padding:12px 18px;background:var(--bg2);}
+.comment-toggle{display:flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;transition:color .2s;width:100%;}
+.comment-toggle:hover{color:var(--accent);}
+.comments-body{display:none;margin-top:12px;}
+.comment-input-row{display:flex;gap:8px;margin-bottom:12px;}
+.comment-av{width:26px;height:26px;border-radius:50%;background:rgba(0,229,160,0.15);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--accent);flex-shrink:0;}
+.comment-input{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 11px;border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;}
+.comment-input:focus{border-color:var(--accent);}
+.comment-post-btn{background:var(--accent);color:#000;border:none;padding:7px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;flex-shrink:0;}
+.comment-item{display:flex;gap:8px;margin-bottom:10px;}
+.comment-body-wrap{flex:1;background:var(--bg3);border-radius:12px;padding:8px 12px;}
+.comment-author{font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:6px;}
+.comment-text{font-size:12px;color:#8892a4;line-height:1.5;}
+.comment-meta{font-size:10px;color:var(--muted);margin-top:4px;display:flex;gap:10px;}
+.comment-like{background:transparent;border:none;color:var(--muted);font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;transition:color .2s;}
+.comment-like:hover{color:var(--red);}
 .feed-side-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;}
 .feed-side-title{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
 .trending-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);}
@@ -2364,6 +2380,90 @@ function filterFeed(type,btn){
 
 function scoreClr(s){return s>=75?'var(--green)':s>=50?'var(--yellow)':'var(--red)';}
 
+// ── COMMENTS SYSTEM ──
+const COMMENTS_STORE={
+  1:[
+    {author:'Bernardo M.',initials:'BM',text:'Finally confirmed! Gyökeres was unstoppable this season. Madrid got a steal at €100M.',time:'2h ago',likes:24,plan:'pro'},
+    {author:'Tactical Pedro',initials:'TP',text:'His aerial numbers (60%) will immediately fix Madrid's set piece weakness. Great signing.',time:'1h ago',likes:11,plan:'free'},
+  ],
+  2:[{author:'Fla Fan 1903',initials:'FF',text:'Álvarez seria perfeito mas €90M é demais pra gente agora. Torço por um empréstimo.',time:'3h ago',likes:18,plan:'free'}],
+  3:[],4:[],5:[],6:[],7:[],8:[],
+};
+const COMMENT_LIKES={};
+
+function getInitials(name){return(name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+
+function toggleComments(newsId){
+  const body=document.getElementById('cb-'+newsId);
+  const toggle=document.getElementById('ct-'+newsId);
+  if(!body)return;
+  const isOpen=body.style.display==='block';
+  body.style.display=isOpen?'none':'block';
+  const count=(COMMENTS_STORE[newsId]||[]).length;
+  toggle.innerHTML=isOpen
+    ?`💬 ${count} comment${count!==1?'s':''} &nbsp;<span style="color:var(--accent)">Show</span>`
+    :`💬 ${count} comment${count!==1?'s':''} &nbsp;<span style="color:var(--muted)">Hide</span>`;
+}
+
+function postComment(newsId){
+  const input=document.getElementById('ci-'+newsId);
+  const text=input&&input.value.trim();
+  if(!text)return;
+  if(text.length>280){alert('Keep it under 280 characters.');return;}
+  const cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
+  const author=cu?cu.name:'Anonymous';
+  const plan=cu?cu.plan:'free';
+  const initials=getInitials(author);
+  if(!COMMENTS_STORE[newsId])COMMENTS_STORE[newsId]=[];
+  COMMENTS_STORE[newsId].unshift({author,initials,text,time:'Just now',likes:0,plan});
+  input.value='';
+  renderComments(newsId);
+  const toggle=document.getElementById('ct-'+newsId);
+  const count=COMMENTS_STORE[newsId].length;
+  if(toggle)toggle.innerHTML=`💬 ${count} comment${count!==1?'s':''} &nbsp;<span style="color:var(--muted)">Hide</span>`;
+}
+
+function likeComment(newsId,idx){
+  const key=newsId+'-'+idx;
+  if(COMMENT_LIKES[key])return;
+  COMMENT_LIKES[key]=true;
+  if(COMMENTS_STORE[newsId]&&COMMENTS_STORE[newsId][idx]!=null){
+    COMMENTS_STORE[newsId][idx].likes=(COMMENTS_STORE[newsId][idx].likes||0)+1;
+    renderComments(newsId);
+  }
+}
+
+function renderComments(newsId){
+  const list=document.getElementById('cl-'+newsId);
+  if(!list)return;
+  const comments=COMMENTS_STORE[newsId]||[];
+  if(!comments.length){
+    list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0 4px;">No comments yet — be the first!</div>';
+    return;
+  }
+  list.innerHTML=comments.map((c,i)=>{
+    const planBadge=c.plan==='analyst'
+      ?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);font-weight:700;">ANALYST</span>'
+      :(c.plan==='pro'||c.plan==='club'||c.plan==='clubpro')
+      ?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);border:1px solid rgba(0,229,160,0.2);font-weight:700;">PRO</span>'
+      :'';
+    const liked=COMMENT_LIKES[newsId+'-'+i];
+    return `<div class="comment-item">
+      <div class="comment-av">${c.initials}</div>
+      <div class="comment-body-wrap">
+        <div class="comment-author">${c.author} ${planBadge}</div>
+        <div class="comment-text">${c.text}</div>
+        <div class="comment-meta">
+          <span>${c.time}</span>
+          <button class="comment-like" onclick="likeComment(${newsId},${i})" style="color:${liked?'var(--red)':'var(--muted)'}">
+            ${liked?'❤':'♡'} ${c.likes||0}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function renderFeedNews(){
   const filtered=FEED_NEWS.filter(n=>{
     if(currentFeedFilter==='all')return true;
@@ -2373,6 +2473,7 @@ function renderFeedNews(){
   });
   let html='';
   filtered.forEach((n,i)=>{
+    const commentCount=(COMMENTS_STORE[n.id]||[]).length;
     html+=`<div style="background:var(--bg2);border:1px solid ${n.featured?'rgba(0,229,160,0.2)':'var(--border)'};border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;">
       <div style="padding:16px 18px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
@@ -2394,14 +2495,32 @@ function renderFeedNews(){
           </div>`).join('')}
         </div>`:''}
       </div>
+      <div class="comment-section">
+        <button class="comment-toggle" id="ct-${n.id}" onclick="toggleComments(${n.id})">
+          💬 ${commentCount} comment${commentCount!==1?'s':''} &nbsp;<span style="color:var(--accent)">Show</span>
+        </button>
+        <div class="comments-body" id="cb-${n.id}">
+          <div class="comment-input-row">
+            <div class="comment-av" id="cav-${n.id}">?</div>
+            <input class="comment-input" id="ci-${n.id}" placeholder="What do you think about this transfer?" maxlength="280"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postComment(${n.id});}">
+            <button class="comment-post-btn" onclick="postComment(${n.id})">Post</button>
+          </div>
+          <div id="cl-${n.id}"></div>
+        </div>
+      </div>
     </div>`;
   });
   const el=document.getElementById('feed-news-main');
-  if(el)el.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories found.</div>';
-
-  // Also render transfer tab same content
-  const tEl=document.getElementById('feed-transfers-main');
-  if(tEl)tEl.innerHTML=html;
+  if(el){
+    el.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories found.</div>';
+    FEED_NEWS.forEach(n=>{
+      renderComments(n.id);
+      const cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
+      const av=document.getElementById('cav-'+n.id);
+      if(av&&cu)av.textContent=getInitials(cu.name||cu.email||'U');
+    });
+  }
 }
 
 function renderSidebar(){
