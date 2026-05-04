@@ -604,7 +604,6 @@ async function submitBadgeApp(){
   var btn=document.querySelector('#badge-form-wrap button:last-child');
   if(btn){btn.textContent='Submitting...';btn.disabled=true;}
   var r=await _sb.from('badge_applications').insert({
-    user_id:cu?cu.id:null,
     user_name:name,
     email:email,
     role:role,
