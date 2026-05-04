@@ -432,6 +432,20 @@ if(!_cu){
         <button class="filter-btn" onclick="filterFeed('brazil',this)">🇧🇷 Brazil</button>
         <button class="filter-btn" onclick="filterFeed('europe',this)">🏆 Europe</button>
       </div>
+      <!-- HOT RUMORS + FIT SCORE — shown inline when Rumors filter active, always visible under All -->
+      <div id="inline-rumors-section" style="display:none;margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">🔥 Hot Rumors</div>
+            <div id="feed-hot-rumors"></div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">📊 Fit Score Index</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;">How well each rumoured signing solves the buying club's weakness.</div>
+            <div id="feed-fit-index"></div>
+          </div>
+        </div>
+      </div>
       <div id="feed-news-main"></div>
     </div>
 
@@ -481,15 +495,6 @@ if(!_cu){
     </div>
 </div><!-- /feed-main -->
   <div class="feed-side">
-    <div class="feed-side-card">
-      <div class="feed-side-title">🔥 Hot Rumors</div>
-      <div id="feed-hot-rumors"></div>
-    </div>
-    <div class="feed-side-card">
-      <div class="feed-side-title">📊 Fit Score Index</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;">How well each rumoured signing solves the buying club's tactical weakness.</div>
-      <div id="feed-fit-index"></div>
-    </div>
     <div class="feed-side-card">
       <div class="feed-side-title">Today's matches</div>
       <div class="match-row-sm"><div><div class="match-comp-sm">SÉRIE A · 21:00</div><div class="match-teams-sm">Botafogo <span style="color:var(--muted);font-size:10px;">vs</span> Fluminense</div></div></div>
@@ -2375,6 +2380,9 @@ function filterFeed(type,btn){
   currentFeedFilter=type;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
+  // Show rumors/fit score block when on Rumors or All News filter
+  const rumorSection=document.getElementById('inline-rumors-section');
+  if(rumorSection)rumorSection.style.display=(type==='rumor'||type==='all')?'block':'none';
   renderFeedNews();
 }
 
@@ -2524,6 +2532,9 @@ function renderFeedNews(){
 }
 
 function renderSidebar(){
+  // Show inline rumors section by default (All News is default filter)
+  const rumorSection=document.getElementById('inline-rumors-section');
+  if(rumorSection)rumorSection.style.display='block';
   const hr=document.getElementById('feed-hot-rumors');
   if(hr)hr.innerHTML=HOT_RUMORS.map(r=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;min-width:44px;color:${r.probClass==='hi'?'var(--green)':r.probClass==='mid'?'var(--yellow)':'var(--red)'};">${r.prob}%</div>
