@@ -2180,6 +2180,7 @@ function showPage(id){
   const navEl=document.getElementById('nav-'+id);
   if(navEl)navEl.classList.add('active');
   if(id==='profile') try{renderProfileClubs();}catch(e){}
+  if(id==='feed') try{renderFeedNews();}catch(e){}
   window.scrollTo(0,0);
 }
 
