@@ -748,7 +748,14 @@ if(!_cu){
       <div class="profile-row-label">Name</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="profile-row-value" id="profile-name-val">—</div>
-        <button class="profile-edit-btn">Edit</button>
+        <div id="profile-name-edit" style="display:none;align-items:center;gap:6px;">
+          <input type="text" id="profile-name-input" placeholder="Enter name..."
+            onkeydown="if(event.key==='Enter')saveName();if(event.key==='Escape')cancelEditName();"
+            style="background:var(--bg3);border:1px solid var(--accent);color:var(--text);padding:5px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:160px;">
+          <button onclick="saveName()" style="font-size:11px;font-weight:700;padding:5px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">Save</button>
+          <button onclick="cancelEditName()" style="font-size:11px;padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-family:inherit;">✕</button>
+        </div>
+        <button class="profile-edit-btn" id="profile-edit-btn" onclick="editName()">Edit</button>
       </div>
     </div>
     <div class="profile-row">
@@ -2721,6 +2728,34 @@ function renderProfileClubs(){
   el.innerHTML = html;
 }
 
+function editName(){
+  var nameVal=document.getElementById('profile-name-val');
+  var nameEdit=document.getElementById('profile-name-edit');
+  var nameInput=document.getElementById('profile-name-input');
+  var editBtn=document.getElementById('profile-edit-btn');
+  if(nameVal)nameVal.style.display='none';
+  if(nameEdit)nameEdit.style.display='flex';
+  if(nameInput){nameInput.value=currentUser&&currentUser.name?currentUser.name:'';nameInput.focus();nameInput.select();}
+  if(editBtn)editBtn.style.display='none';
+}
+function cancelEditName(){
+  var nameVal=document.getElementById('profile-name-val');
+  var nameEdit=document.getElementById('profile-name-edit');
+  var editBtn=document.getElementById('profile-edit-btn');
+  if(nameVal)nameVal.style.display='';
+  if(nameEdit)nameEdit.style.display='none';
+  if(editBtn)editBtn.style.display='';
+}
+function saveName(){
+  var input=document.getElementById('profile-name-input');
+  var newName=input&&input.value.trim();
+  if(!newName){alert('Please enter a name.');return;}
+  if(currentUser){currentUser.name=newName;localStorage.setItem('sm_current_user',JSON.stringify(currentUser));}
+  var initials=newName.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+  var ids={'profile-name-val':newName,'profile-name-big':newName.toUpperCase(),'nav-name':newName,'nav-avatar':initials,'profile-avatar-big':initials};
+  Object.keys(ids).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=ids[id];});
+  cancelEditName();
+}
 function highlightCurrPref(c){
   ['EUR','USD','BRL','GBP'].forEach(x=>{
     const btn=document.getElementById('pref-'+x);
