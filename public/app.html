@@ -769,7 +769,7 @@ if(!_cu){
         <div class="plan-card-name" id="profile-plan-name">Scout Free</div>
         <div class="plan-card-desc" id="profile-plan-desc">Basic analysis · Top 10 recommendations · No PDF export</div>
       </div>
-      <button class="upgrade-plan-btn" onclick="window.location.href='/auth.html?tab=signup&plan=pro'">Upgrade to Pro</button>
+      <button class="upgrade-plan-btn" onclick="window.open('https://buy.stripe.com/test_5kQ4gsbY9eW32IQ6rqeME00','_blank')">Upgrade to Pro</button>
     </div>
     <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.6;">
       Scout Pro unlocks full player recommendations, PDF scouting reports, weekly deep analysis reports across all leagues, and the ability to create polls and post in community groups.
@@ -1559,7 +1559,7 @@ function runAnalysis(){
       </div>`;
     });
   }
-  if(isFree&&hiddenCount>0){html+=`<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:20px;text-align:center;margin:16px 0;"><div style="font-size:16px;font-weight:700;margin-bottom:6px">🔒 ${hiddenCount} more players hidden</div><div style="font-size:13px;color:var(--muted);margin-bottom:14px">Upgrade to Scout Pro to see all recommendations.</div><a href="/auth.html?tab=signup&plan=pro" style="display:inline-block;background:var(--accent);color:#000;font-size:13px;font-weight:800;padding:10px 24px;border-radius:8px;text-decoration:none;">Upgrade to Scout Pro — $6.99/mo</a></div>`;}
+  if(isFree&&hiddenCount>0){html+=`<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:20px;text-align:center;margin:16px 0;"><div style="font-size:16px;font-weight:700;margin-bottom:6px">🔒 ${hiddenCount} more players hidden</div><div style="font-size:13px;color:var(--muted);margin-bottom:14px">Upgrade to Scout Pro to see all recommendations.</div><a href="https://buy.stripe.com/test_5kQ4gsbY9eW32IQ6rqeME00" target="_blank" style="display:inline-block;background:var(--accent);color:#000;font-size:13px;font-weight:800;padding:10px 24px;border-radius:8px;text-decoration:none;">Upgrade to Scout Pro — $6.99/mo</a></div>`;}
   if(rankedSec.length>0&&!isFree){
     html+=`<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)"><div class="section-hdr"><div style="display:flex;align-items:center;gap:8px"><div class="section-ttl">Also Consider</div><div class="data-badge" style="background:rgba(245,200,66,0.08);border-color:rgba(245,200,66,0.2);color:var(--yellow)">Secondary weakness: ${secType}</div></div></div>`;
     rankedSec.forEach((m,i)=>{const p=m.p,sc=m.score,isCP=selectedTeam&&p.club===selectedTeam.name;html+=`<div class="pcard" style="${isCP?'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);':''}opacity:0.85"><div class="prank">${String(i+1).padStart(2,'0')}</div><div><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px"><div class="pname">${p.name}</div><div class="pos-badge">${p.subpos||p.pos}</div>${isCP?`<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>`:''}</div><div class="pmeta"><span>🏟 ${p.club}</span><span>📍 ${p.nat}</span><span>🎂 ${p.age} yrs</span><span>📋 ${p.apps} apps</span><span>💰 ${fmtVal(p.value)}</span></div><div class="stat-pills">${getPositionStats(p)}</div>${m.reasons.map(r=>`<div class="reason">${r}</div>`).join('')}${(m.contextBoosts||[]).map(b=>`<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px">${b.icon} ${b.text}</div>`).join('')}${(m.contextFlags||[]).map(f=>`<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px">${f.icon} ${f.text}</div>`).join('')}</div><div class="score-blk"><div class="score-num ${scCls(sc)}">${sc}%</div><div class="score-lbl">MATCH</div><div class="sbar"><div class="sbar-fill" style="width:${sc}%;background:${barClr(sc)}"></div></div></div></div>`;});
@@ -2544,7 +2544,7 @@ function weeklyReportCard(r, locked) {
     html += '<div style="font-size:28px;margin-bottom:10px;">🔒</div>';
     html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:6px;">' + r.flag + ' ' + r.league + ' — Scout Pro</div>';
     html += '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;text-align:center;max-width:260px;">Upgrade to Scout Pro to read the full ' + r.league + ' weekly report.</div>';
-    html += '<button style="background:var(--accent);color:#000;border:none;padding:8px 20px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Upgrade — $6.99/mo</button>';
+    html += '<button onclick="window.open(\"https://buy.stripe.com/test_5kQ4gsbY9eW32IQ6rqeME00\",\"_blank\")" style="background:var(--accent);color:#000;border:none;padding:8px 20px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Upgrade — $6.99/mo</button>';
     html += '</div>';
   }
 
@@ -2634,6 +2634,22 @@ try{renderSidebar();}catch(e){console.error('renderSidebar:',e);}
 try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 try{initProfile();}catch(e){console.error('initProfile:',e);}
 try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
+
+
+// Handle return from Stripe payment
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('upgraded') === '1'){
+    // Show success banner
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,229,160,0.95);color:#000;padding:14px 28px;border-radius:10px;font-weight:700;font-size:14px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;align-items:center;gap:10px;';
+    banner.innerHTML = '✅ Welcome to Scout Pro! Your account will be upgraded shortly.';
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 6000);
+    // Clean URL
+    window.history.replaceState({}, '', '/app.html');
+  }
+})();
 
 // Handle ?page= URL parameter (e.g. from community.html Feed link)
 (function(){
