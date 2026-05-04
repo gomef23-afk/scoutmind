@@ -397,6 +397,7 @@ if(!_cu){
     <div class="feed-tabs-bar">
       <button class="ftab active" onclick="showFeedTab('transfers',this)">Transfer news</button>
       <button class="ftab" onclick="showFeedTab('foryou',this)">For you</button>
+      <button class="ftab" onclick="showFeedTab('weekly',this)">SM Weekly</button>
       <button class="ftab" onclick="showFeedTab('matchday',this)">Match day</button>
     </div>
 
@@ -420,8 +421,6 @@ if(!_cu){
 
     <!-- FOR YOU TAB — posts from your clubs and analysts -->
     <div id="feedtab-foryou" style="display:none;">
-      <!-- SCOUTMIND WEEKLY REPORT -->
-      <div id="weekly-report-section"></div>
       <div class="feed-post">
         <div class="feed-post-header">
           <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
@@ -458,6 +457,11 @@ if(!_cu){
     <!-- MATCH DAY TAB -->
     <div id="feedtab-matchday" style="display:none;">
       <div id="matchday-content"></div>
+    </div>
+
+    <!-- SCOUTMIND WEEKLY TAB -->
+    <div id="feedtab-weekly" style="display:none;">
+      <div id="weekly-report-section"></div>
     </div>
 </div><!-- /feed-main -->
   <div class="feed-side">
@@ -2181,7 +2185,7 @@ function showPage(id){
 
 // ── FEED TABS ──
 function showFeedTab(id,btn){
-  ['transfers','foryou','matchday'].forEach(t=>{
+  ['transfers','foryou','weekly','matchday'].forEach(t=>{
     const el=document.getElementById('feedtab-'+t);
     if(el)el.style.display='none';
   });
@@ -2191,6 +2195,7 @@ function showFeedTab(id,btn){
   if(btn)btn.classList.add('active');
   if(id==='matchday') try{renderMatchDay();}catch(e){}
   if(id==='foryou') try{renderWeeklyReport();}catch(e){}
+  if(id==='weekly') try{renderWeeklyReport();}catch(e){}
 }
 
 // ── MATCH DAY ──
