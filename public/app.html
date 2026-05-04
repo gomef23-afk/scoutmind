@@ -420,6 +420,8 @@ if(!_cu){
 
     <!-- FOR YOU TAB — posts from your clubs and analysts -->
     <div id="feedtab-foryou" style="display:none;">
+      <!-- SCOUTMIND WEEKLY REPORT -->
+      <div id="weekly-report-section"></div>
       <div class="feed-post">
         <div class="feed-post-header">
           <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
@@ -761,12 +763,12 @@ if(!_cu){
     <div class="plan-card">
       <div>
         <div class="plan-card-name" id="profile-plan-name">Scout Free</div>
-        <div class="plan-card-desc" id="profile-plan-desc">Basic analysis · Top 3 recommendations · No PDF export</div>
+        <div class="plan-card-desc" id="profile-plan-desc">Basic analysis · Top 10 recommendations · No PDF export</div>
       </div>
       <button class="upgrade-plan-btn" onclick="window.location.href='/auth.html?tab=signup&plan=pro'">Upgrade to Pro</button>
     </div>
     <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.6;">
-      Scout Pro unlocks full player recommendations, PDF scouting reports, unlimited transfer news, and the ability to create fan groups.
+      Scout Pro unlocks full player recommendations, PDF scouting reports, weekly deep analysis reports across all leagues, and the ability to create polls and post in community groups.
     </div>
   </div>
 
@@ -1247,7 +1249,7 @@ function getProfile(weaknessType,positionFilter){
 
 // ── AUTH & USER ──
 const currentUser=JSON.parse(localStorage.getItem('sm_current_user')||'null');
-const PLAN_NAMES={free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro'};
+const PLAN_NAMES={free:'Scout Free',pro:'Scout Pro ($6.99/mo)',club:'Club Basic ($49/mo)',clubpro:'Club Pro ($149/mo)',analyst:'Analyst'};
 const PLAN_CLASS={free:'free',pro:'pro',club:'club',clubpro:'clubpro'};
 const userPlan=currentUser?.plan||'free';
 const isPro=['pro','club','clubpro'].includes(userPlan);
@@ -1527,8 +1529,8 @@ function runAnalysis(){
   }
   if(profile){html+=`<div class="profile-card"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:7px">IDEAL PLAYER PROFILE</div><div class="profile-pos">${profile.pos}</div><div class="profile-role">${profile.role}</div><div class="req-stats">${Object.entries(profile.stats).map(([k,v])=>`<div class="req-stat">${k.replace(/_pg$/,' /g').replace(/_/g,' ')} ≥ <span>${v}</span></div>`).join('')}</div></div>`;}
   html+=`<div class="section-hdr"><div class="section-ttl">Player Recommendations</div><div style="display:flex;gap:8px;align-items:center"><div class="data-badge">⚽ ${ranked.length} matched</div><div class="data-badge" style="background:rgba(0,184,255,0.08);border-color:rgba(0,184,255,0.2);color:var(--accent2)">${primaryPool.length} players searched</div></div></div>`;
-  const visibleRanked=isFree?ranked.slice(0,3):ranked;
-  const hiddenCount=isFree?Math.max(0,ranked.length-3):0;
+  const visibleRanked=isFree?ranked.slice(0,10):ranked;
+  const hiddenCount=isFree?Math.max(0,ranked.length-10):0;
   if(!ranked.length){html+=`<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No Matches Found</div><div style="font-size:13px">Try widening your filters — increase the budget, age range, or select "All Leagues"</div></div>`;}
   else{
     visibleRanked.forEach((m,i)=>{
@@ -1553,7 +1555,7 @@ function runAnalysis(){
       </div>`;
     });
   }
-  if(isFree&&hiddenCount>0){html+=`<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:20px;text-align:center;margin:16px 0;"><div style="font-size:16px;font-weight:700;margin-bottom:6px">🔒 ${hiddenCount} more players hidden</div><div style="font-size:13px;color:var(--muted);margin-bottom:14px">Upgrade to Scout Pro to see all recommendations.</div><a href="/auth.html?tab=signup&plan=pro" style="display:inline-block;background:var(--accent);color:#000;font-size:13px;font-weight:800;padding:10px 24px;border-radius:8px;text-decoration:none;">Upgrade to Scout Pro — $9.99/mo</a></div>`;}
+  if(isFree&&hiddenCount>0){html+=`<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:20px;text-align:center;margin:16px 0;"><div style="font-size:16px;font-weight:700;margin-bottom:6px">🔒 ${hiddenCount} more players hidden</div><div style="font-size:13px;color:var(--muted);margin-bottom:14px">Upgrade to Scout Pro to see all recommendations.</div><a href="/auth.html?tab=signup&plan=pro" style="display:inline-block;background:var(--accent);color:#000;font-size:13px;font-weight:800;padding:10px 24px;border-radius:8px;text-decoration:none;">Upgrade to Scout Pro — $6.99/mo</a></div>`;}
   if(rankedSec.length>0&&!isFree){
     html+=`<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)"><div class="section-hdr"><div style="display:flex;align-items:center;gap:8px"><div class="section-ttl">Also Consider</div><div class="data-badge" style="background:rgba(245,200,66,0.08);border-color:rgba(245,200,66,0.2);color:var(--yellow)">Secondary weakness: ${secType}</div></div></div>`;
     rankedSec.forEach((m,i)=>{const p=m.p,sc=m.score,isCP=selectedTeam&&p.club===selectedTeam.name;html+=`<div class="pcard" style="${isCP?'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);':''}opacity:0.85"><div class="prank">${String(i+1).padStart(2,'0')}</div><div><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px"><div class="pname">${p.name}</div><div class="pos-badge">${p.subpos||p.pos}</div>${isCP?`<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>`:''}</div><div class="pmeta"><span>🏟 ${p.club}</span><span>📍 ${p.nat}</span><span>🎂 ${p.age} yrs</span><span>📋 ${p.apps} apps</span><span>💰 ${fmtVal(p.value)}</span></div><div class="stat-pills">${getPositionStats(p)}</div>${m.reasons.map(r=>`<div class="reason">${r}</div>`).join('')}${(m.contextBoosts||[]).map(b=>`<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px">${b.icon} ${b.text}</div>`).join('')}${(m.contextFlags||[]).map(f=>`<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px">${f.icon} ${f.text}</div>`).join('')}</div><div class="score-blk"><div class="score-num ${scCls(sc)}">${sc}%</div><div class="score-lbl">MATCH</div><div class="sbar"><div class="sbar-fill" style="width:${sc}%;background:${barClr(sc)}"></div></div></div></div>`;});
@@ -2188,6 +2190,7 @@ function showFeedTab(id,btn){
   if(target)target.style.display='block';
   if(btn)btn.classList.add('active');
   if(id==='matchday') try{renderMatchDay();}catch(e){}
+  if(id==='foryou') try{renderWeeklyReport();}catch(e){}
 }
 
 // ── MATCH DAY ──
@@ -2413,10 +2416,218 @@ document.querySelectorAll('.league-filter-btn').forEach(btn=>{
 });
 
 // ── INIT ──
-try{renderFeedNews();}catch(e){console.error('renderFeedNews:',e);}
+// ── SCOUTMIND WEEKLY REPORT ──
+const WEEKLY_REPORTS = [
+  {
+    league:'Série A', flag:'🇧🇷', week:'May 3, 2026',
+    mover:{team:'Palmeiras', direction:'up', change:'+8pts vs avg', note:'Estêvão now starting every game — creative output up 34% in 3 weeks.'},
+    alert:{team:'Corinthians', weakness:'Aerial vulnerability', stat:'41% aerial duels won vs 54% league avg', note:'3 of last 4 goals conceded from set pieces. A dominant CB is urgent.'},
+    transfer:{position:'CB', demand:'High', leagues:['Série A','La Liga'], note:'12 Série A clubs showing aerial weakness. Tall CBs under €10M are the most searched profile this week.', players:[{name:'Lautaro Mosquera',club:'Nacional (URU)',score:84},{name:'Matías Galarza',club:'Genoa (loan)',score:79}]},
+    deepDive:{team:'Flamengo', coach:'Filipe Luís', summary:'Flamengo lead Série A in possession (61%) and key passes per game (14.2) but their conversion rate (8.3%) is the 7th worst in the league. The data points to one clear fix: a clinical striker. Pedro\'s injury has exposed a finishing gap that no current squad member can solve. Arrascaeta is creating at an elite level — he needs a finisher.', signings:[{name:'Julián Álvarez',club:'Atlético Madrid',fit:88,note:'Perfect press fit, goals per game 0.50'},{name:'Borja Iglesias',club:'Betis',fit:74,note:'Clinical, cheaper alternative at ~€12M'}]}
+  },
+  {
+    league:'Premier League', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', week:'May 3, 2026',
+    mover:{team:'Arsenal', direction:'up', change:'+12% pressing intensity', note:'Arteta\'s new 4-2-3-1 is generating 3.2 more high turnovers per game than last month.'},
+    alert:{team:'Manchester United', weakness:'Low passing accuracy under pressure', stat:'71% pass acc vs 84% league avg', note:'Ball is being surrendered cheaply in midfield. A technical CM is the priority.'},
+    transfer:{position:'CM', demand:'Very High', leagues:['Premier League','Bundesliga'], note:'9 Premier League clubs showing midfield creativity weakness. Ball-playing CMs under £40M dominate search this week.', players:[{name:'Florian Wirtz',club:'Bayer Leverkusen',score:91},{name:'Kieran Tierney',club:'Real Sociedad',score:72}]},
+    deepDive:{team:'Chelsea', coach:'Enzo Maresca', summary:'Chelsea\'s £250M budget is confirmed and the data gives a clear priority order. Their xG per shot (0.11) is the 4th lowest in the league despite high shot volume — they need a clinical striker above all. Their pressing numbers (8.1 PPDA) are elite but fatigue in the 70th+ minute window is real, suggesting a rotation CM is also needed.', signings:[{name:'Florian Wirtz',club:'Bayer Leverkusen',fit:88,note:'Would solve the creativity + finishing link-up'},{name:'Viktor Gyökeres',club:'Real Madrid',fit:82,note:'Already confirmed at Madrid — window has closed'}]}
+  },
+  {
+    league:'La Liga', flag:'🇪🇸', week:'May 3, 2026',
+    mover:{team:'Barcelona', direction:'up', change:'Yamal contract extended', note:'Lamine Yamal signed until 2031. His 0.45 assists per game leads all U21 players in Europe.'},
+    alert:{team:'Sevilla', weakness:'Goalscoring output', stat:'0.9 goals/game vs 1.6 league avg', note:'Lowest attack output in top half. A proven striker is existential for their top-4 hopes.'},
+    transfer:{position:'ST', demand:'High', leagues:['La Liga','Serie A IT'], note:'7 La Liga clubs flagging attacking output weakness. Clinical strikers available under €25M are the most tracked profile.', players:[{name:'Che Adams',club:'Southampton',score:77},{name:'Donyell Malen',club:'Dortmund',score:81}]},
+    deepDive:{team:'Atlético Madrid', coach:'Diego Simeone', summary:'Atlético\'s defensive record (0.8 goals conceded/game) remains elite — best in La Liga. But their attacking transition has slowed since Álvarez\'s form dipped. Their counter-attack speed is 18% slower than last season. Simeone needs a pacey wide forward to restore the threat on the break.', signings:[{name:'Alejandro Garnacho',club:'Man Utd',fit:86,note:'Pace, directness, young — perfect Simeone profile'},{name:'Adama Traoré',club:'Free agent',fit:68,note:'Cheaper but declining physically'}]}
+  },
+  {
+    league:'Bundesliga', flag:'🇩🇪', week:'May 3, 2026',
+    mover:{team:'Bayer Leverkusen', direction:'down', change:'-15% key passes/game', note:'Wirtz transfer speculation affecting form. 3 straight draws signal squad depth problem.'},
+    alert:{team:'Borussia Dortmund', weakness:'Defensive errors', stat:'2.1 goals conceded/game vs 1.3 avg', note:'Worst defensive record in top 6. Losing aerial duels at 44% — a commanding CB is essential.'},
+    transfer:{position:'CB', demand:'High', leagues:['Bundesliga','Ligue 1'], note:'Defensive frailty across 6 Bundesliga clubs. Aerial CBs under €20M heavily tracked this week.', players:[{name:'Castello Lukeba',club:'RB Leipzig',score:86},{name:'Jakub Kiwior',club:'Arsenal',score:78}]},
+    deepDive:{team:'Bayern Munich', coach:'Vincent Kompany', summary:'Bayern lead the Bundesliga in possession (68%) and xG (2.8/game) but their pressing has dropped 14% from last season. Harry Kane\'s 28 goals are exceptional but the midfield isn\'t consistently capitalising on the space he creates. A high-energy box-to-box CM would turn good into dominant.', signings:[{name:'Xavi Simons',club:'PSG',fit:84,note:'Energy, technique, Bundesliga-proven'},{name:'Granit Xhaka',club:'Leverkusen',fit:71,note:'Leadership but pace declining'}]}
+  },
+  {
+    league:'Serie A Italy', flag:'🇮🇹', week:'May 3, 2026',
+    mover:{team:'Inter Milan', direction:'up', change:'3 clean sheets in a row', note:'Inzaghi\'s back 3 is suffocating opponents — conceding just 0.4 goals/game in May.'},
+    alert:{team:'Juventus', weakness:'Creative output', stat:'8.1 key passes/game vs 12.4 avg', note:'Worst creativity in Serie A top 8. A playmaker is essential — they\'re grinding results without fluid football.'},
+    transfer:{position:'CAM', demand:'Very High', leagues:['Serie A IT','Premier League'], note:'Creative midfielder the most searched position in Serie A this week. 8 clubs flagging key pass weakness.', players:[{name:'Nico González',club:'Porto',score:82},{name:'Luis Alberto',club:'Lazio',score:76}]},
+    deepDive:{team:'Napoli', coach:'Antonio Conte', summary:'Conte has restored defensive solidity (1.1 goals conceded/game, up from 1.8 last season) but Napoli\'s attack is still finding its identity post-Osimhen. Their pressing intensity (9.2 PPDA) is top 3 in Italy but they lack a striker who can lead that press. A mobile CF who presses from the front is the clear missing piece.', signings:[{name:'Viktor Gyökeres',club:'Real Madrid',fit:79,note:'Would fit Conte\'s system perfectly — too expensive'},{name:'Boulaye Dia',club:'Lazio',fit:83,note:'Pressing, goals, Serie A proven — realistic target'}]}
+  },
+  {
+    league:'Ligue 1', flag:'🇫🇷', week:'May 3, 2026',
+    mover:{team:'Monaco', direction:'up', change:'+22% shot accuracy', note:'Ben Seghir running the league\'s most efficient attack — 0.43 goals/shot, best in France.'},
+    alert:{team:'Lyon', weakness:'Defensive errors', stat:'1.9 goals conceded/game vs 1.2 avg', note:'Leaking goals from open play and set pieces. Defensive rebuild needed this summer.'},
+    transfer:{position:'CB', demand:'High', leagues:['Ligue 1'], note:'Lyon and 4 other Ligue 1 clubs flagging defensive weakness simultaneously — creating rare market opportunity for strong CBs.', players:[{name:'Maxime Estève',club:'Burnley',score:80},{name:'Facundo Medina',club:'RC Lens',score:77}]},
+    deepDive:{team:'PSG', coach:'Luis Enrique', summary:'PSG\'s 4-0 win over Lyon showed what Luis Enrique is building — high press, fluid rotations, no reliance on one superstar. Their pass accuracy (92%) and pressing recovery time (6.2 sec) are elite. The squad depth question is the only concern: one injury to Dembélé or Asensio and the system strains. A versatile winger with similar profile is the priority.', signings:[{name:'Noni Madueke',club:'Chelsea',fit:81,note:'Direct, pacy, works in high-press system'},{name:'Leroy Sané',club:'Bayern (expiring)',fit:77,note:'Free transfer — elite quality if fit'}]}
+  },
+  {
+    league:'Argentina', flag:'🇦🇷', week:'May 3, 2026',
+    mover:{team:'River Plate', direction:'up', change:'Top of Apertura', note:'Gallardo 2.0 — pressing metrics up 28% since his return. League\'s best attack (2.4 goals/game).'},
+    alert:{team:'Independiente', weakness:'All metrics below average', stat:'Bottom 3 in goals, possession, passing', note:'Structural rebuild needed. Wrong coach, wrong system — squad has talent but no identity.'},
+    transfer:{position:'Winger', demand:'High', leagues:['Argentina','Brazil'], note:'South American wingers being heavily tracked by European clubs — 14 scouted in Argentina this week alone.', players:[{name:'Valentín Carboni',club:'Inter Milan (loan)',score:86},{name:'Thiago Almada',club:'Atlanta United',score:81}]},
+    deepDive:{team:'Boca Juniors', coach:'Fernando Gago', summary:'Boca\'s identity crisis continues. Under Gago they\'ve tried three different systems in 8 games. Their underlying numbers are actually reasonable (1.6 goals/game, 78% pass acc) but they\'re conceding from individual errors (67% of goals from defensive mistakes vs 41% league avg). Leadership and defensive organisation — not talent — is the problem.', signings:[{name:'Marcos Rojo',club:'Estudiantes',fit:72,note:'Experience and leadership, knows the pressure'},{name:'Lisandro Martínez',club:'Man Utd',fit:89,note:'Dream signing — back to Boca? 5% chance but tracked'}]}
+  }
+];
+
+function renderWeeklyReport() {
+  const el = document.getElementById('weekly-report-section');
+  if (!el) return;
+  const plan = currentUser?.plan || 'free';
+  const isPro = ['pro','club','clubpro','analyst'].includes(plan);
+
+  // Get user's main league preference
+  const mainClub = JSON.parse(localStorage.getItem('sm_main_club') || 'null');
+  const userLeagueMap = {
+    serie_a:'Série A', premier_league:'Premier League', la_liga:'La Liga',
+    bundesliga:'Bundesliga', serie_a_it:'Serie A Italy', ligue_1:'Ligue 1', argentina:'Argentina'
+  };
+
+  // Sort reports: user's league first, then rest
+  let reports = [...WEEKLY_REPORTS];
+  if (mainClub?.league) {
+    const userLeague = Object.values(userLeagueMap).find(l =>
+      mainClub.league.toLowerCase().includes(l.toLowerCase().split(' ')[0].toLowerCase())
+    ) || 'Série A';
+    reports.sort((a, b) => a.league === userLeague ? -1 : b.league === userLeague ? 1 : 0);
+  }
+
+  let html = '<div style="margin-bottom:24px;">';
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">';
+  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;letter-spacing:2px;">ScoutMind Weekly</div>';
+  html += '<div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(0,229,160,0.1),rgba(0,184,255,0.1));border:1px solid rgba(0,229,160,0.2);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--accent);">📊 Every Monday</div>';
+  html += '</div>';
+  html += '<div style="font-size:13px;color:var(--muted);">Deep tactical analysis across all major leagues — who\'s rising, who\'s struggling, and which signings the data recommends.</div>';
+  html += '</div>';
+
+  // League filter tabs
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">';
+  html += '<button class="filter-btn active" onclick="filterWeekly(\'all\',this)">All Leagues</button>';
+  reports.forEach(r => {
+    html += '<button class="filter-btn" onclick="filterWeekly(\'' + r.league.replace(/\s/g,'_') + '\',this)">' + r.flag + ' ' + r.league + '</button>';
+  });
+  html += '</div>';
+
+  html += '<div id="weekly-reports-list">';
+  reports.forEach((r, idx) => {
+    const isLocked = !isPro && idx >= 2; // Free users see first 2 leagues
+    html += weeklyReportCard(r, isLocked);
+  });
+
+  if (!isPro) {
+    html += '<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.2);border-radius:14px;padding:24px;text-align:center;margin-top:6px;">';
+    html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:8px;">Unlock All ' + WEEKLY_REPORTS.length + ' League Reports</div>';
+    html += '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Scout Pro includes the full weekly breakdown for every league — deep dives, transfer recommendations, and tactical alerts updated every Monday.</div>';
+    html += '<div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">';
+    html += '<button style="background:var(--accent);color:#000;border:none;padding:11px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;">UPGRADE TO SCOUT PRO — $6.99/MO</button>';
+    html += '</div></div>';
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function weeklyReportCard(r, locked) {
+  const scoreClr = s => s >= 75 ? 'var(--green)' : s >= 50 ? 'var(--yellow)' : 'var(--red)';
+  const dirIcon = r.mover.direction === 'up' ? '↑' : '↓';
+  const dirClr = r.mover.direction === 'up' ? 'var(--green)' : 'var(--red)';
+
+  let html = '<div class="weekly-card" data-league="' + r.league.replace(/\s/g,'_') + '" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;' + (locked ? 'position:relative;' : '') + '">';
+
+  if (locked) {
+    html += '<div style="position:absolute;inset:0;backdrop-filter:blur(6px);background:rgba(7,9,15,0.7);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;">';
+    html += '<div style="font-size:28px;margin-bottom:10px;">🔒</div>';
+    html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:6px;">' + r.flag + ' ' + r.league + ' — Scout Pro</div>';
+    html += '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;text-align:center;max-width:260px;">Upgrade to Scout Pro to read the full ' + r.league + ' weekly report.</div>';
+    html += '<button style="background:var(--accent);color:#000;border:none;padding:8px 20px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Upgrade — $6.99/mo</button>';
+    html += '</div>';
+  }
+
+  // Header
+  html += '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">';
+  html += '<div style="display:flex;align-items:center;gap:10px;">';
+  html += '<div style="font-size:24px;">' + r.flag + '</div>';
+  html += '<div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;letter-spacing:1px;">' + r.league + '</div>';
+  html += '<div style="font-size:11px;color:var(--muted);">Week of ' + r.week + '</div></div></div>';
+  html += '<div style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(0,229,160,0.08);color:var(--accent);border:1px solid rgba(0,229,160,0.2);">WEEKLY REPORT</div>';
+  html += '</div>';
+
+  html += '<div style="padding:18px 20px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">';
+
+  // Biggest mover
+  html += '<div style="background:var(--bg3);border-radius:10px;padding:14px;">';
+  html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">📈 Biggest Mover</div>';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
+  html += '<div style="font-size:15px;font-weight:700;">' + r.mover.team + '</div>';
+  html += '<div style="font-size:13px;font-weight:700;color:' + dirClr + '">' + dirIcon + ' ' + r.mover.change + '</div></div>';
+  html += '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + r.mover.note + '</div>';
+  html += '</div>';
+
+  // Weakness alert
+  html += '<div style="background:rgba(255,107,53,0.06);border:1px solid rgba(255,107,53,0.15);border-radius:10px;padding:14px;">';
+  html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--warn);text-transform:uppercase;margin-bottom:8px;">⚠️ Weakness Alert</div>';
+  html += '<div style="font-size:15px;font-weight:700;margin-bottom:3px;">' + r.alert.team + '</div>';
+  html += '<div style="font-size:11px;font-weight:600;color:var(--warn);margin-bottom:6px;">' + r.alert.weakness + '</div>';
+  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-family:\'DM Mono\',monospace;">' + r.alert.stat + '</div>';
+  html += '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + r.alert.note + '</div>';
+  html += '</div>';
+
+  html += '</div>';
+
+  // Transfer intelligence
+  html += '<div style="padding:0 20px 18px;">';
+  html += '<div style="background:var(--bg3);border-radius:10px;padding:14px;">';
+  html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent2);text-transform:uppercase;margin-bottom:8px;">🔄 Most Needed Position This Week</div>';
+  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">';
+  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:var(--text)">' + r.transfer.position + '</div>';
+  html += '<div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(255,107,53,0.1);color:var(--warn)">Demand: ' + r.transfer.demand + '</div></div>';
+  html += '<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px">' + r.transfer.note + '</div>';
+  html += r.transfer.players.map(p =>
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+    + '<div><div style="font-size:13px;font-weight:600">' + p.name + '</div><div style="font-size:11px;color:var(--muted)">' + p.club + '</div></div>'
+    + '<div style="display:flex;align-items:center;gap:8px;">'
+    + '<div style="width:60px;height:4px;background:var(--border);border-radius:2px;"><div style="width:' + p.score + '%;height:100%;border-radius:2px;background:' + scoreClr(p.score) + '"></div></div>'
+    + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:' + scoreClr(p.score) + '">' + p.score + '%</div>'
+    + '</div></div>'
+  ).join('');
+  html += '</div></div>';
+
+  // Deep dive
+  html += '<div style="margin:0 20px 20px;">';
+  html += '<div style="background:linear-gradient(135deg,rgba(0,229,160,0.04),rgba(0,184,255,0.02));border:1px solid rgba(0,229,160,0.15);border-radius:10px;padding:16px;">';
+  html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s infinite"></span>Deep Dive — ' + r.deepDive.team + '</div>';
+  html += '<div style="font-size:13px;font-weight:600;margin-bottom:4px;">' + r.deepDive.team + ' <span style="font-size:11px;color:var(--muted);font-weight:400">· Coach: ' + r.deepDive.coach + '</span></div>';
+  html += '<div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px">' + r.deepDive.summary + '</div>';
+  html += '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:8px">Recommended Signings</div>';
+  html += r.deepDive.signings.map(s =>
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;background:var(--bg3);border-radius:8px;padding:10px 12px;">'
+    + '<div style="flex:1"><div style="font-size:13px;font-weight:600">' + s.name + '</div>'
+    + '<div style="font-size:11px;color:var(--muted)">' + s.club + '</div>'
+    + '<div style="font-size:11px;color:var(--accent);margin-top:2px">' + s.note + '</div></div>'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-left:12px;">'
+    + '<div style="width:50px;height:4px;background:var(--border);border-radius:2px;"><div style="width:' + s.fit + '%;height:100%;border-radius:2px;background:' + scoreClr(s.fit) + '"></div></div>'
+    + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:' + scoreClr(s.fit) + '">' + s.fit + '%</div>'
+    + '</div></div>'
+  ).join('');
+  html += '</div></div>';
+
+  html += '</div>'; // close weekly-card
+  return html;
+}
+
+function filterWeekly(league, btn) {
+  document.querySelectorAll('.weekly-card').forEach(card => {
+    card.style.display = (league === 'all' || card.dataset.league === league) ? 'block' : 'none';
+  });
+  document.querySelectorAll('#weekly-reports-list').forEach(() => {});
+  // Update filter buttons
+  const allBtns = btn.parentElement.querySelectorAll('.filter-btn');
+  allBtns.forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
 try{renderSidebar();}catch(e){console.error('renderSidebar:',e);}
 try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 try{initProfile();}catch(e){console.error('initProfile:',e);}
+try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
 
 // Handle ?page= URL parameter (e.g. from community.html Feed link)
 (function(){
@@ -2445,8 +2656,8 @@ function initProfile(){
 
   // Plan
   const PLAN_LABELS = {
-    free: {name:'Scout Free', desc:'Basic analysis · Top 3 recommendations · No PDF export'},
-    pro:  {name:'Scout Pro',  desc:'Full analysis · Unlimited recommendations · PDF reports'},
+    free: {name:'Scout Free', desc:'Basic analysis · Top 10 recommendations · No PDF export'},
+    pro:  {name:'Scout Pro',  desc:'Full analysis · Unlimited recommendations · PDF export · Weekly reports · Community posting'},
     club: {name:'Club Basic', desc:'Club dashboard · Recruitment reports · Team insights'},
     clubpro: {name:'Club Pro', desc:'Full scouting suite · Custom reports · API access'},
   };
