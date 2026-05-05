@@ -2699,6 +2699,7 @@ function filterWeekly(league, btn) {
   btn.classList.add('active');
 }
 try{renderSidebar();}catch(e){console.error('renderSidebar:',e);}
+try{renderFeedNews();}catch(e){console.error('renderFeedNews:',e);}
 try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 try{initProfile();}catch(e){console.error('initProfile:',e);}
 try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
