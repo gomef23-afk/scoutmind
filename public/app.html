@@ -434,7 +434,7 @@ if(!_cu){
         <button class="filter-btn" onclick="filterFeed('brazil',this)">🇧🇷 Brazil</button>
         <button class="filter-btn" onclick="filterFeed('europe',this)">🏆 Europe</button>
       </div>
-      <div id="inline-rumors-section" style="display:block;margin-bottom:20px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">🔥 Hot Rumors</div><div id="feed-hot-rumors"></div></div><div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">📊 Fit Score Index</div><div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;">How well each rumoured signing solves the buying club weakness.</div><div id="feed-fit-index"></div></div></div></div>
+      <div id="inline-rumors-section" style="display:none;margin-bottom:20px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">🔥 Hot Rumors</div><div id="feed-hot-rumors"></div></div><div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">📊 Fit Score Index</div><div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;">How well each rumoured signing solves the buying club weakness.</div><div id="feed-fit-index"></div></div></div></div>
       <div id="feed-news-main"></div>
     </div>
 
@@ -2362,6 +2362,8 @@ function filterFeed(type,btn){
   currentFeedFilter=type;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
+  const rs=document.getElementById('inline-rumors-section');
+  if(rs)rs.style.display=(type==='rumor')?'block':'none';
   renderFeedNews();
 }
 
