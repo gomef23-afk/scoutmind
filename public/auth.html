@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com https://kdhbpzooyjxcglbxbuya.supabase.co; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; connect-src 'self' https://kdhbpzooyjxcglbxbuya.supabase.co;">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
 <title>ScoutMind — Sign In</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -92,7 +94,7 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
         </div>
         <div class="plan-opt" onclick="pickPlan('pro',this)">
           <div class="plan-name">Scout Pro</div>
-          <div class="plan-price">$6.99/month</div>
+          <div class="plan-price">$9.99/month</div>
         </div>
         <div class="plan-opt" onclick="pickPlan('club',this)">
           <div class="plan-name">Club Basic</div>
@@ -100,7 +102,7 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
         </div>
         <div class="plan-opt" onclick="pickPlan('clubpro',this)">
           <div class="plan-name">Club Pro</div>
-          <div class="plan-price">$149/month</div>
+          <div class="plan-price">$199/month</div>
         </div>
       </div>
     </div>
@@ -175,9 +177,11 @@ function saveUser(id, email, name, userPlan) {
 }
 
 async function doLogin() {
-  var email = document.getElementById('l-email').value.trim();
-  var pass = document.getElementById('l-pass').value;
+  var email = document.getElementById('l-email').value.trim().slice(0,254);
+  var pass = document.getElementById('l-pass').value.slice(0,128);
   if (!email || !pass) return showError('Please fill in all fields.');
+  // Basic email format check
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Please enter a valid email address.');
   var btn = document.getElementById('l-btn');
   btn.textContent = 'Signing in...'; btn.disabled = true;
   var res = await sb.auth.signInWithPassword({email: email, password: pass});
@@ -193,11 +197,17 @@ async function doLogin() {
 }
 
 async function doRegister() {
-  var name = document.getElementById('r-name').value.trim();
-  var email = document.getElementById('r-email').value.trim();
-  var pass = document.getElementById('r-pass').value;
+  var name = document.getElementById('r-name').value.trim().slice(0,60);
+  var email = document.getElementById('r-email').value.trim().slice(0,254);
+  var pass = document.getElementById('r-pass').value.slice(0,128);
   if (!name || !email || !pass) return showError('Please fill in all fields.');
+  // Validate name — no HTML/scripts
+  if (/<|>|script/i.test(name)) return showError('Invalid characters in name.');
+  // Validate email format
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Please enter a valid email address.');
   if (pass.length < 8) return showError('Password must be at least 8 characters.');
+  // Require at least one number or special char in password
+  if (!/[\d!@#$%^&*]/.test(pass)) return showError('Password must include at least one number or special character (!@#$%^&*).');
   var btn = document.getElementById('r-btn');
   btn.textContent = 'Creating account...'; btn.disabled = true;
   var res = await sb.auth.signUp({email: email, password: pass, options: {data: {name: name, plan: plan}}});
