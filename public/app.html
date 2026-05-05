@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Security: prevent clickjacking and MIME sniffing -->
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com https://kdhbpzooyjxcglbxbuya.supabase.co https://buy.stripe.com https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://kdhbpzooyjxcglbxbuya.supabase.co wss://kdhbpzooyjxcglbxbuya.supabase.co;">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 <title>ScoutMind — Tactical Intelligence</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1134,6 +1141,105 @@ if(!_cu){
 
 <script>
 // All the JS from your original file — with the 2 fixes applied
+// ═══════════════════════════════════════════════
+// SECURITY LAYER
+// ═══════════════════════════════════════════════
+
+// XSS sanitizer — ALWAYS use this before injecting user content into DOM
+function sanitize(str){
+  if(!str)return'';
+  return String(str)
+    .slice(0,500) // hard length cap
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#x27;')
+    .replace(/\//g,'&#x2F;')
+    .replace(/`/g,'&#x60;');
+}
+
+// Input validator — checks length, type, content
+function validateInput(value, options={}){
+  const {maxLen=280, minLen=1, label='Input'} = options;
+  if(!value||typeof value!=='string') return {ok:false, err:`${label} is required.`};
+  const trimmed = value.trim();
+  if(trimmed.length < minLen) return {ok:false, err:`${label} is too short.`};
+  if(trimmed.length > maxLen) return {ok:false, err:`${label} must be under ${maxLen} characters.`};
+  // Block script injection attempts
+  if(/<script|javascript:|on\w+\s*=|data:/i.test(trimmed)) return {ok:false, err:`${label} contains invalid content.`};
+  return {ok:true, value:trimmed};
+}
+
+// Rate limiter — prevents spam (per action, per session)
+const _rateLimits={};
+function rateLimit(action, maxPerMinute=5){
+  const now=Date.now();
+  const key=action;
+  if(!_rateLimits[key]) _rateLimits[key]=[];
+  // Remove entries older than 60 seconds
+  _rateLimits[key]=_rateLimits[key].filter(t=>now-t<60000);
+  if(_rateLimits[key].length>=maxPerMinute){
+    const wait=Math.ceil((60000-(now-_rateLimits[key][0]))/1000);
+    return {allowed:false, msg:`Too many attempts. Please wait ${wait} seconds.`};
+  }
+  _rateLimits[key].push(now);
+  return {allowed:true};
+}
+
+// ═══════════════════════════════════════════════
+
+// ══════════════════════════════════════════════
+// SECURITY LAYER
+// ══════════════════════════════════════════════
+
+// XSS sanitizer — always use before rendering ANY user-supplied text as innerHTML
+function sanitize(str){
+  if(!str)return'';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#x27;');
+}
+
+// Input validator — trims and enforces max length
+function validateInput(str,maxLen){
+  if(!str)return'';
+  return String(str).trim().slice(0,maxLen||280);
+}
+
+// Rate limiter — max N actions per minute per key
+const _rateLimits={};
+function rateLimit(key,maxPerMinute){
+  const now=Date.now();
+  if(!_rateLimits[key])_rateLimits[key]=[];
+  _rateLimits[key]=_rateLimits[key].filter(t=>now-t<60000);
+  if(_rateLimits[key].length>=maxPerMinute)return false;
+  _rateLimits[key].push(now);
+  return true;
+}
+
+// Plan verifier — re-checks plan from Supabase on every load
+// Prevents users from editing localStorage to fake a Pro plan
+async function verifyPlanFromDB(){
+  const cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
+  if(!cu||!cu.id||cu.id==='demo')return;
+  try{
+    const sb=window.supabase.createClient(
+      'https://kdhbpzooyjxcglbxbuya.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw'
+    );
+    const {data}=await sb.from('profiles').select('plan').eq('id',cu.id).single();
+    if(data&&data.plan!==cu.plan){
+      cu.plan=data.plan;
+      localStorage.setItem('sm_current_user',JSON.stringify(cu));
+      window.location.reload();
+    }
+  }catch(e){/* silent — do not break app if offline */}
+}
+
 const PROFILES={
   "Defensive errors":{pos:"Reliable CB",role:"Consistent, low-error centre-back. Minimises mistakes that lead to shots.",stats:{tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:55,pass_acc:82},w:{tackles_pg:3,interceptions_pg:3,aerial_pct:2,pass_acc:2}},
   "Aerial vulnerability":{pos:"Aerial CB",role:"Dominant in the air. Commands the penalty area at set pieces.",stats:{aerial_pct:60,height:185,tackles_pg:2.5},w:{aerial_pct:4,height:2,tackles_pg:2}},
@@ -1283,10 +1389,14 @@ function getProfile(weaknessType,positionFilter){
 const currentUser=JSON.parse(localStorage.getItem('sm_current_user')||'null');
 const PLAN_NAMES={free:'Scout Free',pro:'Scout Pro ($6.99/mo)',club:'Club Basic ($49/mo)',clubpro:'Club Pro ($149/mo)',analyst:'Analyst'};
 const PLAN_CLASS={free:'free',pro:'pro',club:'club',clubpro:'clubpro'};
-const userPlan=currentUser?.plan||'free';
-const isPro=['pro','club','clubpro'].includes(userPlan);
+// SECURITY: validate plan from localStorage — never trust client-side data blindly
+// Plan is re-validated against Supabase on every session start via auth check
+const VALID_PLANS=['free','pro','club','clubpro','analyst'];
+const rawPlan=currentUser?.plan||'free';
+const userPlan=VALID_PLANS.includes(rawPlan)?rawPlan:'free'; // reject unknown plan values
+const isPro=['pro','club','clubpro','analyst'].includes(userPlan);
 const isClub=['club','clubpro'].includes(userPlan);
-const isFree=userPlan==='free';
+const isFree=!isPro;
 if(currentUser){
   document.getElementById('nav-name').textContent=currentUser.name||'User';
   const planEl=document.getElementById('nav-plan');
@@ -2414,12 +2524,20 @@ function toggleComments(newsId){
 }
 
 function postComment(newsId){
-  const input=document.getElementById('ci-'+newsId);
-  const text=input&&input.value.trim();
-  if(!text)return;
-  if(text.length>280){alert('Keep it under 280 characters.');return;}
   const cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
-  const author=cu?cu.name:'Anonymous';
+  // Rate limiting — max 5 comments per minute per user
+  if(!rateLimit('comment_'+(cu?cu.id:'anon'),5)){
+    alert('Posting too fast — please wait a moment.');return;
+  }
+  const input=document.getElementById('ci-'+newsId);
+  const rawText=input&&input.value.trim();
+  if(!rawText){return;}
+  const text=validateInput(rawText,280);
+  if(text.length<2){alert('Comment is too short.');return;}
+  // Block script injection attempts
+  if(/<script|javascript:|on\w+=/i.test(text)){alert('Invalid content.');return;}
+  const rawAuthor=cu?cu.name:'Anonymous';
+  const author=validateInput(rawAuthor,60)||'Anonymous';
   const plan=cu?cu.plan:'free';
   const initials=getInitials(author);
   if(!COMMENTS_STORE[newsId])COMMENTS_STORE[newsId]=[];
@@ -2456,11 +2574,12 @@ function renderComments(newsId){
       ?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);border:1px solid rgba(0,229,160,0.2);font-weight:700;">PRO</span>'
       :'';
     const liked=COMMENT_LIKES[newsId+'-'+i];
+    // sanitize() prevents XSS from user-generated content
     return `<div class="comment-item">
-      <div class="comment-av">${c.initials}</div>
+      <div class="comment-av">${sanitize(c.initials)}</div>
       <div class="comment-body-wrap">
-        <div class="comment-author">${c.author} ${planBadge}</div>
-        <div class="comment-text">${c.text}</div>
+        <div class="comment-author">${sanitize(c.author)} ${planBadge}</div>
+        <div class="comment-text">${sanitize(c.text)}</div>
         <div class="comment-meta">
           <span>${c.time}</span>
           <button class="comment-like" onclick="likeComment(${newsId},${i})" style="color:${liked?'var(--red)':'var(--muted)'}">
@@ -2770,6 +2889,8 @@ function filterWeekly(league, btn) {
 try{renderSidebar();}catch(e){console.error('renderSidebar:',e);}
 try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 try{initProfile();}catch(e){console.error('initProfile:',e);}
+// Verify plan from DB on every load — prevents localStorage tampering
+verifyPlanFromDB().catch(()=>{});
 try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
 
 
@@ -2878,8 +2999,11 @@ function cancelEditName(){
 }
 function saveName(){
   var input=document.getElementById('profile-name-input');
-  var newName=input&&input.value.trim();
+  var rawName=input&&input.value.trim();
+  var newName=validateInput(rawName,60);
   if(!newName){alert('Please enter a name.');return;}
+  // Block script injection attempts
+  if(/<|>|script|javascript/i.test(newName)){alert('Invalid characters in name.');return;}
   if(currentUser){currentUser.name=newName;localStorage.setItem('sm_current_user',JSON.stringify(currentUser));}
   var initials=newName.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
   var ids={'profile-name-val':newName,'profile-name-big':newName.toUpperCase(),'nav-name':newName,'nav-avatar':initials,'profile-avatar-big':initials};
