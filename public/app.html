@@ -2,12 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<!-- Security: prevent clickjacking and MIME sniffing -->
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
-<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com https://kdhbpzooyjxcglbxbuya.supabase.co https://buy.stripe.com https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://kdhbpzooyjxcglbxbuya.supabase.co wss://kdhbpzooyjxcglbxbuya.supabase.co;">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 <title>ScoutMind — Tactical Intelligence</title>
@@ -439,20 +434,7 @@ if(!_cu){
         <button class="filter-btn" onclick="filterFeed('brazil',this)">🇧🇷 Brazil</button>
         <button class="filter-btn" onclick="filterFeed('europe',this)">🏆 Europe</button>
       </div>
-      <!-- HOT RUMORS + FIT SCORE — shown inline when Rumors filter active, always visible under All -->
-      <div id="inline-rumors-section" style="display:none;margin-bottom:20px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">🔥 Hot Rumors</div>
-            <div id="feed-hot-rumors"></div>
-          </div>
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">📊 Fit Score Index</div>
-            <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;">How well each rumoured signing solves the buying club's weakness.</div>
-            <div id="feed-fit-index"></div>
-          </div>
-        </div>
-      </div>
+      <div id="inline-rumors-section" style="display:block;margin-bottom:20px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">🔥 Hot Rumors</div><div id="feed-hot-rumors"></div></div><div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">📊 Fit Score Index</div><div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;">How well each rumoured signing solves the buying club weakness.</div><div id="feed-fit-index"></div></div></div></div>
       <div id="feed-news-main"></div>
     </div>
 
@@ -776,14 +758,7 @@ if(!_cu){
       <div class="profile-row-label">Name</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="profile-row-value" id="profile-name-val">—</div>
-        <div id="profile-name-edit" style="display:none;align-items:center;gap:6px;">
-          <input type="text" id="profile-name-input" placeholder="Enter name..."
-            onkeydown="if(event.key==='Enter')saveName();if(event.key==='Escape')cancelEditName();"
-            style="background:var(--bg3);border:1px solid var(--accent);color:var(--text);padding:5px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:160px;">
-          <button onclick="saveName()" style="font-size:11px;font-weight:700;padding:5px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">Save</button>
-          <button onclick="cancelEditName()" style="font-size:11px;padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-family:inherit;">✕</button>
-        </div>
-        <button class="profile-edit-btn" id="profile-edit-btn" onclick="editName()">Edit</button>
+        <div id="profile-name-edit" style="display:none;align-items:center;gap:6px;"><input type="text" id="profile-name-input" placeholder="Enter name..." onkeydown="if(event.key==='Enter')saveName();if(event.key==='Escape')cancelEditName();" style="background:var(--bg3);border:1px solid var(--accent);color:var(--text);padding:5px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:160px;"><button onclick="saveName()" style="font-size:11px;font-weight:700;padding:5px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">Save</button><button onclick="cancelEditName()" style="font-size:11px;padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-family:inherit;">&#x2715;</button></div><button class="profile-edit-btn" id="profile-edit-btn" onclick="editName()">Edit</button>
       </div>
     </div>
     <div class="profile-row">
@@ -1141,105 +1116,6 @@ if(!_cu){
 
 <script>
 // All the JS from your original file — with the 2 fixes applied
-// ═══════════════════════════════════════════════
-// SECURITY LAYER
-// ═══════════════════════════════════════════════
-
-// XSS sanitizer — ALWAYS use this before injecting user content into DOM
-function sanitize(str){
-  if(!str)return'';
-  return String(str)
-    .slice(0,500) // hard length cap
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#x27;')
-    .replace(/\//g,'&#x2F;')
-    .replace(/`/g,'&#x60;');
-}
-
-// Input validator — checks length, type, content
-function validateInput(value, options={}){
-  const {maxLen=280, minLen=1, label='Input'} = options;
-  if(!value||typeof value!=='string') return {ok:false, err:`${label} is required.`};
-  const trimmed = value.trim();
-  if(trimmed.length < minLen) return {ok:false, err:`${label} is too short.`};
-  if(trimmed.length > maxLen) return {ok:false, err:`${label} must be under ${maxLen} characters.`};
-  // Block script injection attempts
-  if(/<script|javascript:|on\w+\s*=|data:/i.test(trimmed)) return {ok:false, err:`${label} contains invalid content.`};
-  return {ok:true, value:trimmed};
-}
-
-// Rate limiter — prevents spam (per action, per session)
-const _rateLimits={};
-function rateLimit(action, maxPerMinute=5){
-  const now=Date.now();
-  const key=action;
-  if(!_rateLimits[key]) _rateLimits[key]=[];
-  // Remove entries older than 60 seconds
-  _rateLimits[key]=_rateLimits[key].filter(t=>now-t<60000);
-  if(_rateLimits[key].length>=maxPerMinute){
-    const wait=Math.ceil((60000-(now-_rateLimits[key][0]))/1000);
-    return {allowed:false, msg:`Too many attempts. Please wait ${wait} seconds.`};
-  }
-  _rateLimits[key].push(now);
-  return {allowed:true};
-}
-
-// ═══════════════════════════════════════════════
-
-// ══════════════════════════════════════════════
-// SECURITY LAYER
-// ══════════════════════════════════════════════
-
-// XSS sanitizer — always use before rendering ANY user-supplied text as innerHTML
-function sanitize(str){
-  if(!str)return'';
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#x27;');
-}
-
-// Input validator — trims and enforces max length
-function validateInput(str,maxLen){
-  if(!str)return'';
-  return String(str).trim().slice(0,maxLen||280);
-}
-
-// Rate limiter — max N actions per minute per key
-const _rateLimits={};
-function rateLimit(key,maxPerMinute){
-  const now=Date.now();
-  if(!_rateLimits[key])_rateLimits[key]=[];
-  _rateLimits[key]=_rateLimits[key].filter(t=>now-t<60000);
-  if(_rateLimits[key].length>=maxPerMinute)return false;
-  _rateLimits[key].push(now);
-  return true;
-}
-
-// Plan verifier — re-checks plan from Supabase on every load
-// Prevents users from editing localStorage to fake a Pro plan
-async function verifyPlanFromDB(){
-  const cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
-  if(!cu||!cu.id||cu.id==='demo')return;
-  try{
-    const sb=window.supabase.createClient(
-      'https://kdhbpzooyjxcglbxbuya.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw'
-    );
-    const {data}=await sb.from('profiles').select('plan').eq('id',cu.id).single();
-    if(data&&data.plan!==cu.plan){
-      cu.plan=data.plan;
-      localStorage.setItem('sm_current_user',JSON.stringify(cu));
-      window.location.reload();
-    }
-  }catch(e){/* silent — do not break app if offline */}
-}
-
 const PROFILES={
   "Defensive errors":{pos:"Reliable CB",role:"Consistent, low-error centre-back. Minimises mistakes that lead to shots.",stats:{tackles_pg:2.5,interceptions_pg:1.5,aerial_pct:55,pass_acc:82},w:{tackles_pg:3,interceptions_pg:3,aerial_pct:2,pass_acc:2}},
   "Aerial vulnerability":{pos:"Aerial CB",role:"Dominant in the air. Commands the penalty area at set pieces.",stats:{aerial_pct:60,height:185,tackles_pg:2.5},w:{aerial_pct:4,height:2,tackles_pg:2}},
@@ -1389,14 +1265,10 @@ function getProfile(weaknessType,positionFilter){
 const currentUser=JSON.parse(localStorage.getItem('sm_current_user')||'null');
 const PLAN_NAMES={free:'Scout Free',pro:'Scout Pro ($6.99/mo)',club:'Club Basic ($49/mo)',clubpro:'Club Pro ($149/mo)',analyst:'Analyst'};
 const PLAN_CLASS={free:'free',pro:'pro',club:'club',clubpro:'clubpro'};
-// SECURITY: validate plan from localStorage — never trust client-side data blindly
-// Plan is re-validated against Supabase on every session start via auth check
-const VALID_PLANS=['free','pro','club','clubpro','analyst'];
-const rawPlan=currentUser?.plan||'free';
-const userPlan=VALID_PLANS.includes(rawPlan)?rawPlan:'free'; // reject unknown plan values
-const isPro=['pro','club','clubpro','analyst'].includes(userPlan);
+const userPlan=currentUser?.plan||'free';
+const isPro=['pro','club','clubpro'].includes(userPlan);
 const isClub=['club','clubpro'].includes(userPlan);
-const isFree=!isPro;
+const isFree=userPlan==='free';
 if(currentUser){
   document.getElementById('nav-name').textContent=currentUser.name||'User';
   const planEl=document.getElementById('nav-plan');
@@ -2490,27 +2362,21 @@ function filterFeed(type,btn){
   currentFeedFilter=type;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  // Show rumors/fit score block when on Rumors or All News filter
-  const rumorSection=document.getElementById('inline-rumors-section');
-  if(rumorSection)rumorSection.style.display=(type==='rumor'||type==='all')?'block':'none';
   renderFeedNews();
 }
 
 function scoreClr(s){return s>=75?'var(--green)':s>=50?'var(--yellow)':'var(--red)';}
 
-// ── COMMENTS SYSTEM ──
+function sanitize(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
+const _rl={};
+function rateLimit(key,max){const now=Date.now();if(!_rl[key])_rl[key]=[];_rl[key]=_rl[key].filter(t=>now-t<60000);if(_rl[key].length>=max)return false;_rl[key].push(now);return true;}
 const COMMENTS_STORE={
-  1:[
-    {author:'Bernardo M.',initials:'BM',text:'Finally confirmed! Gyökeres was unstoppable this season. Madrid got a steal at €100M.',time:'2h ago',likes:24,plan:'pro'},
-    {author:'Tactical Pedro',initials:'TP',text:'His aerial numbers (60%) will immediately fix Madrid\'s set piece weakness. Great signing.',time:'1h ago',likes:11,plan:'free'},
-  ],
-  2:[{author:'Fla Fan 1903',initials:'FF',text:'Álvarez seria perfeito mas €90M é demais pra gente agora. Torço por um empréstimo.',time:'3h ago',likes:18,plan:'free'}],
+  1:[{author:'Bernardo M.',initials:'BM',text:'Finally confirmed! Gyokeres was unstoppable this season. Madrid got a steal at 100M.',time:'2h ago',likes:24,plan:'pro'},{author:'Tactical Pedro',initials:'TP',text:'His aerial numbers will immediately fix Madrid set piece weakness. Great signing.',time:'1h ago',likes:11,plan:'free'}],
+  2:[{author:'Fla Fan 1903',initials:'FF',text:'Alvarez seria perfeito mas o valor e demais pra gente agora.',time:'3h ago',likes:18,plan:'free'}],
   3:[],4:[],5:[],6:[],7:[],8:[],
 };
 const COMMENT_LIKES={};
-
 function getInitials(name){return(name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
-
 function toggleComments(newsId){
   const body=document.getElementById('cb-'+newsId);
   const toggle=document.getElementById('ct-'+newsId);
@@ -2518,26 +2384,16 @@ function toggleComments(newsId){
   const isOpen=body.style.display==='block';
   body.style.display=isOpen?'none':'block';
   const count=(COMMENTS_STORE[newsId]||[]).length;
-  toggle.innerHTML=isOpen
-    ?`💬 ${count} comment${count!==1?'s':''} &nbsp;<span style="color:var(--accent)">Show</span>`
-    :`💬 ${count} comment${count!==1?'s':''} &nbsp;<span style="color:var(--muted)">Hide</span>`;
+  const label=count+' comment'+(count!==1?'s':'');
+  toggle.innerHTML=isOpen?('&#x1F4AC; '+label+' &nbsp;<span style="color:var(--accent)">Show</span>'):('&#x1F4AC; '+label+' &nbsp;<span style="color:var(--muted)">Hide</span>');
 }
-
 function postComment(newsId){
   const cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
-  // Rate limiting — max 5 comments per minute per user
-  if(!rateLimit('comment_'+(cu?cu.id:'anon'),5)){
-    alert('Posting too fast — please wait a moment.');return;
-  }
+  if(!rateLimit('cmt_'+(cu?cu.id:'anon'),5)){alert('Posting too fast.');return;}
   const input=document.getElementById('ci-'+newsId);
-  const rawText=input&&input.value.trim();
-  if(!rawText){return;}
-  const text=validateInput(rawText,280);
-  if(text.length<2){alert('Comment is too short.');return;}
-  // Block script injection attempts
-  if(/<script|javascript:|on\w+=/i.test(text)){alert('Invalid content.');return;}
-  const rawAuthor=cu?cu.name:'Anonymous';
-  const author=validateInput(rawAuthor,60)||'Anonymous';
+  const text=input&&input.value.trim().slice(0,280)||'';
+  if(text.length<2)return;
+  const author=sanitize(cu?(cu.name||'').slice(0,60):'Anonymous');
   const plan=cu?cu.plan:'free';
   const initials=getInitials(author);
   if(!COMMENTS_STORE[newsId])COMMENTS_STORE[newsId]=[];
@@ -2546,102 +2402,59 @@ function postComment(newsId){
   renderComments(newsId);
   const toggle=document.getElementById('ct-'+newsId);
   const count=COMMENTS_STORE[newsId].length;
-  if(toggle)toggle.innerHTML=`💬 ${count} comment${count!==1?'s':''} &nbsp;<span style="color:var(--muted)">Hide</span>`;
+  if(toggle)toggle.innerHTML='&#x1F4AC; '+count+' comment'+(count!==1?'s':'')+' &nbsp;<span style="color:var(--muted)">Hide</span>';
 }
-
 function likeComment(newsId,idx){
   const key=newsId+'-'+idx;
   if(COMMENT_LIKES[key])return;
   COMMENT_LIKES[key]=true;
-  if(COMMENTS_STORE[newsId]&&COMMENTS_STORE[newsId][idx]!=null){
-    COMMENTS_STORE[newsId][idx].likes=(COMMENTS_STORE[newsId][idx].likes||0)+1;
-    renderComments(newsId);
-  }
+  if(COMMENTS_STORE[newsId]&&COMMENTS_STORE[newsId][idx]!=null){COMMENTS_STORE[newsId][idx].likes=(COMMENTS_STORE[newsId][idx].likes||0)+1;renderComments(newsId);}
 }
-
 function renderComments(newsId){
   const list=document.getElementById('cl-'+newsId);
   if(!list)return;
   const comments=COMMENTS_STORE[newsId]||[];
-  if(!comments.length){
-    list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0 4px;">No comments yet — be the first!</div>';
-    return;
-  }
-  list.innerHTML=comments.map((c,i)=>{
-    const planBadge=c.plan==='analyst'
-      ?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);font-weight:700;">ANALYST</span>'
-      :(c.plan==='pro'||c.plan==='club'||c.plan==='clubpro')
-      ?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);border:1px solid rgba(0,229,160,0.2);font-weight:700;">PRO</span>'
-      :'';
+  if(!comments.length){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0 4px;">No comments yet.</div>';return;}
+  list.innerHTML=comments.map(function(c,i){
+    const planBadge=c.plan==='analyst'?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);font-weight:700;">ANALYST</span>':(c.plan==='pro'||c.plan==='club'||c.plan==='clubpro')?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);border:1px solid rgba(0,229,160,0.2);font-weight:700;">PRO</span>':'';
     const liked=COMMENT_LIKES[newsId+'-'+i];
-    // sanitize() prevents XSS from user-generated content
-    return `<div class="comment-item">
-      <div class="comment-av">${sanitize(c.initials)}</div>
-      <div class="comment-body-wrap">
-        <div class="comment-author">${sanitize(c.author)} ${planBadge}</div>
-        <div class="comment-text">${sanitize(c.text)}</div>
-        <div class="comment-meta">
-          <span>${c.time}</span>
-          <button class="comment-like" onclick="likeComment(${newsId},${i})" style="color:${liked?'var(--red)':'var(--muted)'}">
-            ${liked?'❤':'♡'} ${c.likes||0}
-          </button>
-        </div>
-      </div>
-    </div>`;
+    return '<div class="comment-item"><div class="comment-av">'+sanitize(c.initials)+'</div><div class="comment-body-wrap"><div class="comment-author">'+sanitize(c.author)+' '+planBadge+'</div><div class="comment-text">'+sanitize(c.text)+'</div><div class="comment-meta"><span>'+c.time+'</span><button class="comment-like" onclick="likeComment('+newsId+','+i+')" style="color:'+(liked?'var(--red)':'var(--muted)')+'\">'+(liked?'&#x2764;':'&#x2661;')+' '+(c.likes||0)+'</button></div></div></div>';
   }).join('');
 }
-
 function renderFeedNews(){
-  const filtered=FEED_NEWS.filter(n=>{
-    if(currentFeedFilter==='all')return true;
-    if(currentFeedFilter==='brazil')return n.region==='brazil';
-    if(currentFeedFilter==='europe')return n.region==='europe';
-    return n.type===currentFeedFilter;
-  });
+  const filtered=FEED_NEWS.filter(function(n){if(currentFeedFilter==='all')return true;if(currentFeedFilter==='brazil')return n.region==='brazil';if(currentFeedFilter==='europe')return n.region==='europe';return n.type===currentFeedFilter;});
   let html='';
-  filtered.forEach((n,i)=>{
+  filtered.forEach(function(n){
     const commentCount=(COMMENTS_STORE[n.id]||[]).length;
-    html+=`<div style="background:var(--bg2);border:1px solid ${n.featured?'rgba(0,229,160,0.2)':'var(--border)'};border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;">
-      <div style="padding:16px 18px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;" class="${n.tagClass}">${n.tag}</span>
-          <span style="font-size:10px;padding:2px 8px;background:rgba(255,255,255,0.04);border-radius:10px;color:var(--muted);">${n.region==='brazil'?'🇧🇷 Brazil':'🌍 Europe'}</span>
-          <span style="font-size:11px;color:var(--muted);">${n.date}</span>
-        </div>
-        <div style="font-size:${n.featured?'16px':'14px'};font-weight:600;line-height:1.4;margin-bottom:8px;">${n.title}</div>
-        <div style="font-size:${n.featured?'13px':'12px'};color:var(--muted);line-height:1.6;margin-bottom:${n.analysis?'12px':'0'}">${n.excerpt}</div>
-        ${n.analysis?`<div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;"></span>ScoutMind Analysis</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;">${n.analysis.verdict}</div>
-          ${n.analysis.players.map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <div><div style="font-size:12px;font-weight:500;">${p.name}</div><div style="font-size:11px;color:var(--muted);">${p.club}</div></div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:60px;height:4px;background:var(--border);border-radius:2px;"><div style="width:${p.score}%;height:100%;border-radius:2px;background:${scoreClr(p.score)};"></div></div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${scoreClr(p.score)};">${p.score}%</div>
-            </div>
-          </div>`).join('')}
-        </div>`:''}
-      </div>
-      <div class="comment-section">
-        <button class="comment-toggle" id="ct-${n.id}" onclick="toggleComments(${n.id})">
-          💬 ${commentCount} comment${commentCount!==1?'s':''} &nbsp;<span style="color:var(--accent)">Show</span>
-        </button>
-        <div class="comments-body" id="cb-${n.id}">
-          <div class="comment-input-row">
-            <div class="comment-av" id="cav-${n.id}">?</div>
-            <input class="comment-input" id="ci-${n.id}" placeholder="What do you think about this transfer?" maxlength="280"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postComment(${n.id});}">
-            <button class="comment-post-btn" onclick="postComment(${n.id})">Post</button>
-          </div>
-          <div id="cl-${n.id}"></div>
-        </div>
-      </div>
-    </div>`;
+    const commentLabel=commentCount+' comment'+(commentCount!==1?'s':'');
+    html+='<div style="background:var(--bg2);border:1px solid '+(n.featured?'rgba(0,229,160,0.2)':'var(--border)')+';border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;">'
+      +'<div style="padding:16px 18px;">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;"><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;" class="'+n.tagClass+'">'+n.tag+'</span>'
+      +'<span style="font-size:10px;padding:2px 8px;background:rgba(255,255,255,0.04);border-radius:10px;color:var(--muted);">'+(n.region==='brazil'?'&#x1F1E7;&#x1F1F7; Brazil':'&#x1F30D; Europe')+'</span>'
+      +'<span style="font-size:11px;color:var(--muted);">'+n.date+'</span></div>'
+      +'<div style="font-size:'+(n.featured?'16px':'14px')+';font-weight:600;line-height:1.4;margin-bottom:8px;">'+n.title+'</div>'
+      +'<div style="font-size:'+(n.featured?'13px':'12px')+';color:var(--muted);line-height:1.6;margin-bottom:'+(n.analysis?'12px':'0')+'">'+n.excerpt+'</div>';
+    if(n.analysis){
+      html+='<div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">'
+        +'<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;"></span>ScoutMind Analysis</div>'
+        +'<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;">'+n.analysis.verdict+'</div>'
+        +n.analysis.players.map(function(p){return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div><div style="font-size:12px;font-weight:500;">'+p.name+'</div><div style="font-size:11px;color:var(--muted);">'+p.club+'</div></div><div style="display:flex;align-items:center;gap:8px;"><div style="width:60px;height:4px;background:var(--border);border-radius:2px;"><div style="width:'+p.score+'%;height:100%;border-radius:2px;background:'+scoreClr(p.score)+';"></div></div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:'+scoreClr(p.score)+';">'+p.score+'%</div></div></div>';}).join('')
+        +'</div>';
+    }
+    html+='</div>'
+      +'<div class="comment-section">'
+      +'<button class="comment-toggle" id="ct-'+n.id+'" onclick="toggleComments('+n.id+')">&#x1F4AC; '+commentLabel+' &nbsp;<span style="color:var(--accent)">Show</span></button>'
+      +'<div class="comments-body" id="cb-'+n.id+'">'
+      +'<div class="comment-input-row"><div class="comment-av" id="cav-'+n.id+'">?</div>'
+      +'<input class="comment-input" id="ci-'+n.id+'" placeholder="What do you think about this transfer?" maxlength="280" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();postComment('+n.id+');}"></input>'
+      +'<button class="comment-post-btn" onclick="postComment('+n.id+')">Post</button></div>'
+      +'<div id="cl-'+n.id+'"></div>'
+      +'</div></div></div>';
   });
   const el=document.getElementById('feed-news-main');
   if(el){
     el.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories found.</div>';
-    FEED_NEWS.forEach(n=>{
+    FEED_NEWS.forEach(function(n){
       renderComments(n.id);
       const cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
       const av=document.getElementById('cav-'+n.id);
@@ -2651,9 +2464,6 @@ function renderFeedNews(){
 }
 
 function renderSidebar(){
-  // Show inline rumors section by default (All News is default filter)
-  const rumorSection=document.getElementById('inline-rumors-section');
-  if(rumorSection)rumorSection.style.display='block';
   const hr=document.getElementById('feed-hot-rumors');
   if(hr)hr.innerHTML=HOT_RUMORS.map(r=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;min-width:44px;color:${r.probClass==='hi'?'var(--green)':r.probClass==='mid'?'var(--yellow)':'var(--red)'};">${r.prob}%</div>
@@ -2889,8 +2699,6 @@ function filterWeekly(league, btn) {
 try{renderSidebar();}catch(e){console.error('renderSidebar:',e);}
 try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 try{initProfile();}catch(e){console.error('initProfile:',e);}
-// Verify plan from DB on every load — prevents localStorage tampering
-verifyPlanFromDB().catch(()=>{});
 try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
 
 
@@ -2979,38 +2787,7 @@ function renderProfileClubs(){
   el.innerHTML = html;
 }
 
-function editName(){
-  var nameVal=document.getElementById('profile-name-val');
-  var nameEdit=document.getElementById('profile-name-edit');
-  var nameInput=document.getElementById('profile-name-input');
-  var editBtn=document.getElementById('profile-edit-btn');
-  if(nameVal)nameVal.style.display='none';
-  if(nameEdit)nameEdit.style.display='flex';
-  if(nameInput){nameInput.value=currentUser&&currentUser.name?currentUser.name:'';nameInput.focus();nameInput.select();}
-  if(editBtn)editBtn.style.display='none';
-}
-function cancelEditName(){
-  var nameVal=document.getElementById('profile-name-val');
-  var nameEdit=document.getElementById('profile-name-edit');
-  var editBtn=document.getElementById('profile-edit-btn');
-  if(nameVal)nameVal.style.display='';
-  if(nameEdit)nameEdit.style.display='none';
-  if(editBtn)editBtn.style.display='';
-}
-function saveName(){
-  var input=document.getElementById('profile-name-input');
-  var rawName=input&&input.value.trim();
-  var newName=validateInput(rawName,60);
-  if(!newName){alert('Please enter a name.');return;}
-  // Block script injection attempts
-  if(/<|>|script|javascript/i.test(newName)){alert('Invalid characters in name.');return;}
-  if(currentUser){currentUser.name=newName;localStorage.setItem('sm_current_user',JSON.stringify(currentUser));}
-  var initials=newName.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
-  var ids={'profile-name-val':newName,'profile-name-big':newName.toUpperCase(),'nav-name':newName,'nav-avatar':initials,'profile-avatar-big':initials};
-  Object.keys(ids).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=ids[id];});
-  cancelEditName();
-}
-function highlightCurrPref(c){
+function editName(){var nameVal=document.getElementById("profile-name-val");var nameEdit=document.getElementById("profile-name-edit");var nameInput=document.getElementById("profile-name-input");var editBtn=document.getElementById("profile-edit-btn");if(nameVal)nameVal.style.display="none";if(nameEdit)nameEdit.style.display="flex";if(nameInput){nameInput.value=currentUser&&currentUser.name?currentUser.name:"";nameInput.focus();nameInput.select();}if(editBtn)editBtn.style.display="none";}function cancelEditName(){var nameVal=document.getElementById("profile-name-val");var nameEdit=document.getElementById("profile-name-edit");var editBtn=document.getElementById("profile-edit-btn");if(nameVal)nameVal.style.display="";if(nameEdit)nameEdit.style.display="none";if(editBtn)editBtn.style.display="";}function saveName(){var input=document.getElementById("profile-name-input");var newName=input&&input.value.trim();if(!newName){alert("Please enter a name.");return;}if(currentUser){currentUser.name=newName;localStorage.setItem("sm_current_user",JSON.stringify(currentUser));}var initials=newName.split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);var ids={"profile-name-val":newName,"profile-name-big":newName.toUpperCase(),"nav-name":newName,"nav-avatar":initials,"profile-avatar-big":initials};Object.keys(ids).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=ids[id];});cancelEditName();}function highlightCurrPref(c){
   ['EUR','USD','BRL','GBP'].forEach(x=>{
     const btn=document.getElementById('pref-'+x);
     if(!btn) return;
