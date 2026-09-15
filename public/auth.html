@@ -33,11 +33,6 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
 .msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
 .msg.error{background:rgba(255,69,96,0.1);border:1px solid rgba(255,69,96,0.3);color:#ff4560;}
 .msg.success{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:#00e5a0;}
-.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
-.plan-opt{border:1px solid #1a2540;border-radius:8px;padding:11px 12px;cursor:pointer;}
-.plan-opt:hover,.plan-opt.sel{border-color:#00e5a0;background:rgba(0,229,160,0.05);}
-.plan-name{font-size:13px;font-weight:700;}
-.plan-price{font-size:11px;color:#5a6a85;margin-top:2px;}
 .back{text-align:center;margin-top:14px;font-size:12px;color:#5a6a85;cursor:pointer;}
 .back:hover{color:#edf2f7;}
 </style>
@@ -85,27 +80,6 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
       <label>Password</label>
       <input type="password" id="r-pass" placeholder="Min. 8 characters">
     </div>
-    <div class="field">
-      <label>Choose plan</label>
-      <div class="plan-grid">
-        <div class="plan-opt sel" onclick="pickPlan('free',this)">
-          <div class="plan-name">Scout Free</div>
-          <div class="plan-price">$0 forever</div>
-        </div>
-        <div class="plan-opt" onclick="pickPlan('pro',this)">
-          <div class="plan-name">Scout Pro</div>
-          <div class="plan-price">$9.99/month</div>
-        </div>
-        <div class="plan-opt" onclick="pickPlan('club',this)">
-          <div class="plan-name">Club Basic</div>
-          <div class="plan-price">$49/month</div>
-        </div>
-        <div class="plan-opt" onclick="pickPlan('clubpro',this)">
-          <div class="plan-name">Club Pro</div>
-          <div class="plan-price">$199/month</div>
-        </div>
-      </div>
-    </div>
     <button class="btn-primary" onclick="doRegister()" id="r-btn">Create Account</button>
     <div class="divider">or</div>
     <button class="btn-demo" onclick="doDemo()">👁 Preview as Demo User</button>
@@ -119,7 +93,6 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
 var SURL = 'https://kdhbpzooyjxcglbxbuya.supabase.co';
 var SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
 var sb = supabase.createClient(SURL, SKEY);
-var plan = 'free';
 
 // Check if already logged in
 sb.auth.getSession().then(function(res) {
@@ -131,7 +104,6 @@ sb.auth.getSession().then(function(res) {
 // Check URL params
 var params = new URLSearchParams(window.location.search);
 if (params.get('tab') === 'signup') switchTab('register');
-if (params.get('plan')) pickPlanByName(params.get('plan'));
 
 function switchTab(tab) {
   document.getElementById('sec-login').className = 'form-section' + (tab==='login'?' active':'');
@@ -139,20 +111,6 @@ function switchTab(tab) {
   document.getElementById('btn-login').className = 'tab-btn' + (tab==='login'?' active':'');
   document.getElementById('btn-register').className = 'tab-btn' + (tab==='register'?' active':'');
   clearMsgs();
-}
-
-function pickPlan(p, el) {
-  plan = p;
-  document.querySelectorAll('.plan-opt').forEach(function(o){ o.classList.remove('sel'); });
-  el.classList.add('sel');
-}
-
-function pickPlanByName(p) {
-  plan = p;
-  var opts = document.querySelectorAll('.plan-opt');
-  opts.forEach(function(o){ o.classList.remove('sel'); });
-  var idx = {free:0,pro:1,club:2,clubpro:3}[p];
-  if (idx !== undefined && opts[idx]) opts[idx].classList.add('sel');
 }
 
 function showError(msg) {
@@ -172,7 +130,7 @@ function clearMsgs() {
 
 function saveUser(id, email, name, userPlan) {
   localStorage.setItem('sm_current_user', JSON.stringify({
-    id: id, email: email, name: name, plan: userPlan || 'free'
+    id: id, email: email, name: name, plan: userPlan || 'fan'
   }));
 }
 
@@ -192,7 +150,7 @@ async function doLogin() {
   }
   var profRes = await sb.from('profiles').select('*').eq('id', res.data.user.id).single();
   var prof = profRes.data;
-  saveUser(res.data.user.id, email, prof ? prof.name : email.split('@')[0], prof ? prof.plan : 'free');
+  saveUser(res.data.user.id, email, prof ? prof.name : email.split('@')[0], prof ? prof.plan : 'fan');
   window.location.href = '/app.html';
 }
 
@@ -210,14 +168,14 @@ async function doRegister() {
   if (!/[\d!@#$%^&*]/.test(pass)) return showError('Password must include at least one number or special character (!@#$%^&*).');
   var btn = document.getElementById('r-btn');
   btn.textContent = 'Creating account...'; btn.disabled = true;
-  var res = await sb.auth.signUp({email: email, password: pass, options: {data: {name: name, plan: plan}}});
+  var res = await sb.auth.signUp({email: email, password: pass, options: {data: {name: name, plan: 'fan'}}});
   if (res.error) {
     showError(res.error.message);
     btn.textContent = 'Create Account'; btn.disabled = false;
     return;
   }
   if (res.data.user) {
-    await sb.from('profiles').upsert({id: res.data.user.id, name: name, email: email, plan: plan, created_at: new Date().toISOString()});
+    await sb.from('profiles').upsert({id: res.data.user.id, name: name, email: email, plan: 'fan', created_at: new Date().toISOString()});
     saveUser(res.data.user.id, email, name, plan);
   }
   if (res.data.session) {

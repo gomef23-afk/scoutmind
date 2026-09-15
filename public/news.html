@@ -14,7 +14,6 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .logo span{color:var(--text);}
 .nav-right{display:flex;align-items:center;gap:10px;}
 .user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
-.plan-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);}
 .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
 .logout-btn:hover{border-color:var(--accent);color:var(--text);}
 .page{max-width:1100px;margin:0 auto;padding:32px 28px;}
@@ -98,7 +97,6 @@ if (!_cu) window.location.href = '/auth.html';
     <div class="user-badge" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
       <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s infinite"></span>
       <span id="nav-name" style="font-size:12px;font-weight:500"></span>
-      <span id="nav-plan" class="plan-pill"></span>
     </div>
     <div id="nav-avatar" onclick="window.location.href='/app.html'" title="Go to profile" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s;flex-shrink:0;" onmouseover="this.style.background='rgba(0,229,160,0.25)'" onmouseout="this.style.background='rgba(0,229,160,0.15)'">?</div>
     <button class="logout-btn" onclick="logout()">Sign out</button>
@@ -151,12 +149,9 @@ if (!_cu) window.location.href = '/auth.html';
 
 <script>
 const cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
-const PLAN_NAMES = {free:'Scout Free',pro:'Scout Pro',club:'Club Basic',clubpro:'Club Pro'};
 if (cu) {
   const name = cu.name || cu.email?.split('@')[0] || 'User';
   document.getElementById('nav-name').textContent = name;
-  const planEl = document.getElementById('nav-plan');
-  planEl.textContent = PLAN_NAMES[cu.plan] || 'Scout Free';
   const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   const avEl = document.getElementById('nav-avatar');
   if(avEl) avEl.textContent = initials;

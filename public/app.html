@@ -20,11 +20,6 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .logo span{color:var(--text);}
 .nav-right{display:flex;align-items:center;gap:10px;}
 .user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
-.plan-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);letter-spacing:0.5px;}
-.plan-pill.pro{background:rgba(0,229,160,0.1);color:var(--accent);}
-.plan-pill.club{background:rgba(0,184,255,0.1);color:var(--accent2);}
-.plan-pill.clubpro{background:rgba(245,200,66,0.1);color:var(--yellow);}
-.plan-pill.free{background:rgba(90,106,133,0.1);color:var(--muted);}
 .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
 .logout-btn:hover{border-color:var(--accent);color:var(--text);}
 .app{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 53px);}
@@ -118,10 +113,6 @@ hr{border:none;border-top:1px solid var(--border);}
 .team-list-wrap{max-height:220px;overflow-y:auto;}
 .hint{font-size:11px;color:var(--muted);text-align:center;margin-top:3px;}
 .filter-count{font-size:10px;color:var(--accent);margin-top:4px;text-align:center;}
-.locked{opacity:0.4;pointer-events:none;position:relative;}
-.lock-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(7,9,15,0.7);border-radius:12px;z-index:5;}
-.lock-msg{font-size:12px;color:var(--muted);text-align:center;}
-.upgrade-btn{display:inline-block;margin-top:6px;background:var(--accent);color:#000;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
 .curr-btn.active{background:var(--accent)!important;color:#000!important;}
 .curr-btn:hover:not(.active){color:var(--text)!important;}
 /* ── MAIN NAV BUTTONS ── */
@@ -282,10 +273,6 @@ hr{border:none;border-top:1px solid var(--border);}
 .profile-row-value{font-size:12px;font-weight:500;color:var(--text);}
 .profile-edit-btn{font-size:10px;padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .profile-edit-btn:hover{border-color:var(--accent);color:var(--accent);}
-.plan-card{background:var(--bg3);border:1px solid rgba(0,229,160,0.15);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
-.plan-card-name{font-size:14px;font-weight:700;color:var(--accent);}
-.plan-card-desc{font-size:11px;color:var(--muted);margin-top:2px;}
-.upgrade-plan-btn{font-size:11px;font-weight:700;padding:7px 16px;background:var(--accent);color:#000;border:none;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .club-chip{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:7px;}
 .club-chip-emoji{font-size:18px;}
 .club-chip-name{flex:1;font-size:12px;font-weight:500;color:var(--text);}
@@ -355,7 +342,7 @@ if(!_cu){
                 id:userResult.data.user.id,
                 email:userResult.data.user.email,
                 name:profile?profile.name:userResult.data.user.email.split('@')[0],
-                plan:profile?profile.plan:'free'
+                plan:profile?profile.plan:'fan'
               }));
               window.location.href='/app.html';
             });
@@ -373,7 +360,7 @@ if(!_cu){
           id:session.user.id,
           email:session.user.email,
           name:profile?profile.name:session.user.email.split('@')[0],
-          plan:profile?profile.plan:'free'
+          plan:profile?profile.plan:'fan'
         }));
         window.location.reload();
       });
@@ -402,7 +389,6 @@ if(!_cu){
     <div class="user-badge" onclick="showPage('profile')" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
       <span class="live-dot"></span>
       <span id="nav-name" style="font-size:12px;font-weight:500"></span>
-      <span id="nav-plan" class="plan-pill"></span>
     </div>
     <div id="nav-avatar" onclick="showPage('profile')" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s;flex-shrink:0;" onmouseover="this.style.background='rgba(0,229,160,0.25)'" onmouseout="this.style.background='rgba(0,229,160,0.15)'">?</div>
     <button class="logout-btn" onclick="logout()">Sign out</button>
@@ -723,8 +709,8 @@ if(!_cu){
     <div class="hub-groups-card"><div class="hub-groups-icon" style="background:rgba(245,200,66,0.1);">🏆</div><div><div class="hub-groups-name">Mengão Match Day</div><div class="hub-groups-meta">Live match reactions · Public</div></div><div class="hub-groups-count">21k</div></div>
     <div style="background:var(--bg3);border:1px dashed var(--border);border-radius:12px;padding:16px;text-align:center;margin-top:6px;">
       <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Create a group</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Build your own Flamengo community. Scout Pro subscribers can create verified groups.</div>
-      <button style="font-size:11px;font-weight:700;padding:7px 18px;background:var(--accent);color:#000;border:none;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;">Upgrade to create</button>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Build your own Flamengo community. Anyone can create a group.</div>
+      <button onclick="window.location.href='/community.html'" style="font-size:11px;font-weight:700;padding:7px 18px;background:var(--accent);color:#000;border:none;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;">Create a group</button>
     </div>
   </div>
   <!-- HUB MATCHES TAB -->
@@ -768,21 +754,6 @@ if(!_cu){
     <div class="profile-row">
       <div class="profile-row-label">Member since</div>
       <div class="profile-row-value">May 2026</div>
-    </div>
-  </div>
-
-  <!-- Subscription -->
-  <div class="profile-section">
-    <div class="profile-section-title">Subscription</div>
-    <div class="plan-card">
-      <div>
-        <div class="plan-card-name" id="profile-plan-name">Scout Free</div>
-        <div class="plan-card-desc" id="profile-plan-desc">Basic analysis · Top 10 recommendations · No PDF export</div>
-      </div>
-      <button class="upgrade-plan-btn" onclick="window.open('https://buy.stripe.com/test_5kQ4gsbY9eW32IQ6rqeME00','_blank')">Upgrade to Pro</button>
-    </div>
-    <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.6;">
-      Scout Pro unlocks full player recommendations, PDF scouting reports, weekly deep analysis reports across all leagues, and the ability to create polls and post in community groups.
     </div>
   </div>
 
@@ -1263,17 +1234,8 @@ function getProfile(weaknessType,positionFilter){
 
 // ── AUTH & USER ──
 const currentUser=JSON.parse(localStorage.getItem('sm_current_user')||'null');
-const PLAN_NAMES={free:'Scout Free',pro:'Scout Pro ($6.99/mo)',club:'Club Basic ($49/mo)',clubpro:'Club Pro ($149/mo)',analyst:'Analyst'};
-const PLAN_CLASS={free:'free',pro:'pro',club:'club',clubpro:'clubpro'};
-const userPlan=currentUser?.plan||'free';
-const isPro=['pro','club','clubpro'].includes(userPlan);
-const isClub=['club','clubpro'].includes(userPlan);
-const isFree=userPlan==='free';
 if(currentUser){
   document.getElementById('nav-name').textContent=currentUser.name||'User';
-  const planEl=document.getElementById('nav-plan');
-  planEl.textContent=PLAN_NAMES[userPlan]||'Scout Free';
-  planEl.className='plan-pill '+(PLAN_CLASS[userPlan]||'free');
 }
 
 // FIX 1: logout now waits for signOut to complete before redirecting
@@ -1543,8 +1505,7 @@ function runAnalysis(){
   }
   if(profile){html+=`<div class="profile-card"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:7px">IDEAL PLAYER PROFILE</div><div class="profile-pos">${profile.pos}</div><div class="profile-role">${profile.role}</div><div class="req-stats">${Object.entries(profile.stats).map(([k,v])=>`<div class="req-stat">${k.replace(/_pg$/,' /g').replace(/_/g,' ')} ≥ <span>${v}</span></div>`).join('')}</div></div>`;}
   html+=`<div class="section-hdr"><div class="section-ttl">Player Recommendations</div><div style="display:flex;gap:8px;align-items:center"><div class="data-badge">⚽ ${ranked.length} matched</div><div class="data-badge" style="background:rgba(0,184,255,0.08);border-color:rgba(0,184,255,0.2);color:var(--accent2)">${primaryPool.length} players searched</div></div></div>`;
-  const visibleRanked=isFree?ranked.slice(0,10):ranked;
-  const hiddenCount=isFree?Math.max(0,ranked.length-10):0;
+  const visibleRanked=ranked;
   if(!ranked.length){html+=`<div class="empty"><div class="empty-icon">🔎</div><div class="empty-ttl">No Matches Found</div><div style="font-size:13px">Try widening your filters — increase the budget, age range, or select "All Leagues"</div></div>`;}
   else{
     visibleRanked.forEach((m,i)=>{
@@ -1569,8 +1530,7 @@ function runAnalysis(){
       </div>`;
     });
   }
-  if(isFree&&hiddenCount>0){html+=`<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:20px;text-align:center;margin:16px 0;"><div style="font-size:16px;font-weight:700;margin-bottom:6px">🔒 ${hiddenCount} more players hidden</div><div style="font-size:13px;color:var(--muted);margin-bottom:14px">Upgrade to Scout Pro to see all recommendations.</div><a href="https://buy.stripe.com/test_5kQ4gsbY9eW32IQ6rqeME00" target="_blank" style="display:inline-block;background:var(--accent);color:#000;font-size:13px;font-weight:800;padding:10px 24px;border-radius:8px;text-decoration:none;">Upgrade to Scout Pro — $6.99/mo</a></div>`;}
-  if(rankedSec.length>0&&!isFree){
+  if(rankedSec.length>0){
     html+=`<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)"><div class="section-hdr"><div style="display:flex;align-items:center;gap:8px"><div class="section-ttl">Also Consider</div><div class="data-badge" style="background:rgba(245,200,66,0.08);border-color:rgba(245,200,66,0.2);color:var(--yellow)">Secondary weakness: ${secType}</div></div></div>`;
     rankedSec.forEach((m,i)=>{const p=m.p,sc=m.score,isCP=selectedTeam&&p.club===selectedTeam.name;html+=`<div class="pcard" style="${isCP?'border-color:rgba(0,184,255,0.4);background:rgba(0,184,255,0.03);':''}opacity:0.85"><div class="prank">${String(i+1).padStart(2,'0')}</div><div><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px"><div class="pname">${p.name}</div><div class="pos-badge">${p.subpos||p.pos}</div>${isCP?`<div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(0,184,255,0.12);border:1px solid rgba(0,184,255,0.4);color:var(--accent2)">✓ ALREADY AT CLUB</div>`:''}</div><div class="pmeta"><span>🏟 ${p.club}</span><span>📍 ${p.nat}</span><span>🎂 ${p.age} yrs</span><span>📋 ${p.apps} apps</span><span>💰 ${fmtVal(p.value)}</span></div><div class="stat-pills">${getPositionStats(p)}</div>${m.reasons.map(r=>`<div class="reason">${r}</div>`).join('')}${(m.contextBoosts||[]).map(b=>`<div style="font-size:11px;color:${b.color||'var(--accent2)'};margin-bottom:2px">${b.icon} ${b.text}</div>`).join('')}${(m.contextFlags||[]).map(f=>`<div style="font-size:11px;color:${f.color||'var(--warn)'};margin-bottom:2px">${f.icon} ${f.text}</div>`).join('')}</div><div class="score-blk"><div class="score-num ${scCls(sc)}">${sc}%</div><div class="score-lbl">MATCH</div><div class="sbar"><div class="sbar-fill" style="width:${sc}%;background:${barClr(sc)}"></div></div></div></div>`;});
     html+=`</div>`;
@@ -2373,8 +2333,8 @@ function sanitize(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').repla
 const _rl={};
 function rateLimit(key,max){const now=Date.now();if(!_rl[key])_rl[key]=[];_rl[key]=_rl[key].filter(t=>now-t<60000);if(_rl[key].length>=max)return false;_rl[key].push(now);return true;}
 const COMMENTS_STORE={
-  1:[{author:'Bernardo M.',initials:'BM',text:'Finally confirmed! Gyokeres was unstoppable this season. Madrid got a steal at 100M.',time:'2h ago',likes:24,plan:'pro'},{author:'Tactical Pedro',initials:'TP',text:'His aerial numbers will immediately fix Madrid set piece weakness. Great signing.',time:'1h ago',likes:11,plan:'free'}],
-  2:[{author:'Fla Fan 1903',initials:'FF',text:'Alvarez seria perfeito mas o valor e demais pra gente agora.',time:'3h ago',likes:18,plan:'free'}],
+  1:[{author:'Bernardo M.',initials:'BM',text:'Finally confirmed! Gyokeres was unstoppable this season. Madrid got a steal at 100M.',time:'2h ago',likes:24,plan:'fan'},{author:'Tactical Pedro',initials:'TP',text:'His aerial numbers will immediately fix Madrid set piece weakness. Great signing.',time:'1h ago',likes:11,plan:'fan'}],
+  2:[{author:'Fla Fan 1903',initials:'FF',text:'Alvarez seria perfeito mas o valor e demais pra gente agora.',time:'3h ago',likes:18,plan:'fan'}],
   3:[],4:[],5:[],6:[],7:[],8:[],
 };
 const COMMENT_LIKES={};
@@ -2396,7 +2356,7 @@ function postComment(newsId){
   const text=input&&input.value.trim().slice(0,280)||'';
   if(text.length<2)return;
   const author=sanitize(cu?(cu.name||'').slice(0,60):'Anonymous');
-  const plan=cu?cu.plan:'free';
+  const plan=cu?cu.plan:'fan';
   const initials=getInitials(author);
   if(!COMMENTS_STORE[newsId])COMMENTS_STORE[newsId]=[];
   COMMENTS_STORE[newsId].unshift({author,initials,text,time:'Just now',likes:0,plan});
@@ -2418,7 +2378,7 @@ function renderComments(newsId){
   const comments=COMMENTS_STORE[newsId]||[];
   if(!comments.length){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0 4px;">No comments yet.</div>';return;}
   list.innerHTML=comments.map(function(c,i){
-    const planBadge=c.plan==='analyst'?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);font-weight:700;">ANALYST</span>':(c.plan==='pro'||c.plan==='club'||c.plan==='clubpro')?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,229,160,0.1);color:var(--accent);border:1px solid rgba(0,229,160,0.2);font-weight:700;">PRO</span>':'';
+    const planBadge=c.plan==='analyst'?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);font-weight:700;">ANALYST</span>':'';
     const liked=COMMENT_LIKES[newsId+'-'+i];
     return '<div class="comment-item"><div class="comment-av">'+sanitize(c.initials)+'</div><div class="comment-body-wrap"><div class="comment-author">'+sanitize(c.author)+' '+planBadge+'</div><div class="comment-text">'+sanitize(c.text)+'</div><div class="comment-meta"><span>'+c.time+'</span><button class="comment-like" onclick="likeComment('+newsId+','+i+')" style="color:'+(liked?'var(--red)':'var(--muted)')+'\">'+(liked?'&#x2764;':'&#x2661;')+' '+(c.likes||0)+'</button></div></div></div>';
   }).join('');
@@ -2546,8 +2506,6 @@ const WEEKLY_REPORTS = [
 function renderWeeklyReport() {
   const el = document.getElementById('weekly-report-section');
   if (!el) return;
-  const plan = currentUser?.plan || 'free';
-  const isPro = ['pro','club','clubpro','analyst'].includes(plan);
 
   // Get user's main league preference
   const mainClub = JSON.parse(localStorage.getItem('sm_main_club') || 'null');
@@ -2582,39 +2540,20 @@ function renderWeeklyReport() {
   html += '</div>';
 
   html += '<div id="weekly-reports-list">';
-  reports.forEach((r, idx) => {
-    const isLocked = !isPro && idx >= 2; // Free users see first 2 leagues
-    html += weeklyReportCard(r, isLocked);
+  reports.forEach(r => {
+    html += weeklyReportCard(r);
   });
-
-  if (!isPro) {
-    html += '<div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,184,255,0.04));border:1px solid rgba(0,229,160,0.2);border-radius:14px;padding:24px;text-align:center;margin-top:6px;">';
-    html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:8px;">Unlock All ' + WEEKLY_REPORTS.length + ' League Reports</div>';
-    html += '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Scout Pro includes the full weekly breakdown for every league — deep dives, transfer recommendations, and tactical alerts updated every Monday.</div>';
-    html += '<div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">';
-    html += '<button style="background:var(--accent);color:#000;border:none;padding:11px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;">UPGRADE TO SCOUT PRO — $6.99/MO</button>';
-    html += '</div></div>';
-  }
 
   html += '</div>';
   el.innerHTML = html;
 }
 
-function weeklyReportCard(r, locked) {
+function weeklyReportCard(r) {
   const scoreClr = s => s >= 75 ? 'var(--green)' : s >= 50 ? 'var(--yellow)' : 'var(--red)';
   const dirIcon = r.mover.direction === 'up' ? '↑' : '↓';
   const dirClr = r.mover.direction === 'up' ? 'var(--green)' : 'var(--red)';
 
-  let html = '<div class="weekly-card" data-league="' + r.league.replace(/\s/g,'_') + '" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;' + (locked ? 'position:relative;' : '') + '">';
-
-  if (locked) {
-    html += '<div style="position:absolute;inset:0;backdrop-filter:blur(6px);background:rgba(7,9,15,0.7);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;">';
-    html += '<div style="font-size:28px;margin-bottom:10px;">🔒</div>';
-    html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:6px;">' + r.flag + ' ' + r.league + ' — Scout Pro</div>';
-    html += '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;text-align:center;max-width:260px;">Upgrade to Scout Pro to read the full ' + r.league + ' weekly report.</div>';
-    html += '<button onclick="window.open(\"https://buy.stripe.com/test_5kQ4gsbY9eW32IQ6rqeME00\",\"_blank\")" style="background:var(--accent);color:#000;border:none;padding:8px 20px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Upgrade — $6.99/mo</button>';
-    html += '</div>';
-  }
+  let html = '<div class="weekly-card" data-league="' + r.league.replace(/\s/g,'_') + '" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">';
 
   // Header
   html += '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">';
@@ -2705,21 +2644,6 @@ try{initProfile();}catch(e){console.error('initProfile:',e);}
 try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
 
 
-// Handle return from Stripe payment
-(function(){
-  const params = new URLSearchParams(window.location.search);
-  if(params.get('upgraded') === '1'){
-    // Show success banner
-    const banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,229,160,0.95);color:#000;padding:14px 28px;border-radius:10px;font-weight:700;font-size:14px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:flex;align-items:center;gap:10px;';
-    banner.innerHTML = '✅ Welcome to Scout Pro! Your account will be upgraded shortly.';
-    document.body.appendChild(banner);
-    setTimeout(() => banner.remove(), 6000);
-    // Clean URL
-    window.history.replaceState({}, '', '/app.html');
-  }
-})();
-
 // Handle ?page= URL parameter (e.g. from community.html Feed link)
 (function(){
   const urlPage = new URLSearchParams(window.location.search).get('page');
@@ -2730,7 +2654,6 @@ function initProfile(){
   if(!currentUser) return;
   const name = currentUser.name || currentUser.email?.split('@')[0] || 'User';
   const email = currentUser.email || '—';
-  const plan = currentUser.plan || 'free';
   const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
 
   // Nav avatar
@@ -2744,21 +2667,6 @@ function initProfile(){
   setBig('profile-email-big', email);
   setBig('profile-name-val', name);
   setBig('profile-email-val', email);
-
-  // Plan
-  const PLAN_LABELS = {
-    free: {name:'Scout Free', desc:'Basic analysis · Top 10 recommendations · No PDF export'},
-    pro:  {name:'Scout Pro',  desc:'Full analysis · Unlimited recommendations · PDF export · Weekly reports · Community posting'},
-    club: {name:'Club Basic', desc:'Club dashboard · Recruitment reports · Team insights'},
-    clubpro: {name:'Club Pro', desc:'Full scouting suite · Custom reports · API access'},
-  };
-  const pl = PLAN_LABELS[plan] || PLAN_LABELS.free;
-  setBig('profile-plan-name', pl.name);
-  setBig('profile-plan-desc', pl.desc);
-  if(plan !== 'free'){
-    const btn = document.querySelector('.upgrade-plan-btn');
-    if(btn){ btn.textContent='Manage Plan'; btn.style.background='var(--bg3)'; btn.style.color='var(--text)'; btn.style.border='1px solid var(--border)'; }
-  }
 }
 
 function renderProfileClubs(){
