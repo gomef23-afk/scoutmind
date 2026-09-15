@@ -78,10 +78,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 </head>
 <body>
 
-<script>
-const _cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
-if (!_cu) window.location.href = '/auth.html';
-</script>
+<!-- No auth guard: guests read everything. This page is removed in B3 and
+     redirected to /?filter=transfers. -->
 
 <nav>
   <div style="display:flex;align-items:center;gap:0">

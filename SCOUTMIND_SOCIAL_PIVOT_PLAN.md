@@ -68,31 +68,64 @@ Everything here is deletion/simplification. Do it first — it unblocks all othe
 ---
 
 ## 4. PHASE B — RESTRUCTURE THE SITE (Day 2–3)
+*Product decisions below are final as of Sept 2026 and supersede the earlier draft of this section.*
 
-### New information architecture
-The app gets **five primary tabs** (bottom nav on phone, top nav on desktop):
+### Guest mode (decided)
+scoutmind.app opens directly into the Home feed for everyone — logged in or not.
+There is no redirect-to-auth guard on any page.
 
-| Tab | Icon | What it is | Built from |
-|---|---|---|---|
-| **Home** | 🏠 | The social feed. Default landing after login. | Current "Feed → For you" + user posts + AI posts + news |
-| **Clubs** | ⚽ | Team pages: chat, polls, wishlist, analyst insights, weekly verdict | Current `community.html` |
-| **Scout** | 🔍 | Scout Mode — weakness analysis, player recs, build-your-squad | Current `#page-scout` |
-| **Matches** | 📅 | Match Day — live/upcoming, your clubs pinned, predictions | Current "Feed → Match day" |
-| **Profile** | 👤 | Your posts, followers/following, predictions record, badges, squad | Current `#page-profile` + new |
+- **Guests can read everything:** feed, club pages, Scout Mode, matches, analyst
+  insights, polls and group messages.
+- **Every write action opens a sign-in sheet**, not a redirect:
+  post · comment · react · vote · follow · create poll · create group · send group
+  message · suggest wishlist player · apply for badge · set main club · edit profile.
+  Copy: *"Create a free account to join the conversation."*
+- Badge applications are gated too, so every application is tied to an account
+  that the badge can actually be granted to.
+- **Guests never read `profiles` directly.** It holds email addresses. Public
+  profile data (name, plan, credential) is served by the `public_profiles` view;
+  only the signed-in user's own row is read from `profiles`. See
+  `002_public_read.sql`.
+- **Top right:** Sign in button for guests; avatar for logged-in users.
 
-Notifications (🔔) sit in the top bar on every page. Transfer news and SM Weekly become **feed content types**, not separate tabs (news.html can redirect to Home with the "Transfers" filter).
+Rationale: a social network that demands signup before showing anything has no
+top of funnel. Reading is the hook; the account is the investment step.
 
-### Landing page (`index.html`) rewrite
-Current landing sells a scouting tool ("Fix your team's weaknesses"). New landing sells a place:
-- Headline direction: *"Where football lives."* / *"Every club. Every rumor. Every argument. One app."* (PT-BR version for Brazilian traffic)
-- Sub: the social network for football fans — follow your club, debate transfers, scout like a pro, all free
-- Show a **phone mockup of the feed**, not a weakness-analysis card
-- Sections: What you can do (feed / clubs / scout / matches) → Analysts (apply for badge) → For clubs (contact us — keeps the B2B door open) → CTA
-- Kill: Pricing, "For who" plan labels, subscription FAQ
-- Keep: FAQ on data sources, league coverage
+### Single entry point (decided)
+- `index.html` **is the app.** The old landing content moves out wholesale.
+- `about.html` is new and holds the former landing page: hero, how it works,
+  for who, FAQ, the "for clubs" band, and the Terms/Privacy modals.
+- `app.html` becomes a redirect to `/` so existing links and bookmarks survive.
+- `news.html` is deleted; `/news.html` redirects to `/?filter=transfers`.
+
+### Five-tab navigation (decided)
+Every page carries the same five tabs — **Home · Clubs · Scout · Matches · Profile**
+— rendered as a top bar on desktop and a fixed bottom bar on mobile.
+
+| Tab | Icon | Built from |
+|---|---|---|
+| **Home** | 🏠 | `#page-feed` — the social feed, default landing |
+| **Clubs** | ⚽ | `#page-communities` + `community.html` |
+| **Scout** | 🔍 | `#page-scout` |
+| **Matches** | 📅 | the Match day feed tab, promoted to a top-level page |
+| **Profile** | 👤 | `#page-profile` |
+
+Top-right, on every page: **Sign in / avatar**, a small **About** link, and the
+**language switcher**. Transfer news and SM Weekly remain feed content types, not tabs.
+Notifications (🔔) join the top bar in Phase C6.
+
+### Languages (decided)
+- Every UI string in every page lives in one `public/i18n.js` dictionary.
+- Three languages at launch: **en**, **pt-BR**, **es** — fully translated.
+- Default from `navigator.language`; the user's choice persists in localStorage
+  (a UI preference, so rule #12 permits it).
+- **Content data stays English for now** — weekly reports, news items, player and
+  team data. Browser translation covers the rest, so keep `lang` attributes
+  accurate and update `<html lang>` when the switcher changes.
 
 ### Nav consistency rule
-`app.html`, `community.html`, and `news.html` are separate files — nav must be replicated manually in all three (existing rule #8). Consider: fold `news.html` into `app.html` as a feed filter to eliminate one file to maintain.
+Nav is duplicated across `index.html`, `community.html` and `about.html`. Any nav
+change must be applied to all three (was rule #8; `news.html` no longer applies).
 
 ---
 

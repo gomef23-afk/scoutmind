@@ -97,7 +97,7 @@ var sb = supabase.createClient(SURL, SKEY);
 // Check if already logged in
 sb.auth.getSession().then(function(res) {
   if (res.data && res.data.session) {
-    window.location.href = '/app.html';
+    window.location.href = '/';
   }
 });
 
@@ -151,7 +151,7 @@ async function doLogin() {
   var profRes = await sb.from('profiles').select('*').eq('id', res.data.user.id).single();
   var prof = profRes.data;
   saveUser(res.data.user.id, email, prof ? prof.name : email.split('@')[0], prof ? prof.plan : 'fan');
-  window.location.href = '/app.html';
+  window.location.href = '/';
 }
 
 async function doRegister() {
@@ -175,11 +175,17 @@ async function doRegister() {
     return;
   }
   if (res.data.user) {
-    await sb.from('profiles').upsert({id: res.data.user.id, name: name, email: email, plan: 'fan', created_at: new Date().toISOString()});
-    saveUser(res.data.user.id, email, name, plan);
+    // The profiles row is created server-side by the on_auth_user_created
+    // trigger (see 002_public_read.sql) — required because email confirmation
+    // means there is no session here, so this client write runs as `anon`.
+    // Kept as a harmless fallback for the session-exists case.
+    try {
+      await sb.from('profiles').upsert({id: res.data.user.id, name: name, email: email, plan: 'fan', created_at: new Date().toISOString()});
+    } catch (e) { /* trigger already handled it */ }
+    saveUser(res.data.user.id, email, name, 'fan');
   }
   if (res.data.session) {
-    window.location.href = '/app.html';
+    window.location.href = '/';
   } else {
     showSuccess('Account created! Check your email to verify, then sign in.');
     btn.textContent = 'Create Account'; btn.disabled = false;
@@ -187,8 +193,8 @@ async function doRegister() {
 }
 
 function doDemo() {
-  saveUser('demo', 'demo@scoutmind.app', 'Demo User', 'pro');
-  window.location.href = '/app.html';
+  saveUser('demo', 'demo@scoutmind.app', 'Demo User', 'fan');
+  window.location.href = '/';
 }
 </script>
 </body>

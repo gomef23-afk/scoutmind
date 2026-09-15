@@ -20,6 +20,19 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
 .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
 .logout-btn:hover{border-color:var(--accent);color:var(--text);}
+/* ── GUEST MODE ── */
+.nav-about-link{font-size:12px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px;transition:color .2s;}
+.nav-about-link:hover{color:var(--text);}
+.signin-btn{background:var(--accent);color:#000;border:none;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+.signin-btn:hover{background:#00ffb3;}
+.signin-sheet{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);}
+.signin-sheet-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:360px;width:100%;text-align:center;}
+.signin-sheet-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:8px;}
+.signin-sheet-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+.signin-sheet-actions{display:flex;flex-direction:column;gap:9px;}
+.signin-sheet-primary{background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.signin-sheet-secondary{background:transparent;color:var(--text);border:1px solid var(--border);padding:12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.signin-sheet-dismiss{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;padding:6px;margin-top:2px;}
 .live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .page{max-width:1200px;margin:0 auto;padding:28px;}
@@ -89,31 +102,83 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .sp{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:24px auto;}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:768px){.two-col{grid-template-columns:1fr;}.team-selector{position:static;}.ts-scroll{max-height:200px;}.stats4{grid-template-columns:repeat(2,1fr);}nav{padding:12px 16px;}.page{padding:14px;}}
+/* ── B2: FIVE-TAB NAV — mobile-first (base = 375px, desktop at 900px) ──
+   Copied verbatim from index.html (rule #5 — keep all three in sync). */
+.sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+.sm-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent);text-decoration:none;flex-shrink:0;}
+.sm-logo span{color:var(--text);}
+.sm-nav-right{display:flex;align-items:center;gap:4px;margin-left:auto;}
+.sm-lang-slot{display:flex;align-items:center;}
+.sm-about{font-size:12px;color:var(--muted);text-decoration:none;padding:0 8px;min-height:44px;display:flex;align-items:center;}
+.sm-about:hover{color:var(--text);}
+.sm-tabs{display:flex;}
+.sm-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;line-height:1.2;cursor:pointer;text-decoration:none;transition:color .2s;}
+.sm-tab-icon{font-size:17px;line-height:1;}
+.sm-tab:hover{color:var(--text);}
+.sm-tab.active{color:var(--accent);}
+.sm-tabs-top{display:none;}
+.sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(7,9,15,0.98);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
+body{padding-bottom:64px;}
+@media(min-width:900px){
+  .sm-nav{padding:10px 28px;gap:18px;}
+  .sm-tabs-bottom{display:none;}
+  body{padding-bottom:0;}
+  .sm-tabs-top{display:flex;gap:2px;margin-left:18px;}
+  .sm-tabs-top .sm-tab{flex:0 0 auto;flex-direction:row;gap:7px;min-height:38px;font-size:12px;font-weight:500;padding:0 14px;border-bottom:2px solid transparent;}
+  .sm-tabs-top .sm-tab-icon{font-size:14px;}
+  .sm-tabs-top .sm-tab.active{border-bottom-color:var(--accent);}
+}
 </style>
 </head>
 <body>
-<script>
-const _cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
-if(!_cu)window.location.href='/auth.html';
-</script>
-<nav>
-  <div style="display:flex;align-items:center;">
-    <a class="logo" href="/app.html">Scout<span>Mind</span></a>
-    <div style="display:flex;gap:2px;margin-left:28px;">
-      <a class="mnb" href="/app.html?page=feed">Feed</a>
-      <a class="mnb" href="/app.html?page=scout">Scout Mode</a>
-      <a class="mnb active" href="/community.html">Communities</a>
-    </div>
+<!-- No auth guard: guests read everything, writes open the sign-in sheet. -->
+<!-- ── B2 NAV — kept in sync with index.html and about.html (rule #5) ── -->
+<nav class="sm-nav">
+  <a class="sm-logo" href="/">Scout<span>Mind</span></a>
+  <div class="sm-tabs sm-tabs-top">
+    <a class="sm-tab" href="/?page=feed"><span class="sm-tab-icon">🏠</span>Home</a>
+    <a class="sm-tab active" href="/community.html"><span class="sm-tab-icon">⚽</span>Clubs</a>
+    <a class="sm-tab" href="/?page=scout"><span class="sm-tab-icon">🔍</span>Scout</a>
+    <a class="sm-tab" href="/?page=matches"><span class="sm-tab-icon">📅</span>Matches</a>
+    <a class="sm-tab" href="/?page=profile"><span class="sm-tab-icon">👤</span>Profile</a>
   </div>
-  <div class="nav-right">
-    <div class="user-badge">
-      <span class="live-dot"></span>
-      <span id="nav-name" style="font-size:12px;font-weight:500"></span>
+  <div class="sm-nav-right">
+    <!-- B4 fills this with the language switcher. -->
+    <div class="sm-lang-slot" id="lang-slot"></div>
+    <a href="/about.html" class="sm-about">About</a>
+    <div id="nav-user" style="display:none;align-items:center;gap:10px;">
+      <div class="user-badge">
+        <span class="live-dot"></span>
+        <span id="nav-name" style="font-size:12px;font-weight:500"></span>
+      </div>
+      <div id="nav-av" onclick="window.location.href='/?page=profile'" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0;">?</div>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
     </div>
-    <div id="nav-av" onclick="window.location.href='/app.html?page=profile'" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0;">?</div>
-    <button class="logout-btn" onclick="logout()">Sign out</button>
+    <button id="nav-signin" class="signin-btn" style="display:none;" onclick="window.location.href='/auth.html'">Sign in</button>
   </div>
 </nav>
+<!-- Mobile bottom bar — same five tabs. -->
+<div class="sm-tabs sm-tabs-bottom">
+  <a class="sm-tab" href="/?page=feed"><span class="sm-tab-icon">🏠</span>Home</a>
+  <a class="sm-tab active" href="/community.html"><span class="sm-tab-icon">⚽</span>Clubs</a>
+  <a class="sm-tab" href="/?page=scout"><span class="sm-tab-icon">🔍</span>Scout</a>
+  <a class="sm-tab" href="/?page=matches"><span class="sm-tab-icon">📅</span>Matches</a>
+  <a class="sm-tab" href="/?page=profile"><span class="sm-tab-icon">👤</span>Profile</a>
+</div>
+
+<!-- ── SIGN-IN SHEET (guest write gate) ── -->
+<div id="signin-sheet" class="signin-sheet">
+  <div class="signin-sheet-card">
+    <div style="font-size:34px;margin-bottom:10px;">⚽</div>
+    <div class="signin-sheet-title">Join the conversation</div>
+    <div class="signin-sheet-sub" id="signin-sheet-sub">Create a free account to join the conversation.</div>
+    <div class="signin-sheet-actions">
+      <button class="signin-sheet-primary" onclick="window.location.href='/auth.html?tab=signup'">Create a free account</button>
+      <button class="signin-sheet-secondary" onclick="window.location.href='/auth.html'">I already have an account</button>
+      <button class="signin-sheet-dismiss" onclick="closeSigninSheet()">Keep browsing</button>
+    </div>
+  </div>
+</div>
 <div class="page">
   <div style="margin-bottom:20px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:4px">Communities</div>
@@ -215,14 +280,53 @@ if(!_cu)window.location.href='/auth.html';
 <script>
 var _sb=window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
 var cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
+var isGuest=!cu;
 var isAnalyst=cu&&cu.plan==='analyst';
-if(cu){
-  var nm=cu.name||cu.email.split('@')[0]||'User';
-  document.getElementById('nav-name').textContent=nm;
-  var ini=nm.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
-  document.getElementById('nav-av').textContent=ini;
+
+// Swap the nav between guest (Sign in) and signed-in (name + avatar + sign out).
+function renderAuthUi(){
+  var userBlock=document.getElementById('nav-user');
+  var signinBtn=document.getElementById('nav-signin');
+  if(userBlock)userBlock.style.display=isGuest?'none':'flex';
+  if(signinBtn)signinBtn.style.display=isGuest?'block':'none';
+  if(!isGuest){
+    var nm=cu.name||(cu.email?cu.email.split('@')[0]:'')||'User';
+    document.getElementById('nav-name').textContent=nm;
+    var ini=nm.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+    document.getElementById('nav-av').textContent=ini;
+  }
 }
-function logout(){localStorage.removeItem('sm_current_user');window.location.href='/auth.html';}
+renderAuthUi();
+
+// ── GUEST WRITE GATE ──
+// Every write action calls requireAuth() FIRST and bails if it returns false.
+function requireAuth(message){
+  if(!isGuest)return true;
+  openSigninSheet(message);
+  return false;
+}
+function openSigninSheet(message){
+  var sheet=document.getElementById('signin-sheet');
+  if(!sheet){window.location.href='/auth.html';return;}
+  var sub=document.getElementById('signin-sheet-sub');
+  if(sub)sub.textContent=message||'Create a free account to join the conversation.';
+  sheet.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeSigninSheet(){
+  var sheet=document.getElementById('signin-sheet');
+  if(sheet)sheet.style.display='none';
+  document.body.style.overflow='';
+}
+document.addEventListener('click',function(e){
+  var sheet=document.getElementById('signin-sheet');
+  if(sheet&&e.target===sheet)closeSigninSheet();
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape')closeSigninSheet();
+});
+
+function logout(){localStorage.removeItem('sm_current_user');window.location.href='/';}
 var AL='serie_a',AT=null,ATab='polls',AGid=null,GTimer=null;
 var GICONS=['🔴','💚','⚫','⭐','🔵','🟡','🔥','💪','🏆','🦁'];
 var _ft=[];
@@ -349,6 +453,7 @@ function doPolls(el,tk){
 }
 function tPF(){var f=document.getElementById('pform');if(f)f.style.display=f.style.display==='none'?'block':'none';}
 function subPoll(tk){
+  if(!requireAuth('Create a free account to create a poll.'))return;
   var q=document.getElementById('pfq').value.trim();
   var o1=document.getElementById('pfo1').value.trim();
   var o2=document.getElementById('pfo2').value.trim();
@@ -360,6 +465,7 @@ function subPoll(tk){
   saveTD(tk,d);renderTab();
 }
 function doVote(tk,pid,idx){
+  if(!requireAuth('Create a free account to vote in polls.'))return;
   var d=getTD(tk);
   var p=d.polls.find(function(x){return x.id===pid;});
   if(!p||p.userVote!==null)return;
@@ -405,6 +511,7 @@ async function doAnalyst(el,tk){
   el.innerHTML=html;
 }
 async function postAI(tk){
+  if(!requireAuth('Create a free account to post an insight.'))return;
   var inp=document.getElementById('ai');
   var content=inp&&inp.value.trim();
   if(!content)return;
@@ -415,6 +522,7 @@ async function postAI(tk){
   renderTab();
 }
 async function reactAI(pid,reaction){
+  if(!requireAuth('Create a free account to react to posts.'))return;
   var pr=await _sb.from('analyst_posts').select('reactions').eq('id',pid).single();
   if(!pr.data)return;
   var r=pr.data.reactions||{fire:0,clap:0,mind_blown:0};
@@ -448,6 +556,7 @@ async function doGroups(el,tk){
   el.innerHTML=html;
 }
 async function createG(tk){
+  if(!requireAuth('Create a free account to start a group.'))return;
   var name=document.getElementById('cgname')&&document.getElementById('cgname').value.trim();
   var desc=document.getElementById('cgdesc')&&document.getElementById('cgdesc').value.trim();
   if(!name){alert('Please enter a group name.');return;}
@@ -492,6 +601,7 @@ async function loadMsgs(){
   if(atBot)el.scrollTop=el.scrollHeight;
 }
 async function sendMsg(){
+  if(!requireAuth('Create a free account to post in this group.'))return;
   if(!AGid)return;
   var inp=document.getElementById('gc-input');
   var content=inp&&inp.value.trim();
@@ -520,6 +630,7 @@ function doWishlist(el,tk){
   el.innerHTML=html;
 }
 function wVote(tk,i){
+  if(!requireAuth('Create a free account to vote on transfer targets.'))return;
   var d=getTD(tk);
   var sorted=d.wishlist.slice().sort(function(a,b){return b.votes-a.votes;});
   var p=sorted[i];if(!p)return;
@@ -528,6 +639,7 @@ function wVote(tk,i){
   orig.votes++;orig.userVoted=true;saveTD(tk,d);renderTab();
 }
 function addW(tk){
+  if(!requireAuth('Create a free account to suggest a signing.'))return;
   var n=document.getElementById('wn')&&document.getElementById('wn').value.trim();
   var c=document.getElementById('wc')&&document.getElementById('wc').value.trim();
   var p=document.getElementById('wp')&&document.getElementById('wp').value.trim();
@@ -558,10 +670,11 @@ function init(){
     if(AT)renderTeamPage();
   }else{
     filterTeams();
-    document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div style="font-family:Bebas Neue,sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the left, or set your main club so it loads automatically every time.</div><button onclick="window.location.href=\'/app.html\'" style="background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Set My Main Club</button></div>';
+    document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div style="font-family:Bebas Neue,sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the left, or set your main club so it loads automatically every time.</div><button onclick="window.location.href=\'/\'" style="background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Set My Main Club</button></div>';
   }
 }
 function openBadgeModal(){
+  if(!requireAuth('Create a free account to apply for an analyst badge.'))return;
   // Pre-fill name and email from logged-in user
   var nameEl=document.getElementById('ba-name');
   var emailEl=document.getElementById('ba-email');
@@ -577,6 +690,7 @@ function closeBadgeModal(){
   document.body.style.overflow='';
 }
 async function submitBadgeApp(){
+  if(!requireAuth('Create a free account to apply for an analyst badge.'))return;
   var name=document.getElementById('ba-name').value.trim();
   var email=document.getElementById('ba-email').value.trim();
   var role=document.getElementById('ba-role').value;
