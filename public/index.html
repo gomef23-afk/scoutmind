@@ -2141,9 +2141,80 @@ const ALL_MATCHES = [
   {comp:'LIGUE 1',compTier:5,flag:'🇫🇷',time:'21:00',home:'PSG',away:'Lyon',status:'finished',score:'4 – 0',teams:['psg','lyon']},
 ];
 
+// ── REAL FIXTURES (Phase R) ──
+// Anon key only. The service-role key lives in Vercel env and never reaches
+// the browser; these tables are public-read by RLS (003_football_data.sql).
+const SUPA_URL = 'https://kdhbpzooyjxcglbxbuya.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
+
+// Reads the fixtures ingested by /api/cron/fixtures. Falls back to the static
+// ALL_MATCHES list if Supabase is unreachable or has not been populated yet,
+// so the page is never empty while the ingest is being set up.
+let LIVE_MATCHES = null;
+
+const COMP_TIER = {
+  'UEFA Champions League': 1, 'Premier League': 2, 'La Liga': 3,
+  'Bundesliga': 4, 'Serie A': 5, 'Ligue 1': 5, 'Série A': 6, 'Liga Profesional': 7
+};
+
+async function loadFixtures(){
+  const from = new Date(Date.now() - 36*3600*1000).toISOString();
+  const to   = new Date(Date.now() + 8*24*3600*1000).toISOString();
+  const q = new URLSearchParams({
+    select: 'api_fixture_id,kickoff_utc,status_short,elapsed,home_goals,away_goals,'
+          + 'home_team:teams!fixtures_home_team_id_fkey(name),'
+          + 'away_team:teams!fixtures_away_team_id_fkey(name),'
+          + 'league:leagues(name,flag)',
+    kickoff_utc: `gte.${from}`,
+    order: 'kickoff_utc.asc',
+    limit: '120'
+  });
+  q.append('kickoff_utc', `lte.${to}`);
+
+  const res = await fetch(`${SUPA_URL}/rest/v1/fixtures?${q}`, {
+    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
+  });
+  if(!res.ok) throw new Error('fixtures '+res.status);
+  const rows = await res.json();
+  if(!rows.length) throw new Error('no fixtures ingested yet');
+
+  const FINISHED = ['FT','AET','PEN'];
+  const LIVE = ['1H','HT','2H','ET','BT','P','LIVE'];
+  return rows.map(r=>{
+    const comp = r.league?.name || '';
+    const st = FINISHED.includes(r.status_short) ? 'finished'
+             : LIVE.includes(r.status_short) ? 'live' : 'upcoming';
+    return {
+      comp: comp.toUpperCase(),
+      compTier: COMP_TIER[comp] || 8,
+      flag: r.league?.flag || '⚽',
+      time: new Date(r.kickoff_utc).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
+      home: r.home_team?.name || '—',
+      away: r.away_team?.name || '—',
+      status: st,
+      minute: r.elapsed ? String(r.elapsed) : undefined,
+      score: (r.home_goals!=null && r.away_goals!=null) ? `${r.home_goals} – ${r.away_goals}` : undefined,
+      teams: [slugFor(r.home_team?.name), slugFor(r.away_team?.name)]
+    };
+  });
+}
+
+function slugFor(n){
+  return (n||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+}
+
 function renderMatchDay() {
   const el = document.getElementById('matchday-content');
   if (!el) return;
+
+  // Kick off the Supabase load once; re-render when it lands.
+  if (LIVE_MATCHES === null) {
+    LIVE_MATCHES = [];
+    loadFixtures()
+      .then(m => { LIVE_MATCHES = m; renderMatchDay(); })
+      .catch(e => { console.warn('fixtures: using static fallback —', e.message); });
+  }
 
   // Get user's clubs
   const mainClub = JSON.parse(localStorage.getItem('sm_main_club') || 'null');
@@ -2152,8 +2223,9 @@ function renderMatchDay() {
   if (mainClub) myClubs.add(mainClub.id);
 
   // Split into my matches and other matches
-  const myMatches = ALL_MATCHES.filter(m => m.teams && m.teams.some(t => myClubs.has(t)));
-  const otherMatches = ALL_MATCHES.filter(m => !m.teams || !m.teams.some(t => myClubs.has(t)));
+  const SOURCE = (LIVE_MATCHES && LIVE_MATCHES.length) ? LIVE_MATCHES : ALL_MATCHES;
+  const myMatches = SOURCE.filter(m => m.teams && m.teams.some(t => myClubs.has(t)));
+  const otherMatches = SOURCE.filter(m => !m.teams || !m.teams.some(t => myClubs.has(t)));
 
   // Sort others by: live first, then tier, then time
   const statusOrder = {live: 0, upcoming: 1, finished: 2};
