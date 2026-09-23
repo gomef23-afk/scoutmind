@@ -17,6 +17,7 @@
 | **R2** | `api/_lib/` — API client (quota-aware, logs exact request URLs) and dependency-free PostgREST helper | done |
 | **R3** | Teams, venues and coaches ingested — **146 teams across 7 leagues** | live |
 | **R4** | Fixtures, standings and live scores. Standings **146 rows**; Argentina's multi-group tables collapse correctly. Matches page reads Supabase with a static fallback | live |
+| **R5** | `/api/cron/fixture-stats` — all 18 stat types per fixture, aggregated into `team_season_stats`. Migration `004`. Self-limiting batches serve backfill and steady state from one job | live |
 
 ### Infrastructure
 
@@ -38,17 +39,57 @@
 
 | # | Work | Notes |
 |---|---|---|
-| **R5** | Fixture stats + team season stats | Aggregate `/fixtures/statistics` into `team_season_stats`. Unlocks 8 of 12 weakness metrics |
-| **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg` |
+| **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg`/`duels_won_pct` — the last three nulls in `team_season_stats` |
 | **R7** | League averages | Recompute `league_averages` from real data — the weakness thresholds become real |
 | **R8** | RSS news | GE, ESPN Brasil, BBC, Sky → `news_items`, club-tagged via `team_aliases` |
-| **R9** | Front end on real data | Scout Mode, SM Weekly and Transfer Intelligence read Supabase. The Matches slice is already done |
+| **R9** | Front end on real data | Scout Mode, SM Weekly and Transfer Intelligence read Supabase. The Matches slice is already done. **Three engine decisions are queued here — see below** |
 | **B3** | Delete `news.html` | Fold into the Home feed as a filter. Depends on R8 + R9; port the 2 missing Hot Rumors and the Fit Index labels first |
 | **B4** | i18n | `public/i18n.js` with en / pt-BR / es. Split: B4a infrastructure + extraction, B4b translation. ~250-400 strings |
 | **F** | Mobile | Invert the remaining desktop-first CSS (the feed grid still does not collapse at 375px), then PWA manifest + service worker |
 | **C** | Social layer | Posts, reactions, comments, follows, notifications, feed algorithm — the actual social network |
 
 R10 (delete `leagues_data.js` / `players_data.js`) follows R9.
+
+### Weakness-engine decisions queued for R9
+
+**The plan previously said R5 unlocks "8 of 12" metrics. That is right for the
+displayed stat cards and wrong for the engine.** `detectWeaknesses()`
+(`index.html:1260`) builds `st` with 12 metrics but `checks[]` references only
+**10** — `yel` and `fouls` are displayed and drive no weakness at all. So R5
+unlocks **8 of 12 displayed**, but only **6 of 10 detection inputs**.
+
+| Metric | In `checks[]` | After R5 | Source |
+|---|---|---|---|
+| `gc` `gs` `pa` `pos` `sh` `sot` | ✅ | ✅ real | R5 |
+| `tk` `int` | ✅ | ⏳ R6 | player `tackles.total` / `.interceptions` |
+| `aer` | ✅ | ❌ | no aerial split → `duels_won_pct` in R6 |
+| `cl` | ✅ | ❌ **permanently** | clearances absent from the API entirely |
+| `yel` `fouls` | ❌ display only | ✅ real | R5 |
+
+1. **"GK weakness" and "Defensive errors" both run on `gc` alone after R5, so
+   they always fire together.** They were separable only because "Defensive
+   errors" also read `cl`, which no longer exists. **Move GK weakness onto
+   `goals_prevented`** (real shot-stopping vs xG) in R9 so the two checks
+   measure different things again.
+2. **"Poor finishing" should compare `gs` against `xg_pg`**, not `gs` against
+   the league average. Underperforming your own xG is the actual signal;
+   scoring less than average may just mean fewer chances.
+3. **"Aerial vulnerability" → "Duel vulnerability"** on `duels_won_pct` once R6
+   lands, and `cl` drops out of "Defensive errors" for good.
+
+### Argentina: both tournaments are in the season
+
+Liga Profesional splits into Apertura and Clausura within one calendar season.
+Our `fixtures` rows carry rounds labelled `Clausura - 9`, and `standings.played`
+reported ~13.4 average against 201 season-to-date fixtures — consistent with
+both tournaments counting. **R5 aggregates all of them into one
+`team_season_stats` row per team per season.** That is the right default for a
+weakness engine, which wants the largest honest sample.
+
+**R9 decision:** whether Scout Mode should show Apertura and Clausura form
+separately for Argentine clubs, and whether the league-average baselines in R7
+should be split per tournament. Splitting would need a `tournament` dimension on
+`team_season_stats` and `league_averages` — deferred until someone asks for it.
 
 ### Launch checklist — non-code
 *Carried over from context doc Section 16, which has been deleted.*

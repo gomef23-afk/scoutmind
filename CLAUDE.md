@@ -10,6 +10,8 @@ A free football social network. All subscription tiers (Scout Free / Scout Pro /
 ## Stack
 Vanilla HTML/CSS/JS in `public/`. No framework, no build step. Hosted on Vercel, auto-deploys from `main`. Supabase for auth + data. Stripe exists but is dormant — do not wire anything to it.
 
+Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Supabase over PostgREST with `fetch`). Football data comes from API-Football v3 Pro via `/api/cron/*`, scheduled by cron-job.org with a `CRON_SECRET` bearer token. The browser never sees the service key.
+
 ## Files
 - `public/app.html` — main app (Scout Mode, Feed, Profile)
 - `public/community.html` — team communities (polls, analyst insights, groups, wishlist)
@@ -31,6 +33,10 @@ Vanilla HTML/CSS/JS in `public/`. No framework, no build step. Hosted on Vercel,
 10. No social data in localStorage. Only session/UI preferences. Anything other users should see goes in Supabase.
 11. Mobile-first CSS: base styles for ~375px, `@media (min-width: 900px)` for desktop.
 12. All feed items render through one `renderFeedItem(item)` with a `type` switch.
+13. **Ingest jobs are additive only.** Nothing in `api/` may DELETE — `_lib/supabase.js` exports no delete on purpose. A job that deleted outside its window would wipe backfilled data on the next scheduled run.
+14. **Null is not zero.** In API-Football responses, counting stats (shots, fouls, cards, saves) use `null` for "none happened" → coalesce to 0. `expected_goals` and `goals_prevented` use `null` for "not available" → keep null and exclude from averages. Averaging a null in as zero is the most likely source of wrong-looking-but-plausible data.
+15. **Every average needs its denominator stored.** `team_season_stats` has three: `matches`, `fixtures_sampled`, `xg_sample`. Never divide by the wrong one, and never add an average without a sample column beside it.
+16. Cron endpoints must finish in **under ~25s** — cron-job.org stops waiting at 30s. Bound work by wall clock, not only by row count.
 
 ## Workflow
 - Before editing, grep and list every hit you plan to change. Wait for approval on anything that removes or restructures more than one section.

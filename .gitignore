@@ -1,0 +1,22 @@
+# Local diagnostic scratch — never commit these.
+serve.ps1
+divcheck.ps1
+dedupe-test.ps1
+tmp-probe*/
+
+# Probe output written outside the committed fixtures directory
+probe-out*/
+
+# Environment. The real values live in Vercel; nothing secret belongs in the repo.
+.env
+.env.*
+!.env.example
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+node_modules/

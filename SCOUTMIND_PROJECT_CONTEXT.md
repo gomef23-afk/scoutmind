@@ -58,8 +58,13 @@ The core value proposition: "What position does your team need? Here are the 10 
 | `/api/cron/fixtures` | daily 05:05 | 7 (+1 per empty league) |
 | `/api/cron/standings` | daily 06:00 | 7 |
 | `/api/cron/live` | every 30 min | 1 |
+| `/api/cron/fixture-stats` | every 15 min | ≤40 (0 when the queue is empty) |
 | `/api/cron/teams` | manual | 7, or ~150 with `?coaches=1` |
 | `/api/cron/health` | manual | 0 |
+
+`fixture-stats` is self-limiting: max 40 fixtures **or** 20 s of wall clock,
+whichever comes first, so it always returns inside cron-job.org's 30 s timeout.
+It serves both the backfill and steady state — no manual looping.
 
 ---
 
@@ -199,8 +204,8 @@ Written only by the cron jobs. All public-read.
 | `team_aliases` | Nicknames for RSS club tagging ("Mengão", "Man Utd", "Coxa") | seeded in `003` |
 | `standings` | Rank, points, form, `group_label` | `/api/cron/standings` ✅ |
 | `fixtures` | Kickoff, status, elapsed, score, venue | `/api/cron/fixtures` ✅ |
-| `fixture_stats` | All 18 `/fixtures/statistics` types incl. `expected_goals`, `goals_prevented` | R5 |
-| `team_season_stats` | The weakness engine's inputs — `gc gs yel pa pos_pct fouls sh sot tk int duels_won_pct xg_pg xga_pg` | R5 + R6 |
+| `fixture_stats` | All 18 `/fixtures/statistics` types incl. `expected_goals`, `goals_prevented` | `/api/cron/fixture-stats` ✅ |
+| `team_season_stats` | The weakness engine's inputs — `gc gs yel pa pos_pct fouls sh sot tk int duels_won_pct xg_pg xga_pg` | R5 ✅ (`tk`/`int`/`duels` await R6) |
 | `league_averages` | Per-league baselines the weakness thresholds compare against | R7 |
 | `players` | Name, age, nationality, height, photo | R6 |
 | `player_season_stats` | Apps, minutes, rating, goals, passes, tackles, duels, cards | R6 |
@@ -214,6 +219,18 @@ Player **market value** (so the budget filter and currency switcher are gone),
 `subpos` (only Goalkeeper/Defender/Midfielder/Attacker), **clearances**, and the
 **aerial-duel split** — "Aerial vulnerability" becomes **"Duel vulnerability"**
 on `duels_won_pct`. `passes.accuracy` is null for ~95% of players.
+
+### The three denominators in `team_season_stats`
+Getting these wrong produces plausible-looking nonsense, so they are explicit:
+
+| Column | Counts | Denominator for |
+|---|---|---|
+| `matches` | games played (from `fixtures`) | `gs`, `gc` |
+| `fixtures_sampled` | games we hold stats for | `pa`, `pos_pct`, `sh_pg`, `sot_pg`, `fouls_pg`, `yel_pg` |
+| `xg_sample` | games with non-null xG **on both sides** | `xg_pg`, `xga_pg` |
+
+`matches >= fixtures_sampled >= xg_sample`. When they diverge the averages are
+still right; the sample columns are what make that visible.
 
 ### Ingest gotchas worth remembering
 - Counting stats use `null` for zero — coalesce or every per-90 breaks

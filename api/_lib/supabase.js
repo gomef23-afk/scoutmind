@@ -131,8 +131,25 @@ export async function insertReturning(table, row) {
 export function activeLeagues() {
   return select(
     'leagues',
-    'select=id,api_league_id,slug,name,current_season&active=is.true&order=id'
+    'select=id,api_league_id,slug,name,current_season,stats_coverage&active=is.true&order=id'
   );
+}
+
+/**
+ * Exact row count without transferring the rows.
+ * PostgREST returns it in the Content-Range header when Prefer: count=exact.
+ */
+export async function count(table, filter = '') {
+  const res = await fetch(`${URL_()}/rest/v1/${table}?select=id&limit=1${filter ? `&${filter}` : ''}`, {
+    headers: headers({ Prefer: 'count=exact' }),
+  });
+  if (!res.ok) {
+    throw new Error(`Supabase count ${table} ${res.status}: ${await res.text()}`);
+  }
+  // "0-0/1234" or "*/1234"
+  const range = res.headers.get('content-range') || '';
+  const total = Number(range.split('/')[1]);
+  return Number.isFinite(total) ? total : 0;
 }
 
 /** Map of API-Football team id -> our teams.id, for the given leagues. */
