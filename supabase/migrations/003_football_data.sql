@@ -92,6 +92,10 @@ create table if not exists public.standings (
   goals_against   integer,
   goal_diff       integer,
   form            text,
+  -- Which standings table this rank came from ("Serie A", "Zona A",
+  -- "Tabla Anual"...). Leagues that publish several tables are collapsed to one
+  -- row per team by the ingest, keeping the best rank; this says which.
+  group_label     text,
   updated_at      timestamptz not null default now(),
   primary key (league_id, season, team_id)
 );
@@ -405,6 +409,17 @@ alter table public.team_season_stats
   add column if not exists xg_pg            numeric(6,3),
   add column if not exists xga_pg           numeric(6,3),
   add column if not exists goals_prevented  numeric(6,3);
+
+-- 2026-09-23 - standings groups. The first live run of /api/cron/standings died
+-- with Postgres 21000, "ON CONFLICT DO UPDATE command cannot affect row a
+-- second time". `league.standings` is an array of GROUPS: Brazil returns one,
+-- but Argentina returns zone tables PLUS aggregate tables (tabla anual,
+-- promedios) and the same team appears in several of them, so the flattened
+-- batch contained a team twice and collided on (league_id, season, team_id).
+-- The job now keeps the best rank per team; this records which table that rank
+-- came from, so an Argentine "rank 3" is interpretable.
+alter table public.standings
+  add column if not exists group_label text;
 
 commit;
 

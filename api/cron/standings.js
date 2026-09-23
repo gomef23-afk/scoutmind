@@ -15,6 +15,7 @@ export default withCron('standings', async () => {
 
   let rows = 0;
   const skipped = [];
+  const byLeague = [];
 
   for (const lg of leagues) {
     const json = await api.get('standings', {
@@ -22,37 +23,77 @@ export default withCron('standings', async () => {
       season: lg.current_season,
     });
 
-    // response[0].league.standings is an ARRAY OF GROUPS — one group for a
-    // straight league table, several for group stages (Argentina uses these).
+    // response[0].league.standings is an ARRAY OF GROUPS. Brazil returns one
+    // group ("Serie A", 20 rows, no repeats). Argentina returns several — zone
+    // tables PLUS aggregate tables (tabla anual, promedios) — and the SAME team
+    // appears in more than one of them.
+    //
+    // Flattening those blindly puts a team in the batch twice, and Postgres
+    // rejects the whole upsert with 21000 "ON CONFLICT DO UPDATE command cannot
+    // affect row a second time". The primary key is (league_id, season,
+    // team_id), so we must collapse to one row per team BEFORE writing:
+    // keep the best (lowest) rank and remember which table it came from.
     const groups = json.response?.[0]?.league?.standings || [];
-    const flat = groups.flat();
 
-    const standingRows = [];
-    for (const s of flat) {
-      const teamId = teams.get(s.team?.id);
-      if (!teamId) {
-        skipped.push(s.team?.id);
-        continue;
+    const bestByTeam = new Map();   // api_team_id -> row
+    let seen = 0;
+    let collapsed = 0;
+
+    for (const group of groups) {
+      for (const s of group || []) {
+        seen++;
+        const apiTeamId = s.team?.id;
+        const teamId = teams.get(apiTeamId);
+        if (!teamId) {
+          skipped.push(apiTeamId);
+          continue;
+        }
+
+        const candidate = {
+          league_id: lg.id,
+          season: lg.current_season,
+          team_id: teamId,
+          rank: s.rank ?? null,
+          points: s.points ?? null,
+          played: s.all?.played ?? null,
+          win: s.all?.win ?? null,
+          draw: s.all?.draw ?? null,
+          lose: s.all?.lose ?? null,
+          goals_for: s.all?.goals?.for ?? null,
+          goals_against: s.all?.goals?.against ?? null,
+          goal_diff: s.goalsDiff ?? null,
+          form: s.form || null,
+          group_label: s.group || null,
+          updated_at: new Date().toISOString(),
+        };
+
+        const prev = bestByTeam.get(apiTeamId);
+        if (!prev) {
+          bestByTeam.set(apiTeamId, candidate);
+          continue;
+        }
+        collapsed++;
+        // Lower rank wins; a null rank never beats a real one.
+        const prevRank = prev.rank ?? Number.MAX_SAFE_INTEGER;
+        const thisRank = candidate.rank ?? Number.MAX_SAFE_INTEGER;
+        if (thisRank < prevRank) bestByTeam.set(apiTeamId, candidate);
       }
-      standingRows.push({
-        league_id: lg.id,
-        season: lg.current_season,
-        team_id: teamId,
-        rank: s.rank ?? null,
-        points: s.points ?? null,
-        played: s.all?.played ?? null,
-        win: s.all?.win ?? null,
-        draw: s.all?.draw ?? null,
-        lose: s.all?.lose ?? null,
-        goals_for: s.all?.goals?.for ?? null,
-        goals_against: s.all?.goals?.against ?? null,
-        goal_diff: s.goalsDiff ?? null,
-        form: s.form || null,
-        updated_at: new Date().toISOString(),
-      });
     }
 
-    rows += await upsert('standings', standingRows, 'league_id,season,team_id');
+    const standingRows = [...bestByTeam.values()];
+    const written = await upsert('standings', standingRows, 'league_id,season,team_id');
+    rows += written;
+
+    const diag = {
+      league: lg.slug,
+      groups: groups.length,
+      rows_seen: seen,
+      unique_teams: standingRows.length,
+      duplicates_collapsed: collapsed,
+      written,
+    };
+    byLeague.push(diag);
+    console.log('[standings]', JSON.stringify(diag));
   }
 
   const s = api.stats();
@@ -61,5 +102,6 @@ export default withCron('standings', async () => {
     requests_used: s.used,
     quota_remaining: s.remaining,
     skipped_unknown_teams: skipped.length,
+    by_league: byLeague,
   };
 });
