@@ -26,45 +26,60 @@ The core value proposition: "What position does your team need? Here are the 10 
 ---
 
 ## 3. TECH STACK
+*Updated September 23, 2026.*
 
-- **Frontend:** Pure vanilla HTML/CSS/JavaScript — NO framework, no React, no Vue
+- **Frontend:** Pure vanilla HTML/CSS/JavaScript — NO framework, no build step
+- **Backend:** Vercel serverless functions in `api/` (ESM, zero npm dependencies — they talk to Supabase over PostgREST with `fetch`)
 - **Hosting:** Vercel (auto-deploys from GitHub on push to main)
 - **Database/Auth:** Supabase
-- **Payments:** Stripe (test mode as of May 2026)
-- **Domain:** scoutmind.app (purchased, not yet connected to Vercel — live at scoutmind-one.vercel.app)
-- **GitHub:** github.com/gomef23-afk/scoutmind (public/ folder)
-- **Live URL:** https://scoutmind-one.vercel.app
+- **Football data:** API-Football v3 — **Pro plan**, direct host `v3.football.api-sports.io` (NOT RapidAPI)
+- **Scheduling:** cron-job.org (Vercel Hobby allows only 2 daily crons)
+- **Payments:** Stripe — **dormant**. All tiers removed in Phase A; nothing is wired to it
+- **Domain:** scoutmind.app
+- **GitHub:** github.com/gomef23-afk/scoutmind
 
 ### Supabase Details
 - **Project URL:** https://kdhbpzooyjxcglbxbuya.supabase.co
-- **Anon Key:** eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw
-- **Site URL:** https://scoutmind-one.vercel.app (updated from localhost:3000)
-- **Redirect URLs:** https://scoutmind-one.vercel.app
+- **Anon key:** used by the browser only, against public-read tables
+- **Service key:** new format (`sb_secret_…`), Vercel env only — **never** in the client
+- **Migrations applied:** `001_plan_to_role`, `002_public_read`, `003_football_data`
 
-### Stripe Details (Test Mode)
-- **Account:** gomef23@wfu.edu
-- **Product:** Scout Pro — $6.99/mo recurring
-- **Price ID:** price_1TTPbD37p1XoJuouR0HQWLbu
-- **Publishable Key:** pk_test_51TTBnu37p1XoJuouXfgMHV3TDdlGxo4LPLgkWZ8HnSxhe8Vm6FfjsOIo0fDdObsHn6LepNWdo60ULKhk161ESIuS00fF0Fv6gu
-- **Payment Link (test):** https://buy.stripe.com/test_5kQ4gsbY9eW32IQ6rqeME00
-- **Success redirect:** https://scoutmind-one.vercel.app/app.html?upgraded=1
-- **Status:** Test mode only — NOT live. Will go live after APIs, MEI, and legal are sorted.
+### API-Football
+- Pro: **7,500 req/day, 300/min**. Steady state ~330/day (~4%)
+- All seven leagues active: Série A 🇧🇷 (71), Premier League (39), La Liga (140), Bundesliga (78), Serie A 🇮🇹 (135), Ligue 1 (61), Liga Profesional 🇦🇷 (128) — all `current_season = 2026`
+- The free tier is unusable here: seasons 2022-2024 only, and it rejects the `next`/`last` fixture parameters
+
+### Vercel environment variables
+`API_FOOTBALL_KEY` · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `CRON_SECRET`
+
+### Cron endpoints (cron-job.org, `Authorization: Bearer $CRON_SECRET`)
+| Endpoint | Schedule | Cost |
+|---|---|---|
+| `/api/cron/fixtures` | daily 05:05 | 7 (+1 per empty league) |
+| `/api/cron/standings` | daily 06:00 | 7 |
+| `/api/cron/live` | every 30 min | 1 |
+| `/api/cron/teams` | manual | 7, or ~150 with `?coaches=1` |
+| `/api/cron/health` | manual | 0 |
 
 ---
 
 ## 4. FILES IN THE PROJECT
 
-All files live in the `public/` folder on GitHub:
-
 | File | Purpose | Status |
 |------|---------|--------|
-| `app.html` | Main app — Scout Mode, Feed, Profile | ✅ Fully built |
-| `community.html` | Communities page | ✅ Fully built |
-| `auth.html` | Login / Signup | ⚠️ Needs plan selection at signup |
-| `index.html` | Landing page | ⚠️ Needs pricing update |
-| `news.html` | Transfer news standalone page | ⚠️ Needs nav update + pricing |
-| `leagues_data.js` | All team/league data | ✅ Working |
-| `players_data.js` | Player database | ✅ Working |
+| `public/index.html` | **The app** — Home feed, Clubs, Scout Mode, Matches, Profile | ✅ Live (was `app.html`) |
+| `public/app.html` | Redirect stub to `/`, preserves query + hash | ✅ Live |
+| `public/about.html` | Marketing page — hero, how it works, for who, FAQ, for clubs | ✅ Live |
+| `public/community.html` | Team communities — polls, analyst insights, groups, wishlist | ✅ Live |
+| `public/auth.html` | Login / Signup | ✅ Live |
+| `public/news.html` | Transfer news | ⚠️ Deleted in B3 → `/?filter=transfers` |
+| `public/leagues_data.js` | Static team/league data | ⚠️ Replaced in R9, deleted in R10 |
+| `public/players_data.js` | Static player database | ⚠️ Replaced in R9, deleted in R10 |
+| `api/_lib/*.js` | API-Football client, PostgREST helper, cron scaffolding | ✅ Live |
+| `api/cron/*.js` | teams · fixtures · standings · live · health | ✅ Live |
+| `supabase/migrations/*.sql` | 001, 002, 003 | ✅ Applied |
+| `scripts/probe-api-football.ps1` | R0 schema probe (PowerShell 5.1-safe, pure ASCII) | ✅ |
+| `tests/fixtures/api-football/*.json` | Real API payloads, committed as fixtures | ✅ |
 
 ---
 
@@ -89,16 +104,35 @@ All files live in the `public/` folder on GitHub:
 ---
 
 ## 6. SUPABASE DATABASE TABLES
+*Updated September 23, 2026. Migrations 001-003 applied.*
 
-### `profiles` (existing)
+**Access model, applied to every table:** RLS on; `anon` + `authenticated` may
+SELECT; writes go through the service key, which bypasses RLS and lives only in
+Vercel env. Exceptions are called out below.
+
+### `profiles` (existing — repurposed by `001`)
 ```sql
 id UUID (references auth.users)
 name TEXT
 email TEXT
-plan TEXT DEFAULT 'free'  -- 'free', 'pro', 'club', 'clubpro', 'analyst'
+plan TEXT DEFAULT 'fan'   -- 'fan' | 'analyst' | 'admin'  (was free/pro/club/clubpro)
 credential TEXT           -- e.g. 'ESPN Brasil', 'Licensed Scout' (for analysts)
 created_at TIMESTAMP
 ```
+⚠️ **`profiles` is NOT publicly readable** — it holds email addresses. A signed-in
+user can read and update only their own row. Public/social reads go through:
+
+### `public_profiles` (VIEW, created by `002`)
+```sql
+id, name, plan, credential, created_at   -- never email
+```
+**Client rule:** another user's profile data → `public_profiles`; the signed-in
+user's own row → `profiles`.
+
+### `on_auth_user_created` (TRIGGER, created by `002`)
+Creates the `profiles` row server-side on signup. Required: email confirmation
+means `auth.signUp()` returns no session, so a client-side insert would run as
+`anon` and be rejected by RLS.
 
 ### `groups` (created May 2026)
 ```sql
@@ -146,32 +180,63 @@ status TEXT DEFAULT 'pending'
 created_at TIMESTAMPTZ
 ```
 
+⚠️ `badge_applications` has **no SELECT policy at all** — applications hold an
+email and a bio. Only the dashboard (service role) reads them. Insert is
+`authenticated` only, so every application is tied to an account.
+
 **Seeded groups:** Botafogo (3 groups), Flamengo (3), Palmeiras (2)
 
 ---
 
-## 7. PRICING (DECIDED)
+## 6b. FOOTBALL DATA TABLES (migration `003`, Phase R)
 
-| Tier | Audience | Price | Key Features |
-|------|----------|-------|-------------|
-| Scout Free | Everyone | Free | Top 10 player recommendations, weakness analysis, transfer news, read/post in groups, SM Weekly (2 leagues: Série A + Premier League) |
-| Scout Pro | Fans, serious followers | **$6.99/mo** | Full player database, unlimited recs, PDF export, all 7 SM Weekly leagues, create polls, create groups |
-| Club Basic | Semi-pro clubs, agents | **$49/mo** | Everything Pro + recruitment shortlist, player comparison tool, branded PDF (club logo), 3 account users |
-| Club Pro | Pro clubs, full scouts | **$149/mo** | Everything Club Basic + 10 users, API access (contact us), historical tracking (post-launch) |
-| Analyst | Journalists/scouts | **Free** (apply only) | Post analyst insights with verified credential badge |
+Written only by the cron jobs. All public-read.
 
-**Pricing decisions made:**
-- $6.99 not $9.99 — psychological threshold, Brazilian student market
-- Free users CAN post in group chats — drives engagement
-- Only poll creation = Pro gate
-- Analyst badge = free, manually approved by Felipe in Supabase
-- Historical tracking = post-launch (needs paid API)
-- API access = "contact us" only, not self-serve
-- Club Basic vs Pro: distinguished by user seats (3 vs 10), not more of same features
+| Table | Holds | Populated by |
+|---|---|---|
+| `leagues` | 7 leagues, `api_league_id`, `current_season` (per league), `active` | seeded in `003` |
+| `teams` | 146 teams — venue, founded, logo, coach | `/api/cron/teams` ✅ |
+| `team_aliases` | Nicknames for RSS club tagging ("Mengão", "Man Utd", "Coxa") | seeded in `003` |
+| `standings` | Rank, points, form, `group_label` | `/api/cron/standings` ✅ |
+| `fixtures` | Kickoff, status, elapsed, score, venue | `/api/cron/fixtures` ✅ |
+| `fixture_stats` | All 18 `/fixtures/statistics` types incl. `expected_goals`, `goals_prevented` | R5 |
+| `team_season_stats` | The weakness engine's inputs — `gc gs yel pa pos_pct fouls sh sot tk int duels_won_pct xg_pg xga_pg` | R5 + R6 |
+| `league_averages` | Per-league baselines the weakness thresholds compare against | R7 |
+| `players` | Name, age, nationality, height, photo | R6 |
+| `player_season_stats` | Apps, minutes, rating, goals, passes, tackles, duels, cards | R6 |
+| `player_season_rates` | **VIEW** — per-appearance rates computed, never stored | derived |
+| `news_items` | RSS headline + summary + link only (never full article text) | R8 |
+| `news_item_teams` | Article → club tagging | R8 |
+| `ingest_runs` | Job telemetry + resumable cursor. **No read policy** — telemetry, not content | all jobs |
+
+### Data the API does not provide — dropped
+Player **market value** (so the budget filter and currency switcher are gone),
+`subpos` (only Goalkeeper/Defender/Midfielder/Attacker), **clearances**, and the
+**aerial-duel split** — "Aerial vulnerability" becomes **"Duel vulnerability"**
+on `duels_won_pct`. `passes.accuracy` is null for ~95% of players.
+
+### Ingest gotchas worth remembering
+- Counting stats use `null` for zero — coalesce or every per-90 breaks
+- `Ball Possession` and `Passes %` are strings (`"56%"`); `rating` is a string
+- `height` arrives as both `"178"` and `"188 cm"` in one response
+- `teams/statistics` cards include an **empty-string key** (`""`) for unknown minute
+- `/coachs` returns coaching **history**, not just the incumbent
+- `league.standings` is an array of **groups**; Argentina repeats teams across them
 
 ---
 
-## 8. APP ARCHITECTURE (app.html)
+## 7. *(deleted — pricing)*
+
+ScoutMind is free. There are no tiers. Removed in Phase A, September 2026; see
+the Status section of SCOUTMIND_SOCIAL_PIVOT_PLAN.
+
+*Section numbers below are intentionally unchanged: CLAUDE.md and the pivot plan
+reference this document by section number, so the gaps stay rather than
+renumbering everything and breaking those links.*
+
+---
+
+## 8. APP ARCHITECTURE (`index.html`)
 
 ### Pages (CSS class `.page`, toggled with `.active`)
 - `#page-scout` — Scout Mode (default on load)
@@ -186,8 +251,8 @@ Scout Mode | Feed | Communities (→ community.html)
 
 - **Transfer news:** Transfer Intelligence format, filters (All/Transfers/Rumors/Contracts/Financial/Brazil/Europe), Hot Rumors sidebar, Fit Score Index sidebar
 - **For you:** Posts from clubs/analysts you follow (ScoutMind AI + verified analyst posts)
-- **SM Weekly:** ScoutMind Weekly Report — 7 leagues, free users see Série A + Premier League, other 5 locked behind blur overlay ("Scout Pro — $6.99/mo")
-- **Match day:** User's clubs pinned top with green border + analysis, then all matches grouped by competition tier (UCL > PL > La Liga > Bundesliga > Serie A IT/Ligue 1 > Série A > etc), live first
+- **SM Weekly:** ScoutMind Weekly Report — all 7 leagues, ungated (Phase A removed the blur overlay)
+- **Match day:** promoted out of the feed into its own `#page-matches` in B2. User's clubs pinned top, then all matches grouped by competition tier, live first. Reads `fixtures` from Supabase with a static fallback
 
 ### Feed Sidebar (sticky right column)
 Hot Rumors % | Fit Score Index | Today's Matches | My Clubs
@@ -249,7 +314,8 @@ Each report has 4 sections:
 3. **Most Needed Position** — demand level + 2 players with fit scores
 4. **Deep Dive** — one team, coach, analysis paragraph, 2 recommended signings with fit %
 
-**Gating:** Free = Série A + Premier League in full. Other 5 have blur overlay + "Upgrade to Scout Pro — $6.99/mo"
+**Gating:** none. All 7 leagues are readable by everyone, including signed-out
+guests — the blur overlay and upgrade CTA were removed in Phase A.
 
 **User's main league always sorts first**
 
@@ -269,28 +335,29 @@ sm_comm_{teamId}     -- community data (polls, wishlist) per team
 
 ---
 
-## 12. PLAN DETECTION IN CODE
+## 12. ROLE DETECTION IN CODE
+*Rewritten September 2026. `isPro` / `isFree` / `isClub` no longer exist anywhere.*
 
 ```javascript
 const cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
-const isPro = cu && ['pro', 'club', 'clubpro', 'analyst'].includes(cu.plan);
-const isAnalyst = cu && cu.plan === 'analyst';
-const isFree = !isPro;
+const isGuest   = !cu;                          // drives the sign-in sheet
+const isAnalyst = cu && cu.plan === 'analyst';  // analyst write box
 ```
 
-**To approve a user manually:** Supabase → Table Editor → profiles → find by email → set `plan = 'pro'` (or 'analyst') + fill `credential` field for analysts.
+**Guest mode:** there is no auth guard on any page. Guests read everything.
+Every write action calls `requireAuth(message)` at function entry, which returns
+`false` and opens the sign-in sheet. Gating at function entry, not on the
+button, so programmatic callers are covered too.
+
+**To approve an analyst:** Supabase → Table Editor → `profiles` → find by email
+→ set `plan = 'analyst'` + fill `credential`.
 
 ---
 
-## 13. STRIPE FLOW (CURRENT — MANUAL)
+## 13. *(deleted — Stripe flow)*
 
-1. User clicks any "Upgrade" button → opens `https://buy.stripe.com/test_5kQ4gsbY9eW32IQ6rqeME00` in new tab
-2. User pays with test card `4242 4242 4242 4242` (test mode)
-3. Stripe redirects to `https://scoutmind-one.vercel.app/app.html?upgraded=1`
-4. Green banner appears: "Welcome to Scout Pro! Your account will be upgraded shortly."
-5. **Felipe manually** goes to Supabase → profiles → finds user by email → changes `plan` to `pro`
-
-**Future:** Stripe webhook to automate step 5 — not yet built.
+Nothing is charged. The Stripe account exists but is dormant and nothing in the
+codebase references it.
 
 ---
 
@@ -325,30 +392,11 @@ const isFree = !isPro;
 
 ---
 
-## 16. PENDING / NOT YET BUILT ⚠️
+## 16. *(deleted — pending list)*
 
-### High Priority (next sessions)
-- [ ] **index.html pricing update** — still shows old prices ($9.99, Top 3 players), needs new tier structure
-- [ ] **auth.html plan selection** — show Scout Free vs Scout Pro choice at signup so users can go Pro immediately
-- [ ] **Profile "Edit name" button** — exists in UI but not wired up
-- [ ] **news.html** — still has old nav structure and old $9.99 pricing
-
-### Before Launch
-- [ ] **MEI registration** — gov.br/mei, CNAE 6201-5/00
-- [ ] **Legal/patent review** — lawyers reviewing
-- [ ] **Real stats API** — API-Football, FBref, WhoScored (need budget)
-- [ ] **Stripe webhook** — automate plan upgrade after payment
-- [ ] **Connect scoutmind.app domain** to Vercel
-- [ ] **Stripe live mode** — after MEI + legal
-
-### Post-Launch Features
-- [ ] Historical tracking (needs paid API with historical data)
-- [ ] Real-time match data API
-- [ ] Community groups subscription model
-- [ ] Official club logos
-- [ ] Club Basic / Club Pro tier implementation in UI
-- [ ] Stripe webhook automation
-- [ ] Middle tier around $19.99/mo (for serious fans, freelance scouts) — possible future addition
+The live roadmap and the non-code launch checklist (MEI, legal review, Terms and
+Privacy, account deletion) now live in one place: the **Status** section at the
+top of SCOUTMIND_SOCIAL_PIVOT_PLAN.
 
 ---
 
@@ -363,14 +411,16 @@ const isFree = !isPro;
 1. Build user base first (free users, word of mouth)
 2. Get real analysts posting content (badge system)
 3. Then pitch clubs with "X users, Y analysts active"
-4. Only then introduce Club Basic / Club Pro sales pitch
+4. Only then build a **separate** B2B product for clubs. The old Club Basic /
+   Club Pro tiers are gone and are not coming back for fans — see monetization
+   path 3 in the pivot plan. Nothing consumer-facing is ever charged for.
 
 ### Pitch Targets (drafted emails ready)
 - Sampaio Corrêa
 - Madureira
 
 ### Competitive Positioning
-- vs Wyscout: $150/mo — ScoutMind Club Pro at $149/mo is competitive but ScoutMind has community + fan angle
+- vs Wyscout (~$150/mo): a future B2B tier could undercut it, and ScoutMind has the community + fan angle Wyscout lacks. No price is set; no club product exists yet
 - vs Fan forums: ScoutMind adds real data, analyst insights, AI recommendations
 - vs nothing: Brazilian clubs often have no data infrastructure at all
 
@@ -395,8 +445,8 @@ const isFree = !isPro;
 
 - No real-time data (needs paid API)
 - No historical tracking (needs paid API)
-- No automated Stripe webhook (manual plan upgrade for now)
-- No self-serve API access (Club Pro gets "contact us" only)
+- No payments of any kind — Stripe is dormant and nothing references it
+- No self-serve API access (B2B enquiries go to hello@scoutmind.app)
 - No Google Translate widget (Chrome handles it natively via lang="en")
 - No priority support tier (too complex)
 - No league requests feature (too complex)
@@ -405,14 +455,10 @@ const isFree = !isPro;
 
 ---
 
-## 20. WHAT TO DO IN THE NEXT SESSION
+## 20. *(deleted — next session)*
 
-In order of priority:
-
-1. **index.html** — update pricing section: $6.99/mo Scout Pro, Top 10 free players, add Club Basic ($49) and Club Pro ($149) tiers, update feature lists
-2. **auth.html** — add plan selection at signup (Scout Free vs Scout Pro toggle), wire Scout Pro choice to Stripe payment link
-3. **Profile edit name** — wire up the "Edit name" button in app.html profile page (input field → update localStorage `sm_current_user.name` → update nav display name)
-4. **news.html** — update nav to match other pages, update any $9.99 references to $6.99
+What to do next is tracked in one place: **"Next, in order"** in the Status
+section of SCOUTMIND_SOCIAL_PIVOT_PLAN. As of 23 Sept 2026 that is R5.
 
 ---
 

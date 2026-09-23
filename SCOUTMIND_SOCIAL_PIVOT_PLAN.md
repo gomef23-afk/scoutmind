@@ -1,5 +1,71 @@
 # ScoutMind — Social Pivot Master Plan
-*Created: September 14, 2026. Companion to SCOUTMIND_PROJECT_CONTEXT. This plan supersedes Sections 7, 13, 16 and 20 of the context doc (pricing, Stripe flow, pending list, next session).*
+*Created: September 14, 2026. Last updated September 23, 2026. Companion to SCOUTMIND_PROJECT_CONTEXT — the monetization sections it used to supersede have now been deleted from that document outright.*
+
+---
+
+## STATUS AS OF SEPTEMBER 23, 2026
+
+### Shipped
+
+| Phase | What | State |
+|---|---|---|
+| **A** | All monetization removed — no tiers, gates, Stripe, blur overlays or upgrade CTAs anywhere | live |
+| **B1** | Guest mode (no auth guard; every write opens a sign-in sheet), `about.html`, single entry point — `index.html` **is** the app, `app.html` is a redirect | live |
+| **B2** | Five-tab nav (Home · Clubs · Scout · Matches · Profile), top bar on desktop, fixed bottom bar on mobile, written mobile-first. Match Day promoted to `#page-matches` | live |
+| **R0** | API-Football schema probe; real payloads committed as test fixtures in `tests/fixtures/api-football/` | done |
+| **R1** | Migration `003` — 13 tables, `player_season_rates` view, public-read RLS | applied |
+| **R2** | `api/_lib/` — API client (quota-aware, logs exact request URLs) and dependency-free PostgREST helper | done |
+| **R3** | Teams, venues and coaches ingested — **146 teams across 7 leagues** | live |
+| **R4** | Fixtures, standings and live scores. Standings **146 rows**; Argentina's multi-group tables collapse correctly. Matches page reads Supabase with a static fallback | live |
+
+### Infrastructure
+
+- **API-Football Pro** — direct host `v3.football.api-sports.io`, 7,500 req/day, 300/min. All seven leagues active (`leagues.active`). Steady state is ~330 req/day, about 4% of quota.
+  *The free tier was abandoned: it serves only seasons 2022-2024 and rejects the `next`/`last` fixture parameters.*
+- **cron-job.org** drives `/api/cron/fixtures`, `/api/cron/standings` and `/api/cron/live`, each authenticated with `CRON_SECRET` via an `Authorization: Bearer` header. Vercel's own cron was not used — the Hobby plan allows only 2 jobs at daily granularity. `/api/cron/teams` is run manually.
+- **Supabase migrations 001, 002 and 003 applied.** `003` carries a SCHEMA PATCHES section so re-running it always brings an existing database up to date.
+- **Vercel env:** `API_FOOTBALL_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (new-format `sb_secret_…`), `CRON_SECRET`. The service key never reaches the browser; the client uses the anon key against public-read tables only.
+
+### Known state to carry forward
+
+- The fixtures window is **-8/+21 days**. It has to be that wide: FIFA's September 2026 international window ran 21 Sept - 6 Oct, sixteen days with no club football, during which a narrower window returns nothing. Not a bug — verified the job's request URL is byte-identical to the probe's.
+- **Dropped for good** (API-Football does not provide them): player market value — and with it the budget filter and currency switcher — plus `subpos`, clearances, and aerial-duel split. "Aerial vulnerability" becomes **"Duel vulnerability"** on `duels_won_pct`.
+- **Gained**: `expected_goals` and `goals_prevented` per fixture — better signals for "Poor finishing" and "Goalkeeper weakness" than raw shot counts.
+- `passes.accuracy` is null for ~95% of players. Team-level pass accuracy is fine (from `fixtures/statistics`), but the player profiles that weight `pass_acc` need reweighting in R6.
+- `leagues_data.js` and `players_data.js` are still the live data source for Scout Mode and the weakness engine. They are replaced in R9 and deleted in R10.
+
+### Next, in order
+
+| # | Work | Notes |
+|---|---|---|
+| **R5** | Fixture stats + team season stats | Aggregate `/fixtures/statistics` into `team_season_stats`. Unlocks 8 of 12 weakness metrics |
+| **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg` |
+| **R7** | League averages | Recompute `league_averages` from real data — the weakness thresholds become real |
+| **R8** | RSS news | GE, ESPN Brasil, BBC, Sky → `news_items`, club-tagged via `team_aliases` |
+| **R9** | Front end on real data | Scout Mode, SM Weekly and Transfer Intelligence read Supabase. The Matches slice is already done |
+| **B3** | Delete `news.html` | Fold into the Home feed as a filter. Depends on R8 + R9; port the 2 missing Hot Rumors and the Fit Index labels first |
+| **B4** | i18n | `public/i18n.js` with en / pt-BR / es. Split: B4a infrastructure + extraction, B4b translation. ~250-400 strings |
+| **F** | Mobile | Invert the remaining desktop-first CSS (the feed grid still does not collapse at 375px), then PWA manifest + service worker |
+| **C** | Social layer | Posts, reactions, comments, follows, notifications, feed algorithm — the actual social network |
+
+R10 (delete `leagues_data.js` / `players_data.js`) follows R9.
+
+### Launch checklist — non-code
+*Carried over from context doc Section 16, which has been deleted.*
+
+| Item | State |
+|---|---|
+| **MEI registration** — gov.br/mei, CNAE 6201-5/00 | ⚠️ still open. Needed once any money flows; nothing is charged today |
+| **Legal / patent review** | ⚠️ still open, with the lawyers |
+| **Real stats API** | ✅ done — API-Football Pro |
+| **scoutmind.app connected to Vercel** | ✅ done |
+| **Real-time match data** | ✅ done — `/api/cron/live` |
+| **Official club logos** | ✅ done — `teams.logo_url` from the API, not yet shown in the UI |
+| **Historical tracking** | now possible on Pro; not scheduled |
+| **Terms + Privacy pages** | ⚠️ still `showLegal()` modals on `about.html`; real pages needed before public launch (Phase G) |
+| **Account deletion path** | ⚠️ not built. Required by LGPD |
+| **Profile name changes persist** | ⚠️ `saveName()` writes localStorage only — the change is lost on another device. Needs a `profiles` update (Phase C5) |
+| **Stripe live mode / webhook / Club tiers / middle tier** | ❌ dropped. Fans never pay for social features; Stripe stays dormant |
 
 ---
 
@@ -46,19 +112,23 @@ Every feature below should map to at least one stage. If it doesn't, it's not la
 
 ---
 
-## 3. PHASE A — REMOVE MONETIZATION (Day 1–2)
+## 3. PHASE A — REMOVE MONETIZATION (Day 1–2) ✅ DONE
 
 Everything here is deletion/simplification. Do it first — it unblocks all other work and removes the biggest source of code complexity.
 
 ### Code changes
-- [ ] `app.html`: set `isPro = true` for everyone (or remove the check entirely); delete blur overlays on Scout Mode player list, SM Weekly leagues, PDF export gate
-- [ ] `app.html`: remove all Upgrade buttons, `STRIPE_PRO` constant, `goStripe()`, the `?upgraded=1` welcome banner handler
-- [ ] `community.html`: remove Pro gates on create poll, create group, suggest wishlist player; remove upgrade buttons/`goStripe()`
-- [ ] `index.html`: delete Pricing section entirely; delete "Pricing" nav link; delete pricing FAQ items (free trial, cancel anytime, "Scout Pro subscribers get access…"); replace plan labels on the "For who" cards
-- [ ] `auth.html`: no plan selection needed anymore — signup = name, email, password, club (see Phase D onboarding)
-- [ ] `news.html`: remove $9.99/$6.99 references and upgrade CTAs; fix nav
-- [ ] Supabase `profiles.plan`: keep the column but repurpose → `role` semantics: `'fan'` (default), `'analyst'`, `'admin'`. Stop reading `'pro'/'club'/'clubpro'`
-- [ ] Remove `Club Plan / Scout Pro / Club Pro` labels everywhere in copy
+- [x] `app.html`: set `isPro = true` for everyone (or remove the check entirely); delete blur overlays on Scout Mode player list, SM Weekly leagues, PDF export gate
+- [x] `app.html`: remove all Upgrade buttons, `STRIPE_PRO` constant, `goStripe()`, the `?upgraded=1` welcome banner handler
+- [x] `community.html`: remove Pro gates on create poll, create group, suggest wishlist player; remove upgrade buttons/`goStripe()`
+- [x] `index.html`: delete Pricing section entirely; delete "Pricing" nav link; delete pricing FAQ items (free trial, cancel anytime, "Scout Pro subscribers get access…"); replace plan labels on the "For who" cards
+- [x] `auth.html`: no plan selection needed anymore — signup = name, email, password, club (see Phase D onboarding)
+- [x] `news.html`: removed the auth guard; the paywalled duplicate at `public/public/news.html` was deleted. Full removal is B3
+- [x] Supabase `profiles.plan`: keep the column but repurpose → `role` semantics: `'fan'` (default), `'analyst'`, `'admin'`. Stop reading `'pro'/'club'/'clubpro'` — migration `001`
+- [x] Remove `Club Plan / Scout Pro / Club Pro` labels everywhere in copy
+
+Also removed while here: the unused API-Football proxy at `api/football.js`,
+which had a **RapidAPI key committed in plaintext** on an open CORS proxy. Key
+rotated; the replacement reads `API_FOOTBALL_KEY` from Vercel env.
 
 ### Keep (don't delete)
 - Stripe account — dormant, may be reused later for club/brand products
