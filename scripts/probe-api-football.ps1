@@ -28,6 +28,10 @@ param(
   #   errors: { plan: "Free plans do not have access to this season..." }
   # Pass -Season 2026 once the account is on Pro.
   [int]$Season    = 2024,
+  # Fixture window. Defaults to an April sample; pass -From/-To to probe the
+  # exact window a cron job is using, so the two can be compared directly.
+  [string]$From   = "",
+  [string]$To     = "",
   [string]$OutDir = "tests/fixtures/api-football"
 )
 
@@ -166,10 +170,15 @@ if ($teamId) {
 # from/to, NOT next/last. The free plan rejects the Next and Last parameters
 # outright ("Free plans do not have access to the Next parameter"), and the
 # ingest job uses date ranges anyway, so probe what production actually calls.
-$from = "$Season-04-01"
-$to   = "$Season-04-30"
+$from = if ($From) { $From } else { "$Season-04-01" }
+$to   = if ($To)   { $To }   else { "$Season-04-30" }
 $fx = Invoke-Probe -Name "fixtures_range" -Path "fixtures" `
                    -Params ([ordered]@{ league = $LeagueId; season = $Season; from = $from; to = $to })
+
+# Same window WITHOUT season, mirroring the job's fallback, so we can see
+# whether season is the discriminator or the window itself is empty.
+Invoke-Probe -Name "fixtures_range_noseason" -Path "fixtures" `
+             -Params ([ordered]@{ league = $LeagueId; from = $from; to = $to }) | Out-Null
 
 # Fixture statistics need a FINISHED fixture or they come back empty.
 $fid = $null

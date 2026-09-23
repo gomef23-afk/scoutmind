@@ -1,8 +1,16 @@
 // R4 — fixture schedule + results.
 //
-// One request per active league covering yesterday through +7 days, so the
-// Matches page always has recent results and the next week of kickoffs.
-// Cost: 1 request per active league (2/day on the free tier).
+// One request per active league covering the last 8 days through the next 21,
+// so the Matches page always has recent results AND the next round even when
+// the leagues are idle.
+//
+// The window is deliberately wide because of international breaks: FIFA's
+// September 2026 window ran 21 Sept - 6 Oct, sixteen days with no club
+// football, and a +7 day window returned literally nothing for six of the
+// seven leagues. A ~29 day span always straddles a break.
+//
+// Cost: 1 request per active league (7/day), plus one season-less retry for
+// any league that returns nothing at all.
 
 import { createClient } from '../_lib/apifootball.js';
 import { activeLeagues, teamIdMap, upsert } from '../_lib/supabase.js';
@@ -11,8 +19,10 @@ import { withCron, isoDate } from '../_lib/cron.js';
 export default withCron('fixtures', async ({ req }) => {
   const api = createClient();
   const url = new URL(req.url, 'http://localhost');
-  const back = Number(url.searchParams.get('back') ?? 1);
-  const ahead = Number(url.searchParams.get('ahead') ?? 7);
+  // back=8 is "yesterday minus 7": a full week of results behind yesterday.
+  // Both are overridable per call, e.g. ?back=30&ahead=60 for a backfill.
+  const back = Number(url.searchParams.get('back') ?? 8);
+  const ahead = Number(url.searchParams.get('ahead') ?? 21);
 
   const leagues = await activeLeagues();
   const teams = await teamIdMap(leagues.map((l) => l.id));
@@ -34,6 +44,8 @@ export default withCron('fixtures', async ({ req }) => {
       to,
     };
     let json = await api.get('fixtures', params);
+    const requestUrl = api.lastUrl();
+    let fallbackUrl = null;
     let seasonFallback = false;
 
     // If a league returns nothing for a normal match week, the usual cause is
@@ -48,6 +60,7 @@ export default withCron('fixtures', async ({ req }) => {
           from,
           to,
         });
+        fallbackUrl = api.lastUrl();
         if ((retry.results ?? 0) > 0) {
           json = retry;
           seasonFallback = true;
@@ -59,6 +72,17 @@ export default withCron('fixtures', async ({ req }) => {
 
     const apiResults = json.results ?? 0;
     const responseLen = (json.response || []).length;
+    // /fixtures has not paginated in practice (a full month of Serie A came
+    // back as one page of 50), but the window is now ~29 days across leagues
+    // of up to 28 teams. If it ever does paginate we would silently lose
+    // fixtures, so surface it loudly rather than trust the observation.
+    const pages = json.paging?.total ?? 1;
+    if (pages > 1) {
+      console.warn(
+        `[fixtures] ${lg.slug}: ${pages} pages returned, only page 1 ingested — ` +
+        `narrow the window or add paging`
+      );
+    }
     let leagueSkipped = 0;
 
     const fixtureRows = [];
@@ -104,11 +128,15 @@ export default withCron('fixtures', async ({ req }) => {
       season_in_payload: json.response?.[0]?.league?.season ?? null,
       api_results: apiResults,
       response_len: responseLen,
-      pages: json.paging?.total ?? null,
+      pages,
+      truncated: pages > 1,
       mapped: fixtureRows.length,
       skipped: leagueSkipped,
       written,
       season_fallback_used: seasonFallback,
+      // Exact URLs sent. The API key is a header, so nothing here is secret.
+      request_url: requestUrl,
+      fallback_url: fallbackUrl,
     };
     byLeague.push(diag);
     console.log('[fixtures]', JSON.stringify(diag));

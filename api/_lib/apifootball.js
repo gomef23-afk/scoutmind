@@ -15,7 +15,9 @@ export function createClient() {
   if (!key) throw new Error('API_FOOTBALL_KEY is not set');
 
   // Per-invocation counters so each job can report what it spent.
-  const state = { used: 0, remaining: null, limit: null };
+  // `log` records every request made so a job can report the EXACT URL it sent.
+  // Safe to return to the caller: the key travels in a header, never in the URL.
+  const state = { used: 0, remaining: null, limit: null, lastUrl: null, log: [] };
 
   async function get(path, params = {}) {
     // Refuse to start a call we already know we cannot afford. `remaining` is
@@ -28,6 +30,7 @@ export function createClient() {
       Object.entries(params).filter(([, v]) => v !== undefined && v !== null)
     ).toString();
     const url = `${BASE}/${path}${qs ? `?${qs}` : ''}`;
+    state.lastUrl = url;
 
     let res;
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -49,6 +52,14 @@ export function createClient() {
 
     const json = await res.json();
 
+    state.log.push({
+      url,
+      status: res.status,
+      results: json.results ?? null,
+      // An empty array means "no errors"; an object means the API rejected it.
+      api_errors: Array.isArray(json.errors) ? null : json.errors ?? null,
+    });
+
     // API-Football answers 200 even when the request was wrong; real problems
     // land in `errors` as either an array (empty = fine) or an object.
     if (json.errors && !Array.isArray(json.errors) && Object.keys(json.errors).length) {
@@ -60,6 +71,8 @@ export function createClient() {
 
   return {
     get,
+    /** Exact URL of the most recent request. No secret in it. */
+    lastUrl: () => state.lastUrl,
     stats: () => ({ ...state }),
     // True when fewer than `n` calls remain — lets a job stop cleanly and
     // resume on the next run instead of dying mid-write.

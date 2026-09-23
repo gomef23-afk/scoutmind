@@ -2158,8 +2158,11 @@ const COMP_TIER = {
 };
 
 async function loadFixtures(){
-  const from = new Date(Date.now() - 36*3600*1000).toISOString();
-  const to   = new Date(Date.now() + 8*24*3600*1000).toISOString();
+  // Matches the ingest window (/api/cron/fixtures defaults to -8/+21 days).
+  // It has to be this wide: during a FIFA international break there is no club
+  // football for over two weeks, and a narrow window renders an empty page.
+  const from = new Date(Date.now() - 7*24*3600*1000).toISOString();
+  const to   = new Date(Date.now() + 21*24*3600*1000).toISOString();
   const q = new URLSearchParams({
     select: 'api_fixture_id,kickoff_utc,status_short,elapsed,home_goals,away_goals,'
           + 'home_team:teams!fixtures_home_team_id_fkey(name),'
@@ -2167,7 +2170,7 @@ async function loadFixtures(){
           + 'league:leagues(name,flag)',
     kickoff_utc: `gte.${from}`,
     order: 'kickoff_utc.asc',
-    limit: '120'
+    limit: '300'
   });
   q.append('kickoff_utc', `lte.${to}`);
 
