@@ -168,9 +168,16 @@ body{padding-bottom:64px;}
 .page{display:none;}
 .page.active{display:block;}
 #page-feed.active{display:block;}
-.feed-page{display:grid;grid-template-columns:1fr 300px;min-height:calc(100vh - 53px);align-items:start;}
-.feed-main{padding:20px 24px;border-right:1px solid var(--border);min-width:0;}
-.feed-side{padding:20px 16px;position:sticky;top:53px;max-height:calc(100vh - 53px);overflow-y:auto;}
+/* Mobile first: one column. The 300px sidebar only exists on desktop — as an
+   unconditional grid it squeezed the feed to ~75px on a phone. */
+.feed-page{display:block;min-height:calc(100vh - 53px);}
+.feed-main{padding:20px 16px;min-width:0;}
+.feed-side{padding:0 16px 24px;}
+@media (min-width: 900px){
+  .feed-page{display:grid;grid-template-columns:1fr 300px;align-items:start;}
+  .feed-main{padding:20px 24px;border-right:1px solid var(--border);}
+  .feed-side{padding:20px 16px;position:sticky;top:53px;max-height:calc(100vh - 53px);overflow-y:auto;}
+}
 #page-scout.active{display:block;}
 #page-scout.active .app{display:grid;}
 /* ── FEED PAGE ── */
@@ -407,14 +414,11 @@ if(!_cu){
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;">
         <button class="filter-btn active" onclick="filterFeed('all',this)">All News</button>
-        <button class="filter-btn" onclick="filterFeed('transfer',this)">🔄 Transfers</button>
-        <button class="filter-btn" onclick="filterFeed('rumor',this)">💬 Rumors</button>
-        <button class="filter-btn" onclick="filterFeed('contract',this)">📝 Contracts</button>
-        <button class="filter-btn" onclick="filterFeed('financial',this)">💰 Financial</button>
+        <button class="filter-btn" onclick="filterFeed('transfers',this)">🔄 Transfers</button>
+        <button class="filter-btn" onclick="filterFeed('match',this)">⚽ Match</button>
         <button class="filter-btn" onclick="filterFeed('brazil',this)">🇧🇷 Brazil</button>
         <button class="filter-btn" onclick="filterFeed('europe',this)">🏆 Europe</button>
       </div>
-      <div id="inline-rumors-section" style="display:none;margin-bottom:20px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">🔥 Hot Rumors</div><div id="feed-hot-rumors"></div></div><div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;"><div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">📊 Fit Score Index</div><div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;">How well each rumoured signing solves the buying club weakness.</div><div id="feed-fit-index"></div></div></div></div>
       <div id="feed-news-main"></div>
     </div>
 
@@ -2294,34 +2298,127 @@ function matchCard(m, featured) {
   return html;
 }
 
-// ── TRANSFER NEWS DATA ──
-const FEED_NEWS=[
-  {id:1,type:'transfer',region:'europe',tag:'Transfer',tagClass:'tag-transfer',date:'May 3, 2026',title:'Gyökeres Transfer Confirmed — Sporting to Real Madrid for €100M',excerpt:'Viktor Gyökeres completes his move to Real Madrid after a stunning 2025/26 season at Sporting CP where he scored 42 goals in all competitions.',featured:true,analysis:{verdict:'Excellent fit. Madrid needed a pure striker after Mbappé drifted wide. Gyökeres\' aerial ability (60%) and shot volume (3.0/g) directly address their finishing weakness.',players:[{name:'Viktor Gyökeres',club:'Sporting → Real Madrid',score:91},{name:'Kylian Mbappé',club:'Already at Madrid',score:78}]}},
-  {id:2,type:'rumor',region:'brazil',tag:'Rumor',tagClass:'tag-rumor',date:'May 3, 2026',title:'Flamengo Eye Julián Álvarez as Pedro Replacement',excerpt:'Reports from Rio suggest Flamengo are monitoring Julián Álvarez at Atlético Madrid after Pedro picked up a knee injury.',analysis:{verdict:'High fit. Álvarez\'s pressing intensity and goals per game (0.50) match Flamengo\'s high-energy style. Budget may be the only obstacle at €90M.',players:[{name:'Julián Álvarez',club:'Atlético Madrid',score:88},{name:'Germán Cano',club:'Fluminense (cheaper alt)',score:71}]}},
-  {id:3,type:'contract',region:'europe',tag:'Contract',tagClass:'tag-contract',date:'May 2, 2026',title:'Mohamed Salah Signs Liverpool Extension Until 2028',excerpt:'Mohamed Salah ends speculation over his future by agreeing a two-year extension with Liverpool. The Egyptian will remain at Anfield until 2028.',analysis:{verdict:'Justified. Salah still contributes 0.55 goals and 0.40 assists per game at 33. Liverpool\'s system is built around his positioning.',players:[{name:'Mohamed Salah',club:'Liverpool (Extended)',score:86}]}},
-  {id:4,type:'transfer',region:'brazil',tag:'Transfer',tagClass:'tag-transfer',date:'May 2, 2026',title:'Palmeiras Complete Signing of Argentine CB for €14M',excerpt:'Palmeiras confirm the signing of 22-year-old Argentine centre-back from Racing Club in a deal worth €14M.',analysis:{verdict:'Good value. Palmeiras\' aerial duel rate is above average, but adding a young CB with high ceiling makes sense long-term.',players:[{name:'Young CB signing',club:'Racing → Palmeiras',score:79},{name:'Murilo',club:'Palmeiras (incumbent)',score:84}]}},
-  {id:5,type:'financial',region:'europe',tag:'Financial',tagClass:'tag-financial',date:'May 1, 2026',title:'Chelsea\'s Summer Budget Confirmed at €250M',excerpt:'Chelsea confirm a record summer transfer budget following strong commercial revenue growth. Four positions targeted.',analysis:{verdict:'Data agrees. Chelsea\'s goals scored are strong but pass accuracy under pressure suggests a ball-playing CM is the priority.',players:[{name:'Florian Wirtz',club:'Bayer Leverkusen (rumored)',score:88},{name:'Pedri',club:'Barcelona (rumored)',score:82}]}},
-  {id:6,type:'rumor',region:'brazil',tag:'Rumor',tagClass:'tag-rumor',date:'May 1, 2026',title:'Botafogo Linked with Colombian Winger from Atlético Nacional',excerpt:'Botafogo in advanced talks with Atlético Nacional over a Colombian winger who has 8 goals and 11 assists this season.',analysis:{verdict:'Potentially strong fit. Botafogo rely on Luiz Henrique and Savarino. Adding quality width fits their attack-minded system.',players:[{name:'Jhon Arias',club:'Fluminense (comparable)',score:82},{name:'Cucho Hernández',club:'Columbus Crew',score:65}]}},
-  {id:7,type:'contract',region:'europe',tag:'Contract',tagClass:'tag-contract',date:'Apr 30, 2026',title:'Lamine Yamal Extended Until 2031 — €1B Release Clause',excerpt:'Barcelona secure Yamal\'s long-term future with a new contract until 2031, reportedly including a €1 billion release clause.',analysis:{verdict:'Absolutely. Yamal\'s stats are historically unusual for an 18-year-old: 0.35 goals and 0.45 assists per game with 3.5 key passes.',players:[{name:'Lamine Yamal',club:'Barcelona',score:96}]}},
-  {id:8,type:'transfer',region:'brazil',tag:'Transfer',tagClass:'tag-transfer',date:'Apr 30, 2026',title:'Fluminense Agree Fee for Experienced LB from Europe',excerpt:'Fluminense close to completing signing of an experienced left-back from Ligue 1 to replace Marcelo, set to retire.',analysis:{verdict:'Urgent need. Fluminense\'s high possession style demands a technical LB who can overlap and maintain width.',players:[{name:'Caio Henrique',club:'AS Monaco (rumored)',score:86},{name:'Vanderson',club:'AS Monaco (alt)',score:72}]}},
-];
+// ── NEWS FEED ──
+// The eight hardcoded transfer stories that used to live here (with invented
+// "ScoutMind Analysis" verdicts and fit scores) are gone. Items now come from
+// news_items, filled by /api/cron/news.
 
-const HOT_RUMORS=[
-  {player:'Florian Wirtz',from:'Leverkusen',to:'Chelsea',prob:78,probClass:'hi'},
-  {player:'Julián Álvarez',from:'Atlético',to:'Flamengo',prob:42,probClass:'mid'},
-  {player:'Dušan Vlahović',from:'Juventus',to:'Arsenal',prob:65,probClass:'mid'},
-  {player:'Gyökeres',from:'Sporting',to:'Real Madrid',prob:95,probClass:'hi'},
-  {player:'Osimhen',from:'Napoli',to:'PSG',prob:55,probClass:'mid'},
-  {player:'Lautaro',from:'Inter',to:'Man City',prob:28,probClass:'lo'},
-];
+// The "Hot Rumors" probability list and the "Fit Score Index" used to sit
+// here. Both were invented numbers. We do not put a percentage next to a real
+// headline, so they are gone rather than hidden.
 
-const FIT_INDEX=[
-  {signing:'Wirtz → Chelsea',fit:88},
-  {signing:'Álvarez → Flamengo',fit:88},
-  {signing:'Vlahović → Arsenal',fit:72},
-  {signing:'Gyökeres → Real Madrid',fit:91},
-  {signing:'Osimhen → PSG',fit:68},
-];
+// Our club slugs predate the football data tables. Until the two are
+// reconciled, this maps a slug to its API-Football team id so a followed club
+// can be matched against a tagged article.
+const CLUB_API_ID={
+  flamengo:127,palmeiras:121,corinthians:131,botafogo:120,fluminense:124,
+  atletico_mg:1062,gremio:130,internacional:119,sao_paulo:126,cruzeiro:135,
+  real_madrid:541,barcelona:529,atletico_madrid:530,
+  man_city:50,arsenal:42,liverpool:40,man_utd:33,chelsea:49,
+  bayern:157,dortmund:165,psg:85,juventus:496,inter:505,
+  river:435,boca:451,
+};
+
+// Which half of the world a league belongs to, for the Brazil/Europe filters.
+const LEAGUE_REGION={
+  serie_a:'brazil',
+  premier_league:'europe',la_liga:'europe',bundesliga:'europe',
+  serie_a_it:'europe',ligue_1:'europe',
+  // Argentina is neither; those items appear under All News.
+};
+const COUNTRY_REGION={BR:'brazil',GB:'europe',ES:'europe',IT:'europe',DE:'europe',FR:'europe'};
+
+const CATEGORY_LABEL={
+  transfer:{label:'Transfer',cls:'tag-transfer'},
+  rumor:{label:'Rumor',cls:'tag-rumor'},
+  contract:{label:'Contract',cls:'tag-contract'},
+  match:{label:'Match',cls:'tag-injury'},
+  general:{label:'News',cls:'tag-contract'},
+};
+
+let FEED_ITEMS=[];
+
+/** Browser language reduced to one of our source languages. */
+function browserLang(){
+  const raw=(navigator.language||'en').toLowerCase();
+  if(raw.startsWith('pt'))return 'pt-BR';
+  if(raw.startsWith('es'))return 'es';
+  if(raw.startsWith('it'))return 'it';
+  if(raw.startsWith('de'))return 'de';
+  if(raw.startsWith('fr'))return 'fr';
+  return 'en';
+}
+
+/**
+ * Read the saved club selection straight from storage: followingClubs is only
+ * hydrated when the club modal opens, so the module-level copy is empty on a
+ * cold load even when the user has clubs saved.
+ */
+function followedApiIds(){
+  let slugs=followingClubs.slice();
+  if(selectedMainClub)slugs.push(selectedMainClub);
+  try{
+    const main=JSON.parse(localStorage.getItem('sm_main_club')||'null');
+    if(main&&main.id)slugs.push(main.id);
+    slugs=slugs.concat(JSON.parse(localStorage.getItem('sm_following_clubs')||'[]'));
+  }catch(e){}
+  return slugs.map(s=>CLUB_API_ID[s]).filter(Boolean);
+}
+
+async function loadNews(){
+  const select=[
+    'id','title','summary','source_url','lang','category','published_at',
+    'news_sources(slug,name,country)',
+    'news_item_teams(via,teams(api_team_id,name,leagues(slug)))'
+  ].join(',');
+  const q='select='+encodeURIComponent(select)+'&order=published_at.desc&limit=80';
+  try{
+    const res=await fetch(`${SUPA_URL}/rest/v1/news_items?${q}`,{
+      headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`}
+    });
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const rows=await res.json();
+    FEED_ITEMS=rows.map(function(r){
+      const teams=(r.news_item_teams||[]).map(t=>t.teams).filter(Boolean);
+      const leagues=teams.map(t=>t.leagues&&t.leagues.slug).filter(Boolean);
+      // A tagged item takes its region from the club; only an untagged one
+      // falls back to where the publisher is.
+      let region=null;
+      for(const l of leagues){if(LEAGUE_REGION[l]){region=LEAGUE_REGION[l];break;}}
+      if(!region&&!teams.length)region=COUNTRY_REGION[(r.news_sources||{}).country]||null;
+      return {
+        type:'news',
+        id:r.id,
+        title:r.title,
+        excerpt:r.summary||'',
+        category:r.category||'general',
+        lang:r.lang,
+        url:r.source_url,
+        source:(r.news_sources||{}).name||'',
+        publishedAt:r.published_at,
+        teams:teams,
+        teamIds:teams.map(t=>t.api_team_id),
+        region:region,
+      };
+    });
+  }catch(e){
+    console.error('loadNews:',e);
+    FEED_ITEMS=[];
+  }
+  renderFeedNews();
+}
+
+function timeAgo(iso){
+  const then=new Date(iso).getTime();
+  if(!then)return '';
+  const mins=Math.max(0,Math.round((Date.now()-then)/60000));
+  if(mins<60)return mins+'m ago';
+  const hrs=Math.round(mins/60);
+  if(hrs<24)return hrs+'h ago';
+  const days=Math.round(hrs/24);
+  if(days<7)return days+'d ago';
+  return new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short'});
+}
 
 let currentFeedFilter='all';
 
@@ -2329,126 +2426,76 @@ function filterFeed(type,btn){
   currentFeedFilter=type;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  const rs=document.getElementById('inline-rumors-section');
-  if(rs)rs.style.display=(type==='rumor')?'block':'none';
   renderFeedNews();
 }
 
-function scoreClr(s){return s>=75?'var(--green)':s>=50?'var(--yellow)':'var(--red)';}
 
 function sanitize(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
 const _rl={};
 function rateLimit(key,max){const now=Date.now();if(!_rl[key])_rl[key]=[];_rl[key]=_rl[key].filter(t=>now-t<60000);if(_rl[key].length>=max)return false;_rl[key].push(now);return true;}
-const COMMENTS_STORE={
-  1:[{author:'Bernardo M.',initials:'BM',text:'Finally confirmed! Gyokeres was unstoppable this season. Madrid got a steal at 100M.',time:'2h ago',likes:24,plan:'fan'},{author:'Tactical Pedro',initials:'TP',text:'His aerial numbers will immediately fix Madrid set piece weakness. Great signing.',time:'1h ago',likes:11,plan:'fan'}],
-  2:[{author:'Fla Fan 1903',initials:'FF',text:'Alvarez seria perfeito mas o valor e demais pra gente agora.',time:'3h ago',likes:18,plan:'fan'}],
-  3:[],4:[],5:[],6:[],7:[],8:[],
-};
-const COMMENT_LIKES={};
-function getInitials(name){return(name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
-function toggleComments(newsId){
-  const body=document.getElementById('cb-'+newsId);
-  const toggle=document.getElementById('ct-'+newsId);
-  if(!body)return;
-  const isOpen=body.style.display==='block';
-  body.style.display=isOpen?'none':'block';
-  const count=(COMMENTS_STORE[newsId]||[]).length;
-  const label=count+' comment'+(count!==1?'s':'');
-  toggle.innerHTML=isOpen?('&#x1F4AC; '+label+' &nbsp;<span style="color:var(--accent)">Show</span>'):('&#x1F4AC; '+label+' &nbsp;<span style="color:var(--muted)">Hide</span>');
-}
-function postComment(newsId){
-  if(!requireAuth('Create a free account to join the conversation.'))return;
-  const cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
-  if(!rateLimit('cmt_'+(cu?cu.id:'anon'),5)){alert('Posting too fast.');return;}
-  const input=document.getElementById('ci-'+newsId);
-  const text=input&&input.value.trim().slice(0,280)||'';
-  if(text.length<2)return;
-  const author=sanitize(cu?(cu.name||'').slice(0,60):'Anonymous');
-  const plan=cu?cu.plan:'fan';
-  const initials=getInitials(author);
-  if(!COMMENTS_STORE[newsId])COMMENTS_STORE[newsId]=[];
-  COMMENTS_STORE[newsId].unshift({author,initials,text,time:'Just now',likes:0,plan});
-  input.value='';
-  renderComments(newsId);
-  const toggle=document.getElementById('ct-'+newsId);
-  const count=COMMENTS_STORE[newsId].length;
-  if(toggle)toggle.innerHTML='&#x1F4AC; '+count+' comment'+(count!==1?'s':'')+' &nbsp;<span style="color:var(--muted)">Hide</span>';
-}
-function likeComment(newsId,idx){
-  if(!requireAuth('Create a free account to react to posts.'))return;
-  const key=newsId+'-'+idx;
-  if(COMMENT_LIKES[key])return;
-  COMMENT_LIKES[key]=true;
-  if(COMMENTS_STORE[newsId]&&COMMENTS_STORE[newsId][idx]!=null){COMMENTS_STORE[newsId][idx].likes=(COMMENTS_STORE[newsId][idx].likes||0)+1;renderComments(newsId);}
-}
-function renderComments(newsId){
-  const list=document.getElementById('cl-'+newsId);
-  if(!list)return;
-  const comments=COMMENTS_STORE[newsId]||[];
-  if(!comments.length){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0 4px;">No comments yet.</div>';return;}
-  list.innerHTML=comments.map(function(c,i){
-    const planBadge=c.plan==='analyst'?'<span style="font-size:8px;padding:1px 6px;border-radius:10px;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);font-weight:700;">ANALYST</span>':'';
-    const liked=COMMENT_LIKES[newsId+'-'+i];
-    return '<div class="comment-item"><div class="comment-av">'+sanitize(c.initials)+'</div><div class="comment-body-wrap"><div class="comment-author">'+sanitize(c.author)+' '+planBadge+'</div><div class="comment-text">'+sanitize(c.text)+'</div><div class="comment-meta"><span>'+c.time+'</span><button class="comment-like" onclick="likeComment('+newsId+','+i+')" style="color:'+(liked?'var(--red)':'var(--muted)')+'\">'+(liked?'&#x2764;':'&#x2661;')+' '+(c.likes||0)+'</button></div></div></div>';
-  }).join('');
-}
-function renderFeedNews(){
-  const filtered=FEED_NEWS.filter(function(n){if(currentFeedFilter==='all')return true;if(currentFeedFilter==='brazil')return n.region==='brazil';if(currentFeedFilter==='europe')return n.region==='europe';return n.type===currentFeedFilter;});
-  let html='';
-  filtered.forEach(function(n){
-    const commentCount=(COMMENTS_STORE[n.id]||[]).length;
-    const commentLabel=commentCount+' comment'+(commentCount!==1?'s':'');
-    html+='<div style="background:var(--bg2);border:1px solid '+(n.featured?'rgba(0,229,160,0.2)':'var(--border)')+';border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;">'
-      +'<div style="padding:16px 18px;">'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;"><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;" class="'+n.tagClass+'">'+n.tag+'</span>'
-      +'<span style="font-size:10px;padding:2px 8px;background:rgba(255,255,255,0.04);border-radius:10px;color:var(--muted);">'+(n.region==='brazil'?'&#x1F1E7;&#x1F1F7; Brazil':'&#x1F30D; Europe')+'</span>'
-      +'<span style="font-size:11px;color:var(--muted);">'+n.date+'</span></div>'
-      +'<div style="font-size:'+(n.featured?'16px':'14px')+';font-weight:600;line-height:1.4;margin-bottom:8px;">'+n.title+'</div>'
-      +'<div style="font-size:'+(n.featured?'13px':'12px')+';color:var(--muted);line-height:1.6;margin-bottom:'+(n.analysis?'12px':'0')+'">'+n.excerpt+'</div>';
-    if(n.analysis){
-      html+='<div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">'
-        +'<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;"></span>ScoutMind Analysis</div>'
-        +'<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;">'+n.analysis.verdict+'</div>'
-        +n.analysis.players.map(function(p){return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div><div style="font-size:12px;font-weight:500;">'+p.name+'</div><div style="font-size:11px;color:var(--muted);">'+p.club+'</div></div><div style="display:flex;align-items:center;gap:8px;"><div style="width:60px;height:4px;background:var(--border);border-radius:2px;"><div style="width:'+p.score+'%;height:100%;border-radius:2px;background:'+scoreClr(p.score)+';"></div></div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:'+scoreClr(p.score)+';">'+p.score+'%</div></div></div>';}).join('')
-        +'</div>';
-    }
-    html+='</div>'
-      +'<div class="comment-section">'
-      +'<button class="comment-toggle" id="ct-'+n.id+'" onclick="toggleComments('+n.id+')">&#x1F4AC; '+commentLabel+' &nbsp;<span style="color:var(--accent)">Show</span></button>'
-      +'<div class="comments-body" id="cb-'+n.id+'">'
-      +'<div class="comment-input-row"><div class="comment-av" id="cav-'+n.id+'">?</div>'
-      +'<input class="comment-input" id="ci-'+n.id+'" placeholder="What do you think about this transfer?" maxlength="280" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();postComment('+n.id+');}"></input>'
-      +'<button class="comment-post-btn" onclick="postComment('+n.id+')">Post</button></div>'
-      +'<div id="cl-'+n.id+'"></div>'
-      +'</div></div></div>';
-  });
-  const el=document.getElementById('feed-news-main');
-  if(el){
-    el.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories found.</div>';
-    FEED_NEWS.forEach(function(n){
-      renderComments(n.id);
-      const cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
-      const av=document.getElementById('cav-'+n.id);
-      if(av&&cu)av.textContent=getInitials(cu.name||cu.email||'U');
-    });
+// Comments on news cards were removed until Phase C. They were in memory only:
+// a comment looked posted and then vanished on the next reload. The CSS classes
+// (.comment-section, .comment-toggle, .comments-body, .comment-item …) are left
+// in place for Phase C to render against, backed by Supabase.
+/**
+ * Every feed item renders through here, switching on item.type.
+ * Today that is 'news'; analyst posts, polls and match cards join it later.
+ */
+function renderFeedItem(item){
+  switch(item.type){
+    case 'news': return renderNewsCard(item);
+    default:
+      console.warn('renderFeedItem: unknown type',item.type);
+      return '';
   }
 }
 
-function renderSidebar(){
-  const hr=document.getElementById('feed-hot-rumors');
-  if(hr)hr.innerHTML=HOT_RUMORS.map(r=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;min-width:44px;color:${r.probClass==='hi'?'var(--green)':r.probClass==='mid'?'var(--yellow)':'var(--red)'};">${r.prob}%</div>
-    <div><div style="font-size:12px;line-height:1.5;">${r.player}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.from} → ${r.to}</div></div>
-  </div>`).join('');
-  const fi=document.getElementById('feed-fit-index');
-  if(fi)fi.innerHTML=FIT_INDEX.map(f=>`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-    <div style="font-size:12px;flex:1;padding-right:10px;">${f.signing}</div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <div style="width:60px;height:4px;background:var(--border);border-radius:2px;"><div style="width:${f.fit}%;height:100%;border-radius:2px;background:${scoreClr(f.fit)};"></div></div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${scoreClr(f.fit)};">${f.fit}%</div>
-    </div>
-  </div>`).join('');
+function renderNewsCard(n){
+  const cat=CATEGORY_LABEL[n.category]||CATEGORY_LABEL.general;
+  const clubs=(n.teams||[]).slice(0,3).map(t=>
+    '<span style="font-size:10px;padding:2px 8px;background:rgba(0,184,255,0.08);border:1px solid rgba(0,184,255,0.18);border-radius:10px;color:var(--accent2);">'+sanitize(t.name)+'</span>'
+  ).join('');
+  let html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;">'
+    +'<div style="padding:16px 18px;">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">'
+    +'<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;" class="'+cat.cls+'">'+cat.label+'</span>'
+    +clubs
+    +'<span style="font-size:11px;color:var(--muted);">'+sanitize(n.source)+' · '+timeAgo(n.publishedAt)+'</span></div>'
+    +'<a href="'+sanitize(n.url)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;">'
+    +'<div style="font-size:14px;font-weight:600;line-height:1.4;margin-bottom:8px;">'+sanitize(n.title)+'</div></a>';
+  if(n.excerpt){
+    html+='<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">'+sanitize(n.excerpt)+'</div>';
+  }
+  html+='<a href="'+sanitize(n.url)+'" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--accent);text-decoration:none;">Read on '+sanitize(n.source)+' &rarr;</a>'
+    +'</div></div>';
+  return html;
 }
+
+function visibleFeedItems(){
+  const myLang=browserLang();
+  const mine=followedApiIds();
+  return FEED_ITEMS.filter(function(n){
+    // Language: your language, plus English, plus anything about a club you
+    // follow whatever language it is written in.
+    const followed=n.teamIds.some(id=>mine.indexOf(id)>-1);
+    if(!followed && n.lang!==myLang && n.lang!=='en')return false;
+    if(currentFeedFilter==='all')return true;
+    if(currentFeedFilter==='transfers')return ['transfer','rumor','contract'].indexOf(n.category)>-1;
+    if(currentFeedFilter==='brazil')return n.region==='brazil';
+    if(currentFeedFilter==='europe')return n.region==='europe';
+    return n.category===currentFeedFilter;
+  });
+}
+
+function renderFeedNews(){
+  const filtered=visibleFeedItems();
+  const html=filtered.map(renderFeedItem).join('');
+  const el=document.getElementById('feed-news-main');
+  if(el){
+    el.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories yet. The news job runs every 15 minutes.</div>';
+  }
+}
+
 
 // ── LEAGUE FILTER BUTTONS ──
 document.querySelectorAll('.league-filter-btn').forEach(btn=>{
@@ -2646,8 +2693,7 @@ function filterWeekly(league, btn) {
   allBtns.forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
-try{renderSidebar();}catch(e){console.error('renderSidebar:',e);}
-try{renderFeedNews();}catch(e){console.error('renderFeedNews:',e);}
+try{loadNews();}catch(e){console.error('loadNews:',e);}
 try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 try{initProfile();}catch(e){console.error('initProfile:',e);}
 try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}

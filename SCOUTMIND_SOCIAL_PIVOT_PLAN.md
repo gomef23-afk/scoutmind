@@ -17,14 +17,16 @@
 | **R2** | `api/_lib/` — API client (quota-aware, logs exact request URLs) and dependency-free PostgREST helper | done |
 | **R3** | Teams, venues and coaches ingested — **146 teams across 7 leagues** | live |
 | **R4** | Fixtures, standings and live scores. Standings **146 rows**; Argentina's multi-group tables collapse correctly. Matches page reads Supabase with a static fallback | live |
-| **R5** | `/api/cron/fixture-stats` — all 18 stat types per fixture, aggregated into `team_season_stats`. Migration `004`. Self-limiting batches serve backfill and steady state from one job | live |
+| **R5** | `/api/cron/fixture-stats` — all 18 stat types per fixture, aggregated into `team_season_stats`. Migration `004`. Self-limiting batches (40 fixtures or 20s) serve backfill and steady state from one job. Backlog at launch: **932 finished fixtures**, ~24 runs | live |
+| **R8 + news slice of R9** | `/api/cron/news` — 10 RSS feeds → `news_items`, club-tagged via `team_aliases`. Migration `005`. Home feed renders real news through `renderFeedItem()`. Both fake widgets (Hot Rumors %, Fit Score Index) deleted. Costs **zero** API-Football requests | built, awaiting `005` |
 
 ### Infrastructure
 
-- **API-Football Pro** — direct host `v3.football.api-sports.io`, 7,500 req/day, 300/min. All seven leagues active (`leagues.active`). Steady state is ~330 req/day, about 4% of quota.
+- **API-Football Pro** — direct host `v3.football.api-sports.io`, 7,500 req/day, 300/min. All seven leagues active (`leagues.active`). Steady state ~205 req/day (~3%): live 144, fixtures ≤14, standings 7, fixture-stats 20-40.
   *The free tier was abandoned: it serves only seasons 2022-2024 and rejects the `next`/`last` fixture parameters.*
-- **cron-job.org** drives `/api/cron/fixtures`, `/api/cron/standings` and `/api/cron/live`, each authenticated with `CRON_SECRET` via an `Authorization: Bearer` header. Vercel's own cron was not used — the Hobby plan allows only 2 jobs at daily granularity. `/api/cron/teams` is run manually.
-- **Supabase migrations 001, 002 and 003 applied.** `003` carries a SCHEMA PATCHES section so re-running it always brings an existing database up to date.
+- **cron-job.org** drives `/api/cron/fixtures` (daily), `/api/cron/standings` (daily), `/api/cron/live` (**every 10 min**), `/api/cron/fixture-stats` (every 15 min) and `/api/cron/news` (every 15 min), each authenticated with `CRON_SECRET` via an `Authorization: Bearer` header. Vercel's own cron was not used — the Hobby plan allows only 2 jobs at daily granularity. `/api/cron/teams` is run manually.
+- **Season backfill done (23 Sept).** One `/api/cron/fixtures?back=400&ahead=21` run took `fixtures` from 83 to **1,033 rows, 932 finished**, no league paginated. Série A's 300 rows are 30 complete rounds x 10 matches, not an API cap — cross-checked against `standings.played`. Argentina holds **both** Apertura and Clausura (32 distinct round labels, max round 16).
+- **Supabase migrations 001, 002, 003 and 004 applied; `005_news.sql` is pending.** `003` carries a SCHEMA PATCHES section so re-running it always brings an existing database up to date. `005` is idempotent and order-independent: its alias seed joins on `teams.api_team_id`, so it can be run before or after the teams job.
 - **Vercel env:** `API_FOOTBALL_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (new-format `sb_secret_…`), `CRON_SECRET`. The service key never reaches the browser; the client uses the anon key against public-read tables only.
 
 ### Known state to carry forward
@@ -35,17 +37,29 @@
 - `passes.accuracy` is null for ~95% of players. Team-level pass accuracy is fine (from `fixtures/statistics`), but the player profiles that weight `pass_acc` need reweighting in R6.
 - `leagues_data.js` and `players_data.js` are still the live data source for Scout Mode and the weakness engine. They are replaced in R9 and deleted in R10.
 
+**News (R8), carried forward:**
+
+- **Four of the original feed URLs were dead** and are not in the seed. Ten are live: ge, ESPN Brasil, BBC, Sky, Olé, AS, Marca, Gazzetta, kicker, RMC. L'Équipe was dropped by decision, not by failure.
+- **Copyright:** headline + ≤300-char snippet + link only. ge's feed carries whole articles, so it is `headline_only` — it is tagged on the snippet and stores none of it. *Legal review item: news snippets from RSS feeds, especially ge.*
+- **Tag rate is ~50% and that is the intended trade.** Precision beats recall: an untagged article still appears in the feed, a wrongly tagged one appears on the wrong club's page. Measured on 505 frozen headlines: ge 48/100, Gazzetta 61/99, AS 36/68, Marca 32/49, BBC 26/86, kicker 13/20, ESPN 12/23, RMC 11/30, Olé 10/10, Sky 1/20.
+- **Sky Sports is 1/20** — its headlines are mostly player- and pundit-led with no club name. Not a bug; revisit if it stays that low with a bigger sample.
+- **Known tagger limits:** an English sentence-start common word can still false-positive (`"Forest fire near the stadium"` → Nottingham Forest). It never fired once across 505 real headlines, so it was accepted rather than patched with guesswork. `"Inter-Milan derby"` tags Inter only, not both clubs — the phrase is genuinely ambiguous and precision wins.
+- **Promoted clubs arrive each season with no aliases.** After the teams job ingests a new season, add them to `api/_lib/aliases.js` and regenerate the seed block in `005`.
+- **Argentina is neither Brazil nor Europe** in the Home filters, so Argentine items appear only under All News. Decide in B3 whether to add a third region or rename the filters.
+- **Club-ID stopgap:** the Home feed's `ALL_CLUBS` slugs predate the football tables, so `CLUB_API_ID` in `index.html` maps 25 slugs to API-Football ids. Replace it when clubs are read from `teams`.
+- **News cards have no comment UI.** The old hardcoded stories had one backed by an in-memory store, so a comment looked posted and vanished on reload. It was removed rather than shipped. Comments are Phase C and must go to Supabase, not localStorage (rule 10). The CSS classes (`.comment-section`, `.comment-toggle`, `.comments-body`, `.comment-item`, `.comment-input`) are still in `index.html` for C to render against.
+- `news_items` only grows: rule 13 forbids DELETE in `api/`. Prune by hand; the SQL is at the bottom of `005`.
+
 ### Next, in order
 
 | # | Work | Notes |
 |---|---|---|
 | **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg`/`duels_won_pct` — the last three nulls in `team_season_stats` |
 | **R7** | League averages | Recompute `league_averages` from real data — the weakness thresholds become real |
-| **R8** | RSS news | GE, ESPN Brasil, BBC, Sky → `news_items`, club-tagged via `team_aliases` |
-| **R9** | Front end on real data | Scout Mode, SM Weekly and Transfer Intelligence read Supabase. The Matches slice is already done. **Three engine decisions are queued here — see below** |
-| **B3** | Delete `news.html` | Fold into the Home feed as a filter. Depends on R8 + R9; port the 2 missing Hot Rumors and the Fit Index labels first |
+| **R9** | Front end on real data | Scout Mode and SM Weekly read Supabase. The Matches and news slices are done. **Three engine decisions are queued here — see below** |
+| **B3** | Delete `news.html` | Superseded by the Home feed; nothing left to port — the two widgets it shared were invented numbers and are gone |
 | **B4** | i18n | `public/i18n.js` with en / pt-BR / es. Split: B4a infrastructure + extraction, B4b translation. ~250-400 strings |
-| **F** | Mobile | Invert the remaining desktop-first CSS (the feed grid still does not collapse at 375px), then PWA manifest + service worker |
+| **F** | Mobile | Invert the remaining desktop-first CSS, then PWA manifest + service worker. *(The feed grid is done — it collapsed to a 75px column at 375px and now stacks below 900px.)* |
 | **C** | Social layer | Posts, reactions, comments, follows, notifications, feed algorithm — the actual social network |
 
 R10 (delete `leagues_data.js` / `players_data.js`) follows R9.

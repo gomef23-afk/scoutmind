@@ -13,12 +13,15 @@ Vanilla HTML/CSS/JS in `public/`. No framework, no build step. Hosted on Vercel,
 Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Supabase over PostgREST with `fetch`). Football data comes from API-Football v3 Pro via `/api/cron/*`, scheduled by cron-job.org with a `CRON_SECRET` bearer token. The browser never sees the service key.
 
 ## Files
-- `public/app.html` — main app (Scout Mode, Feed, Profile)
+- `public/index.html` — **the app** (Home feed, Clubs, Scout, Matches, Profile). Since B1 this is the entry point, not a landing page.
+- `public/about.html` — landing / marketing page
+- `public/app.html` — a redirect to `/`, kept so old links work. Not the app.
 - `public/community.html` — team communities (polls, analyst insights, groups, wishlist)
 - `public/auth.html` — login/signup
-- `public/index.html` — landing page
-- `public/news.html` — transfer news
-- `public/leagues_data.js`, `public/players_data.js` — data
+- `public/news.html` — the old standalone transfer-news page. Superseded by the Home feed; still present, queued for deletion in B3.
+- `public/leagues_data.js`, `public/players_data.js` — Scout Mode data (still the source for Scout Mode until R9)
+- `api/_lib/`, `api/cron/` — serverless ingest (see Stack)
+- `tests/` — `node tests/tagger.test.js`, no dependencies
 
 ## Hard rules
 1. Never use Python string replacement on JS-inside-HTML. Edit files directly with the editor tools.
@@ -37,6 +40,9 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 14. **Null is not zero.** In API-Football responses, counting stats (shots, fouls, cards, saves) use `null` for "none happened" → coalesce to 0. `expected_goals` and `goals_prevented` use `null` for "not available" → keep null and exclude from averages. Averaging a null in as zero is the most likely source of wrong-looking-but-plausible data.
 15. **Every average needs its denominator stored.** `team_season_stats` has three: `matches`, `fixtures_sampled`, `xg_sample`. Never divide by the wrong one, and never add an average without a sample column beside it.
 16. Cron endpoints must finish in **under ~25s** — cron-job.org stops waiting at 30s. Bound work by wall clock, not only by row count.
+17. **Never store article text.** For news we keep a headline, a plain-text snippet of at most 300 characters, and a link out. Never fetch the article page, never store or hotlink its images. Sources whose feed carries the full body are marked `news_sources.headline_only` and get no snippet stored at all.
+18. **No invented numbers next to real content.** No probability, fit score or confidence percentage beside a real headline unless it is computed from data we hold and can be explained.
+19. Club tagging rules live in `api/_lib/tagger.js` and the alias seed in `api/_lib/aliases.js` (the migration's seed block is generated from it). Both are pinned by `tests/tagger.test.js` against frozen RSS fixtures — run it after any change to either.
 
 ## Workflow
 - Before editing, grep and list every hit you plan to change. Wait for approval on anything that removes or restructures more than one section.

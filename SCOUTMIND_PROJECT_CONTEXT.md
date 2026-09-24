@@ -45,7 +45,7 @@ The core value proposition: "What position does your team need? Here are the 10 
 - **Migrations applied:** `001_plan_to_role`, `002_public_read`, `003_football_data`
 
 ### API-Football
-- Pro: **7,500 req/day, 300/min**. Steady state ~330/day (~4%)
+- Pro: **7,500 req/day, 300/min**. Steady state ~205/day (~3%): live 144, fixtures ≤14, standings 7, fixture-stats 20-40
 - All seven leagues active: Série A 🇧🇷 (71), Premier League (39), La Liga (140), Bundesliga (78), Serie A 🇮🇹 (135), Ligue 1 (61), Liga Profesional 🇦🇷 (128) — all `current_season = 2026`
 - The free tier is unusable here: seasons 2022-2024 only, and it rejects the `next`/`last` fixture parameters
 
@@ -57,7 +57,7 @@ The core value proposition: "What position does your team need? Here are the 10 
 |---|---|---|
 | `/api/cron/fixtures` | daily 05:05 | 7 (+1 per empty league) |
 | `/api/cron/standings` | daily 06:00 | 7 |
-| `/api/cron/live` | every 30 min | 1 |
+| `/api/cron/live` | **every 10 min** | 1 (144/day) |
 | `/api/cron/fixture-stats` | every 15 min | ≤40 (0 when the queue is empty) |
 | `/api/cron/teams` | manual | 7, or ~150 with `?coaches=1` |
 | `/api/cron/health` | manual | 0 |
@@ -193,7 +193,7 @@ email and a bio. Only the dashboard (service role) reads them. Insert is
 
 ---
 
-## 6b. FOOTBALL DATA TABLES (migration `003`, Phase R)
+## 6b. FOOTBALL DATA TABLES (migrations `003`–`005`, Phase R)
 
 Written only by the cron jobs. All public-read.
 
@@ -201,7 +201,7 @@ Written only by the cron jobs. All public-read.
 |---|---|---|
 | `leagues` | 7 leagues, `api_league_id`, `current_season` (per league), `active` | seeded in `003` |
 | `teams` | 146 teams — venue, founded, logo, coach | `/api/cron/teams` ✅ |
-| `team_aliases` | Nicknames for RSS club tagging ("Mengão", "Man Utd", "Coxa") | seeded in `003` |
+| `team_aliases` | Club aliases for news tagging, with `kind` / `langs` / `short_ok` | seeded in `005` from `api/_lib/aliases.js` ✅ |
 | `standings` | Rank, points, form, `group_label` | `/api/cron/standings` ✅ |
 | `fixtures` | Kickoff, status, elapsed, score, venue | `/api/cron/fixtures` ✅ |
 | `fixture_stats` | All 18 `/fixtures/statistics` types incl. `expected_goals`, `goals_prevented` | `/api/cron/fixture-stats` ✅ |
@@ -210,8 +210,9 @@ Written only by the cron jobs. All public-read.
 | `players` | Name, age, nationality, height, photo | R6 |
 | `player_season_stats` | Apps, minutes, rating, goals, passes, tackles, duels, cards | R6 |
 | `player_season_rates` | **VIEW** — per-appearance rates computed, never stored | derived |
-| `news_items` | RSS headline + summary + link only (never full article text) | R8 |
-| `news_item_teams` | Article → club tagging | R8 |
+| `news_sources` | The 10 live feeds — `lang`, `country`, `headline_only`, health counters | seeded in `005` ✅ |
+| `news_items` | Headline + ≤300-char snippet + link. **Never full article text** | `/api/cron/news` ✅ |
+| `news_item_teams` | Article → club, plus `via` (the alias that matched, so a surprising tag is debuggable) | `/api/cron/news` ✅ |
 | `ingest_runs` | Job telemetry + resumable cursor. **No read policy** — telemetry, not content | all jobs |
 
 ### Data the API does not provide — dropped

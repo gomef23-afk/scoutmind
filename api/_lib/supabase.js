@@ -101,6 +101,39 @@ export async function upsert(table, rows, onConflict) {
   return written;
 }
 
+/**
+ * UPSERT and return the stored rows — needed when a child table has to
+ * reference ids the database assigned (news_item_teams -> news_items).
+ */
+export async function upsertReturning(table, rows, onConflict, columns = '*') {
+  if (!rows || rows.length === 0) return [];
+
+  const CHUNK = 500;
+  const out = [];
+
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const batch = rows.slice(i, i + CHUNK);
+    const qs = [
+      onConflict ? `on_conflict=${encodeURIComponent(onConflict)}` : '',
+      `select=${encodeURIComponent(columns)}`,
+    ]
+      .filter(Boolean)
+      .join('&');
+    const res = await fetch(`${URL_()}/rest/v1/${table}?${qs}`, {
+      method: 'POST',
+      headers: headers({
+        Prefer: 'resolution=merge-duplicates,return=representation',
+      }),
+      body: JSON.stringify(batch),
+    });
+    if (!res.ok) {
+      throw new Error(`Supabase upsert ${table} ${res.status}: ${await res.text()}`);
+    }
+    out.push(...(await res.json()));
+  }
+  return out;
+}
+
 /** PATCH rows matching a PostgREST filter. */
 export async function update(table, filter, patch) {
   const res = await fetch(`${URL_()}/rest/v1/${table}?${filter}`, {
