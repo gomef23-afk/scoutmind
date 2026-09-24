@@ -126,8 +126,6 @@ hr{border:none;border-top:1px solid var(--border);}
 .team-list-wrap{max-height:220px;overflow-y:auto;}
 .hint{font-size:11px;color:var(--muted);text-align:center;margin-top:3px;}
 .filter-count{font-size:10px;color:var(--accent);margin-top:4px;text-align:center;}
-.curr-btn.active{background:var(--accent)!important;color:#000!important;}
-.curr-btn:hover:not(.active){color:var(--text)!important;}
 /* ── B2: FIVE-TAB NAV — mobile-first (base = 375px, desktop at 900px) ──
    Shared verbatim by index.html, community.html and about.html (rule #5).
    One tab list is rendered twice: .sm-tabs-top for desktop, .sm-tabs-bottom
@@ -251,7 +249,9 @@ body{padding-bottom:64px;}
 .league-filter-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
 .league-filter-btn{font-size:11px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .league-filter-btn.active,.league-filter-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--accent);}
-.clubs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+/* Mobile first: two columns fit 375px. Three was cutting the last one off. */
+.clubs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+@media (min-width: 900px){ .clubs-grid{grid-template-columns:repeat(3,1fr);} }
 .club-explore-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;}
 .club-explore-card:hover{border-color:rgba(0,229,160,0.3);transform:translateY(-2px);}
 .club-explore-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
@@ -366,12 +366,7 @@ if(!_cu){
     <button class="sm-tab" data-tab="profile" onclick="showPage('profile')"><span class="sm-tab-icon">👤</span>Profile</button>
   </div>
   <div class="sm-nav-right">
-    <div class="sm-curr">
-      <button class="curr-btn active" data-c="EUR" onclick="setCurrency('EUR')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">€ EUR</button>
-      <button class="curr-btn" data-c="USD" onclick="setCurrency('USD')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">$ USD</button>
-      <button class="curr-btn" data-c="BRL" onclick="setCurrency('BRL')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">R$ BRL</button>
-      <button class="curr-btn" data-c="GBP" onclick="setCurrency('GBP')" style="background:transparent;border:none;color:var(--muted);padding:4px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;">£ GBP</button>
-    </div>
+    <!-- Currency switcher removed: market values were dropped in R0, so it changed nothing. -->
     <!-- B4 fills this with the language switcher. -->
     <div class="sm-lang-slot" id="lang-slot"></div>
     <a href="/about.html" class="sm-about">About</a>
@@ -403,14 +398,15 @@ if(!_cu){
     <div class="feed-tabs-bar">
       <button class="ftab active" onclick="showFeedTab('transfers',this)">Transfer news</button>
       <button class="ftab" onclick="showFeedTab('foryou',this)">For you</button>
-      <button class="ftab" onclick="showFeedTab('weekly',this)">SM Weekly</button>
+      <!-- SM Weekly is hidden until it is generated from real data in R9. The tab,
+           #feedtab-weekly and renderWeeklyReport() are all intentionally kept. -->
+      <button class="ftab" style="display:none;" onclick="showFeedTab('weekly',this)">SM Weekly</button>
     </div>
 
-    <!-- TRANSFER NEWS TAB — first and default, full Transfer Intelligence format -->
+    <!-- NEWS TAB — first and default. Real headlines from news_items. -->
     <div id="feedtab-transfers">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Transfer Intelligence</div>
-        <div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(0,229,160,0.1),rgba(0,184,255,0.1));border:1px solid rgba(0,229,160,0.2);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--accent);">⚡ AI-Powered</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">News</div>
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;">
         <button class="filter-btn active" onclick="filterFeed('all',this)">All News</button>
@@ -424,36 +420,12 @@ if(!_cu){
 
     <!-- FOR YOU TAB — posts from your clubs and analysts -->
     <div id="feedtab-foryou" style="display:none;">
-      <div class="feed-post">
-        <div class="feed-post-header">
-          <div class="feed-av" style="background:rgba(0,229,160,0.12);color:var(--accent);">SM</div>
-          <div><div class="feed-author">ScoutMind AI · Botafogo</div><div class="feed-submeta">3h ago · Your club</div></div>
-          <span class="feed-vbadge c-pill-o">Weakness Alert</span>
-        </div>
-        <div class="feed-body">Botafogo's passing accuracy (79%) is 6 points below the Série A average. Their build-up play is being disrupted easily in the middle third — a technical CM would address this directly.</div>
-        <div class="feed-insight-box">
-          <div class="feed-insight-label">SCOUT INSIGHT</div>
-          <div class="feed-insight-body">4 players fit Botafogo's profile within R$25M. <span style="color:var(--accent);cursor:pointer;" onclick="showPage('scout')">See recommendations →</span></div>
-        </div>
-        <div class="feed-actions"><button class="feed-action-btn">♡ 892</button><button class="feed-action-btn">↩ 214</button><button class="feed-action-btn">Save</button></div>
-      </div>
-      <div class="feed-post">
-        <div class="feed-post-header">
-          <div class="feed-av" style="background:rgba(0,184,255,0.12);color:var(--accent2);">JR</div>
-          <div><div class="feed-author">João Ricardo · ESPN Brasil</div><div class="feed-submeta">Verified analyst · 5h ago</div></div>
-          <span class="feed-vbadge c-pill-b">Analyst</span>
-        </div>
-        <div class="feed-body">Botafogo's Luiz Henrique is the most underrated player in Série A right now. 0.42 goals + 0.31 assists per game, yet he doesn't get the recognition Vinicius Jr got at a similar age. Keep watching.</div>
-        <div class="feed-actions"><button class="feed-action-btn">♡ 1.4k</button><button class="feed-action-btn">↩ 388</button><button class="feed-action-btn">Save</button></div>
-      </div>
-      <div class="feed-post">
-        <div class="feed-post-header">
-          <div class="feed-av" style="background:rgba(245,200,66,0.12);color:var(--yellow);">TF</div>
-          <div><div class="feed-author">The Football Analyst</div><div class="feed-submeta">Partner · 42k followers · 5h ago</div></div>
-          <span class="feed-vbadge c-pill-y">Partner</span>
-        </div>
-        <div class="feed-body">Why Botafogo's 4-3-3 is tactically broken right now — their wide midfielders are being asked to press AND provide width simultaneously. This creates massive gaps in transition that opponents are starting to exploit consistently.</div>
-        <div class="feed-actions"><button class="feed-action-btn">♡ 2.1k</button><button class="feed-action-btn">↩ 670</button><button class="feed-action-btn">Save</button></div>
+      <!-- Three seeded posts lived here: a "ScoutMind AI - Botafogo" weakness
+           alert, a fake "Joao Ricardo - ESPN Brasil" analyst post and a fake
+           "The Football Analyst - Partner - 42k followers" post, all with
+           invented like/repost counts. A real For You feed is Phase C. -->
+      <div style="text-align:center;padding:40px 20px;color:var(--muted);">
+        <div style="font-size:13px;line-height:1.7;max-width:340px;margin:0 auto;">Posts from the clubs and analysts you follow will appear here.</div>
       </div>
     </div>
 
@@ -499,103 +471,17 @@ if(!_cu){
 <div class="page" id="page-communities">
 <div style="max-width:1100px;margin:0 auto;padding:24px 28px;">
 
-  <!-- Your club pinned top -->
+  <!-- Your club and the club grid are rendered from Supabase by
+       renderMyClubCard() / renderClubsGrid(). Everything here used to be
+       hardcoded: a Botafogo banner with "42.8k followers", invented style
+       badges and made-up per-game numbers. -->
   <div style="margin-bottom:22px;">
     <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Your club</div>
-    <div onclick="window.location.href='/community.html'" style="background:var(--bg2);border:1px solid rgba(0,229,160,0.2);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.5)'" onmouseout="this.style.borderColor='rgba(0,229,160,0.2)'">
-      <div style="height:48px;background:linear-gradient(135deg,#6b0000 0%,#c8000a 50%,#1a0000 100%);position:relative;overflow:hidden;">
-        <div style="position:absolute;inset:0;opacity:0.07;background-image:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:8px 8px;"></div>
-      </div>
-      <div style="padding:12px 16px;display:flex;align-items:center;gap:14px;">
-        <div style="width:44px;height:44px;border-radius:8px;background:var(--bg3);border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px;margin-top:-24px;flex-shrink:0;">⚽</div>
-        <div style="flex:1;">
-          <div id="clubs-main-name" style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--text);">BOTAFOGO</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px;">Série A · Rio de Janeiro · 42.8k followers</div>
-          <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;">
-            <span style="font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;background:rgba(255,107,53,0.1);color:var(--warn);border:1px solid rgba(255,107,53,0.2);">High Press</span>
-            <span style="font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);">Strong Attack</span>
-            <span style="font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;background:rgba(255,69,96,0.1);color:var(--red);border:1px solid rgba(255,69,96,0.2);">Aerial Weakness</span>
-          </div>
-        </div>
-        <div style="font-size:11px;color:var(--accent);flex-shrink:0;">Open →</div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);background:var(--bg3);">
-        <div style="padding:8px 0;text-align:center;border-right:1px solid var(--border);"><div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent);">5th</div><div style="font-size:8px;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:1px;">Position</div></div>
-        <div style="padding:8px 0;text-align:center;border-right:1px solid var(--border);"><div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;">31</div><div style="font-size:8px;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:1px;">Points</div></div>
-        <div style="padding:8px 0;text-align:center;border-right:1px solid var(--border);"><div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;">1.4</div><div style="font-size:8px;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:1px;">Goals/g</div></div>
-        <div style="padding:8px 0;text-align:center;"><div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--yellow);">1.2</div><div style="font-size:8px;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:1px;">Conceded/g</div></div>
-      </div>
-    </div>
+    <div id="clubs-my-card"></div>
   </div>
 
-  <!-- Explore all clubs -->
   <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">Explore communities</div>
-  <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
-    <button class="league-filter-btn active">All</button>
-    <button class="league-filter-btn">🇧🇷 Série A</button>
-    <button class="league-filter-btn">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</button>
-    <button class="league-filter-btn">🇪🇸 La Liga</button>
-    <button class="league-filter-btn">🇩🇪 Bundesliga</button>
-    <button class="league-filter-btn">🇦🇷 Argentina</button>
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-
-    <div onclick="window.location.href='/community.html'" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="width:34px;height:34px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;">🌿</div>
-        <div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--text);">Palmeiras</div><div style="font-size:10px;color:var(--muted);">Série A · 1st place</div></div>
-        <span style="font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;background:rgba(0,229,160,0.08);color:var(--accent);border:1px solid rgba(0,229,160,0.2);">No weakness</span>
-      </div>
-      <div style="display:flex;gap:10px;"><div style="font-size:10px;color:var(--muted);">Goals/g <span style="color:var(--text);font-family:'DM Mono',monospace;">2.1</span></div><div style="font-size:10px;color:var(--muted);">Conc/g <span style="color:var(--text);font-family:'DM Mono',monospace;">0.9</span></div><div style="font-size:10px;color:var(--muted);">Pass <span style="color:var(--text);font-family:'DM Mono',monospace;">87%</span></div></div>
-    </div>
-
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="width:34px;height:34px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;">⚽</div>
-        <div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--text);">Real Madrid</div><div style="font-size:10px;color:var(--muted);">La Liga · 1st place</div></div>
-        <span style="font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;background:rgba(245,200,66,0.08);color:var(--yellow);border:1px solid rgba(245,200,66,0.2);">Minor flag</span>
-      </div>
-      <div style="display:flex;gap:10px;"><div style="font-size:10px;color:var(--muted);">Goals/g <span style="color:var(--text);font-family:'DM Mono',monospace;">2.4</span></div><div style="font-size:10px;color:var(--muted);">Conc/g <span style="color:var(--text);font-family:'DM Mono',monospace;">0.8</span></div><div style="font-size:10px;color:var(--muted);">Pass <span style="color:var(--text);font-family:'DM Mono',monospace;">91%</span></div></div>
-    </div>
-
-    <div onclick="window.location.href='/community.html'" style="background:var(--bg2);border:1px solid rgba(0,229,160,0.15);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(0,229,160,0.15)';this.style.transform='none'">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="width:34px;height:34px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;">⚽</div>
-        <div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--text);">Botafogo</div><div style="font-size:10px;color:var(--muted);">Série A · 5th place</div></div>
-        <span style="font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;background:rgba(255,107,53,0.08);color:var(--warn);border:1px solid rgba(255,107,53,0.2);">Weakness</span>
-      </div>
-      <div style="display:flex;gap:10px;"><div style="font-size:10px;color:var(--muted);">Goals/g <span style="color:var(--text);font-family:'DM Mono',monospace;">1.4</span></div><div style="font-size:10px;color:var(--muted);">Conc/g <span style="color:var(--text);font-family:'DM Mono',monospace;">1.2</span></div><div style="font-size:10px;color:var(--muted);">Pass <span style="color:var(--text);font-family:'DM Mono',monospace;">79%</span></div></div>
-    </div>
-
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="width:34px;height:34px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;">⚽</div>
-        <div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--text);">Barcelona</div><div style="font-size:10px;color:var(--muted);">La Liga · 2nd place</div></div>
-        <span style="font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;background:rgba(0,229,160,0.08);color:var(--accent);border:1px solid rgba(0,229,160,0.2);">No weakness</span>
-      </div>
-      <div style="display:flex;gap:10px;"><div style="font-size:10px;color:var(--muted);">Goals/g <span style="color:var(--text);font-family:'DM Mono',monospace;">2.2</span></div><div style="font-size:10px;color:var(--muted);">Conc/g <span style="color:var(--text);font-family:'DM Mono',monospace;">0.9</span></div><div style="font-size:10px;color:var(--muted);">Pass <span style="color:var(--text);font-family:'DM Mono',monospace;">89%</span></div></div>
-    </div>
-
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="width:34px;height:34px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;">⚽</div>
-        <div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--text);">Arsenal</div><div style="font-size:10px;color:var(--muted);">Premier League · 2nd</div></div>
-        <span style="font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;background:rgba(245,200,66,0.08);color:var(--yellow);border:1px solid rgba(245,200,66,0.2);">Minor flag</span>
-      </div>
-      <div style="display:flex;gap:10px;"><div style="font-size:10px;color:var(--muted);">Goals/g <span style="color:var(--text);font-family:'DM Mono',monospace;">2.0</span></div><div style="font-size:10px;color:var(--muted);">Conc/g <span style="color:var(--text);font-family:'DM Mono',monospace;">0.8</span></div><div style="font-size:10px;color:var(--muted);">Pass <span style="color:var(--text);font-family:'DM Mono',monospace;">88%</span></div></div>
-    </div>
-
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.3)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="width:34px;height:34px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;">⚽</div>
-        <div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--text);">River Plate</div><div style="font-size:10px;color:var(--muted);">Argentina · 1st place</div></div>
-        <span style="font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;background:rgba(0,229,160,0.08);color:var(--accent);border:1px solid rgba(0,229,160,0.2);">No weakness</span>
-      </div>
-      <div style="display:flex;gap:10px;"><div style="font-size:10px;color:var(--muted);">Goals/g <span style="color:var(--text);font-family:'DM Mono',monospace;">1.9</span></div><div style="font-size:10px;color:var(--muted);">Conc/g <span style="color:var(--text);font-family:'DM Mono',monospace;">0.7</span></div><div style="font-size:10px;color:var(--muted);">Pass <span style="color:var(--text);font-family:'DM Mono',monospace;">83%</span></div></div>
-    </div>
-
-  </div>
+  <div class="clubs-grid" id="clubs-grid"></div>
 </div>
 </div>
 
@@ -652,18 +538,7 @@ if(!_cu){
   </div>
 
   <!-- Preferences -->
-  <div class="profile-section">
-    <div class="profile-section-title">Preferences</div>
-    <div class="profile-row">
-      <div class="profile-row-label">Default currency</div>
-      <div style="display:flex;gap:4px;">
-        <button onclick="setCurrency('EUR');highlightCurrPref('EUR')" id="pref-EUR" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--accent);background:rgba(0,229,160,0.1);color:var(--accent);cursor:pointer;font-family:inherit;">€ EUR</button>
-        <button onclick="setCurrency('USD');highlightCurrPref('USD')" id="pref-USD" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">$ USD</button>
-        <button onclick="setCurrency('BRL');highlightCurrPref('BRL')" id="pref-BRL" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">R$ BRL</button>
-        <button onclick="setCurrency('GBP');highlightCurrPref('GBP')" id="pref-GBP" style="font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">£ GBP</button>
-      </div>
-    </div>
-  </div>
+  <!-- Preferences held only the currency switcher, removed with it. -->
 
   <!-- Danger Zone -->
   <div class="profile-section" style="border-color:rgba(255,69,96,0.15);">
@@ -1378,14 +1253,10 @@ const CURRENCIES={
   GBP:{sym:'£',rate:0.85,fmt:(v)=>v>=1e6?'£'+((v*0.85)/1e6).toFixed(1)+'M':v>=1e3?'£'+((v*0.85)/1e3).toFixed(0)+'K':'£'+(v*0.85).toFixed(0)},
 };
 function fmtVal(v){return CURRENCIES[currentCurrency]?.fmt(v)||'€'+v;}
-function setCurrency(c){
-  currentCurrency=c;
-  document.querySelectorAll('.curr-btn').forEach(b=>b.classList.toggle('active',b.dataset.c===c));
-  const resContent=document.getElementById('resContent');
-  if(resContent&&resContent.style.display!=='none')runAnalysis();
-  const squadList=document.getElementById('squad-list');
-  if(squadList&&squadList.innerHTML)renderSquadPlayers();
-}
+// setCurrency() and its EUR/USD/BRL/GBP controls are gone: API-Football does
+// not supply market values (dropped in R0), so switching currency changed
+// nothing real. fmtVal() stays because Scout Mode still formats the values in
+// players_data.js — those go when Scout Mode moves to Supabase in R9.
 function scCls(s){return s>=70?'hi':s>=45?'mid':'lo';}
 function barClr(s){return s>=70?'var(--green)':s>=45?'var(--yellow)':'var(--red)';}
 function runAnalysis(){
@@ -1987,8 +1858,11 @@ function renderModalClubs(){
   document.getElementById('modal-club-list').innerHTML = filtered.map(c => {
     const isMain = selectedMainClub === c.id;
     const isFollowing = followingClubs.includes(c.id);
-    return `<div onclick="selectModalClub('${c.id}')" style="background:${isMain?'rgba(0,229,160,0.08)':isFollowing?'rgba(0,184,255,0.06)':'var(--bg3)'};border:1px solid ${isMain?'var(--accent)':isFollowing?'var(--accent2)':'var(--border)'};border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;">
-      <span style="font-size:16px;">${c.emoji}</span>
+    const state = isMain ? 'Main club — click to follow instead'
+                : isFollowing ? 'Following — click to remove'
+                : 'Click to follow';
+    return `<div onclick="selectModalClub('${c.id}')" title="${state}" style="background:${isMain?'rgba(0,229,160,0.08)':isFollowing?'rgba(0,184,255,0.06)':'var(--bg3)'};border:1px solid ${isMain?'var(--accent)':isFollowing?'var(--accent2)':'var(--border)'};border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;">
+      ${clubCrestBySlug(c.id,22)}
       <div style="flex:1;">
         <div style="font-size:11px;font-weight:600;color:var(--text);">${c.name}</div>
         <div style="font-size:9px;color:var(--muted);">${c.league}</div>
@@ -2000,34 +1874,53 @@ function renderModalClubs(){
 }
 
 function renderFollowingChips(){
-  document.getElementById('modal-following-list').innerHTML = followingClubs.map(id => {
+  const chip=(id,isMain)=>{
     const c = ALL_CLUBS.find(x=>x.id===id);
     if(!c)return '';
-    return `<div style="display:flex;align-items:center;gap:5px;background:rgba(0,184,255,0.08);border:1px solid rgba(0,184,255,0.2);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--accent2);">
-      ${c.emoji} ${c.name}
-      <span onclick="unfollowClub('${id}')" style="cursor:pointer;color:var(--muted);margin-left:3px;font-size:12px;">✕</span>
+    const col = isMain ? 'var(--accent)' : 'var(--accent2)';
+    const bg  = isMain ? 'rgba(0,229,160,0.08)' : 'rgba(0,184,255,0.08)';
+    const br  = isMain ? 'rgba(0,229,160,0.2)'  : 'rgba(0,184,255,0.2)';
+    const clear = isMain ? 'clearMainClub()' : `unfollowClub('${id}')`;
+    return `<div style="display:flex;align-items:center;gap:5px;background:${bg};border:1px solid ${br};border-radius:20px;padding:3px 10px 3px 4px;font-size:11px;color:${col};">
+      ${clubCrestBySlug(id,16)} ${c.name}${isMain?' <span style="font-size:9px;font-weight:700;">MAIN</span>':''}
+      <span onclick="event.stopPropagation();${clear}" title="Remove" style="cursor:pointer;color:var(--muted);margin-left:3px;font-size:12px;">✕</span>
     </div>`;
-  }).join('') || `<div style="font-size:11px;color:var(--muted);padding:6px 0;">Click clubs above to follow them too</div>`;
+  };
+  // The main club gets an ✕ too — without it, the only club you cannot remove
+  // from here is the one you most likely picked by mistake.
+  const chips = (selectedMainClub ? [chip(selectedMainClub,true)] : [])
+    .concat(followingClubs.map(id=>chip(id,false)));
+  document.getElementById('modal-following-list').innerHTML =
+    chips.join('') || `<div style="font-size:11px;color:var(--muted);padding:6px 0;">Click clubs above to follow them too</div>`;
 }
 
+/**
+ * Clicking a club cycles it: unselected -> main (or following, if you already
+ * have a main) -> following -> unselected.
+ *
+ * The previous version cycled main -> following -> main, so a club could never
+ * be deselected from the grid and a misclick was unrecoverable.
+ */
 function selectModalClub(id){
   if(selectedMainClub === id){
-    // Toggle to following if clicked again
-    if(!followingClubs.includes(id)) followingClubs.push(id);
+    // Main -> following. Demote, keep it.
     selectedMainClub = null;
+    if(!followingClubs.includes(id)) followingClubs.push(id);
   } else if(followingClubs.includes(id)){
-    // Already following — make it main club
+    // Following -> unselected. This is the step that was missing.
     followingClubs = followingClubs.filter(x=>x!==id);
-    if(selectedMainClub) followingClubs.push(selectedMainClub);
+  } else if(!selectedMainClub){
     selectedMainClub = id;
   } else {
-    // New club — set as main if none, else add to following
-    if(!selectedMainClub){
-      selectedMainClub = id;
-    } else {
-      followingClubs.push(id);
-    }
+    followingClubs.push(id);
   }
+  renderModalClubs();
+  renderFollowingChips();
+}
+
+/** Clear the main club without touching the clubs you follow. */
+function clearMainClub(){
+  selectedMainClub = null;
   renderModalClubs();
   renderFollowingChips();
 }
@@ -2098,6 +1991,7 @@ function showPage(id){
     b.classList.toggle('active', b.dataset.tab===id);
   });
   if(id==='profile') try{renderProfileClubs();}catch(e){}
+  if(id==='communities'){ try{renderMyClubCard();renderClubsGrid();}catch(e){console.error('clubs page:',e);} }
   if(id==='feed') try{renderFeedNews();}catch(e){}
   if(id==='matches') try{renderMatchDay();}catch(e){}
   window.scrollTo(0,0);
@@ -2338,6 +2232,194 @@ const CATEGORY_LABEL={
 
 let FEED_ITEMS=[];
 
+// api_team_id -> { name, logo_url, league, rank, points, played, gs, gc, pa, matches }
+// Filled by loadClubData(); empty until then, and every reader tolerates that.
+const CLUB_DATA=new Map();
+
+/** Crest + real numbers for the 25 picker slugs and anywhere else a club shows. */
+async function loadClubData(){
+  const get=async(path)=>{
+    const res=await fetch(`${SUPA_URL}/rest/v1/${path}`,{
+      headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`}
+    });
+    if(!res.ok)throw new Error(path+' HTTP '+res.status+' — '+(await res.text()).slice(0,200));
+    return res.json();
+  };
+  try{
+    const [teams,standings,stats]=await Promise.all([
+      get('teams?select=id,api_team_id,name,logo_url,leagues!teams_league_id_fkey(slug)&limit=500'),
+      get('standings?select=team_id,rank,points,played&limit=500'),
+      get('team_season_stats?select=team_id,matches,gs,gc,pa&limit=500'),
+    ]);
+    const byRowId=new Map();
+    for(const t of teams){
+      const row={
+        api_team_id:t.api_team_id,
+        name:t.name,
+        logo_url:t.logo_url,
+        league:t.leagues&&t.leagues.slug,
+      };
+      CLUB_DATA.set(t.api_team_id,row);
+      byRowId.set(t.id,row);
+    }
+    for(const s of standings){
+      const row=byRowId.get(s.team_id);
+      // Argentina holds two tournaments; keep the better position.
+      if(row&&(row.rank==null||(s.rank!=null&&s.rank<row.rank))){
+        row.rank=s.rank; row.points=s.points; row.played=s.played;
+      }
+    }
+    for(const s of stats){
+      const row=byRowId.get(s.team_id);
+      if(row){ row.matches=s.matches; row.gs=s.gs; row.gc=s.gc; row.pa=s.pa; }
+    }
+  }catch(e){
+    console.error('loadClubData:',e);
+  }
+}
+
+/**
+ * One stat cell. Renders nothing at all when we have no real value — a dash
+ * would still be a claim that the number exists.
+ */
+function statCell(label,value,colour){
+  if(value==null||value==='')return '';
+  return '<div style="padding:8px 0;text-align:center;flex:1;">'
+    +'<div style="font-size:14px;font-weight:700;font-family:\'DM Mono\',monospace;'
+    +(colour?'color:'+colour+';':'')+'">'+sanitize(String(value))+'</div>'
+    +'<div style="font-size:8px;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:1px;">'
+    +sanitize(label)+'</div></div>';
+}
+
+function ordinal(n){
+  if(n==null)return null;
+  const s=['th','st','nd','rd'],v=n%100;
+  return n+(s[(v-20)%10]||s[v]||s[0]);
+}
+
+const LEAGUE_LABEL={serie_a:'Série A',premier_league:'Premier League',la_liga:'La Liga',
+  bundesliga:'Bundesliga',serie_a_it:'Serie A',ligue_1:'Ligue 1',argentina:'Liga Profesional'};
+
+function renderMyClubCard(){
+  const el=document.getElementById('clubs-my-card');
+  if(!el)return;
+  let slug=selectedMainClub;
+  if(!slug){
+    try{ const m=JSON.parse(localStorage.getItem('sm_main_club')||'null'); if(m)slug=m.id; }catch(e){}
+  }
+  if(!slug){
+    el.innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">'
+      +'<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">You have not picked a club yet.</div>'
+      +'<button class="filter-btn" onclick="openTeamModal()">Choose your club</button></div>';
+    return;
+  }
+  const meta=ALL_CLUBS.find(c=>c.id===slug)||{name:slug};
+  const s=clubStats(slug)||{};
+  const d=CLUB_DATA.get(CLUB_API_ID[slug]);
+  const sub=[LEAGUE_LABEL[d&&d.league]||null,(s.played!=null?s.played+' played':null)]
+    .filter(Boolean).join(' · ');
+  const cells=statCell('Position',ordinal(s.rank),'var(--accent)')
+    +statCell('Points',s.points)
+    +statCell('Goals/g',s.goalsFor)
+    +statCell('Conceded/g',s.goalsAgainst)
+    +statCell('Pass',s.passPct);
+  el.innerHTML='<div onclick="window.location.href=\'/community.html\'" style="background:var(--bg2);border:1px solid rgba(0,229,160,0.2);border-radius:12px;overflow:hidden;cursor:pointer;">'
+    +'<div style="padding:14px 16px;display:flex;align-items:center;gap:14px;">'
+    +clubCrestBySlug(slug,44)
+    +'<div style="flex:1;min-width:0;">'
+    +'<div id="clubs-main-name" style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;letter-spacing:2px;">'+sanitize((meta.name||'').toUpperCase())+'</div>'
+    +(sub?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+sanitize(sub)+'</div>':'')
+    +'</div><div style="font-size:11px;color:var(--accent);flex-shrink:0;">Open →</div></div>'
+    +(cells?'<div style="display:flex;border-top:1px solid var(--border);background:var(--bg3);">'+cells+'</div>':'')
+    +'</div>';
+}
+
+function renderClubsGrid(){
+  const el=document.getElementById('clubs-grid');
+  if(!el)return;
+  const cards=ALL_CLUBS.map(function(c){
+    const s=clubStats(c.id)||{};
+    const d=CLUB_DATA.get(CLUB_API_ID[c.id]);
+    const sub=[LEAGUE_LABEL[d&&d.league]||null,(s.rank!=null?ordinal(s.rank)+' place':null)]
+      .filter(Boolean).join(' · ');
+    const bits=[
+      s.goalsFor!=null?'Goals/g <span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+s.goalsFor+'</span>':null,
+      s.goalsAgainst!=null?'Conc/g <span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+s.goalsAgainst+'</span>':null,
+      s.passPct!=null?'Pass <span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+s.passPct+'</span>':null,
+    ].filter(Boolean);
+    return '<div class="club-explore-card" onclick="window.location.href=\'/community.html\'">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+      +clubCrestBySlug(c.id,34)
+      +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">'+sanitize(c.name)+'</div>'
+      +(sub?'<div style="font-size:10px;color:var(--muted);">'+sanitize(sub)+'</div>':'')
+      +'</div></div>'
+      +(bits.length?'<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--muted);">'
+        +bits.map(b=>'<div>'+b+'</div>').join('')+'</div>':'')
+      +'</div>';
+  }).join('');
+  el.innerHTML=cards;
+}
+
+/** Crest for one of the ALL_CLUBS slugs. Falls back to initials before load. */
+function clubCrestBySlug(slug,size){
+  const team=CLUB_DATA.get(CLUB_API_ID[slug]);
+  const meta=ALL_CLUBS.find(c=>c.id===slug);
+  return clubCrest(team||{name:(meta&&meta.name)||slug},size);
+}
+
+/**
+ * Real numbers for a club, or null when we have none. Never invents a value:
+ * a missing stat is a hidden row, not a zero.
+ */
+function clubStats(slug){
+  const d=CLUB_DATA.get(CLUB_API_ID[slug]);
+  if(!d)return null;
+  // gs and gc are ALREADY per game — team_season_stats stores the rate, with
+  // `matches` as the denominator that produced it (003: "goals scored / game").
+  // Dividing by matches again is the rule-15 mistake.
+  const rate=(v)=>(v!=null)?Number(v).toFixed(2):null;
+  return {
+    rank:d.rank??null,
+    points:d.points??null,
+    played:d.played??null,
+    matches:d.matches??null,
+    goalsFor:rate(d.gs),
+    goalsAgainst:rate(d.gc),
+    passPct:(d.pa!=null)?Math.round(d.pa)+'%':null,
+  };
+}
+
+/**
+ * Club crest from teams.logo_url, on a neutral dark tile.
+ *
+ * The images are hotlinked from media.api-sports.io: CORS is `*`, they are
+ * cached for 48h, and no page that shows a crest sets a CSP. (auth.html does
+ * set one with `img-src 'self' data:` — add the host there before putting a
+ * crest on that page.) Lazy-loaded and sized so 146 of them cannot shift the
+ * layout, with the club's initials as the fallback when an image 404s.
+ */
+function clubCrest(team,size){
+  const px=size||24;
+  const name=(team&&team.name)||'';
+  const initials=name.split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,3);
+  const box='width:'+px+'px;height:'+px+'px;border-radius:6px;background:var(--bg3);'
+    +'border:1px solid var(--border);flex-shrink:0;display:inline-flex;'
+    +'align-items:center;justify-content:center;overflow:hidden;vertical-align:middle;';
+  if(team&&team.logo_url){
+    // onerror swaps in the initials tile, so a dead crest never leaves a hole.
+    return '<span style="'+box+'" title="'+sanitize(name)+'">'
+      +'<img src="'+sanitize(team.logo_url)+'" alt="" loading="lazy" decoding="async" '
+      +'width="'+px+'" height="'+px+'" '
+      +'style="width:'+Math.round(px*0.82)+'px;height:'+Math.round(px*0.82)+'px;object-fit:contain;" '
+      +'onerror="this.parentNode.textContent=\''+sanitize(initials)+'\';'
+      +'this.parentNode.style.fontSize=\''+Math.max(8,Math.round(px*0.34))+'px\';'
+      +'this.parentNode.style.fontWeight=700;this.parentNode.style.color=\'var(--muted)\';">'
+      +'</span>';
+  }
+  return '<span style="'+box+'font-size:'+Math.max(8,Math.round(px*0.34))+'px;font-weight:700;'
+    +'color:var(--muted);" title="'+sanitize(name)+'">'+sanitize(initials)+'</span>';
+}
+
 /** Browser language reduced to one of our source languages. */
 function browserLang(){
   const raw=(navigator.language||'en').toLowerCase();
@@ -2369,15 +2451,39 @@ async function loadNews(){
   const select=[
     'id','title','summary','source_url','lang','category','published_at',
     'news_sources(slug,name,country)',
-    'news_item_teams(via,teams(api_team_id,name,leagues(slug)))'
+    // `leagues` must be disambiguated: standings also joins teams to leagues,
+    // so a bare leagues(...) is ambiguous and PostgREST answers 300 PGRST201.
+    'news_item_teams(via,in_title,teams(api_team_id,name,logo_url,leagues!teams_league_id_fkey(slug)))'
   ].join(',');
-  const q='select='+encodeURIComponent(select)+'&order=published_at.desc&limit=80';
-  try{
+  // Without migration 006 there is no in_title and no football_ok.
+  const legacySelect=select.replace('via,in_title,','via,');
+  const base='select='+encodeURIComponent(select)+'&order=published_at.desc&limit=120';
+  const legacyBase='select='+encodeURIComponent(legacySelect)+'&order=published_at.desc&limit=120';
+  const ask=async(q)=>{
     const res=await fetch(`${SUPA_URL}/rest/v1/news_items?${q}`,{
       headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`}
     });
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const rows=await res.json();
+    // PostgREST puts the real reason in the body; HTTP 300 for an ambiguous
+    // embed is invisible otherwise.
+    if(!res.ok)throw new Error('HTTP '+res.status+' — '+(await res.text()).slice(0,300));
+    return res.json();
+  };
+  try{
+    let rows;
+    try{
+      rows=await ask(base+'&football_ok=is.true');
+    }catch(err){
+      // The site deploys on push but migrations are run by hand, so the page
+      // can be live before 006 adds football_ok and in_title. Show the news
+      // rather than nothing, and say why once.
+      const m=String(err.message);
+      if(m.indexOf('football_ok')>-1||m.indexOf('in_title')>-1){
+        console.warn('news: migration 006 not applied yet — showing unfiltered, unranked news.');
+        rows=await ask(legacyBase);
+      }else{
+        throw err;
+      }
+    }
     FEED_ITEMS=rows.map(function(r){
       const teams=(r.news_item_teams||[]).map(t=>t.teams).filter(Boolean);
       const leagues=teams.map(t=>t.leagues&&t.leagues.slug).filter(Boolean);
@@ -2398,6 +2504,11 @@ async function loadNews(){
         publishedAt:r.published_at,
         teams:teams,
         teamIds:teams.map(t=>t.api_team_id),
+        // A club named in the headline is what the piece is about; a club
+        // mentioned only in the summary is background.
+        // Empty before migration 006; ranking then falls back to recency.
+        headlineTeamIds:(r.news_item_teams||[]).filter(t=>t.in_title&&t.teams)
+                          .map(t=>t.teams.api_team_id),
         region:region,
       };
     });
@@ -2453,7 +2564,8 @@ function renderFeedItem(item){
 function renderNewsCard(n){
   const cat=CATEGORY_LABEL[n.category]||CATEGORY_LABEL.general;
   const clubs=(n.teams||[]).slice(0,3).map(t=>
-    '<span style="font-size:10px;padding:2px 8px;background:rgba(0,184,255,0.08);border:1px solid rgba(0,184,255,0.18);border-radius:10px;color:var(--accent2);">'+sanitize(t.name)+'</span>'
+    '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:2px 8px 2px 3px;background:rgba(0,184,255,0.08);border:1px solid rgba(0,184,255,0.18);border-radius:10px;color:var(--accent2);">'
+    +clubCrest(t,16)+sanitize(t.name)+'</span>'
   ).join('');
   let html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;">'
     +'<div style="padding:16px 18px;">'
@@ -2474,16 +2586,32 @@ function renderNewsCard(n){
 function visibleFeedItems(){
   const myLang=browserLang();
   const mine=followedApiIds();
-  return FEED_ITEMS.filter(function(n){
-    // Language: your language, plus English, plus anything about a club you
-    // follow whatever language it is written in.
-    const followed=n.teamIds.some(id=>mine.indexOf(id)>-1);
-    if(!followed && n.lang!==myLang && n.lang!=='en')return false;
+  const out=FEED_ITEMS.filter(function(n){
+    // Language: English, plus your own language, plus anything tagged to a
+    // club in one of our seven leagues whatever language it is written in —
+    // a Palmeiras story matters to a Palmeiras fan reading in English.
+    const aboutAClub=n.teamIds.length>0;
+    if(!aboutAClub && n.lang!==myLang && n.lang!=='en')return false;
     if(currentFeedFilter==='all')return true;
     if(currentFeedFilter==='transfers')return ['transfer','rumor','contract'].indexOf(n.category)>-1;
     if(currentFeedFilter==='brazil')return n.region==='brazil';
     if(currentFeedFilter==='europe')return n.region==='europe';
     return n.category===currentFeedFilter;
+  });
+  // Rank: clubs you follow first, then headline mentions over passing ones,
+  // then newest. Sort is stable, so equal items keep published order.
+  const followRank=n=>{
+    if(!mine.length)return 0;
+    if(n.headlineTeamIds.some(id=>mine.indexOf(id)>-1))return -2;
+    if(n.teamIds.some(id=>mine.indexOf(id)>-1))return -1;
+    return 0;
+  };
+  return out.sort(function(a,b){
+    const fr=followRank(a)-followRank(b);
+    if(fr)return fr;
+    const ht=(b.headlineTeamIds.length>0)-(a.headlineTeamIds.length>0);
+    if(ht)return ht;
+    return new Date(b.publishedAt)-new Date(a.publishedAt);
   });
 }
 
@@ -2693,7 +2821,14 @@ function filterWeekly(league, btn) {
   allBtns.forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
-try{loadNews();}catch(e){console.error('loadNews:',e);}
+// Club data first: crests and real numbers should be in hand before the feed
+// and the pickers paint. A failure here is logged and everything still renders.
+(async function(){
+  try{ await loadClubData(); }catch(e){ console.error('loadClubData:',e); }
+  try{ renderModalClubs(); }catch(e){}
+  try{ renderProfileClubs(); }catch(e){}
+  try{ await loadNews(); }catch(e){ console.error('loadNews:',e); }
+})();
 try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 try{initProfile();}catch(e){console.error('initProfile:',e);}
 try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}

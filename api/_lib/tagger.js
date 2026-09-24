@@ -235,6 +235,9 @@ function nextToken(text, at) {
 export function tagText(index, title, summary, lang) {
   const text = foldKeepCase(`${title || ''} . ${summary || ''}`);
   const low = text.toLowerCase();
+  // Stripping diacritics preserves length, so offsets in `text` line up with
+  // the original. Anything starting before this is in the headline.
+  const titleEnd = foldKeepCase(title || '').length;
   const candidates = [];
 
   for (const e of index.entries) {
@@ -296,10 +299,22 @@ export function tagText(index, title, summary, lang) {
   for (const c of candidates) {
     if (taken.some((t) => c.at < t.end && t.at < c.end)) continue;
     taken.push(c);
-    if (!hits.has(c.api_team_id)) hits.set(c.api_team_id, c.via);
+    const prev = hits.get(c.api_team_id);
+    const in_title = c.at < titleEnd;
+    if (!prev) {
+      hits.set(c.api_team_id, { via: c.via, in_title });
+    } else if (in_title && !prev.in_title) {
+      // A club named in the headline is what the article is about; a mention
+      // further down is background. Prefer the headline hit.
+      hits.set(c.api_team_id, { via: c.via, in_title });
+    }
   }
 
-  return [...hits.entries()].map(([api_team_id, via]) => ({ api_team_id, via }));
+  return [...hits.entries()].map(([api_team_id, h]) => ({
+    api_team_id,
+    via: h.via,
+    in_title: h.in_title,
+  }));
 }
 
 /**

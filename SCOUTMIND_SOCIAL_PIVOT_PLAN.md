@@ -18,7 +18,8 @@
 | **R3** | Teams, venues and coaches ingested — **146 teams across 7 leagues** | live |
 | **R4** | Fixtures, standings and live scores. Standings **146 rows**; Argentina's multi-group tables collapse correctly. Matches page reads Supabase with a static fallback | live |
 | **R5** | `/api/cron/fixture-stats` — all 18 stat types per fixture, aggregated into `team_season_stats`. Migration `004`. Self-limiting batches (40 fixtures or 20s) serve backfill and steady state from one job. Backlog at launch: **932 finished fixtures**, ~24 runs | live |
-| **R8 + news slice of R9** | `/api/cron/news` — 10 RSS feeds → `news_items`, club-tagged via `team_aliases`. Migration `005`. Home feed renders real news through `renderFeedItem()`. Both fake widgets (Hot Rumors %, Fit Score Index) deleted. Costs **zero** API-Football requests | built, awaiting `005` |
+| **R8 + news slice of R9** | `/api/cron/news` — 10 RSS feeds → `news_items`, club-tagged via `team_aliases`. Migration `005`. Home feed renders real news through `renderFeedItem()`. Both fake widgets (Hot Rumors %, Fit Score Index) deleted. Costs **zero** API-Football requests | live |
+| **Nothing-fake pass** | Migration `006` (`football_ok`, `in_title`, `exclude_patterns`). Real crests everywhere, real Clubs-page numbers from `standings` + `team_season_stats`, football-only feed, headline-first ranking. Every hardcoded post, poll, wishlist entry, follower count, style badge and invented percentage removed | built, awaiting `006` |
 
 ### Infrastructure
 
@@ -49,6 +50,17 @@
 - **Club-ID stopgap:** the Home feed's `ALL_CLUBS` slugs predate the football tables, so `CLUB_API_ID` in `index.html` maps 25 slugs to API-Football ids. Replace it when clubs are read from `teams`.
 - **News cards have no comment UI.** The old hardcoded stories had one backed by an in-memory store, so a comment looked posted and vanished on reload. It was removed rather than shipped. Comments are Phase C and must go to Supabase, not localStorage (rule 10). The CSS classes (`.comment-section`, `.comment-toggle`, `.comments-body`, `.comment-item`, `.comment-input`) are still in `index.html` for C to render against.
 - `news_items` only grows: rule 13 forbids DELETE in `api/`. Prune by hand; the SQL is at the bottom of `005`.
+
+**Nothing-fake pass, carried forward:**
+
+- **The empty Home feed was `HTTP 300 PGRST201`**, not the language filter. `teams`↔`leagues` has two relationship paths (`teams.league_id` and the `standings` junction), so a bare `leagues(...)` embed is ambiguous. Fixed with `leagues!teams_league_id_fkey(...)`. Now a hard rule (20).
+- **Language rule is option (b):** English, plus the browser's language, plus anything tagged to a club in our seven leagues whatever the language. Measured on live data: 120 fetched → 80 visible; strict language-only would have shown 26.
+- **Non-football filter:** a club tag proves football, so keywords only judge untagged items. Zero false positives across 516 live rows. **Golf was missed on the first pass** (Sky carries Ryder/Presidents Cup) and only surfaced by re-running the filter against live rows — re-audit after any feed change.
+- **`gs` and `gc` in `team_season_stats` are already per-game.** `matches` is the denominator that produced them, not one to apply again. Dividing twice showed Flamengo at 0.07 goals/g before it was caught.
+- **Crests** come from `teams.logo_url` on `media.api-sports.io` — `Access-Control-Allow-Origin: *`, `max-age=172800`, all 146 non-null. Lazy-loaded, fixed size, initials fallback on error. ⚠️ `auth.html` sets `img-src 'self' data:`; add the host there before showing a crest on that page.
+- **Community page has no stats right now.** Its badges, four stat cards and "ScoutMind Weekly Verdict" all came from hardcoded `leagues_data.js` and were removed. They return in R9 when `community.html` reads Supabase like the Clubs page does.
+- **Scout Mode still shows market values** from `players_data.js` via `fmtVal()`. The currency *switcher* is gone (the API has no market values), but the numbers remain until Scout Mode moves to Supabase in R9. **Open question for Felipe.**
+- The Scout-instead-of-Home landing bug **could not be reproduced** logged out, with a simulated logged-in user, or after a hard refresh on production: `activePages: ["page-feed"]` every time.
 
 ### Next, in order
 

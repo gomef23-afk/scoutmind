@@ -193,7 +193,7 @@ email and a bio. Only the dashboard (service role) reads them. Insert is
 
 ---
 
-## 6b. FOOTBALL DATA TABLES (migrations `003`–`005`, Phase R)
+## 6b. FOOTBALL DATA TABLES (migrations `003`–`006`, Phase R)
 
 Written only by the cron jobs. All public-read.
 
@@ -210,9 +210,9 @@ Written only by the cron jobs. All public-read.
 | `players` | Name, age, nationality, height, photo | R6 |
 | `player_season_stats` | Apps, minutes, rating, goals, passes, tackles, duels, cards | R6 |
 | `player_season_rates` | **VIEW** — per-appearance rates computed, never stored | derived |
-| `news_sources` | The 10 live feeds — `lang`, `country`, `headline_only`, health counters | seeded in `005` ✅ |
-| `news_items` | Headline + ≤300-char snippet + link. **Never full article text** | `/api/cron/news` ✅ |
-| `news_item_teams` | Article → club, plus `via` (the alias that matched, so a surprising tag is debuggable) | `/api/cron/news` ✅ |
+| `news_sources` | The 10 live feeds — `lang`, `country`, `headline_only`, `exclude_patterns`, health counters | seeded in `005` ✅ |
+| `news_items` | Headline + ≤300-char snippet + link. **Never full article text**. `football_ok` hides non-football without deleting it | `/api/cron/news` ✅ |
+| `news_item_teams` | Article → club, plus `via` (the alias that matched) and `in_title` (named in the headline, drives ranking) | `/api/cron/news` ✅ |
 | `ingest_runs` | Job telemetry + resumable cursor. **No read policy** — telemetry, not content | all jobs |
 
 ### Data the API does not provide — dropped

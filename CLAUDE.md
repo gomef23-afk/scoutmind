@@ -43,6 +43,8 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 17. **Never store article text.** For news we keep a headline, a plain-text snippet of at most 300 characters, and a link out. Never fetch the article page, never store or hotlink its images. Sources whose feed carries the full body are marked `news_sources.headline_only` and get no snippet stored at all.
 18. **No invented numbers next to real content.** No probability, fit score or confidence percentage beside a real headline unless it is computed from data we hold and can be explained.
 19. Club tagging rules live in `api/_lib/tagger.js` and the alias seed in `api/_lib/aliases.js` (the migration's seed block is generated from it). Both are pinned by `tests/tagger.test.js` against frozen RSS fixtures — run it after any change to either.
+20. **Disambiguate PostgREST embeds.** `teams` and `leagues` are joined by *two* paths (`teams.league_id` and the `standings` junction), so a bare `leagues(...)` embed returns **HTTP 300 PGRST201**, not an error row. Always write `leagues!teams_league_id_fkey(...)`. And never treat a non-2xx as a bare status — log the response body, or the real reason stays invisible.
+21. **The front end deploys before migrations run.** Vercel auto-deploys on push; Felipe runs SQL by hand afterwards. Any query using a brand-new column must degrade to a working query when that column is missing, not blank the page.
 
 ## Workflow
 - Before editing, grep and list every hit you plan to change. Wait for approval on anything that removes or restructures more than one section.

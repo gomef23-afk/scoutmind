@@ -12,6 +12,7 @@ import { withCron } from '../_lib/cron.js';
 import { select, upsert, upsertReturning, update } from '../_lib/supabase.js';
 import { parseFeed } from '../_lib/rss.js';
 import { buildIndex, tagText, clipSummary, normalise } from '../_lib/tagger.js';
+import { isFootball } from '../_lib/football-filter.js';
 
 const FETCH_TIMEOUT_MS = 8000;
 const WALL_CLOCK_BUDGET_MS = 20000; // rule 16: cron-job.org gives up at 30s
@@ -83,7 +84,7 @@ export default withCron('news', async ({ req }) => {
   const [sources, teams, aliasRows] = await Promise.all([
     select(
       'news_sources',
-      'select=id,slug,name,url,lang,country,headline_only,consecutive_failures&active=is.true&order=slug'
+      'select=id,slug,name,url,lang,country,headline_only,exclude_patterns,consecutive_failures&active=is.true&order=slug'
     ),
     select('teams', 'select=id,api_team_id,name,league_id'),
     select('team_aliases', 'select=team_id,alias,kind,langs,short_ok'),
@@ -117,6 +118,7 @@ export default withCron('news', async ({ req }) => {
   let itemsWritten = 0;
   let tagsWritten = 0;
   let skippedForTime = 0;
+  let nonFootball = 0;
 
   for (const source of todo) {
     if (Date.now() - started > WALL_CLOCK_BUDGET_MS) {
@@ -158,6 +160,8 @@ export default withCron('news', async ({ req }) => {
       // is not headline_only.
       const snippet = clipSummary(item.summary, 300);
       const hits = tagText(index, item.title, snippet, source.lang);
+      const football = isFootball(item.title, snippet, hits.length, source.exclude_patterns);
+      if (!football) nonFootball++;
 
       rows.push({
         source_id: source.id,
@@ -168,10 +172,17 @@ export default withCron('news', async ({ req }) => {
         lang: source.lang,
         category: categorise(item.title, snippet),
         published_at: item.published,
+        football_ok: football,
       });
       tagsByGuid.set(
         item.guid,
-        hits.map((h) => ({ team_id: ourId.get(h.api_team_id), via: h.via })).filter((t) => t.team_id)
+        hits
+          .map((h) => ({
+            team_id: ourId.get(h.api_team_id),
+            via: h.via,
+            in_title: h.in_title,
+          }))
+          .filter((t) => t.team_id)
       );
     }
 
@@ -186,7 +197,7 @@ export default withCron('news', async ({ req }) => {
     const tagRows = [];
     for (const s of stored) {
       for (const t of tagsByGuid.get(s.guid) || []) {
-        tagRows.push({ news_item_id: s.id, team_id: t.team_id, via: t.via });
+        tagRows.push({ news_item_id: s.id, team_id: t.team_id, via: t.via, in_title: t.in_title });
       }
     }
     if (tagRows.length) {
@@ -208,6 +219,7 @@ export default withCron('news', async ({ req }) => {
     rows_written: itemsWritten,
     requests_used: 0, // no API-Football calls
     tags_written: tagsWritten,
+    non_football_hidden: nonFootball,
     sources: perSource,
     skipped_for_time: skippedForTime,
     index_entries: index.entries.length,

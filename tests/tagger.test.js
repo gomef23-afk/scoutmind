@@ -14,6 +14,7 @@ import { buildIndex, tagText, clipSummary, normalise, LEAGUE_LANG } from '../api
 import { parseFeed, parseDate, decodeEntities } from '../api/_lib/rss.js';
 import { TEAM_ALIASES } from '../api/_lib/aliases.js';
 import { NEWS_SOURCES } from '../api/_lib/sources.js';
+import { isFootball } from '../api/_lib/football-filter.js';
 
 let passed = 0;
 const failures = [];
@@ -122,6 +123,45 @@ export async function run(read) {
   eq('Villa is David Villa in Spanish', tag('David Villa habla sobre el Barcelona', 'es'), ['Barcelona(barcelona)']);
   eq('Villa is the club in English', tag('Villa beat Arsenal at Villa Park', 'en'), ['Arsenal(arsenal)', 'Aston Villa(villa)']);
   eq('full club name still matches abroad', tag('Aston Villa gano al Arsenal', 'es'), ['Arsenal(arsenal)', 'Aston Villa(aston villa)']);
+
+  // ── headline vs summary ─────────────────────────────────────────────────
+  // Drives ranking: a club named in the headline is what the piece is about.
+  const hit = (t, s, l, id) =>
+    tagText(index, t, s, l).find((h) => h.api_team_id === id);
+  eq('in_title: club in the headline', hit('Santos acerta venda', '', 'pt-BR', 128).in_title, true);
+  // Lowercase "o" before the club: a capitalised previous word would trip the
+  // surname rule and drop the tag entirely.
+  eq('in_title: club only in the summary',
+    hit('Mercado agitado hoje', 'Negociacao avanca e o Santos confirma a saida', 'pt-BR', 128).in_title, false);
+  eq('in_title: headline beats a later mention',
+    hit('Santos acerta venda', 'Negociacao avanca e o Santos confirma', 'pt-BR', 128).in_title, true);
+  // Accents must not shift the offset that decides this.
+  eq('in_title: survives diacritics',
+    hit('Grêmio vence o clássico', 'Depois do jogo', 'pt-BR', 130).in_title, true);
+
+  // ── football-only filter ────────────────────────────────────────────────
+  // A club tag is proof of football; keywords only judge untagged items.
+  eq('football: tagged item always passes', isFootball('NFL and NBA roundup', '', 1), true);
+  eq('football: untagged NFL feature blocked',
+    isFootball('NFL no Rio: como o Baltimore Ravens nasceu', '', 0), false);
+  eq('football: untagged TV listing blocked',
+    isFootball('O que assistir nesta quinta-feira no Disney+', '', 0), false);
+  eq('football: untagged F1 blocked',
+    isFootball('Norris rules McLaren out of Baku pole fight', 'Formula 1', 0), false);
+  eq('football: untagged golf blocked',
+    isFootball('How Scheffler and Burns edged Lee and Im', 'Ryder Cup golf', 0), false);
+  eq('football: accented spelling blocked',
+    isFootball('Tênis: Alcaraz avança', '', 0), false);
+  // A football fixture listing must survive — "onde assistir" is how Brazilian
+  // outlets headline kickoff times.
+  eq('football: fixture listing kept',
+    isFootball('Brasil x Australia: onde assistir ao vivo, horario e escalacoes', '', 0), true);
+  eq('football: ordinary transfer story kept',
+    isFootball('Flamengo acerta contratacao de lateral', '', 0), true);
+  eq('football: per-source pattern applies',
+    isFootball('Weekly podcast roundup', '', 0, ['podcast']), false);
+  eq('football: a broken per-source pattern is ignored',
+    isFootball('Flamengo vence', '', 0, ['(((']), true);
 
   // ── snippet clamping ────────────────────────────────────────────────────
   eq('clip: short text untouched', clipSummary('Short one.'), 'Short one.');

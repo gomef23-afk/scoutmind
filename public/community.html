@@ -360,19 +360,7 @@ function renderTeamPage(){
   var info=(typeof TEAM_INFO!=='undefined'&&(TEAM_INFO[tk]||TEAM_INFO[t.id]))||{};
   var coach=(typeof COACHES!=='undefined'&&(COACHES[tk]||COACHES[t.id]))||{};
   var ini=t.name.split(' ').map(function(w){return w[0];}).join('').slice(0,3).toUpperCase();
-  var badges=[];
-  if(t.pos_pct>(av.pos||50)+5)badges.push({t:'High Possession',c:'bs'});
-  if(t.tk>(av.tk||18)+1)badges.push({t:'High Press',c:'bw'});
-  if(t.gs>(av.gs||1.3)+0.2)badges.push({t:'Strong Attack',c:'bs'});
-  if(t.gc<(av.gc||1.3)-0.15)badges.push({t:'Solid Defence',c:'bs'});
-  var vv=[];
-  if(t.gc>(av.gc||1.3)*1.2)vv.push('defensive errors are a concern');
-  if(t.gs<(av.gs||1.3)*0.85)vv.push('attacking output is below average');
-  if(t.aer<(av.aer||51)*0.9)vv.push('aerial vulnerability at set pieces');
-  var verdict=vv.length>0?'ScoutMind identifies '+vv.slice(0,2).join(' and ')+' as priority areas.':t.name+' are performing well across all key metrics this season.';
   var lm=(typeof LEAGUE_META!=='undefined'&&LEAGUE_META[AL])?LEAGUE_META[AL].flag+' '+LEAGUE_META[AL].name:AL;
-  var gsClr=t.gs>=(av.gs||1.3)?'var(--green)':'var(--red)';
-  var gcClr=t.gc<=(av.gc||1.3)?'var(--green)':'var(--red)';
   var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;">'
     +'<div style="height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>'
     +'<div style="padding:20px 22px;">'
@@ -387,16 +375,11 @@ function renderTeamPage(){
     +(info.instagram?'<a href="https://instagram.com/'+info.instagram.replace('@','')+'\" target="_blank" style="text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-size:18px">📸</div><div style="font-size:10px;color:var(--muted)">'+info.instagram+'</div></a>':'')
     +'</div>'
     +(coach.name?'<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;margin-bottom:14px;"><div style="font-size:20px">👔</div><div><div style="font-size:13px;font-weight:600">'+coach.name+'</div><div style="font-size:11px;color:var(--muted)">Head Coach · Since '+coach.since+'</div></div></div>':'')
-    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">'+badges.map(function(b){return '<div class="tbadge '+b.c+'">'+b.t+'</div>';}).join('')+'</div>'
-    +'<div class="stats4">'
-    +'<div class="sc"><div class="sv" style="color:'+gsClr+'">'+(t.gs||'—')+'</div><div class="sl">Goals/game</div></div>'
-    +'<div class="sc"><div class="sv" style="color:'+gcClr+'">'+(t.gc||'—')+'</div><div class="sl">Conceded/game</div></div>'
-    +'<div class="sc"><div class="sv">'+(t.pa||'—')+'%</div><div class="sl">Pass accuracy</div></div>'
-    +'<div class="sc"><div class="sv">'+(t.pos_pct||'—')+'%</div><div class="sl">Possession</div></div>'
-    +'</div></div>'
-    +'<div style="border-top:1px solid var(--border);padding:12px 22px;background:rgba(0,229,160,0.02)">'
-    +'<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:6px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s infinite"></span>ScoutMind Weekly Verdict</div>'
-    +'<div style="font-size:12px;color:var(--muted);line-height:1.6">'+verdict+'</div>'
+    // Style badges (High Press / Strong Attack / Solid Defence), the four
+    // stat cards (goals/game, conceded/game, pass accuracy, possession) and
+    // the "ScoutMind Weekly Verdict" were all computed from leagues_data.js,
+    // which is hardcoded rather than measured. They come back in R9 when this
+    // page reads standings and team_season_stats like the Clubs page does.
     +'</div></div>'
     +'<div class="ctabs">'
     +'<button class="ctab'+(ATab==='polls'?' active':'')+'" onclick="switchTab(\'polls\',this)">🗳 Polls</button>'
@@ -419,13 +402,22 @@ function renderTab(){
 }
 function getTD(tk){var s=localStorage.getItem('sm_comm_'+tk);return s?JSON.parse(s):getDD(tk);}
 function saveTD(tk,d){localStorage.setItem('sm_comm_'+tk,JSON.stringify(d));}
+/**
+ * Per-club polls and wishlist.
+ *
+ * This used to return seeded polls with invented vote counts (Flamengo
+ * 142/89/210, Palmeiras 312/87/56, Botafogo 120/98/75/45) and a seeded
+ * wishlist (Julián Álvarez 234 votes, Nico Williams 189, Wirtz 178, Luiz
+ * Henrique 289, Thiago Almada 156), all attributed to "ScoutMind". None of it
+ * came from a real person, so none of it is here any more.
+ *
+ * Polls and wishlist entries created in this session still work; they live in
+ * memory only. Persisting them to Supabase is Phase C.
+ */
 function getDD(tk){
-  var D={
-    flamengo:{polls:[{id:'p1',q:'Who should be our starting striker?',opts:['Pedro','Igor Jesus','New signing'],votes:[142,89,210],userVote:null,author:'ScoutMind',time:'2h ago'},{id:'p2',q:'Should Flamengo sell Gerson this summer?',opts:['Yes','No','Depends'],votes:[45,287,123],userVote:null,author:'ScoutMind',time:'1d ago'}],wishlist:[{name:'Julián Álvarez',club:'Atlético Madrid',pos:'ST',votes:234,userVoted:false},{name:'Nico Williams',club:'Athletic Bilbao',pos:'LW',votes:189,userVoted:false}]},
-    palmeiras:{polls:[{id:'p1',q:'Is Estêvão ready to start every game?',opts:['Yes, 100%','Needs more time','Rotation is fine'],votes:[312,87,56],userVote:null,author:'ScoutMind',time:'3h ago'}],wishlist:[{name:'Florian Wirtz',club:'Bayer Leverkusen',pos:'CAM',votes:178,userVoted:false}]},
-    botafogo:{polls:[{id:'p1',q:'What position does Botafogo need most?',opts:['Striker','Centre-back','Midfielder','Goalkeeper'],votes:[120,98,75,45],userVote:null,author:'ScoutMind',time:'1d ago'}],wishlist:[{name:'Luiz Henrique',club:'Botafogo (renew)',pos:'LW',votes:289,userVoted:false},{name:'Thiago Almada',club:'Atlanta United',pos:'CAM',votes:156,userVoted:false}]}
-  };
-  return D[tk]||{polls:[{id:'p1',q:'What position does this team need most?',opts:['Striker','Centre-back','Midfielder','Goalkeeper'],votes:[80,60,45,30],userVote:null,author:'ScoutMind',time:'1d ago'}],wishlist:[{name:'Suggest a signing',club:'Use the form below',pos:'???',votes:1,userVoted:false}]};
+  if(!getDD._mem)getDD._mem={};
+  if(!getDD._mem[tk])getDD._mem[tk]={polls:[],wishlist:[]};
+  return getDD._mem[tk];
 }
 function doPolls(el,tk){
   var d=getTD(tk),html='';
