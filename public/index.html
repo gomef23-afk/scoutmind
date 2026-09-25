@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-<title>ScoutMind — Tactical Intelligence</title>
+<title>ScoutMind — Your club. Everything around it.</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="/club_names.js"></script>
 <script src="/leagues_data.js"></script>
 <script src="/players_data.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -281,6 +282,8 @@ body{padding-bottom:64px;}
 .back-btn:hover{color:var(--accent);}
 .filter-btn{background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
 .filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+.lang-chip{background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.5px;}
+.lang-chip:hover,.lang-chip.active{border-color:var(--accent2);color:var(--accent2);background:rgba(0,184,255,0.06);}
 /* ── NEWS TAGS ── */
 .tag-transfer{background:rgba(0,229,160,0.1);color:var(--accent);}
 .tag-financial{background:rgba(0,184,255,0.1);color:var(--accent2);}
@@ -396,7 +399,7 @@ if(!_cu){
 <div class="feed-page">
   <div class="feed-main">
     <div class="feed-tabs-bar">
-      <button class="ftab active" onclick="showFeedTab('transfers',this)">Transfer news</button>
+      <button class="ftab active" onclick="showFeedTab('transfers',this)">News</button>
       <button class="ftab" onclick="showFeedTab('foryou',this)">For you</button>
       <!-- SM Weekly is hidden until it is generated from real data in R9. The tab,
            #feedtab-weekly and renderWeeklyReport() are all intentionally kept. -->
@@ -408,6 +411,9 @@ if(!_cu){
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">News</div>
       </div>
+      <!-- Only the reader's own languages, and only when there is more than
+           one to choose between. Rendered by renderLangChips(). -->
+      <div id="feed-lang-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
       <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;">
         <button class="filter-btn active" onclick="filterFeed('all',this)">All News</button>
         <button class="filter-btn" onclick="filterFeed('transfers',this)">🔄 Transfers</button>
@@ -420,13 +426,11 @@ if(!_cu){
 
     <!-- FOR YOU TAB — posts from your clubs and analysts -->
     <div id="feedtab-foryou" style="display:none;">
-      <!-- Three seeded posts lived here: a "ScoutMind AI - Botafogo" weakness
-           alert, a fake "Joao Ricardo - ESPN Brasil" analyst post and a fake
-           "The Football Analyst - Partner - 42k followers" post, all with
-           invented like/repost counts. A real For You feed is Phase C. -->
-      <div style="text-align:center;padding:40px 20px;color:var(--muted);">
-        <div style="font-size:13px;line-height:1.7;max-width:340px;margin:0 auto;">Posts from the clubs and analysts you follow will appear here.</div>
-      </div>
+      <!-- Three seeded posts lived here (fake "ScoutMind AI" weakness alert,
+           fake analyst, fake partner with 42k followers). Now real news about
+           the clubs you follow, rendered by renderForYou(). Analyst posts join
+           it in Phase C. -->
+      <div id="foryou-content"></div>
     </div>
 
     <!-- SCOUTMIND WEEKLY TAB -->
@@ -436,21 +440,17 @@ if(!_cu){
 </div><!-- /feed-main -->
   <div class="feed-side">
     <div class="feed-side-card">
-      <div class="feed-side-title">Today's matches</div>
-      <div class="match-row-sm"><div><div class="match-comp-sm">SÉRIE A · 21:00</div><div class="match-teams-sm">Botafogo <span style="color:var(--muted);font-size:10px;">vs</span> Fluminense</div></div></div>
-      <div class="match-row-sm"><div><div class="match-comp-sm">PREMIER LEAGUE · 17:30</div><div class="match-teams-sm">Arsenal <span style="color:var(--muted);font-size:10px;">vs</span> Chelsea</div></div></div>
-      <div class="match-row-sm"><div><div class="match-comp-sm">LA LIGA · 20:00</div><div class="match-teams-sm">Real Madrid <span style="color:var(--muted);font-size:10px;">vs</span> Sevilla</div></div></div>
+      <!-- Was three hardcoded rows (Botafogo-Fluminense 21:00, Arsenal-Chelsea,
+           Real Madrid-Sevilla). Now real fixtures for today in the viewer's
+           timezone, falling back to the next matchday. -->
+      <div class="feed-side-title" id="sidebar-matches-title">Today's matches</div>
+      <div id="sidebar-matches"></div>
     </div>
     <div class="feed-side-card">
       <div class="feed-side-title">My clubs</div>
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="window.location.href='/community.html'">
-        <div style="width:24px;height:24px;border-radius:5px;background:rgba(0,229,160,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;">⭐</div>
-        <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:var(--text);" id="sidebar-my-club">Botafogo</div><div style="font-size:9px;color:var(--muted);">My club</div></div>
-        <div style="font-size:9px;color:var(--accent);">Open →</div>
-      </div>
-      <div style="padding:8px 0;text-align:center;">
-        <button onclick="openTeamModal()" style="font-size:10px;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Change my club</button>
-      </div>
+      <!-- Rendered by renderSidebarClubs(). Used to hardcode "Botafogo" for
+           everyone, including signed-out visitors. -->
+      <div id="sidebar-clubs"></div>
     </div>
   </div>
 </div>
@@ -461,7 +461,7 @@ if(!_cu){
 <div style="max-width:1100px;margin:0 auto;padding:24px 16px;">
   <div style="margin-bottom:18px;">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;">Matches</div>
-    <div style="font-size:13px;color:var(--muted);">Your clubs first, then everything else by competition.</div>
+    <div style="font-size:13px;color:var(--muted);">Your clubs first, then every fixture by date. Times are your local time.</div>
   </div>
   <div id="matchday-content"></div>
 </div>
@@ -538,7 +538,14 @@ if(!_cu){
   </div>
 
   <!-- Preferences -->
-  <!-- Preferences held only the currency switcher, removed with it. -->
+  <div class="profile-section">
+    <div class="profile-section-title">Content languages</div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 10px;">
+      Which languages your feed shows. News about a club you follow always appears, whatever language it is in.
+    </div>
+    <div id="profile-lang-prefs" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    <div id="profile-club-lang" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"></div>
+  </div>
 
   <!-- Danger Zone -->
   <div class="profile-section" style="border-color:rgba(255,69,96,0.15);">
@@ -554,6 +561,17 @@ if(!_cu){
 
 <!-- SCOUT MODE PAGE (existing app wrapped) -->
 <div class="page" id="page-scout">
+<!-- Scout Mode still runs on the hardcoded leagues_data.js / players_data.js.
+     It moves to Supabase in R9; until then the banner says so plainly. -->
+<div style="max-width:1100px;margin:0 auto;padding:14px 20px 0;">
+  <div style="display:flex;align-items:center;gap:10px;background:rgba(245,200,66,0.07);border:1px solid rgba(245,200,66,0.25);border-radius:10px;padding:10px 14px;">
+    <span style="font-size:15px;line-height:1;">⚠️</span>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;">
+      <strong style="color:var(--yellow);">Sample data.</strong>
+      Scout Mode still runs on a fixed player set — real stats coming soon. Everything else on the site is live data.
+    </div>
+  </div>
+</div>
 <div class="app">
   <button id="sidebar-toggle" onclick="toggleSidebar()" style="display:none;position:fixed;bottom:24px;right:24px;z-index:200;background:var(--accent);color:#000;border:none;border-radius:50%;width:52px;height:52px;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(0,229,160,0.4);font-family:inherit;">⚙</button>
   <div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:150;"></div>
@@ -561,50 +579,18 @@ if(!_cu){
     <div class="fg">
       <div class="sb-label">League</div>
       <select id="leagueSel" onchange="onLeagueChange()">
-        <optgroup label="🇧🇷 Brazil">
+        <!-- Only the seven leagues we hold data for. The other 22 in
+             leagues_data.js have no fixtures, standings or stats behind them. -->
+        <optgroup label="South America">
           <option value="serie_a">Série A — Brazil 2026</option>
-          <option value="serie_b">Série B — Brazil 2026</option>
-          <option value="serie_c">Série C — Brazil 2026</option>
-        </optgroup>
-        <optgroup label="🇦🇷 South America">
           <option value="argentina">Liga Profesional — Argentina 2026</option>
-          <option value="colombia">Liga BetPlay — Colombia 2026</option>
-          <option value="chile">Primera División — Chile 2026</option>
-          <option value="uruguay">Primera División — Uruguay 2026</option>
-          <option value="peru">Liga 1 — Peru 2026</option>
-          <option value="ecuador">LigaPro — Ecuador 2026</option>
-          <option value="paraguay">Apertura — Paraguay 2026</option>
         </optgroup>
-        <optgroup label="🌎 North/Central America">
-          <option value="mls">MLS — USA 2026</option>
-          <option value="liga_mx">Liga MX — Mexico 2026</option>
-        </optgroup>
-        <optgroup label="🏴󠁧󠁢󠁥󠁮󠁧󠁿 Europe">
+        <optgroup label="Europe">
           <option value="premier_league">Premier League — England 2025/26</option>
           <option value="la_liga">La Liga — Spain 2025/26</option>
-          <option value="bundesliga">Bundesliga — Germany 2025/26</option>
           <option value="serie_a_it">Serie A — Italy 2025/26</option>
+          <option value="bundesliga">Bundesliga — Germany 2025/26</option>
           <option value="ligue_1">Ligue 1 — France 2025/26</option>
-          <option value="eredivisie">Eredivisie — Netherlands 2025/26</option>
-          <option value="primeira_liga">Primeira Liga — Portugal 2025/26</option>
-          <option value="scottish_prem">Scottish Premiership 2025/26</option>
-          <option value="super_lig">Süper Lig — Turkey 2025/26</option>
-          <option value="jupiler">Jupiler Pro League — Belgium 2025/26</option>
-        </optgroup>
-        <optgroup label="🇸🇦 Middle East">
-          <option value="saudi_pro">Saudi Pro League 2025/26</option>
-        </optgroup>
-        <optgroup label="🌏 Asia">
-          <option value="j_league">J1 League — Japan 2026</option>
-          <option value="k_league">K League 1 — South Korea 2026</option>
-          <option value="chinese_sl">Chinese Super League 2026</option>
-        </optgroup>
-        <optgroup label="🌍 Africa">
-          <option value="egypt_pl">Egyptian Premier League 2025/26</option>
-          <option value="sa_psl">Premier Soccer League — South Africa 2025/26</option>
-        </optgroup>
-        <optgroup label="🌏 Oceania">
-          <option value="a_league">A-League — Australia 2026</option>
         </optgroup>
       </select>
     </div>
@@ -621,57 +607,20 @@ if(!_cu){
         <input type="number" id="minAge" value="16" min="14" max="45" placeholder="Min">
         <input type="number" id="maxAge" value="35" min="14" max="45" placeholder="Max">
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Max budget</div>
-      <select id="budgetMax">
-        <option value="5000000">Up to €5M</option>
-        <option value="10000000">Up to €10M</option>
-        <option value="20000000">Up to €20M</option>
-        <option value="30000000">Up to €30M</option>
-        <option value="50000000">Up to €50M</option>
-        <option value="75000000">Up to €75M</option>
-        <option value="100000000">Up to €100M</option>
-        <option value="150000000">Up to €150M</option>
-        <option value="999000000" selected>No limit</option>
-      </select>
+        <!-- "Max budget" removed: API-Football supplies no market values. -->
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Min appearances</div>
       <input type="number" id="minApps" value="10">
       <input type="hidden" id="posFil" value="">
       <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:3px">Search players from</div>
       <select id="playerLeagueSel">
-        <option value="ALL">All Leagues</option>
-        <optgroup label="🇧🇷 Brazil">
+          <option value="ALL">All Leagues</option>
           <option value="serie_a">Série A</option>
-          <option value="serie_b">Série B</option>
-          <option value="serie_c">Série C</option>
-        </optgroup>
-        <optgroup label="🌎 Americas">
-          <option value="argentina">Argentina</option>
-          <option value="colombia">Colombia</option>
-          <option value="chile">Chile</option>
-          <option value="uruguay">Uruguay</option>
-          <option value="mls">MLS</option>
-          <option value="liga_mx">Liga MX</option>
-        </optgroup>
-        <optgroup label="🏴󠁧󠁢󠁥󠁮󠁧󠁿 Europe">
           <option value="premier_league">Premier League</option>
           <option value="la_liga">La Liga</option>
+          <option value="serie_a_it">Serie A</option>
           <option value="bundesliga">Bundesliga</option>
-          <option value="serie_a_it">Serie A Italy</option>
           <option value="ligue_1">Ligue 1</option>
-          <option value="eredivisie">Eredivisie</option>
-          <option value="primeira_liga">Primeira Liga</option>
-          <option value="scottish_prem">Scottish Prem</option>
-          <option value="super_lig">Süper Lig</option>
-          <option value="jupiler">Jupiler</option>
-        </optgroup>
-        <optgroup label="🌍 Rest of World">
-          <option value="saudi_pro">Saudi Pro League</option>
-          <option value="j_league">J1 League</option>
-          <option value="k_league">K League</option>
-          <option value="egypt_pl">Egyptian PL</option>
-          <option value="sa_psl">South Africa PSL</option>
-          <option value="a_league">A-League</option>
-        </optgroup>
+          <option value="argentina">Liga Profesional</option>
       </select>
       <div id="filter-count" class="filter-count"></div>
     </div>
@@ -749,20 +698,13 @@ if(!_cu){
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:5px">League</div>
             <select id="fan-league" onchange="onFanLeagueChange()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
-              <option value="serie_a">🇧🇷 Série A</option>
-              <option value="serie_b">🇧🇷 Série B</option>
-              <option value="serie_c">🇧🇷 Série C</option>
-              <option value="argentina">🇦🇷 Argentina</option>
-              <option value="premier_league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
-              <option value="la_liga">🇪🇸 La Liga</option>
-              <option value="bundesliga">🇩🇪 Bundesliga</option>
-              <option value="serie_a_it">🇮🇹 Serie A Italy</option>
-              <option value="ligue_1">🇫🇷 Ligue 1</option>
-              <option value="eredivisie">🇳🇱 Eredivisie</option>
-              <option value="primeira_liga">🇵🇹 Primeira Liga</option>
-              <option value="mls">🇺🇸 MLS</option>
-              <option value="liga_mx">🇲🇽 Liga MX</option>
-              <option value="saudi_pro">🇸🇦 Saudi Pro League</option>
+          <option value="serie_a">Série A</option>
+          <option value="premier_league">Premier League</option>
+          <option value="la_liga">La Liga</option>
+          <option value="serie_a_it">Serie A</option>
+          <option value="bundesliga">Bundesliga</option>
+          <option value="ligue_1">Ligue 1</option>
+          <option value="argentina">Liga Profesional</option>
             </select>
           </div>
           <div>
@@ -807,33 +749,17 @@ if(!_cu){
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Search from league</div>
             <select id="squad-league" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
-              <option value="ALL">All Leagues</option>
-              <option value="serie_a">🇧🇷 Série A</option>
-              <option value="serie_b">🇧🇷 Série B</option>
-              <option value="premier_league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
-              <option value="la_liga">🇪🇸 La Liga</option>
-              <option value="bundesliga">🇩🇪 Bundesliga</option>
-              <option value="serie_a_it">🇮🇹 Serie A Italy</option>
-              <option value="ligue_1">🇫🇷 Ligue 1</option>
-              <option value="argentina">🇦🇷 Argentina</option>
-              <option value="mls">🇺🇸 MLS</option>
-              <option value="saudi_pro">🇸🇦 Saudi Pro League</option>
+          <option value="ALL">All Leagues</option>
+          <option value="serie_a">Série A</option>
+          <option value="premier_league">Premier League</option>
+          <option value="la_liga">La Liga</option>
+          <option value="serie_a_it">Serie A</option>
+          <option value="bundesliga">Bundesliga</option>
+          <option value="ligue_1">Ligue 1</option>
+          <option value="argentina">Liga Profesional</option>
             </select>
           </div>
-          <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Max budget</div>
-            <select id="squad-budget" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
-              <option value="5000000">Up to €5M</option>
-              <option value="10000000">Up to €10M</option>
-              <option value="20000000">Up to €20M</option>
-              <option value="30000000">Up to €30M</option>
-              <option value="50000000">Up to €50M</option>
-              <option value="75000000">Up to €75M</option>
-              <option value="100000000">Up to €100M</option>
-              <option value="150000000">Up to €150M</option>
-              <option value="999000000" selected>No limit</option>
-            </select>
-          </div>
+        <!-- "Max budget" removed: API-Football supplies no market values. -->
           <div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:5px">Max age</div>
             <input type="number" id="squad-age" value="35" onchange="renderSquadPlayers()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;">
@@ -1129,7 +1055,7 @@ function updateFilterCount(){
   const plLeague=document.getElementById('playerLeagueSel').value;
   const minAge=parseInt(document.getElementById('minAge').value)||0;
   const maxAge=parseInt(document.getElementById('maxAge').value)||99;
-  const budget=parseFloat(document.getElementById('budgetMax').value)||Infinity;
+  const budget=Infinity;   // no market values to filter on (dropped in R0)
   const minApps=parseInt(document.getElementById('minApps').value)||0;
   const pool=plLeague==='ALL'?PLAYERS_VALID:PLAYERS_VALID.filter(p=>p.league===plLeague);
   const count=pool.filter(p=>p.age>=minAge&&p.age<=maxAge&&p.value<=budget&&p.apps>=minApps).length;
@@ -1280,7 +1206,7 @@ function runAnalysis(){
   const plLeague=document.getElementById('playerLeagueSel').value;
   const minAge=parseInt(document.getElementById('minAge').value)||0;
   const maxAge=parseInt(document.getElementById('maxAge').value)||99;
-  const budget=parseFloat(document.getElementById('budgetMax').value)||Infinity;
+  const budget=Infinity;   // no market values to filter on (dropped in R0)
   const minApps=parseInt(document.getElementById('minApps').value)||0;
   const pool=plLeague==='ALL'?PLAYERS_VALID:PLAYERS_VALID.filter(p=>p.league===plLeague);
   let primaryPool=pool.filter(p=>p.age>=minAge&&p.age<=maxAge&&p.value<=budget&&p.apps>=minApps&&targetPos.includes(p.pos));
@@ -1525,7 +1451,7 @@ function downloadScoutReport(){
   const plLeague=document.getElementById('playerLeagueSel').value;
   const minAge=parseInt(document.getElementById('minAge').value)||0;
   const maxAge=parseInt(document.getElementById('maxAge').value)||99;
-  const budget=parseFloat(document.getElementById('budgetMax').value)||Infinity;
+  const budget=Infinity;   // no market values to filter on (dropped in R0)
   const minApps=parseInt(document.getElementById('minApps').value)||0;
   const pool=plLeague==='ALL'?PLAYERS_VALID:PLAYERS_VALID.filter(p=>p.league===plLeague);
   const ranked=pool.filter(p=>p.age>=minAge&&p.age<=maxAge&&p.value<=budget&&p.apps>=minApps&&targetPos.includes(p.pos))
@@ -1720,7 +1646,7 @@ function scorePlayerForTeam(p,team,league,requestedSubpos){
 function renderSquadPlayers(){
   const posVal=document.getElementById('squad-pos').value;
   const leagueVal=document.getElementById('squad-league').value;
-  const budget=parseFloat(document.getElementById('squad-budget').value)||Infinity;
+  const budget=Infinity;   // no market values to filter on (dropped in R0)
   const maxAge=parseInt(document.getElementById('squad-age').value)||99;
   const fanLeague=document.getElementById('fan-league').value;
   const posGroupMap={'DEF':'DEF','DEF_CB':'DEF','DEF_RB':'DEF','DEF_LB':'DEF','MID':'MID','MID_CDM':'MID','MID_CM':'MID','MID_CAM':'MID','ATT':'ATT','ATT_RW':'ATT','ATT_LW':'ATT','ATT_ST':'ATT','GK':'GK'};
@@ -1771,7 +1697,7 @@ function selectTeamWrapped(id){
 }
 renderTeamList('');
 document.getElementById('playerLeagueSel').addEventListener('change',updateFilterCount);
-['minAge','maxAge','budgetMax','minApps','posFil'].forEach(id=>{document.getElementById(id).addEventListener('input',updateFilterCount);});
+['minAge','maxAge','minApps','posFil'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',updateFilterCount);});
 </script>
 </div><!-- close page-scout -->
 
@@ -1790,6 +1716,22 @@ document.getElementById('playerLeagueSel').addEventListener('change',updateFilte
 </div>
 
 <!-- ── TEAM SELECTION MODAL ── -->
+<!-- ONBOARDING — shown once, to a signed-in user with no club. display:flex is
+     set only in JS (rule 6). Both steps are skippable. -->
+<div id="onboard-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:26px;width:min(560px,92vw);max-height:88vh;overflow-y:auto;">
+    <div id="onboard-title" style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:4px;">Pick your club</div>
+    <div id="onboard-sub" style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;"></div>
+    <div id="onboard-body"></div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:18px;">
+      <button id="onboard-next" class="signin-sheet-primary" style="flex:1;" onclick="onboardNext()">Continue</button>
+    </div>
+    <div style="text-align:center;margin-top:10px;">
+      <span onclick="skipOnboarding()" style="font-size:11px;color:var(--muted);cursor:pointer;">I'll do this later</span>
+    </div>
+  </div>
+</div>
+
 <div id="team-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:min(520px,92vw);max-height:85vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
@@ -1813,37 +1755,191 @@ document.getElementById('playerLeagueSel').addEventListener('change',updateFilte
 
 <script>
 // ── ALL CLUBS FOR MODAL ──
-const ALL_CLUBS=[
-  {id:'flamengo',name:'Flamengo',league:'Série A',emoji:'🔴'},
-  {id:'palmeiras',name:'Palmeiras',league:'Série A',emoji:'💚'},
-  {id:'corinthians',name:'Corinthians',league:'Série A',emoji:'⬛'},
-  {id:'botafogo',name:'Botafogo',league:'Série A',emoji:'⭐'},
-  {id:'fluminense',name:'Fluminense',league:'Série A',emoji:'🟤'},
-  {id:'atletico_mg',name:'Atlético Mineiro',league:'Série A',emoji:'🖤'},
-  {id:'gremio',name:'Grêmio',league:'Série A',emoji:'🔵'},
-  {id:'internacional',name:'Internacional',league:'Série A',emoji:'🔴'},
-  {id:'sao_paulo',name:'São Paulo',league:'Série A',emoji:'🔴'},
-  {id:'cruzeiro',name:'Cruzeiro',league:'Série A',emoji:'🔵'},
-  {id:'real_madrid',name:'Real Madrid',league:'La Liga',emoji:'⭐'},
-  {id:'barcelona',name:'Barcelona',league:'La Liga',emoji:'💜'},
-  {id:'atletico_madrid',name:'Atlético Madrid',league:'La Liga',emoji:'🔴'},
-  {id:'man_city',name:'Manchester City',league:'Premier League',emoji:'🔵'},
-  {id:'arsenal',name:'Arsenal',league:'Premier League',emoji:'🔴'},
-  {id:'liverpool',name:'Liverpool',league:'Premier League',emoji:'🔴'},
-  {id:'man_utd',name:'Manchester United',league:'Premier League',emoji:'🔴'},
-  {id:'chelsea',name:'Chelsea',league:'Premier League',emoji:'🔵'},
-  {id:'bayern',name:'Bayern Munich',league:'Bundesliga',emoji:'🔴'},
-  {id:'dortmund',name:'Borussia Dortmund',league:'Bundesliga',emoji:'🟡'},
-  {id:'psg',name:'Paris Saint-Germain',league:'Ligue 1',emoji:'🔵'},
-  {id:'juventus',name:'Juventus',league:'Serie A IT',emoji:'⬛'},
-  {id:'inter',name:'Inter Milan',league:'Serie A IT',emoji:'🔵'},
-  {id:'river',name:'River Plate',league:'Argentina',emoji:'🔴'},
-  {id:'boca',name:'Boca Juniors',league:'Argentina',emoji:'💛'},
-];
+// The hardcoded 25-club list (slug + emoji) is gone. Clubs come from `teams`
+// via loadClubData() and are keyed on teams.id — the same id the account uses
+// in profiles.main_club_id and follows.team_id.
 
+// Both hold teams.id. `null` main club is a real, normal state.
 let selectedMainClub = null;
 let followingClubs = [];
 let modalFilter = '';
+
+/**
+ * The account is the source of truth once signed in; localStorage is a cache
+ * for guests and for the first paint before the profile lands.
+ *
+ * Written by loadMyClubs() (package step 2), which is why these read the
+ * module state first and fall back to storage.
+ */
+function mainClubId(){
+  if(selectedMainClub)return selectedMainClub;
+  try{
+    const m=JSON.parse(localStorage.getItem('sm_main_club')||'null');
+    if(m&&typeof m.id==='number')return m.id;
+  }catch(e){}
+  return null;
+}
+
+function followedClubIds(){
+  if(followingClubs.length)return followingClubs.slice();
+  try{
+    const f=JSON.parse(localStorage.getItem('sm_following_clubs')||'[]');
+    if(Array.isArray(f))return f.filter(x=>typeof x==='number');
+  }catch(e){}
+  return [];
+}
+
+/** Main club first, then followed. teams.id. */
+function myClubIds(){
+  const main=mainClubId();
+  const out=main?[main]:[];
+  for(const id of followedClubIds())if(out.indexOf(id)<0)out.push(id);
+  return out;
+}
+
+/** The same clubs as api_team_id, for matching against news tags. */
+function myClubApiIds(){
+  return myClubIds().map(id=>{const c=CLUB_DATA.get(id);return c&&c.api_team_id;}).filter(Boolean);
+}
+
+// ── ACCOUNT ──────────────────────────────────────────────────────────────
+// Signed in, the account is the source of truth. localStorage is a cache so
+// the first paint is not blank, and the only store a guest has.
+
+let MY_PROFILE=null;          // { main_club_id, content_langs, onboarded_at }
+let PROFILE_LOADED=false;
+
+function authedHeaders(){
+  const h={apikey:SUPA_KEY,'Content-Type':'application/json'};
+  // The Supabase client holds the session; fall back to the anon key so a
+  // read still works (and simply returns nothing) when signed out.
+  const tok=(_supa&&_supa.auth&&_supa.auth.__token)||null;
+  h.Authorization='Bearer '+(tok||SUPA_KEY);
+  return h;
+}
+
+/** The access token for the signed-in user, or null. */
+async function accessToken(){
+  try{
+    const r=await _supa.auth.getSession();
+    return (r&&r.data&&r.data.session&&r.data.session.access_token)||null;
+  }catch(e){ return null; }
+}
+
+async function apiGet(path){
+  const tok=await accessToken();
+  const res=await fetch(`${SUPA_URL}/rest/v1/${path}`,{
+    headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(tok||SUPA_KEY)}
+  });
+  if(!res.ok)throw new Error(path+' HTTP '+res.status+' — '+(await res.text()).slice(0,200));
+  return res.json();
+}
+
+async function apiSend(method,path,body,prefer){
+  const tok=await accessToken();
+  if(!tok)throw new Error('not signed in');
+  const res=await fetch(`${SUPA_URL}/rest/v1/${path}`,{
+    method,
+    headers:{apikey:SUPA_KEY,Authorization:'Bearer '+tok,
+      'Content-Type':'application/json',Prefer:prefer||'return=minimal'},
+    body:body?JSON.stringify(body):undefined
+  });
+  if(!res.ok)throw new Error(method+' '+path+' HTTP '+res.status+' — '+(await res.text()).slice(0,200));
+  return res.status===204?null:res.json().catch(()=>null);
+}
+
+/**
+ * Load the signed-in user's clubs and languages, importing anything left in
+ * localStorage exactly once (guarded by onboarded_at).
+ */
+async function loadMyAccount(){
+  PROFILE_LOADED=true;
+  if(!currentUser)return;
+  try{
+    const rows=await apiGet('profiles?select=main_club_id,content_langs,onboarded_at,show_club_news_all_langs&limit=1');
+    MY_PROFILE=rows[0]||null;
+    const follows=await apiGet('follows?select=team_id');
+
+    if(MY_PROFILE&&!MY_PROFILE.onboarded_at){
+      const imported=await importLocalClubs(MY_PROFILE);
+      if(imported)return loadMyAccount();
+    }
+
+    selectedMainClub=(MY_PROFILE&&MY_PROFILE.main_club_id)||null;
+    followingClubs=follows.map(f=>f.team_id).filter(id=>id!==selectedMainClub);
+    saveMyClubsLocal();
+  }catch(e){
+    // A failed profile read must not cost the user their cached clubs.
+    console.warn('loadMyAccount:',e.message);
+  }
+}
+
+/**
+ * One-time lift of sm_main_club / sm_following_clubs onto the account. Only
+ * runs while onboarded_at is null, so it can never overwrite a later choice.
+ * Returns true if anything was written.
+ */
+async function importLocalClubs(profile){
+  let main=null,follow=[];
+  try{
+    const m=JSON.parse(localStorage.getItem('sm_main_club')||'null');
+    if(m&&typeof m.id==='number'&&CLUB_DATA.has(m.id))main=m.id;
+    const f=JSON.parse(localStorage.getItem('sm_following_clubs')||'[]');
+    if(Array.isArray(f))follow=f.filter(id=>typeof id==='number'&&CLUB_DATA.has(id));
+  }catch(e){}
+  if(!main&&!follow.length)return false;
+  try{
+    await apiSend('PATCH','profiles?id=eq.'+currentUser.id,
+      {main_club_id:main,onboarded_at:new Date().toISOString()});
+    const rows=follow.filter(id=>id!==main).map(id=>({user_id:currentUser.id,team_id:id}));
+    if(rows.length)await apiSend('POST','follows?on_conflict=user_id,team_id',rows,
+      'resolution=ignore-duplicates,return=minimal');
+    console.info('Imported '+(main?1:0)+' main club and '+rows.length+' follows into the account.');
+    return true;
+  }catch(e){
+    console.warn('importLocalClubs:',e.message);
+    return false;
+  }
+}
+
+/** Write the current selection to the account (no-op for guests). */
+async function saveMyClubsToAccount(){
+  if(!currentUser)return;
+  const main=mainClubId();
+  const follow=followedClubIds().filter(id=>id!==main);
+  try{
+    await apiSend('PATCH','profiles?id=eq.'+currentUser.id,
+      {main_club_id:main,onboarded_at:new Date().toISOString()});
+    // Replace the follow set: delete what is gone, insert what is new.
+    const existing=(await apiGet('follows?select=team_id')).map(f=>f.team_id);
+    const toAdd=follow.filter(id=>existing.indexOf(id)<0);
+    const toRemove=existing.filter(id=>follow.indexOf(id)<0);
+    if(toAdd.length){
+      await apiSend('POST','follows?on_conflict=user_id,team_id',
+        toAdd.map(id=>({user_id:currentUser.id,team_id:id})),
+        'resolution=ignore-duplicates,return=minimal');
+    }
+    for(const id of toRemove){
+      await apiSend('DELETE','follows?user_id=eq.'+currentUser.id+'&team_id=eq.'+id);
+    }
+  }catch(e){
+    console.warn('saveMyClubsToAccount:',e.message);
+  }
+}
+
+/** Persist to localStorage. Cache only; the account is the truth. */
+function saveMyClubsLocal(){
+  try{
+    const main=mainClubId();
+    if(main){
+      const c=CLUB_DATA.get(main);
+      localStorage.setItem('sm_main_club',JSON.stringify({id:main,name:c?c.label:''}));
+    }else{
+      localStorage.removeItem('sm_main_club');
+    }
+    localStorage.setItem('sm_following_clubs',JSON.stringify(followedClubIds()));
+  }catch(e){}
+}
 
 function filterModalClubs(){
   modalFilter = document.getElementById('club-search').value.toLowerCase();
@@ -1851,45 +1947,74 @@ function filterModalClubs(){
 }
 
 function renderModalClubs(){
-  const filtered = ALL_CLUBS.filter(c =>
-    c.name.toLowerCase().includes(modalFilter) ||
-    c.league.toLowerCase().includes(modalFilter)
-  );
-  document.getElementById('modal-club-list').innerHTML = filtered.map(c => {
-    const isMain = selectedMainClub === c.id;
-    const isFollowing = followingClubs.includes(c.id);
-    const state = isMain ? 'Main club — click to follow instead'
-                : isFollowing ? 'Following — click to remove'
-                : 'Click to follow';
-    return `<div onclick="selectModalClub('${c.id}')" title="${state}" style="background:${isMain?'rgba(0,229,160,0.08)':isFollowing?'rgba(0,184,255,0.06)':'var(--bg3)'};border:1px solid ${isMain?'var(--accent)':isFollowing?'var(--accent2)':'var(--border)'};border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;">
-      ${clubCrestBySlug(c.id,22)}
-      <div style="flex:1;">
-        <div style="font-size:11px;font-weight:600;color:var(--text);">${c.name}</div>
-        <div style="font-size:9px;color:var(--muted);">${c.league}</div>
-      </div>
-      ${isMain?`<span style="font-size:9px;color:var(--accent);font-weight:700;">MAIN</span>`:''}
-      ${isFollowing&&!isMain?`<span style="font-size:9px;color:var(--accent2);font-weight:700;">+</span>`:''}
-    </div>`;
-  }).join('');
+  const el = document.getElementById('modal-club-list');
+  if(!el) return;
+  if(CLUB_DATA.size === 0){
+    el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px 0;">Loading clubs…</div>';
+    return;
+  }
+  const main = mainClubId();
+  const following = followedClubIds();
+  const q = modalFilter.trim();
+  const groups = clubsByLeague();
+  // League order puts the Brazilian and European majors first; the rest follow
+  // in a stable order so the list never reshuffles between renders.
+  const ORDER = ['serie_a','premier_league','la_liga','serie_a_it','bundesliga','ligue_1','argentina'];
+  const keys = [...groups.keys()].sort((a,b)=>{
+    const ai = ORDER.indexOf(a), bi = ORDER.indexOf(b);
+    return (ai<0?99:ai) - (bi<0?99:bi) || a.localeCompare(b);
+  });
+
+  let html = '', shown = 0;
+  for(const key of keys){
+    const league = LEAGUE_LABEL[key] || key;
+    const rows = groups.get(key).filter(c =>
+      !q || c.label.toLowerCase().includes(q) || league.toLowerCase().includes(q)
+    );
+    if(!rows.length) continue;
+    shown += rows.length;
+    html += '<div style="grid-column:1/-1;font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:10px 0 2px;">'
+      + sanitize(league) + '</div>';
+    for(const c of rows){
+      const isMain = main === c.id;
+      const isFollowing = following.indexOf(c.id) > -1;
+      const state = isMain ? 'Main club — click to follow instead'
+                  : isFollowing ? 'Following — click to remove'
+                  : 'Click to follow';
+      html += '<div onclick="selectModalClub(' + c.id + ')" title="' + state + '"'
+        + ' style="background:' + (isMain?'rgba(0,229,160,0.08)':isFollowing?'rgba(0,184,255,0.06)':'var(--bg3)')
+        + ';border:1px solid ' + (isMain?'var(--accent)':isFollowing?'var(--accent2)':'var(--border)')
+        + ';border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;">'
+        + clubCrestById(c.id,22)
+        + '<div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;color:var(--text);">'
+        + sanitize(c.label) + '</div></div>'
+        + (isMain ? '<span style="font-size:9px;color:var(--accent);font-weight:700;">MAIN</span>' : '')
+        + (isFollowing && !isMain ? '<span style="font-size:9px;color:var(--accent2);font-weight:700;">+</span>' : '')
+        + '</div>';
+    }
+  }
+  el.innerHTML = shown
+    ? html
+    : '<div style="grid-column:1/-1;font-size:11px;color:var(--muted);padding:10px 0;">No club matches “' + sanitize(q) + '”.</div>';
 }
 
 function renderFollowingChips(){
   const chip=(id,isMain)=>{
-    const c = ALL_CLUBS.find(x=>x.id===id);
+    const c = CLUB_DATA.get(id);
     if(!c)return '';
     const col = isMain ? 'var(--accent)' : 'var(--accent2)';
     const bg  = isMain ? 'rgba(0,229,160,0.08)' : 'rgba(0,184,255,0.08)';
     const br  = isMain ? 'rgba(0,229,160,0.2)'  : 'rgba(0,184,255,0.2)';
-    const clear = isMain ? 'clearMainClub()' : `unfollowClub('${id}')`;
+    const clear = isMain ? 'clearMainClub()' : 'unfollowClub('+id+')';
     return `<div style="display:flex;align-items:center;gap:5px;background:${bg};border:1px solid ${br};border-radius:20px;padding:3px 10px 3px 4px;font-size:11px;color:${col};">
-      ${clubCrestBySlug(id,16)} ${c.name}${isMain?' <span style="font-size:9px;font-weight:700;">MAIN</span>':''}
+      ${clubCrestById(id,16)} ${sanitize(c.label)}${isMain?' <span style="font-size:9px;font-weight:700;">MAIN</span>':''}
       <span onclick="event.stopPropagation();${clear}" title="Remove" style="cursor:pointer;color:var(--muted);margin-left:3px;font-size:12px;">✕</span>
     </div>`;
   };
   // The main club gets an ✕ too — without it, the only club you cannot remove
   // from here is the one you most likely picked by mistake.
-  const chips = (selectedMainClub ? [chip(selectedMainClub,true)] : [])
-    .concat(followingClubs.map(id=>chip(id,false)));
+  const chips = (mainClubId() ? [chip(mainClubId(),true)] : [])
+    .concat(followedClubIds().map(id=>chip(id,false)));
   document.getElementById('modal-following-list').innerHTML =
     chips.join('') || `<div style="font-size:11px;color:var(--muted);padding:6px 0;">Click clubs above to follow them too</div>`;
 }
@@ -1935,36 +2060,176 @@ function _getModalKey(){return 'sm_club_selected_'+(currentUser?.id||'guest');}
 
 function saveTeamSelection(){
   if(!requireAuth('Create a free account to follow your club.'))return;
-  if(!selectedMainClub){
-    alert('Please select your main club first!');
+  if(!mainClubId()){
+    alert('Pick your main club first.');
     return;
   }
-  const mainClub = ALL_CLUBS.find(c=>c.id===selectedMainClub);
-  localStorage.setItem('sm_main_club', JSON.stringify(mainClub));
-  localStorage.setItem('sm_following_clubs', JSON.stringify(followingClubs));
+  saveMyClubsLocal();
   localStorage.setItem(_getModalKey(), '1');
   closeTeamModal();
   applyClubSelection();
+  // Fire and forget: the UI already reflects the choice, and a failed write
+  // is logged rather than blocking the user behind a spinner.
+  saveMyClubsToAccount();
 }
 
+// ── ONBOARDING ───────────────────────────────────────────────────────────
+// Runs here rather than in auth.html: signup often requires an email
+// confirmation, so the user lands on / in a fresh page load. Keying it on
+// "signed in, no club, never onboarded" catches every route in.
+
+// Curated rather than by league position — a fan picking a second club is not
+// picking by September form.
+const BIG_CLUBS=[127,121,131,120,541,529,33,50,40,42,157,165,85,496,505,489,451,435];
+
+function maybeStartOnboarding(){
+  if(!currentUser)return;                       // guests are never interrupted
+  if(!MY_PROFILE)return;
+  if(MY_PROFILE.onboarded_at)return;            // done, or deliberately skipped
+  if(MY_PROFILE.main_club_id)return;
+  if(!CLUB_DATA.size)return;
+  openOnboarding();
+}
+
+function openOnboarding(){
+  const m=document.getElementById('onboard-modal');
+  if(!m)return;
+  onboardStep=1;
+  renderOnboard();
+  m.style.display='flex';
+}
+
+let onboardStep=1;
+
+function renderOnboard(){
+  const body=document.getElementById('onboard-body');
+  const title=document.getElementById('onboard-title');
+  const sub=document.getElementById('onboard-sub');
+  if(!body)return;
+  const main=mainClubId();
+
+  if(onboardStep===1){
+    title.textContent='Pick your club';
+    sub.textContent='Your feed, your matches and your club page are built around it.';
+    const groups=clubsByLeague();
+    const ORDER=['serie_a','premier_league','la_liga','serie_a_it','bundesliga','ligue_1','argentina'];
+    let html='<input id="onboard-search" class="club-search" placeholder="Search clubs…" oninput="renderOnboardList()" style="margin-bottom:10px;">'
+      +'<div id="onboard-list" class="clubs-grid" style="max-height:46vh;overflow-y:auto;"></div>';
+    body.innerHTML=html;
+    renderOnboardList();
+    document.getElementById('onboard-next').textContent=main?'Continue':'Skip for now';
+  }else{
+    const c=CLUB_DATA.get(main);
+    title.textContent='Follow a few more';
+    sub.textContent=c?('Rivals and big clubs alongside '+c.label+'. Optional.'):'Optional.';
+    const suggestions=suggestClubs(main);
+    body.innerHTML='<div class="clubs-grid" style="max-height:46vh;overflow-y:auto;">'
+      +suggestions.map(function(t){
+        const on=followedClubIds().indexOf(t.id)>-1;
+        return '<div onclick="toggleOnboardFollow('+t.id+')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;'
+          +'background:'+(on?'rgba(0,184,255,0.06)':'var(--bg3)')+';border:1px solid '+(on?'var(--accent2)':'var(--border)')+';">'
+          +clubCrestById(t.id,22)
+          +'<div style="flex:1;min-width:0;font-size:11px;font-weight:600;">'+sanitize(t.label)+'</div>'
+          +(on?'<span style="font-size:9px;color:var(--accent2);font-weight:700;">✓</span>':'')
+          +'</div>';
+      }).join('')+'</div>';
+    document.getElementById('onboard-next').textContent='Done';
+  }
+}
+
+function renderOnboardList(){
+  const el=document.getElementById('onboard-list');
+  if(!el)return;
+  const q=(document.getElementById('onboard-search')||{value:''}).value.trim().toLowerCase();
+  const main=mainClubId();
+  const rows=[...CLUB_DATA.values()]
+    .filter(c=>!q||c.label.toLowerCase().includes(q)||(LEAGUE_LABEL[c.league]||'').toLowerCase().includes(q))
+    .sort((a,b)=>(a.league||'').localeCompare(b.league||'')||a.label.localeCompare(b.label));
+  el.innerHTML=rows.map(function(c){
+    const on=main===c.id;
+    return '<div onclick="pickOnboardMain('+c.id+')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;'
+      +'background:'+(on?'rgba(0,229,160,0.08)':'var(--bg3)')+';border:1px solid '+(on?'var(--accent)':'var(--border)')+';">'
+      +clubCrestById(c.id,22)
+      +'<div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;">'+sanitize(c.label)+'</div>'
+      +'<div style="font-size:9px;color:var(--muted);">'+sanitize(LEAGUE_LABEL[c.league]||'')+'</div></div>'
+      +(on?'<span style="font-size:9px;color:var(--accent);font-weight:700;">MAIN</span>':'')+'</div>';
+  }).join('')||'<div style="grid-column:1/-1;font-size:11px;color:var(--muted);padding:10px 0;">No club matches that.</div>';
+}
+
+function pickOnboardMain(id){
+  selectedMainClub=(selectedMainClub===id)?null:id;
+  followingClubs=followingClubs.filter(x=>x!==selectedMainClub);
+  renderOnboardList();
+  document.getElementById('onboard-next').textContent=mainClubId()?'Continue':'Skip for now';
+}
+
+function toggleOnboardFollow(id){
+  const i=followingClubs.indexOf(id);
+  if(i>-1)followingClubs.splice(i,1); else followingClubs.push(id);
+  renderOnboard();
+}
+
+/** Same-league clubs first, then the curated big ones. */
+function suggestClubs(mainId){
+  const main=CLUB_DATA.get(mainId);
+  const out=[],seen=new Set(mainId?[mainId]:[]);
+  if(main){
+    for(const c of CLUB_DATA.values()){
+      if(c.league===main.league&&!seen.has(c.id)){ out.push(c); seen.add(c.id); }
+    }
+    out.sort((a,b)=>(a.rank==null?99:a.rank)-(b.rank==null?99:b.rank));
+  }
+  const rest=[];
+  for(const api of BIG_CLUBS){
+    const c=CLUB_BY_API.get(api);
+    if(c&&!seen.has(c.id)){ rest.push(c); seen.add(c.id); }
+  }
+  return out.slice(0,10).concat(rest).slice(0,18);
+}
+
+function onboardNext(){
+  if(onboardStep===1){
+    if(!mainClubId())return finishOnboarding();   // "Skip for now"
+    onboardStep=2;
+    renderOnboard();
+    return;
+  }
+  finishOnboarding();
+}
+
+async function finishOnboarding(){
+  const m=document.getElementById('onboard-modal');
+  if(m)m.style.display='none';
+  saveMyClubsLocal();
+  if(MY_PROFILE)MY_PROFILE.onboarded_at=new Date().toISOString();
+  applyClubSelection();
+  // Always stamp onboarded_at, even on a skip, so nobody is asked twice.
+  if(currentUser){
+    try{
+      await apiSend('PATCH','profiles?id=eq.'+currentUser.id,
+        {main_club_id:mainClubId(),onboarded_at:new Date().toISOString()});
+      await saveMyClubsToAccount();
+    }catch(e){ console.warn('finishOnboarding:',e.message); }
+  }
+}
+
+function skipOnboarding(){ selectedMainClub=null; followingClubs=[]; finishOnboarding(); }
+
 function applyClubSelection(){
-  const mainClub = JSON.parse(localStorage.getItem('sm_main_club')||'null');
-  if(!mainClub) return;
-  // Update sidebar only
-  const sidebarEl = document.getElementById('sidebar-my-club');
-  if(sidebarEl) sidebarEl.textContent = mainClub.name;
-  // Update clubs page banner name
-  const clubNameEl = document.querySelector('.my-club-name');
-  if(clubNameEl) clubNameEl.textContent = mainClub.name.toUpperCase();
+  // Re-render everything that shows a club. Each of these handles "no club".
+  try{ renderSidebarClubs(); }catch(e){}
+  try{ renderMyClubCard(); }catch(e){}
+  try{ renderClubsGrid(); }catch(e){}
+  try{ renderProfileClubs(); }catch(e){}
+  try{ renderFeedNews(); }catch(e){}
+  try{ renderMatchDay(); }catch(e){}
   // DO NOT rename the nav — always stays "Clubs"
 }
 
 function openTeamModal(){
   if(!requireAuth('Create a free account to pick your club.'))return;
-  const saved = JSON.parse(localStorage.getItem('sm_main_club')||'null');
-  const savedFollowing = JSON.parse(localStorage.getItem('sm_following_clubs')||'[]');
-  selectedMainClub = saved ? saved.id : null;
-  followingClubs = savedFollowing;
+  selectedMainClub = mainClubId();
+  followingClubs = followedClubIds();
   document.getElementById('club-search').value = '';
   modalFilter = '';
   renderModalClubs();
@@ -1990,7 +2255,7 @@ function showPage(id){
   document.querySelectorAll('.sm-tab').forEach(b=>{
     b.classList.toggle('active', b.dataset.tab===id);
   });
-  if(id==='profile') try{renderProfileClubs();}catch(e){}
+  if(id==='profile') try{renderProfileClubs();renderLangPrefs();renderClubLangToggle();}catch(e){}
   if(id==='communities'){ try{renderMyClubCard();renderClubsGrid();}catch(e){console.error('clubs page:',e);} }
   if(id==='feed') try{renderFeedNews();}catch(e){}
   if(id==='matches') try{renderMatchDay();}catch(e){}
@@ -2062,10 +2327,10 @@ async function loadFixtures(){
   const from = new Date(Date.now() - 7*24*3600*1000).toISOString();
   const to   = new Date(Date.now() + 21*24*3600*1000).toISOString();
   const q = new URLSearchParams({
-    select: 'api_fixture_id,kickoff_utc,status_short,elapsed,home_goals,away_goals,'
-          + 'home_team:teams!fixtures_home_team_id_fkey(name),'
-          + 'away_team:teams!fixtures_away_team_id_fkey(name),'
-          + 'league:leagues(name,flag)',
+    select: 'api_fixture_id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id,'
+          + 'home_team:teams!fixtures_home_team_id_fkey(name,api_team_id),'
+          + 'away_team:teams!fixtures_away_team_id_fkey(name,api_team_id),'
+          + 'league:leagues!fixtures_league_id_fkey(name,flag)',
     kickoff_utc: `gte.${from}`,
     order: 'kickoff_utc.asc',
     limit: '300'
@@ -2085,24 +2350,46 @@ async function loadFixtures(){
     const comp = r.league?.name || '';
     const st = FINISHED.includes(r.status_short) ? 'finished'
              : LIVE.includes(r.status_short) ? 'live' : 'upcoming';
+    // Keep the instant, not just a formatted time: grouping by day and telling
+      // "today" from "next Tuesday" both need the date, in the viewer's zone.
+    const kickoff = new Date(r.kickoff_utc);
     return {
       comp: comp.toUpperCase(),
       compTier: COMP_TIER[comp] || 8,
       flag: r.league?.flag || '⚽',
-      time: new Date(r.kickoff_utc).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
-      home: r.home_team?.name || '—',
-      away: r.away_team?.name || '—',
+      kickoff,
+      dayKey: localDayKey(kickoff),
+      time: kickoff.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
+      home: clubDisplayName({api_team_id:r.home_team?.api_team_id, name:r.home_team?.name}) || '—',
+      away: clubDisplayName({api_team_id:r.away_team?.api_team_id, name:r.away_team?.name}) || '—',
+      homeId: r.home_team_id,
+      awayId: r.away_team_id,
       status: st,
       minute: r.elapsed ? String(r.elapsed) : undefined,
       score: (r.home_goals!=null && r.away_goals!=null) ? `${r.home_goals} – ${r.away_goals}` : undefined,
-      teams: [slugFor(r.home_team?.name), slugFor(r.away_team?.name)]
+      teamIds: [r.home_team_id, r.away_team_id]
     };
   });
 }
 
-function slugFor(n){
-  return (n||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
-    .toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+// slugFor() is gone: fixtures now carry teams.id directly, so club identity
+// never round-trips through a name-derived slug.
+
+/** YYYY-MM-DD in the viewer's own timezone, not UTC. */
+function localDayKey(d){
+  const dt=(d instanceof Date)?d:new Date(d);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+
+/** "Today" / "Tomorrow" / "Yesterday" / "Saturday, 4 Oct". */
+function dayHeading(key){
+  const today=localDayKey(new Date());
+  const d=new Date(key+'T12:00:00');
+  const diff=Math.round((d-new Date(today+'T12:00:00'))/86400000);
+  if(diff===0)return 'Today';
+  if(diff===1)return 'Tomorrow';
+  if(diff===-1)return 'Yesterday';
+  return d.toLocaleDateString([], {weekday:'long',day:'numeric',month:'short'});
 }
 
 function renderMatchDay() {
@@ -2113,57 +2400,88 @@ function renderMatchDay() {
   if (LIVE_MATCHES === null) {
     LIVE_MATCHES = [];
     loadFixtures()
-      .then(m => { LIVE_MATCHES = m; renderMatchDay(); })
+      .then(m => { LIVE_MATCHES = m; renderMatchDay(); try{renderSidebarMatches();}catch(e){} })
       .catch(e => { console.warn('fixtures: using static fallback —', e.message); });
   }
 
-  // Get user's clubs
-  const mainClub = JSON.parse(localStorage.getItem('sm_main_club') || 'null');
-  const following = JSON.parse(localStorage.getItem('sm_following_clubs') || '[]');
-  const myClubs = new Set(following);
-  if (mainClub) myClubs.add(mainClub.id);
+  // Clubs come from the account (cached in localStorage), keyed on teams.id.
+  const myClubs = new Set(myClubIds());
 
-  // Split into my matches and other matches
+  // The static ALL_MATCHES fallback has no team ids, so it can never match a
+  // followed club — that is correct: it is placeholder data, not this user's.
   const SOURCE = (LIVE_MATCHES && LIVE_MATCHES.length) ? LIVE_MATCHES : ALL_MATCHES;
-  const myMatches = SOURCE.filter(m => m.teams && m.teams.some(t => myClubs.has(t)));
-  const otherMatches = SOURCE.filter(m => !m.teams || !m.teams.some(t => myClubs.has(t)));
-
-  // Sort others by: live first, then tier, then time
-  const statusOrder = {live: 0, upcoming: 1, finished: 2};
-  otherMatches.sort((a, b) => {
-    if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
-    if (a.compTier !== b.compTier) return a.compTier - b.compTier;
-    return (a.time || '').localeCompare(b.time || '');
-  });
-
+  const dated = SOURCE.filter(m => m.kickoff);
   let html = '';
 
-  // My clubs section
-  if (myMatches.length > 0) {
-    html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;"></span>Your Clubs · Today</div>';
-    myMatches.forEach(m => { html += matchCard(m, true); });
+  // ── Your clubs: last result and next match per club, each labelled ──
+  if (myClubs.size && dated.length) {
+    const now = Date.now();
+    let rows = '';
+    for (const id of myClubIds()) {
+      const mine = dated.filter(m => m.teamIds && m.teamIds.indexOf(id) > -1)
+                        .sort((a, b) => a.kickoff - b.kickoff);
+      if (!mine.length) continue;
+      const past = mine.filter(m => m.status === 'finished' || m.kickoff <= now);
+      const next = mine.find(m => m.status !== 'finished' && m.kickoff > now);
+      const last = past[past.length - 1];
+      const live = mine.find(m => m.status === 'live');
+      const club = CLUB_DATA.get(id);
+      rows += '<div style="margin-bottom:14px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+        + clubCrestById(id, 22)
+        + '<div style="font-size:12px;font-weight:600;">' + sanitize(club ? club.label : '') + '</div></div>';
+      if (live) rows += matchCard(live, true, 'Live now');
+      if (last && !live) rows += matchCard(last, true, 'Last result');
+      if (next) rows += matchCard(next, true, 'Next match');
+      if (!live && !last && !next) {
+        rows += '<div style="font-size:11px;color:var(--muted);padding:4px 0 8px;">No fixture in the next three weeks.</div>';
+      }
+      rows += '</div>';
+    }
+    if (rows) {
+      html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;">'
+        + '<span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;"></span>Your clubs</div>'
+        + rows;
+    }
   }
 
-  // All other matches grouped by competition
-  if (otherMatches.length > 0) {
-    html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:18px 0 12px;">All Matches · Today</div>';
+  // ── Everything else, grouped by day ──
+  const byDay = new Map();
+  for (const m of dated) {
+    if (!byDay.has(m.dayKey)) byDay.set(m.dayKey, []);
+    byDay.get(m.dayKey).push(m);
+  }
+  const days = [...byDay.keys()].sort();
+  const statusOrder = {live: 0, upcoming: 1, finished: 2};
+  for (const key of days) {
+    const list = byDay.get(key).sort((a, b) => {
+      if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
+      if (a.compTier !== b.compTier) return a.compTier - b.compTier;
+      return a.kickoff - b.kickoff;
+    });
+    html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:22px 0 12px;">'
+      + sanitize(dayHeading(key)) + ' · ' + list.length + (list.length === 1 ? ' match' : ' matches') + '</div>';
     let lastComp = '';
-    otherMatches.forEach(m => {
+    for (const m of list) {
       if (m.comp !== lastComp) {
-        if (lastComp) html += '</div>';
-        html += '<div style="margin-bottom:14px;">';
-        html += '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;">' + m.flag + ' ' + m.comp + '</div>';
+        html += '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);margin:10px 0 8px;display:flex;align-items:center;gap:6px;">'
+          + m.flag + ' ' + sanitize(m.comp) + '</div>';
         lastComp = m.comp;
       }
       html += matchCard(m, false);
-    });
-    if (lastComp) html += '</div>';
+    }
   }
 
-  el.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--muted)">No matches scheduled for today.</div>';
+  // The static fallback has no dates; render it flat rather than pretending.
+  if (!dated.length && SOURCE.length) {
+    html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:18px 0 12px;">Sample fixtures</div>';
+    SOURCE.forEach(m => { html += matchCard(m, false); });
+  }
+
+  el.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--muted)">No fixtures in the next three weeks. International break?</div>';
 }
 
-function matchCard(m, featured) {
+function matchCard(m, featured, label) {
   const isLive = m.status === 'live';
   const isFinished = m.status === 'finished';
   const borderColor = featured ? 'rgba(0,229,160,0.25)' : isLive ? 'rgba(0,229,160,0.15)' : 'var(--border)';
@@ -2172,10 +2490,24 @@ function matchCard(m, featured) {
   else if (isFinished) statusBadge = '<span style="font-size:9px;font-weight:700;color:var(--muted)">FT</span>';
   else statusBadge = '<span style="font-size:9px;color:var(--muted)">' + (m.time || '') + '</span>';
 
+  // Every card says which day it is. A result from last Sunday next to a
+  // fixture next Tuesday is meaningless without it. The status badge already
+  // carries the kickoff time for upcoming games, so don't print it twice.
+  const when = m.dayKey
+    ? dayHeading(m.dayKey) + ((isLive || isFinished) && m.time ? ' · ' + m.time : '')
+    : '';
+
   let html = '<div style="background:var(--bg2);border:1px solid ' + borderColor + ';border-radius:12px;padding:14px 16px;margin-bottom:8px;">';
-  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">';
+  if (label) {
+    html += '<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent2);margin-bottom:6px;">'
+      + sanitize(label) + '</div>';
+  }
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">';
   html += '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted)">' + m.flag + ' ' + m.comp + '</div>';
   html += statusBadge + '</div>';
+  if (when) {
+    html += '<div style="font-size:10px;color:var(--muted);margin-bottom:8px;">' + sanitize(when) + '</div>';
+  }
   html += '<div style="display:flex;align-items:center;justify-content:space-between;">';
   html += '<div style="font-size:' + (featured ? '16px' : '14px') + ';font-weight:' + (featured ? '700' : '600') + ';color:var(--text);flex:1">' + m.home + '</div>';
   if (m.score) {
@@ -2201,18 +2533,6 @@ function matchCard(m, featured) {
 // here. Both were invented numbers. We do not put a percentage next to a real
 // headline, so they are gone rather than hidden.
 
-// Our club slugs predate the football data tables. Until the two are
-// reconciled, this maps a slug to its API-Football team id so a followed club
-// can be matched against a tagged article.
-const CLUB_API_ID={
-  flamengo:127,palmeiras:121,corinthians:131,botafogo:120,fluminense:124,
-  atletico_mg:1062,gremio:130,internacional:119,sao_paulo:126,cruzeiro:135,
-  real_madrid:541,barcelona:529,atletico_madrid:530,
-  man_city:50,arsenal:42,liverpool:40,man_utd:33,chelsea:49,
-  bayern:157,dortmund:165,psg:85,juventus:496,inter:505,
-  river:435,boca:451,
-};
-
 // Which half of the world a league belongs to, for the Brazil/Europe filters.
 const LEAGUE_REGION={
   serie_a:'brazil',
@@ -2232,11 +2552,28 @@ const CATEGORY_LABEL={
 
 let FEED_ITEMS=[];
 
-// api_team_id -> { name, logo_url, league, rank, points, played, gs, gc, pa, matches }
-// Filled by loadClubData(); empty until then, and every reader tolerates that.
-const CLUB_DATA=new Map();
+// Clubs are keyed on teams.id — the same id profiles.main_club_id and
+// follows.team_id use, so nothing has to be translated before a write.
+// CLUB_BY_API exists only because news tags come back as api_team_id.
+//
+// Each row: { id, api_team_id, name, label, logo_url, league,
+//             rank, points, played, matches, gs, gc, pa }
+const CLUB_DATA=new Map();      // teams.id      -> row
+const CLUB_BY_API=new Map();    // api_team_id   -> row
 
-/** Crest + real numbers for the 25 picker slugs and anywhere else a club shows. */
+/** Every club we hold, grouped by league slug, for the picker. */
+function clubsByLeague(){
+  const out=new Map();
+  for(const row of CLUB_DATA.values()){
+    const k=row.league||'other';
+    if(!out.has(k))out.set(k,[]);
+    out.get(k).push(row);
+  }
+  for(const list of out.values())list.sort((a,b)=>a.label.localeCompare(b.label));
+  return out;
+}
+
+/** Real crests and real numbers for all 146 clubs. */
 async function loadClubData(){
   const get=async(path)=>{
     const res=await fetch(`${SUPA_URL}/rest/v1/${path}`,{
@@ -2251,26 +2588,31 @@ async function loadClubData(){
       get('standings?select=team_id,rank,points,played&limit=500'),
       get('team_season_stats?select=team_id,matches,gs,gc,pa&limit=500'),
     ]);
-    const byRowId=new Map();
     for(const t of teams){
       const row={
+        id:t.id,
         api_team_id:t.api_team_id,
         name:t.name,
+        // The API's name is a data field, not a label: it strips accents and
+        // abbreviates. club_names.js maps the ones that are actually wrong.
+        label:(typeof clubDisplayName==='function')
+          ? clubDisplayName({api_team_id:t.api_team_id,name:t.name})
+          : t.name,
         logo_url:t.logo_url,
         league:t.leagues&&t.leagues.slug,
       };
-      CLUB_DATA.set(t.api_team_id,row);
-      byRowId.set(t.id,row);
+      CLUB_DATA.set(t.id,row);
+      CLUB_BY_API.set(t.api_team_id,row);
     }
     for(const s of standings){
-      const row=byRowId.get(s.team_id);
+      const row=CLUB_DATA.get(s.team_id);
       // Argentina holds two tournaments; keep the better position.
       if(row&&(row.rank==null||(s.rank!=null&&s.rank<row.rank))){
         row.rank=s.rank; row.points=s.points; row.played=s.played;
       }
     }
     for(const s of stats){
-      const row=byRowId.get(s.team_id);
+      const row=CLUB_DATA.get(s.team_id);
       if(row){ row.matches=s.matches; row.gs=s.gs; row.gc=s.gc; row.pa=s.pa; }
     }
   }catch(e){
@@ -2303,19 +2645,15 @@ const LEAGUE_LABEL={serie_a:'Série A',premier_league:'Premier League',la_liga:'
 function renderMyClubCard(){
   const el=document.getElementById('clubs-my-card');
   if(!el)return;
-  let slug=selectedMainClub;
-  if(!slug){
-    try{ const m=JSON.parse(localStorage.getItem('sm_main_club')||'null'); if(m)slug=m.id; }catch(e){}
-  }
-  if(!slug){
+  const id=mainClubId();
+  if(!id){
     el.innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">'
       +'<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">You have not picked a club yet.</div>'
       +'<button class="filter-btn" onclick="openTeamModal()">Choose your club</button></div>';
     return;
   }
-  const meta=ALL_CLUBS.find(c=>c.id===slug)||{name:slug};
-  const s=clubStats(slug)||{};
-  const d=CLUB_DATA.get(CLUB_API_ID[slug]);
+  const s=clubStats(id)||{};
+  const d=CLUB_DATA.get(id);
   const sub=[LEAGUE_LABEL[d&&d.league]||null,(s.played!=null?s.played+' played':null)]
     .filter(Boolean).join(' · ');
   const cells=statCell('Position',ordinal(s.rank),'var(--accent)')
@@ -2325,9 +2663,9 @@ function renderMyClubCard(){
     +statCell('Pass',s.passPct);
   el.innerHTML='<div onclick="window.location.href=\'/community.html\'" style="background:var(--bg2);border:1px solid rgba(0,229,160,0.2);border-radius:12px;overflow:hidden;cursor:pointer;">'
     +'<div style="padding:14px 16px;display:flex;align-items:center;gap:14px;">'
-    +clubCrestBySlug(slug,44)
+    +clubCrestById(id,44)
     +'<div style="flex:1;min-width:0;">'
-    +'<div id="clubs-main-name" style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;letter-spacing:2px;">'+sanitize((meta.name||'').toUpperCase())+'</div>'
+    +'<div id="clubs-main-name" style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;letter-spacing:2px;">'+sanitize(clubLabel(id).toUpperCase())+'</div>'
     +(sub?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+sanitize(sub)+'</div>':'')
     +'</div><div style="font-size:11px;color:var(--accent);flex-shrink:0;">Open →</div></div>'
     +(cells?'<div style="display:flex;border-top:1px solid var(--border);background:var(--bg3);">'+cells+'</div>':'')
@@ -2337,10 +2675,16 @@ function renderMyClubCard(){
 function renderClubsGrid(){
   const el=document.getElementById('clubs-grid');
   if(!el)return;
-  const cards=ALL_CLUBS.map(function(c){
+  // Your clubs first, then the rest by league.
+  const mine=myClubIds();
+  const all=[...CLUB_DATA.values()].sort((a,b)=>{
+    const am=mine.indexOf(a.id)>-1, bm=mine.indexOf(b.id)>-1;
+    if(am!==bm)return am?-1:1;
+    return (a.league||'').localeCompare(b.league||'')||a.label.localeCompare(b.label);
+  });
+  const cards=all.map(function(c){
     const s=clubStats(c.id)||{};
-    const d=CLUB_DATA.get(CLUB_API_ID[c.id]);
-    const sub=[LEAGUE_LABEL[d&&d.league]||null,(s.rank!=null?ordinal(s.rank)+' place':null)]
+    const sub=[LEAGUE_LABEL[c.league]||null,(s.rank!=null?ordinal(s.rank)+' place':null)]
       .filter(Boolean).join(' · ');
     const bits=[
       s.goalsFor!=null?'Goals/g <span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+s.goalsFor+'</span>':null,
@@ -2349,8 +2693,8 @@ function renderClubsGrid(){
     ].filter(Boolean);
     return '<div class="club-explore-card" onclick="window.location.href=\'/community.html\'">'
       +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
-      +clubCrestBySlug(c.id,34)
-      +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">'+sanitize(c.name)+'</div>'
+      +clubCrestById(c.id,34)
+      +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">'+sanitize(c.label)+'</div>'
       +(sub?'<div style="font-size:10px;color:var(--muted);">'+sanitize(sub)+'</div>':'')
       +'</div></div>'
       +(bits.length?'<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--muted);">'
@@ -2360,19 +2704,104 @@ function renderClubsGrid(){
   el.innerHTML=cards;
 }
 
-/** Crest for one of the ALL_CLUBS slugs. Falls back to initials before load. */
-function clubCrestBySlug(slug,size){
-  const team=CLUB_DATA.get(CLUB_API_ID[slug]);
-  const meta=ALL_CLUBS.find(c=>c.id===slug);
-  return clubCrest(team||{name:(meta&&meta.name)||slug},size);
+/**
+ * Sidebar fixtures: today in the viewer's timezone, or the next matchday when
+ * today is empty — which it is for weeks during an international break. The
+ * heading changes with it, so it never says "Today's matches" about Saturday.
+ */
+function renderSidebarMatches(){
+  const el=document.getElementById('sidebar-matches');
+  const title=document.getElementById('sidebar-matches-title');
+  if(!el)return;
+
+  if(LIVE_MATCHES===null){
+    // renderMatchDay() owns the fetch; just wait for it.
+    el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0;">Loading fixtures…</div>';
+    return;
+  }
+  const dated=(LIVE_MATCHES||[]).filter(m=>m.kickoff);
+  if(!dated.length){
+    if(title)title.textContent="Today's matches";
+    el.innerHTML='<div style="font-size:11px;color:var(--muted);line-height:1.6;padding:4px 0;">No fixtures in the next three weeks.</div>';
+    return;
+  }
+  const today=localDayKey(new Date());
+  let key=today;
+  let list=dated.filter(m=>m.dayKey===today);
+  if(!list.length){
+    const next=dated.filter(m=>m.dayKey>today).sort((a,b)=>a.kickoff-b.kickoff)[0];
+    if(!next){
+      if(title)title.textContent="Today's matches";
+      el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0;">Nothing scheduled.</div>';
+      return;
+    }
+    key=next.dayKey;
+    list=dated.filter(m=>m.dayKey===key);
+  }
+  if(title)title.textContent=(key===today)?"Today's matches":('Next matchday · '+dayHeading(key));
+
+  const mine=new Set(myClubIds());
+  list.sort((a,b)=>{
+    const am=a.teamIds&&a.teamIds.some(t=>mine.has(t)), bm=b.teamIds&&b.teamIds.some(t=>mine.has(t));
+    if(am!==bm)return am?-1:1;
+    return (a.compTier-b.compTier)||(a.kickoff-b.kickoff);
+  });
+  el.innerHTML=list.slice(0,6).map(function(m){
+    const score=m.score?('<span style="font-family:\'DM Mono\',monospace;color:var(--text);">'+sanitize(m.score)+'</span>')
+      :('<span style="color:var(--muted);font-size:10px;">vs</span>');
+    const when=(m.status==='live')?'LIVE':(m.status==='finished'?'FT':m.time);
+    return '<div class="match-row-sm"><div><div class="match-comp-sm">'+sanitize(m.comp)+' · '+sanitize(when)+'</div>'
+      +'<div class="match-teams-sm">'+sanitize(m.home)+' '+score+' '+sanitize(m.away)+'</div></div></div>';
+  }).join('');
+}
+
+/**
+ * Sidebar "My clubs". Three distinct states, none of them a made-up club:
+ * guest, signed in with nothing chosen, and signed in with clubs.
+ */
+function renderSidebarClubs(){
+  const el=document.getElementById('sidebar-clubs');
+  if(!el)return;
+  const ids=myClubIds();
+  const main=mainClubId();
+  const button='<div style="padding:8px 0;text-align:center;">'
+    +'<button onclick="openTeamModal()" style="font-size:10px;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'
+    +(ids.length?'Change my clubs':'Choose your club')+'</button></div>';
+
+  if(!ids.length){
+    el.innerHTML='<div style="font-size:11px;color:var(--muted);line-height:1.6;padding:2px 0 6px;">'
+      +(currentUser?'Pick a club to make this feed yours.':'Sign in to follow your club.')
+      +'</div>'+button;
+    return;
+  }
+  el.innerHTML=ids.map(function(id){
+    const c=CLUB_DATA.get(id);
+    if(!c)return '';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="window.location.href=\'/community.html\'">'
+      +clubCrestById(id,24)
+      +'<div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;color:var(--text);">'+sanitize(c.label)+'</div>'
+      +'<div style="font-size:9px;color:var(--muted);">'+(id===main?'My club':'Following')+'</div></div>'
+      +'<div style="font-size:9px;color:var(--accent);">Open →</div></div>';
+  }).join('')+button;
+}
+
+/** Crest by teams.id. Falls back to an initials tile before the data lands. */
+function clubCrestById(id,size){
+  return clubCrest(CLUB_DATA.get(id)||{name:''},size);
+}
+
+/** Display label by teams.id. */
+function clubLabel(id){
+  const c=CLUB_DATA.get(id);
+  return c?c.label:'';
 }
 
 /**
  * Real numbers for a club, or null when we have none. Never invents a value:
  * a missing stat is a hidden row, not a zero.
  */
-function clubStats(slug){
-  const d=CLUB_DATA.get(CLUB_API_ID[slug]);
+function clubStats(id){
+  const d=CLUB_DATA.get(id);
   if(!d)return null;
   // gs and gc are ALREADY per game — team_season_stats stores the rate, with
   // `matches` as the denominator that produced it (003: "goals scored / game").
@@ -2420,6 +2849,15 @@ function clubCrest(team,size){
     +'color:var(--muted);" title="'+sanitize(name)+'">'+sanitize(initials)+'</span>';
 }
 
+const CONTENT_LANGS=[
+  {code:'pt-BR',short:'PT',label:'Português'},
+  {code:'en',   short:'EN',label:'English'},
+  {code:'es',   short:'ES',label:'Español'},
+  {code:'it',   short:'IT',label:'Italiano'},
+  {code:'de',   short:'DE',label:'Deutsch'},
+  {code:'fr',   short:'FR',label:'Français'},
+];
+
 /** Browser language reduced to one of our source languages. */
 function browserLang(){
   const raw=(navigator.language||'en').toLowerCase();
@@ -2432,19 +2870,119 @@ function browserLang(){
 }
 
 /**
- * Read the saved club selection straight from storage: followingClubs is only
- * hydrated when the club modal opens, so the module-level copy is empty on a
- * cold load even when the user has clubs saved.
+ * Languages this reader wants. The account setting wins; otherwise just the
+ * browser language. Deliberately strict: a feed that silently mixes languages
+ * is a worse default than one that occasionally misses a story. Readers add
+ * languages in Profile.
  */
-function followedApiIds(){
-  let slugs=followingClubs.slice();
-  if(selectedMainClub)slugs.push(selectedMainClub);
+function myLangs(){
+  if(MY_PROFILE&&MY_PROFILE.content_langs&&MY_PROFILE.content_langs.length){
+    return MY_PROFILE.content_langs.slice();
+  }
+  return [browserLang()];
+}
+
+/**
+ * Opt-in: also show news about your clubs in languages you did not pick.
+ * Off for everyone by default, and never on for guests — they have no
+ * account to have opted in with.
+ */
+function showClubNewsAllLangs(){
+  return Boolean(currentUser && MY_PROFILE && MY_PROFILE.show_club_news_all_langs);
+}
+
+/** Persist the language choice. Guests keep it in localStorage. */
+async function setMyLangs(langs){
+  const clean=CONTENT_LANGS.map(l=>l.code).filter(c=>langs.indexOf(c)>-1);
+  if(!clean.length)return;                    // never leave the feed with nothing
+  if(!MY_PROFILE)MY_PROFILE={};
+  MY_PROFILE.content_langs=clean;
+  try{ localStorage.setItem('sm_content_langs',JSON.stringify(clean)); }catch(e){}
+  if(currentUser){
+    try{ await apiSend('PATCH','profiles?id=eq.'+currentUser.id,{content_langs:clean}); }
+    catch(e){ console.warn('setMyLangs:',e.message); }
+  }
+  renderLangChips();
+  renderLangPrefs();
+  renderFeedNews();
+}
+
+/** Language checkboxes in Profile. */
+function renderLangPrefs(){
+  const el=document.getElementById('profile-lang-prefs');
+  if(!el)return;
+  const on=myLangs();
+  el.innerHTML=CONTENT_LANGS.map(function(l){
+    const active=on.indexOf(l.code)>-1;
+    // Never let the reader switch off the last one and empty their feed.
+    const last=active&&on.length===1;
+    return '<button onclick="toggleLang(\''+l.code+'\')"'
+      +(last?' title="Keep at least one language"':'')
+      +' style="font-size:11px;padding:5px 12px;border-radius:20px;cursor:'+(last?'not-allowed':'pointer')
+      +';font-family:\'DM Sans\',sans-serif;border:1px solid '+(active?'var(--accent)':'var(--border)')
+      +';background:'+(active?'rgba(0,229,160,0.1)':'transparent')
+      +';color:'+(active?'var(--accent)':'var(--muted)')+';opacity:'+(last?'0.7':'1')+';">'
+      +(active?'✓ ':'')+sanitize(l.label)+'</button>';
+  }).join('');
+}
+
+/** The opt-in cross-language switch, under the language checkboxes. */
+function renderClubLangToggle(){
+  const el=document.getElementById('profile-club-lang');
+  if(!el)return;
+  if(!currentUser){
+    el.innerHTML='<div style="font-size:11px;color:var(--muted);line-height:1.6;">'
+      +'Sign in to show news about your clubs in other languages.</div>';
+    return;
+  }
+  const on=showClubNewsAllLangs();
+  el.innerHTML='<button onclick="toggleClubLangs()" style="display:flex;align-items:center;gap:9px;'
+    +'background:transparent;border:none;padding:0;cursor:pointer;font-family:\'DM Sans\',sans-serif;text-align:left;">'
+    +'<span style="width:34px;height:19px;border-radius:12px;flex-shrink:0;position:relative;transition:background .2s;'
+    +'background:'+(on?'var(--accent)':'var(--bg3)')+';border:1px solid '+(on?'var(--accent)':'var(--border)')+';">'
+    +'<span style="position:absolute;top:2px;left:'+(on?'17px':'2px')+';width:13px;height:13px;border-radius:50%;'
+    +'background:'+(on?'#000':'var(--muted)')+';transition:left .2s;"></span></span>'
+    +'<span style="font-size:12px;color:'+(on?'var(--text)':'var(--muted)')+';line-height:1.5;">'
+    +'Also show news about my clubs in other languages</span></button>';
+}
+
+async function toggleClubLangs(){
+  if(!requireAuth('Create a free account to change this.'))return;
+  if(!MY_PROFILE)MY_PROFILE={};
+  MY_PROFILE.show_club_news_all_langs=!MY_PROFILE.show_club_news_all_langs;
+  renderClubLangToggle();
+  renderFeedNews();
   try{
-    const main=JSON.parse(localStorage.getItem('sm_main_club')||'null');
-    if(main&&main.id)slugs.push(main.id);
-    slugs=slugs.concat(JSON.parse(localStorage.getItem('sm_following_clubs')||'[]'));
+    await apiSend('PATCH','profiles?id=eq.'+currentUser.id,
+      {show_club_news_all_langs:MY_PROFILE.show_club_news_all_langs});
+  }catch(e){ console.warn('toggleClubLangs:',e.message); }
+}
+
+function toggleLang(code){
+  const on=myLangs();
+  const i=on.indexOf(code);
+  if(i>-1){
+    if(on.length===1)return;   // keep at least one
+    on.splice(i,1);
+  }else{
+    on.push(code);
+  }
+  setMyLangs(on);
+}
+
+/** Tell the browser what language the shell is in, for its translate offer. */
+function applyPageLang(){
+  const primary=myLangs()[0]||'en';
+  try{ document.documentElement.setAttribute('lang',primary); }catch(e){}
+}
+
+/** Restore a guest's saved language choice on boot. */
+function hydrateGuestLangs(){
+  if(currentUser)return;
+  try{
+    const s=JSON.parse(localStorage.getItem('sm_content_langs')||'null');
+    if(Array.isArray(s)&&s.length){ MY_PROFILE=MY_PROFILE||{}; MY_PROFILE.content_langs=s; }
   }catch(e){}
-  return slugs.map(s=>CLUB_API_ID[s]).filter(Boolean);
 }
 
 async function loadNews(){
@@ -2567,12 +3105,24 @@ function renderNewsCard(n){
     '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:2px 8px 2px 3px;background:rgba(0,184,255,0.08);border:1px solid rgba(0,184,255,0.18);border-radius:10px;color:var(--accent2);">'
     +clubCrest(t,16)+sanitize(t.name)+'</span>'
   ).join('');
-  let html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;">'
+  // An item can only reach a reader in a language they did not choose via the
+  // opt-in club exception, so the hint is pointless unless that is on. When it
+  // is, say so and let the browser's own translator do the work — we never
+  // translate anything ourselves.
+  const foreign=showClubNewsAllLangs()&&myLangs().indexOf(n.lang)<0;
+  const meta=CONTENT_LANGS.find(l=>l.code===n.lang);
+  const hint=foreign
+    ? '<span title="Use your browser\'s translate option" style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border);">'
+      +sanitize((meta&&meta.short)||n.lang)+' · Translate</span>'
+    : '';
+  // lang on the card itself, so per-item browser translation targets the
+  // right text instead of guessing from the page language.
+  let html='<div lang="'+sanitize(n.lang||'')+'" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;">'
     +'<div style="padding:16px 18px;">'
     +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">'
     +'<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;" class="'+cat.cls+'">'+cat.label+'</span>'
     +clubs
-    +'<span style="font-size:11px;color:var(--muted);">'+sanitize(n.source)+' · '+timeAgo(n.publishedAt)+'</span></div>'
+    +'<span style="font-size:11px;color:var(--muted);">'+sanitize(n.source)+' · '+timeAgo(n.publishedAt)+'</span>'+hint+'</div>'
     +'<a href="'+sanitize(n.url)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;">'
     +'<div style="font-size:14px;font-weight:600;line-height:1.4;margin-bottom:8px;">'+sanitize(n.title)+'</div></a>';
   if(n.excerpt){
@@ -2583,15 +3133,47 @@ function renderNewsCard(n){
   return html;
 }
 
+let currentLangFilter='all';
+
+function filterLang(code,btn){
+  currentLangFilter=code;
+  document.querySelectorAll('.lang-chip').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderFeedNews();
+}
+
+/** The language chips: the reader's own languages, nothing else. */
+function renderLangChips(){
+  const el=document.getElementById('feed-lang-chips');
+  if(!el)return;
+  const langs=myLangs();
+  // One language means there is nothing to choose between.
+  if(langs.length<2){ el.innerHTML=''; return; }
+  if(langs.indexOf(currentLangFilter)<0)currentLangFilter='all';
+  el.innerHTML='<button class="lang-chip'+(currentLangFilter==='all'?' active':'')
+      +'" onclick="filterLang(\'all\',this)">All</button>'
+    +langs.map(function(code){
+      const m=CONTENT_LANGS.find(l=>l.code===code)||{short:code,label:code};
+      return '<button class="lang-chip'+(currentLangFilter===code?' active':'')
+        +'" title="'+sanitize(m.label)+'" onclick="filterLang(\''+code+'\',this)">'
+        +sanitize(m.short)+'</button>';
+    }).join('');
+}
+
 function visibleFeedItems(){
-  const myLang=browserLang();
-  const mine=followedApiIds();
+  const langs=myLangs();
+  const mine=myClubApiIds();
+  const crossLang=showClubNewsAllLangs();
   const out=FEED_ITEMS.filter(function(n){
-    // Language: English, plus your own language, plus anything tagged to a
-    // club in one of our seven leagues whatever language it is written in —
-    // a Palmeiras story matters to a Palmeiras fan reading in English.
-    const aboutAClub=n.teamIds.length>0;
-    if(!aboutAClub && n.lang!==myLang && n.lang!=='en')return false;
+    // Your chosen languages only — unless you opted in to seeing news about
+    // your own clubs in other languages, in which case those pass too.
+    if(langs.indexOf(n.lang)<0){
+      if(!crossLang)return false;
+      if(!n.teamIds.some(id=>mine.indexOf(id)>-1))return false;
+    }
+    // The chips filter strictly, so the feed never mixes languages when the
+    // reader has said which one they want.
+    if(currentLangFilter!=='all' && n.lang!==currentLangFilter)return false;
     if(currentFeedFilter==='all')return true;
     if(currentFeedFilter==='transfers')return ['transfer','rumor','contract'].indexOf(n.category)>-1;
     if(currentFeedFilter==='brazil')return n.region==='brazil';
@@ -2616,12 +3198,45 @@ function visibleFeedItems(){
 }
 
 function renderFeedNews(){
+  renderLangChips();
   const filtered=visibleFeedItems();
   const html=filtered.map(renderFeedItem).join('');
   const el=document.getElementById('feed-news-main');
   if(el){
     el.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories yet. The news job runs every 15 minutes.</div>';
   }
+  renderForYou();
+}
+
+/**
+ * For You: news about the clubs you follow. Headline mentions first, then
+ * newest. Language is deliberately ignored here — you asked for these clubs.
+ */
+function renderForYou(){
+  const el=document.getElementById('foryou-content');
+  if(!el)return;
+  const mine=myClubApiIds();
+  if(!mine.length){
+    el.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--muted);">'
+      +'<div style="font-size:13px;line-height:1.7;max-width:360px;margin:0 auto 16px;">'
+      +(currentUser
+        ? 'Follow a club and its news lands here.'
+        : 'Sign in and pick your clubs to get a feed of your own.')
+      +'</div><button class="filter-btn" onclick="openTeamModal()">Choose your clubs</button></div>';
+    return;
+  }
+  const items=FEED_ITEMS
+    .filter(n=>n.teamIds.some(id=>mine.indexOf(id)>-1))
+    .sort(function(a,b){
+      const ah=a.headlineTeamIds.some(id=>mine.indexOf(id)>-1);
+      const bh=b.headlineTeamIds.some(id=>mine.indexOf(id)>-1);
+      if(ah!==bh)return ah?-1:1;
+      return new Date(b.publishedAt)-new Date(a.publishedAt);
+    });
+  el.innerHTML=items.length
+    ? items.map(renderFeedItem).join('')
+    : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
+      +'Nothing about your clubs in the last batch. The news job runs every 15 minutes.</div>';
 }
 
 
@@ -2824,12 +3439,21 @@ function filterWeekly(league, btn) {
 // Club data first: crests and real numbers should be in hand before the feed
 // and the pickers paint. A failure here is logged and everything still renders.
 (async function(){
+  try{ hydrateGuestLangs(); }catch(e){}
   try{ await loadClubData(); }catch(e){ console.error('loadClubData:',e); }
+  // Needs CLUB_DATA: the localStorage import validates ids against it.
+  try{ await loadMyAccount(); }catch(e){ console.error('loadMyAccount:',e); }
+  try{ applyPageLang(); }catch(e){}
+  try{ renderSidebarClubs(); }catch(e){console.error('renderSidebarClubs:',e);}
   try{ renderModalClubs(); }catch(e){}
   try{ renderProfileClubs(); }catch(e){}
+  try{ renderLangPrefs(); renderClubLangToggle(); }catch(e){}
+  try{ renderMyClubCard(); renderClubsGrid(); }catch(e){}
   try{ await loadNews(); }catch(e){ console.error('loadNews:',e); }
+  try{ renderMatchDay(); }catch(e){}
+  try{ renderSidebarMatches(); }catch(e){}
+  try{ maybeStartOnboarding(); }catch(e){ console.error('onboarding:',e); }
 })();
-try{applyClubSelection();}catch(e){console.error('applyClubSelection:',e);}
 try{initProfile();}catch(e){console.error('initProfile:',e);}
 try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
 
@@ -2863,32 +3487,25 @@ function initProfile(){
 }
 
 function renderProfileClubs(){
-  const mainClub = JSON.parse(localStorage.getItem('sm_main_club')||'null');
-  const following = JSON.parse(localStorage.getItem('sm_following_clubs')||'[]');
   const el = document.getElementById('profile-clubs-list');
   if(!el) return;
-  if(!mainClub && !following.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0;">No club selected yet.</div>';
+  const ids = myClubIds();
+  const main = mainClubId();
+  if(!ids.length){
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0;">'
+      + 'No club selected yet. <span style="color:var(--accent);cursor:pointer;" onclick="openTeamModal()">Choose your club</span></div>';
     return;
   }
-  let html = '';
-  if(mainClub){
-    html += `<div class="club-chip">
-      <span class="club-chip-emoji">${mainClub.emoji||'⚽'}</span>
-      <span class="club-chip-name">${mainClub.name}</span>
-      <span class="club-chip-badge c-pill-g">Main club</span>
-    </div>`;
-  }
-  following.forEach(id => {
-    const c = ALL_CLUBS.find(x=>x.id===id);
-    if(!c) return;
-    html += `<div class="club-chip">
-      <span class="club-chip-emoji">${c.emoji||'⚽'}</span>
-      <span class="club-chip-name">${c.name}</span>
-      <span class="club-chip-badge c-pill-b">Following</span>
-    </div>`;
-  });
-  el.innerHTML = html;
+  el.innerHTML = ids.map(function(id){
+    const c = CLUB_DATA.get(id);
+    if(!c) return '';
+    const isMain = id === main;
+    return '<div class="club-chip">'
+      + clubCrestById(id,20)
+      + '<span class="club-chip-name">' + sanitize(c.label) + '</span>'
+      + '<span class="club-chip-badge ' + (isMain?'c-pill-g':'c-pill-b') + '">'
+      + (isMain?'Main club':'Following') + '</span></div>';
+  }).join('');
 }
 
 function editName(){if(!requireAuth('Create a free account to set up your profile.'))return;var nameVal=document.getElementById("profile-name-val");var nameEdit=document.getElementById("profile-name-edit");var nameInput=document.getElementById("profile-name-input");var editBtn=document.getElementById("profile-edit-btn");if(nameVal)nameVal.style.display="none";if(nameEdit)nameEdit.style.display="flex";if(nameInput){nameInput.value=currentUser&&currentUser.name?currentUser.name:"";nameInput.focus();nameInput.select();}if(editBtn)editBtn.style.display="none";}function cancelEditName(){var nameVal=document.getElementById("profile-name-val");var nameEdit=document.getElementById("profile-name-edit");var editBtn=document.getElementById("profile-edit-btn");if(nameVal)nameVal.style.display="";if(nameEdit)nameEdit.style.display="none";if(editBtn)editBtn.style.display="";}function saveName(){if(!requireAuth('Create a free account to set up your profile.'))return;var input=document.getElementById("profile-name-input");var newName=input&&input.value.trim();if(!newName){alert("Please enter a name.");return;}if(currentUser){currentUser.name=newName;localStorage.setItem("sm_current_user",JSON.stringify(currentUser));}var initials=newName.split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);var ids={"profile-name-val":newName,"profile-name-big":newName.toUpperCase(),"nav-name":newName,"nav-avatar":initials,"profile-avatar-big":initials};Object.keys(ids).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=ids[id];});cancelEditName();}function highlightCurrPref(c){
@@ -2900,14 +3517,13 @@ function editName(){if(!requireAuth('Create a free account to set up your profil
   });
 }
 
-// Show team modal only on very first login per account.
-// Never for guests — the whole point of guest mode is landing straight in the feed.
-const _userId = currentUser?.id || 'guest';
-const _modalKey = 'sm_club_selected_' + _userId;
-const hasSelectedClub = localStorage.getItem(_modalKey);
-if(!isGuest && !hasSelectedClub){
-  setTimeout(()=>{try{openTeamModal();}catch(e){console.error(e);}},400);
-}
+// The old "first login per account" team-modal trigger lived here. It keyed on
+// a localStorage flag and targeted the same moment as onboarding — signed in,
+// no club — so both modals opened, one on top of the other.
+//
+// maybeStartOnboarding() replaces it: it runs off profiles.onboarded_at, so a
+// skip is remembered on the account rather than in one browser, and it cannot
+// fire twice. Guests are never interrupted either way.
 </script>
 </body>
 </html>

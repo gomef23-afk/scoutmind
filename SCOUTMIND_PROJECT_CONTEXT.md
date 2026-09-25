@@ -123,6 +123,11 @@ email TEXT
 plan TEXT DEFAULT 'fan'   -- 'fan' | 'analyst' | 'admin'  (was free/pro/club/clubpro)
 credential TEXT           -- e.g. 'ESPN Brasil', 'Licensed Scout' (for analysts)
 created_at TIMESTAMP
+main_club_id BIGINT       -- 007. references teams(id). NULL is normal: no default club
+content_langs TEXT[]      -- 007. NULL = fall back to the browser language alone
+show_club_news_all_langs BOOLEAN -- 007. opt-in: club news in other languages too
+onboarded_at TIMESTAMPTZ  -- 007. set when onboarding completes OR is skipped;
+                          --      also guards the one-time localStorage import
 ```
 ⚠️ **`profiles` is NOT publicly readable** — it holds email addresses. A signed-in
 user can read and update only their own row. Public/social reads go through:
@@ -193,7 +198,7 @@ email and a bio. Only the dashboard (service role) reads them. Insert is
 
 ---
 
-## 6b. FOOTBALL DATA TABLES (migrations `003`–`006`, Phase R)
+## 6b. FOOTBALL DATA TABLES (migrations `003`–`007`, Phase R)
 
 Written only by the cron jobs. All public-read.
 
@@ -213,7 +218,7 @@ Written only by the cron jobs. All public-read.
 | `news_sources` | The 10 live feeds — `lang`, `country`, `headline_only`, `exclude_patterns`, health counters | seeded in `005` ✅ |
 | `news_items` | Headline + ≤300-char snippet + link. **Never full article text**. `football_ok` hides non-football without deleting it | `/api/cron/news` ✅ |
 | `news_item_teams` | Article → club, plus `via` (the alias that matched) and `in_title` (named in the headline, drives ranking) | `/api/cron/news` ✅ |
-| `ingest_runs` | Job telemetry + resumable cursor. **No read policy** — telemetry, not content | all jobs |
+| `follows` | User -> club. Public read (real follower counts), own-row write only | `007` ✅ || `ingest_runs` | Job telemetry + resumable cursor. **No read policy** — telemetry, not content | all jobs |
 
 ### Data the API does not provide — dropped
 Player **market value** (so the budget filter and currency switcher are gone),

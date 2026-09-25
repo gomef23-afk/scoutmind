@@ -252,6 +252,50 @@ export async function run(read) {
     'Vitoria<-vitoria',
   ]);
 
+  // ── club display names ──────────────────────────────────────────────────
+  // public/club_names.js is the single source of truth and ships to the
+  // browser as a classic script. Evaluate that exact file here so the map
+  // cannot drift from what these assertions describe.
+  const namesSrc = await read('public/club_names.js');
+  const nameMod = { exports: {} };
+  // eslint-disable-next-line no-new-func
+  new Function('module', namesSrc + '\nreturn module.exports;')(nameMod);
+  const { CLUB_NAME_OVERRIDES, clubDisplayName, fixClubParticles } = nameMod.exports;
+
+  check('names: module exports a map and a function',
+    !!CLUB_NAME_OVERRIDES && typeof clubDisplayName === 'function');
+
+  const byApi = new Map(teams.map((t) => [t.api_team_id, t]));
+  const strayIds = Object.keys(CLUB_NAME_OVERRIDES).filter((id) => !byApi.has(Number(id)));
+  check('names: every override points at a team we hold', strayIds.length === 0, strayIds.join(', '));
+
+  // A dead override is worse than none: it hides that the stored name changed.
+  const pointless = Object.entries(CLUB_NAME_OVERRIDES)
+    .filter(([id, label]) => byApi.get(Number(id)) && byApi.get(Number(id)).name === label)
+    .map(([id, label]) => `${id} ${label}`);
+  check('names: no override repeats the stored name', pointless.length === 0, pointless.join(', '));
+
+  eq('names: expands abbreviations',
+    [434, 450, 458, 473, 1066].map((a) => clubDisplayName(byApi.get(a))),
+    ['Gimnasia La Plata', 'Estudiantes La Plata', 'Argentinos Juniors',
+     'Independiente Rivadavia', 'Gimnasia Mendoza']);
+  eq('names: fixes casing', clubDisplayName(byApi.get(133)), 'Vasco da Gama');
+  eq('names: fixes a lowercase suffix', clubDisplayName(byApi.get(132)), 'Chapecoense-SC');
+  eq('names: restores accents',
+    [126, 130, 136].map((a) => clubDisplayName(byApi.get(a))),
+    ['São Paulo', 'Grêmio', 'Vitória']);
+
+  // The whole reason this is a map and not an algorithm.
+  eq('names: leaves correct acronyms alone',
+    [489, 497, 173, 192, 175].map((a) => clubDisplayName(byApi.get(a))),
+    ['AC Milan', 'AS Roma', 'RB Leipzig', '1. FC Köln', 'Hamburger SV']);
+  eq('particles: only between words', fixClubParticles('Vasco DA Gama'), 'Vasco da Gama');
+  eq('particles: first word untouched', fixClubParticles('DA Silva'), 'DA Silva');
+  eq('particles: acronym untouched', fixClubParticles('AC Milan'), 'AC Milan');
+
+  check('names: every team gets a non-empty label',
+    teams.every((t) => clubDisplayName(t).length > 0));
+
   // ── seed vs migration ───────────────────────────────────────────────────
   const sql = await read('supabase/migrations/005_news.sql');
 

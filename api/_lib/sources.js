@@ -21,7 +21,10 @@ export const NEWS_SOURCES = [
     url: 'https://pox.globo.com/rss/ge/futebol',
     lang: 'pt-BR',
     country: 'BR',
-    headline_only: true,
+    // ge's feed carries whole articles. We store the same 300-character
+    // sentence-clamped snippet as every other source and never the body; the
+    // clamp is in clipSummary(). Pending legal review like the rest.
+    headline_only: false,
     active: true,
   },
   {

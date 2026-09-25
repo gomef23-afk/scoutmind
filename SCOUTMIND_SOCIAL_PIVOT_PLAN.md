@@ -19,7 +19,9 @@
 | **R4** | Fixtures, standings and live scores. Standings **146 rows**; Argentina's multi-group tables collapse correctly. Matches page reads Supabase with a static fallback | live |
 | **R5** | `/api/cron/fixture-stats` — all 18 stat types per fixture, aggregated into `team_season_stats`. Migration `004`. Self-limiting batches (40 fixtures or 20s) serve backfill and steady state from one job. Backlog at launch: **932 finished fixtures**, ~24 runs | live |
 | **R8 + news slice of R9** | `/api/cron/news` — 10 RSS feeds → `news_items`, club-tagged via `team_aliases`. Migration `005`. Home feed renders real news through `renderFeedItem()`. Both fake widgets (Hot Rumors %, Fit Score Index) deleted. Costs **zero** API-Football requests | live |
-| **Nothing-fake pass** | Migration `006` (`football_ok`, `in_title`, `exclude_patterns`). Real crests everywhere, real Clubs-page numbers from `standings` + `team_season_stats`, football-only feed, headline-first ranking. Every hardcoded post, poll, wishlist entry, follower count, style badge and invented percentage removed | built, awaiting `006` |
+| **Nothing-fake pass** | Migration `006` (`football_ok`, `in_title`, `exclude_patterns`). Real crests everywhere, real Clubs-page numbers from `standings` + `team_season_stats`, football-only feed, headline-first ranking. Every hardcoded post, poll, wishlist entry, follower count, style badge and invented percentage removed | live |
+| **Accounts & clubs** | Migration `007` — `profiles.main_club_id` / `content_langs` / `onboarded_at`, and a `follows` table. Club picker on all **146** real teams keyed on `teams.id`; the 25-slug `ALL_CLUBS` list, `CLUB_API_ID` and `slugFor()` are gone. Two-step onboarding, one-time localStorage import, per-account content languages, Matches grouped by date, real sidebar fixtures | built, awaiting `007` |
+| **Consistency pass** | `about.html` repositioned to the social network and stripped of every claim we cannot back. Scout Mode limited to the seven leagues we hold, budget filter removed. One page title across the site | built |
 
 ### Infrastructure
 
@@ -41,7 +43,15 @@
 **News (R8), carried forward:**
 
 - **Four of the original feed URLs were dead** and are not in the seed. Ten are live: ge, ESPN Brasil, BBC, Sky, Olé, AS, Marca, Gazzetta, kicker, RMC. L'Équipe was dropped by decision, not by failure.
-- **Copyright:** headline + ≤300-char snippet + link only. ge's feed carries whole articles, so it is `headline_only` — it is tagged on the snippet and stores none of it. *Legal review item: news snippets from RSS feeds, especially ge.*
+- **Copyright:** headline + ≤300-char snippet + link only. As of 007 **ge stores the same clamped snippet as every other source** (`headline_only = false`); we still never fetch the article page or store the body.
+
+  **⚖️ Legal review — nothing below is built until the lawyers answer:**
+  1. News snippets from RSS feeds at all, especially ge, whose feed carries whole articles.
+  2. **AI-written bullet summaries** of articles.
+  3. **Machine translation of headlines** for display.
+  4. **Storing translations of headlines/snippets at ingest** into the reader's language.
+
+  Until then the product does no translation of its own: cards carry a `lang` attribute and a "Translate" hint so the reader's own browser can do it. That is the reader translating a page they are looking at, not us redistributing a translated work.
 - **Tag rate is ~50% and that is the intended trade.** Precision beats recall: an untagged article still appears in the feed, a wrongly tagged one appears on the wrong club's page. Measured on 505 frozen headlines: ge 48/100, Gazzetta 61/99, AS 36/68, Marca 32/49, BBC 26/86, kicker 13/20, ESPN 12/23, RMC 11/30, Olé 10/10, Sky 1/20.
 - **Sky Sports is 1/20** — its headlines are mostly player- and pundit-led with no club name. Not a bug; revisit if it stays that low with a bigger sample.
 - **Known tagger limits:** an English sentence-start common word can still false-positive (`"Forest fire near the stadium"` → Nottingham Forest). It never fired once across 505 real headlines, so it was accepted rather than patched with guesswork. `"Inter-Milan derby"` tags Inter only, not both clubs — the phrase is genuinely ambiguous and precision wins.
@@ -60,7 +70,31 @@
 - **Crests** come from `teams.logo_url` on `media.api-sports.io` — `Access-Control-Allow-Origin: *`, `max-age=172800`, all 146 non-null. Lazy-loaded, fixed size, initials fallback on error. ⚠️ `auth.html` sets `img-src 'self' data:`; add the host there before showing a crest on that page.
 - **Community page has no stats right now.** Its badges, four stat cards and "ScoutMind Weekly Verdict" all came from hardcoded `leagues_data.js` and were removed. They return in R9 when `community.html` reads Supabase like the Clubs page does.
 - **Scout Mode still shows market values** from `players_data.js` via `fmtVal()`. The currency *switcher* is gone (the API has no market values), but the numbers remain until Scout Mode moves to Supabase in R9. **Open question for Felipe.**
-- The Scout-instead-of-Home landing bug **could not be reproduced** logged out, with a simulated logged-in user, or after a hard refresh on production: `activePages: ["page-feed"]` every time.
+- The Scout-instead-of-Home landing bug **could not be reproduced** logged out, with a simulated logged-in user, or after a hard refresh on production. Closed: it was the browser's URL autocomplete serving `/?page=scout`.
+
+**Accounts & clubs (007), carried forward:**
+
+- **Clubs key on `teams.id` everywhere** — the same id `profiles.main_club_id` and `follows.team_id` use, so nothing is translated before a write. `CLUB_BY_API` exists only because news tags return `api_team_id`.
+- **No default club.** Guests, and signed-in users who skipped onboarding, have none. `onboarded_at` marks "asked already", so a skip is remembered and the one-time localStorage import can never overwrite a later choice.
+- **Display names are a map, not an algorithm** (`public/club_names.js`). Stripping capitals would produce *Ac Milan* and *Rb Leipzig*. Pinned by tests, including an assertion that no override merely repeats the stored name — which caught a dead `Inter` entry the day it was written.
+- **`loadFixtures()` had the same ambiguous `leagues(...)` embed** as the news query and would have started returning HTTP 300 the moment anything touched it. Now `leagues!fixtures_league_id_fkey(...)`. Worth grepping for others.
+- **community.html matches clubs by name**, because its team list is still `leagues_data.js` slugs. 82% of the clubs in our seven leagues resolve; the rest show **no numbers rather than someone else's**, enforced by an ambiguity guard that burns any key two clubs share. R9 moves the page onto `teams` and this bridge goes away.
+**Public claims — what `about.html` may say:**
+
+The rule is that every number on the marketing page is one we can point at in the database. Removed because nothing backed them: *30+ leagues covered*, *300+ / 545 real players*, *8 weakness zones detected*, *filtered by budget*, the FBref/Transfermarkt data-source sentence, *Join clubs, agents and fans already using ScoutMind*, the Série C answer, MLS and Série B in the league strip, and a mocked-up "Análise Flamengo" screenshot with players scored at 87% / 74% / 68% MATCH.
+
+Also removed: the "Clubs & Directors", "Scouts & Agents" and "Clubs & Academies" audience cards — supporters and analysts are the two audiences we actually serve today.
+
+What replaced them, all checkable: **7 leagues named, 146 clubs, ~500 stories a day from 10 outlets in 6 languages**, live scores, real season stats, **data from API-Football**, **MLS next**. Scout Mode is step 06, after the community, with its sample-data caveat stated — one feature, not the product.
+
+Headline is **"Your club. Everything around it."**, and that is the page title on every page except `auth.html`, which keeps "Sign In".
+
+Keep this list in mind before adding anything to that page.
+
+- **Language is strict by default.** `profiles.content_langs` defaults to the **browser language alone** — not browser + English. A feed that silently mixes languages is a worse default than one that occasionally misses a story; readers add languages in Profile.
+- **The cross-language club exception is opt-in.** `profiles.show_club_news_all_langs`, default `false`. When on, news tagged to your clubs also appears in languages you did not pick, and only those cards get a Translate hint. **Guests never get the exception** — they have no account to have opted in with. Measured: a pt-BR reader sees 50 items, all pt-BR; flipping the toggle adds exactly 2 French items, both about followed clubs, with exactly 2 hints.
+- We still translate nothing ourselves — the hint points at the browser's own translator.
+- **The old "first login per account" team-modal trigger is gone.** It keyed on a localStorage flag and targeted the same moment as onboarding, so both modals opened at once. `maybeStartOnboarding()` replaces it, keyed on `profiles.onboarded_at`, so a skip is remembered on the account rather than in one browser.
 
 ### Next, in order
 

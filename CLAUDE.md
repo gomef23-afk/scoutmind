@@ -45,6 +45,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 19. Club tagging rules live in `api/_lib/tagger.js` and the alias seed in `api/_lib/aliases.js` (the migration's seed block is generated from it). Both are pinned by `tests/tagger.test.js` against frozen RSS fixtures — run it after any change to either.
 20. **Disambiguate PostgREST embeds.** `teams` and `leagues` are joined by *two* paths (`teams.league_id` and the `standings` junction), so a bare `leagues(...)` embed returns **HTTP 300 PGRST201**, not an error row. Always write `leagues!teams_league_id_fkey(...)`. And never treat a non-2xx as a bare status — log the response body, or the real reason stays invisible.
 21. **The front end deploys before migrations run.** Vercel auto-deploys on push; Felipe runs SQL by hand afterwards. Any query using a brand-new column must degrade to a working query when that column is missing, not blank the page.
+22. **`about.html` may only claim what the database can show.** Every number on the marketing page must be checkable against Supabase. The plan doc lists what was removed and why — read it before adding a figure there.
 
 ## Workflow
 - Before editing, grep and list every hit you plan to change. Wait for approval on anything that removes or restructures more than one section.
