@@ -2076,6 +2076,35 @@ async function toggleReaction(itemId,type){
   }
 }
 
+// Author lookups are cached: a thread of ten comments from three people is
+// three profiles, and the same people recur across threads.
+const AUTHORS=new Map();   // user_id -> { name, main_club_id }
+
+/**
+ * Fetch any authors we do not already have, in one request.
+ *
+ * Deliberately NOT a PostgREST embed. comments.user_id references
+ * auth.users(id), and public_profiles is a view, so there is no foreign key
+ * for PostgREST to follow — an embed returns
+ *   PGRST200: no relationship between 'comments' and 'public_profiles'
+ * A FK to profiles(id) would make the embed resolve against the TABLE, but the
+ * table is not publicly readable and the view still would not be embeddable,
+ * so two queries and a client-side merge is both simpler and more robust.
+ */
+async function loadAuthors(userIds){
+  const missing=[...new Set(userIds)].filter(id=>id&&!AUTHORS.has(id));
+  if(!missing.length)return;
+  try{
+    const rows=await apiGet('public_profiles?select=id,name,main_club_id'
+      +'&id=in.('+missing.join(',')+')');
+    for(const r of rows)AUTHORS.set(r.id,{name:r.name,main_club_id:r.main_club_id});
+    // Remember the misses too, so a deleted account is not re-queried forever.
+    for(const id of missing)if(!AUTHORS.has(id))AUTHORS.set(id,null);
+  }catch(e){
+    console.warn('loadAuthors:',e.message);
+  }
+}
+
 /**
  * Comments for one item. Author names and crests come from public_profiles —
  * never from profiles, which holds email addresses and is not publicly
@@ -2086,10 +2115,9 @@ async function loadComments(itemId,all){
   const s=commentState(itemId);
   const limit=all?200:2;
   try{
-    const sel='id,user_id,content,created_at,'
-      +'public_profiles!comments_user_id_fkey(name,main_club_id)';
-    const rows=await apiGet('comments?select='+encodeURIComponent(sel)
+    const rows=await apiGet('comments?select=id,user_id,content,created_at'
       +'&news_item_id=eq.'+itemId+'&order=created_at.desc&limit='+limit);
+    await loadAuthors(rows.map(r=>r.user_id));
     // Newest at the bottom, like a chat.
     s.items=rows.reverse();
     s.loaded=true;
@@ -3496,7 +3524,8 @@ function paintComments(itemId){
 }
 
 function commentRow(itemId,c){
-  const p=c.public_profiles||{};
+  // Merged client-side from the AUTHORS cache, not from an embed.
+  const p=AUTHORS.get(c.user_id)||{};
   const name=p.name||'Someone';
   const mine=currentUser&&c.user_id===currentUser.id;
   const canDelete=mine||isAdmin();

@@ -444,10 +444,27 @@ revoke select on public.events from anon, authenticated;
 revoke all on public.moderation_blocklist from anon, authenticated;
 revoke all on public.moderation_allowlist from anon, authenticated;
 
+-- Defence in depth: Supabase hands `anon` broad table privileges by default,
+-- so without these revokes a guest's write reaches RLS and is only stopped
+-- there. RLS does stop it — verified against production, every guest write
+-- returns 401 or affects zero rows — but one policy mistake should not be the
+-- only thing between a guest and the table.
+--
+-- anon keeps SELECT on comments, reactions and public_profiles. That is the
+-- whole point of guest mode: read everything, write nothing.
+revoke insert, update, delete on public.comments  from anon;
+revoke insert, update, delete on public.reactions from anon;
+revoke all                    on public.reports   from anon;
+revoke all                    on public.events    from anon;
+
 -- Sequences need to be usable by the inserting role.
 grant usage, select on sequence public.comments_id_seq to authenticated;
 grant usage, select on sequence public.reports_id_seq  to authenticated;
 grant usage, select on sequence public.events_id_seq   to authenticated;
+
+revoke all on sequence public.comments_id_seq from anon;
+revoke all on sequence public.reports_id_seq  from anon;
+revoke all on sequence public.events_id_seq   from anon;
 
 -- ---------------------------------------------------------------------------
 -- SEED: blocklist
@@ -527,6 +544,13 @@ update public.news_items i
 -- events must have NO select policy (expect 0):
 --   select count(*) from pg_policies
 --    where schemaname='public' and tablename='events' and cmd='SELECT';
+--
+-- anon must hold SELECT only, and only on the two social tables (expect
+-- exactly comments/SELECT and reactions/SELECT, nothing else):
+--   select table_name, privilege_type from information_schema.table_privileges
+--    where grantee='anon' and table_schema='public'
+--      and table_name in ('comments','reactions','reports','events')
+--    order by table_name, privilege_type;
 --
 -- content must be immutable — expect exactly deleted_at and deleted_by:
 --   select column_name from information_schema.column_privileges
