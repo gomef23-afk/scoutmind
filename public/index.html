@@ -335,7 +335,37 @@ body{padding-bottom:64px;}
 .compose-box{flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:8px 10px;transition:border-color .15s;}
 .compose-box:focus-within{border-color:var(--accent);}
 .compose-box .comment-input{background:transparent;border:none;padding:0;border-radius:0;}
-.compose-box .comment-input:focus{border:none;}/* ── NEWS TAGS ── */
+.compose-box .comment-input:focus{border:none;}
+/* ── CLUB COMMUNITY CHAT ──
+   Three fixed rows: header, scrolling messages, composer. The body is the only
+   thing that scrolls, so the composer cannot be pushed off screen when a
+   virtual keyboard opens. The overlay sizes itself with position:fixed +
+   inset:0 rather than height:100vh, deliberately: on iOS Safari 100vh is the
+   height WITHOUT the browser chrome, which hides the composer behind the
+   address bar. Mobile-first; the room is capped and centred on desktop. */
+.chat-head{display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;}
+.chat-back{background:transparent;border:none;color:var(--text);font-size:22px;line-height:1;cursor:pointer;padding:4px 6px;flex-shrink:0;min-width:36px;min-height:36px;}
+.chat-head-crest{flex-shrink:0;display:flex;align-items:center;}
+.chat-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1.5px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.chat-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 4px;}
+.chat-foot{flex-shrink:0;border-top:1px solid var(--border);background:var(--bg2);padding:9px 14px calc(9px + env(safe-area-inset-bottom));}
+.chat-msg{display:flex;gap:9px;padding:7px 0;}
+.chat-msg-body{flex:1;min-width:0;}
+.chat-msg-author{font-size:12px;font-weight:600;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;}
+.chat-msg-text{font-size:14px;line-height:1.5;margin-top:2px;overflow-wrap:anywhere;}
+.chat-pinned{background:var(--bg3);border:1px solid rgba(0,229,160,0.2);border-radius:10px;padding:10px 12px;margin-bottom:12px;}
+.chat-pinned .chat-msg-text{color:var(--muted);font-size:13px;}
+.chat-system-name{color:var(--accent);}
+.chat-empty{text-align:center;color:var(--muted);font-size:13px;padding:30px 16px;line-height:1.6;}
+.chat-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text);}
+.chat-card:hover{border-color:var(--accent);}
+.chat-card-last{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+@media (min-width: 900px){
+  .chat-head,.chat-foot{padding-left:calc(50vw - 380px);padding-right:calc(50vw - 380px);}
+  .chat-body{max-width:760px;width:100%;margin:0 auto;}
+}
+/* ── NEWS TAGS ── */
 .tag-transfer{background:rgba(0,229,160,0.1);color:var(--accent);}
 .tag-financial{background:rgba(0,184,255,0.1);color:var(--accent2);}
 .tag-injury{background:rgba(255,69,96,0.1);color:var(--red);}
@@ -516,6 +546,13 @@ if(!_cu){
            timezone, falling back to the next matchday. -->
       <div class="feed-side-title" id="sidebar-matches-title">Today's matches</div>
       <div id="sidebar-matches"></div>
+    </div>
+    <!-- Your club's chat. Hidden for guests and for anyone without a main
+         club — there is no honest thing to show them here. Rendered by
+         renderSidebarChat(). -->
+    <div class="feed-side-card" id="sidebar-chat-card" style="display:none;">
+      <div class="feed-side-title">Your club's chat</div>
+      <div id="sidebar-chat"></div>
     </div>
     <div class="feed-side-card">
       <div class="feed-side-title">My clubs</div>
@@ -1829,6 +1866,23 @@ document.getElementById('playerLeagueSel').addEventListener('change',updateFilte
   </div>
 </div>
 
+<!-- CLUB COMMUNITY CHAT — full screen, one official room per club.
+     display:none here, display:flex only in JS (rule 6). The header and
+     composer are fixed and the message list is the only scrolling part, so the
+     composer stays reachable when the iOS keyboard opens. -->
+<div id="chat-overlay" style="display:none;position:fixed;inset:0;z-index:520;background:var(--bg);flex-direction:column;">
+  <div class="chat-head">
+    <button class="chat-back" onclick="closeChat()" aria-label="Close chat">←</button>
+    <div id="chat-crest" class="chat-head-crest"></div>
+    <div style="flex:1;min-width:0;">
+      <div class="chat-title" id="chat-title">Community</div>
+      <div class="chat-sub" id="chat-sub"></div>
+    </div>
+  </div>
+  <div class="chat-body" id="chat-body"></div>
+  <div class="chat-foot" id="chat-foot"></div>
+</div>
+
 <script>
 // ── ALL CLUBS FOR MODAL ──
 // The hardcoded 25-club list (slug + emoji) is gone. Clubs come from `teams`
@@ -2577,6 +2631,12 @@ function applyClubSelection(){
   try{ renderProfileClubs(); }catch(e){}
   try{ renderFeedNews(); }catch(e){}
   try{ renderMatchDay(); }catch(e){}
+  try{ renderSidebarChat(); }catch(e){}
+  // Changing your clubs changes the member counts, so re-read them and paint
+  // the club cards again once they land.
+  loadChatOverview().then(function(){
+    try{ renderSidebarChat(); renderMyClubCard(); renderClubsGrid(); }catch(e){}
+  });
   // DO NOT rename the nav — always stays "Clubs"
 }
 
@@ -3024,6 +3084,7 @@ function renderMyClubCard(){
     +(sub?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+sanitize(sub)+'</div>':'')
     +'</div><div style="font-size:11px;color:var(--accent);flex-shrink:0;">Open →</div></div>'
     +(cells?'<div style="display:flex;border-top:1px solid var(--border);background:var(--bg3);">'+cells+'</div>':'')
+    +chatBlockHtml(id)
     +'</div>';
 }
 
@@ -3046,7 +3107,10 @@ function renderClubsGrid(){
       s.goalsAgainst!=null?'Conc/g <span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+s.goalsAgainst+'</span>':null,
       s.passPct!=null?'Pass <span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+s.passPct+'</span>':null,
     ].filter(Boolean);
-    return '<div class="club-explore-card" onclick="window.location.href=\'/community.html\'">'
+    // The card used to send every club to /community.html, which had no idea
+    // which club had been clicked. It opens that club's own room now.
+    const o=chatOverview(c.id);
+    return '<div class="club-explore-card" onclick="openChat('+c.id+')">'
       +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
       +clubCrestById(c.id,34)
       +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">'+sanitize(c.label)+'</div>'
@@ -3054,6 +3118,8 @@ function renderClubsGrid(){
       +'</div></div>'
       +(bits.length?'<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--muted);">'
         +bits.map(b=>'<div>'+b+'</div>').join('')+'</div>':'')
+      +(o?'<div style="font-size:10px;color:var(--accent);margin-top:8px;">💬 '
+        +sanitize(memberLabel(o.member_count))+'</div>':'')
       +'</div>';
   }).join('');
   el.innerHTML=cards;
@@ -3610,6 +3676,337 @@ function isAdmin(){
   return Boolean(currentUser&&MY_PROFILE&&MY_PROFILE.plan==='admin');
 }
 
+// ── CLUB COMMUNITY CHAT ──────────────────────────────────────────────────
+// One official room per club, created by migration 011. There is no join and
+// no leave: your main club and everything you follow are your rooms, so
+// membership is derived rather than stored and can never drift from the
+// follows that produce it.
+//
+// Group ids are treated as opaque strings throughout. The tables predate this
+// folder and their id type is a reconstruction — nothing here does arithmetic
+// on an id, so it works whether they are bigints or uuids.
+
+const CHAT_POLL_MS=8000;
+const CHAT_PAGE=120;
+
+// club_id -> overview row from club_chat_overview
+const CHAT_OVERVIEW=new Map();
+let chatRoom=null;        // { groupId, clubId, name }
+let chatTimer=null;
+let chatMessages=[];
+
+/**
+ * Every official room's summary in one request, for the Clubs page and the
+ * Home sidebar. A failure is silent: the chat blocks simply do not render,
+ * which is better than a card promising a room we could not read.
+ */
+async function loadChatOverview(){
+  try{
+    const rows=await apiGet('club_chat_overview?select=group_id,club_id,group_name,'
+      +'member_count,last_message_at,last_message_preview,last_message_user_id,last_message_is_system');
+    CHAT_OVERVIEW.clear();
+    for(const r of rows)CHAT_OVERVIEW.set(r.club_id,r);
+  }catch(e){
+    // Rule 21: the page ships before the migration runs.
+    console.warn('loadChatOverview:',e.message);
+  }
+}
+
+function chatOverview(clubId){ return CHAT_OVERVIEW.get(clubId)||null; }
+
+function memberLabel(n){
+  const v=Number(n||0);
+  return v===1?'1 member':v.toLocaleString()+' members';
+}
+
+/** The "Community chat" block under the club card. */
+function chatBlockHtml(clubId){
+  const o=chatOverview(clubId);
+  if(!o)return '';
+  const last=o.last_message_preview
+    ? (o.last_message_is_system?'ScoutMind: ':'')+o.last_message_preview
+    : 'No messages yet — say something.';
+  return '<div style="padding:12px 14px;border-top:1px solid var(--border);">'
+    +'<button class="chat-card" onclick="event.stopPropagation();openChat('+clubId+')">'
+    +clubCrestById(clubId,30)
+    +'<div style="flex:1;min-width:0;">'
+    +'<div style="font-size:12px;font-weight:600;">Community chat</div>'
+    +'<div class="chat-card-last">'+sanitize(last)+'</div>'
+    +'</div>'
+    +'<div style="font-size:10px;color:var(--accent);flex-shrink:0;">Open →</div>'
+    +'</button>'
+    +'<div style="font-size:10px;color:var(--muted);margin-top:6px;">'
+    +sanitize(memberLabel(o.member_count))
+    +(o.last_message_at?' · active '+sanitize(timeAgo(o.last_message_at)):'')
+    +'</div></div>';
+}
+
+/** Home sidebar: your main club's room only. Guests see nothing. */
+function renderSidebarChat(){
+  const card=document.getElementById('sidebar-chat-card');
+  const el=document.getElementById('sidebar-chat');
+  if(!card||!el)return;
+  const id=currentUser?mainClubId():null;
+  const o=id?chatOverview(id):null;
+  if(!o){ card.style.display='none'; return; }
+  card.style.display='';
+  const last=o.last_message_preview
+    ? (o.last_message_is_system?'ScoutMind: ':'')+o.last_message_preview
+    : 'No messages yet — say something.';
+  el.innerHTML='<button class="chat-card" onclick="openChat('+id+')">'
+    +clubCrestById(id,28)
+    +'<div style="flex:1;min-width:0;">'
+    +'<div style="font-size:12px;font-weight:600;">'+sanitize(clubLabel(id))+'</div>'
+    +'<div class="chat-card-last">'+sanitize(last)+'</div>'
+    +'</div></button>'
+    +'<div style="font-size:10px;color:var(--muted);margin-top:7px;">'
+    +sanitize(memberLabel(o.member_count))+'</div>';
+}
+
+async function openChat(clubId){
+  const o=chatOverview(clubId);
+  if(!o){
+    // Rule 21: this page deploys before 011 runs, and until it does there is no
+    // club_chat_overview to read. Fall back to where these cards used to go
+    // rather than dead-ending every club on the Clubs tab.
+    window.location.href='/community.html';
+    return;
+  }
+  chatRoom={groupId:String(o.group_id),clubId:clubId,name:o.group_name};
+  chatMessages=[];
+
+  const ov=document.getElementById('chat-overlay');
+  const crest=document.getElementById('chat-crest');
+  const title=document.getElementById('chat-title');
+  const sub=document.getElementById('chat-sub');
+  if(crest)crest.innerHTML=clubCrestById(clubId,32);
+  if(title)title.textContent=clubLabel(clubId)+' Community';
+  if(sub)sub.textContent=memberLabel(o.member_count);
+  if(ov)ov.style.display='flex';          // rule 6
+  document.body.style.overflow='hidden';
+
+  paintChatFoot();
+  document.getElementById('chat-body').innerHTML=
+    '<div class="chat-empty">Loading…</div>';
+  await loadChatMessages(true);
+  startChatPolling();
+}
+
+function closeChat(){
+  stopChatPolling();
+  const ov=document.getElementById('chat-overlay');
+  if(ov)ov.style.display='none';
+  document.body.style.overflow='';
+  chatRoom=null;
+  // The preview on the cards behind the overlay is now stale.
+  loadChatOverview().then(function(){
+    try{ renderSidebarChat(); renderMyClubCard(); }catch(e){}
+  });
+}
+
+function startChatPolling(){
+  stopChatPolling();
+  // Real-time subscriptions later; an 8s poll is honest and costs one request.
+  chatTimer=setInterval(function(){
+    if(document.hidden)return;            // a backgrounded tab polls nothing
+    loadChatMessages(false);
+  },CHAT_POLL_MS);
+}
+
+function stopChatPolling(){
+  if(chatTimer){ clearInterval(chatTimer); chatTimer=null; }
+}
+
+/**
+ * Oldest first, like every chat. `deleted_at is null` is enforced by RLS too —
+ * this is belt and braces, and it keeps the query honest if the policy is ever
+ * loosened.
+ */
+async function loadChatMessages(scroll){
+  if(!chatRoom)return;
+  const room=chatRoom.groupId;
+  try{
+    const rows=await apiGet('group_messages?select=id,user_id,content,created_at,pinned,is_system'
+      +'&group_id=eq.'+encodeURIComponent(room)
+      +'&deleted_at=is.null&order=created_at.desc&limit='+CHAT_PAGE);
+    if(!chatRoom||chatRoom.groupId!==room)return;   // the room changed mid-flight
+    await loadAuthors(rows.map(r=>r.user_id).filter(Boolean));
+    chatMessages=rows.reverse();
+    paintChat(scroll);
+  }catch(e){
+    console.warn('loadChatMessages:',e.message);
+    if(!chatMessages.length){
+      const body=document.getElementById('chat-body');
+      if(body)body.innerHTML='<div class="chat-empty">Could not load this room. '
+        +'Check your connection and try again.</div>';
+    }
+  }
+}
+
+function chatMsgRow(m){
+  const system=Boolean(m.is_system);
+  const p=system?{}:(AUTHORS.get(m.user_id)||{});
+  const name=system?'ScoutMind':(p.name||'Someone');
+  const mine=Boolean(currentUser&&m.user_id&&m.user_id===currentUser.id);
+  const canDelete=!system&&(mine||isAdmin());
+  const av=system
+    ? '<span class="comment-av" style="color:var(--accent);">S</span>'
+    : (p.main_club_id?clubCrestById(p.main_club_id,18)
+      :'<span class="comment-av">'+sanitize(name.slice(0,1).toUpperCase())+'</span>');
+  return '<div class="chat-msg'+(m.pinned?' chat-pinned':'')+'">'+av
+    +'<div class="chat-msg-body">'
+    +'<div class="chat-msg-author'+(system?' chat-system-name':'')+'">'+sanitize(name)
+    +'<span class="comment-time">'+timeAgo(m.created_at)+'</span></div>'
+    +'<div class="chat-msg-text">'+sanitize(m.content)+'</div>'
+    +(system?'':'<div class="comment-meta">'
+      +(currentUser&&!mine?'<button class="comment-link" onclick="openChatReport(\''+m.id+'\')">Report</button>':'')
+      +(canDelete?'<button class="comment-link" onclick="deleteChatMessage(\''+m.id+'\')">Delete</button>':'')
+      +'</div>'
+      +'<div class="comment-report" id="grep-'+m.id+'" style="display:none;"></div>')
+    +'</div></div>';
+}
+
+function paintChat(scroll){
+  const body=document.getElementById('chat-body');
+  if(!body)return;
+  // Pinned first and out of the run of messages, so the welcome does not scroll
+  // away and then reappear as if someone had just said it.
+  const pinned=chatMessages.filter(m=>m.pinned);
+  const rest=chatMessages.filter(m=>!m.pinned);
+  const nearBottom=body.scrollHeight-body.scrollTop-body.clientHeight<120;
+  body.innerHTML=pinned.map(chatMsgRow).join('')
+    +(rest.length?rest.map(chatMsgRow).join('')
+      :'<div class="chat-empty">Nobody has said anything yet.<br>Go on.</div>');
+  // Only follow the conversation if the reader was already at the bottom —
+  // yanking them down while they are reading back is the classic chat sin.
+  if(scroll||nearBottom)body.scrollTop=body.scrollHeight;
+}
+
+function paintChatFoot(){
+  const foot=document.getElementById('chat-foot');
+  if(!foot)return;
+  if(!currentUser){
+    foot.innerHTML='<div class="comment-signin" style="margin:0;">'
+      +'<button class="comment-post-btn" onclick="requireAuth(\'Create a free account to join your club\\\'s chat.\')">Sign in to join the conversation</button>'
+      +'</div>';
+    return;
+  }
+  foot.innerHTML='<div class="comment-compose" style="margin-top:0;">'
+    +'<span class="compose-av">'+sanitize(myInitials())+'</span>'
+    +'<div class="compose-box">'
+    +'<textarea class="comment-input" id="chat-input" rows="1" maxlength="500"'
+    +' placeholder="Message the community…"'
+    +' oninput="updateChatCounter();autoGrow(this)"'
+    +' onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();sendChatMessage();}"></textarea>'
+    +'<div class="comment-compose-foot">'
+    +'<span class="comment-counter" id="chat-counter">0/500</span>'
+    +'<span class="comment-hint">Ctrl + Enter to send</span>'
+    +'<button class="comment-post-btn" id="chat-send" onclick="sendChatMessage()">Send</button>'
+    +'</div>'
+    +'<div class="comment-error" id="chat-error" style="display:none;"></div>'
+    +'</div></div>';
+}
+
+function updateChatCounter(){
+  const input=document.getElementById('chat-input');
+  const out=document.getElementById('chat-counter');
+  if(!input||!out)return;
+  const n=input.value.length;
+  out.textContent=n+'/500';
+  out.style.color=n>500?'var(--red)':'var(--muted)';
+}
+
+function setChatError(text){
+  const el=document.getElementById('chat-error');
+  if(!el)return;
+  el.textContent=text||'';
+  el.style.display=text?'block':'none';
+}
+
+async function sendChatMessage(){
+  if(!requireAuth('Create a free account to join your club\'s chat.'))return;
+  if(!chatRoom)return;
+  const input=document.getElementById('chat-input');
+  if(!input)return;
+  const text=cleanComment(input.value);     // same clamp as comments
+  if(text.length<2)return;
+
+  const btn=document.getElementById('chat-send');
+  if(btn){ btn.disabled=true; btn.textContent='Sending…'; }
+  setChatError('');
+  try{
+    await apiSend('POST','group_messages',
+      [{group_id:chatRoom.groupId,user_id:currentUser.id,content:text}]);
+    input.value='';
+    autoGrow(input);
+    updateChatCounter();
+    await loadChatMessages(true);
+    logEvent('group_message','group',null);
+  }catch(e){
+    // The trigger writes the useful message: rate limit, blocklist, closed room.
+    setChatError(friendlyDbError(e.message));
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Send'; }
+  }
+}
+
+/** Soft delete, same as comments. The row stays (rule 13). */
+async function deleteChatMessage(messageId){
+  if(!requireAuth('Create a free account to do that.'))return;
+  if(!confirm('Delete this message? This cannot be undone.'))return;
+  try{
+    await apiSend('PATCH','group_messages?id=eq.'+encodeURIComponent(messageId),
+      {deleted_at:new Date().toISOString(),deleted_by:currentUser.id});
+    chatMessages=chatMessages.filter(m=>String(m.id)!==String(messageId));
+    paintChat(false);
+  }catch(e){
+    alert(friendlyDbError(e.message));
+  }
+}
+
+function openChatReport(messageId){
+  if(!requireAuth('Create a free account to report a message.'))return;
+  const box=document.getElementById('grep-'+messageId);
+  if(!box)return;
+  const open=box.style.display==='block';
+  document.querySelectorAll('.comment-report').forEach(b=>b.style.display='none');
+  if(open)return;
+  box.innerHTML='<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Why are you reporting this?</div>'
+    +REPORT_REASONS.map(r=>'<button class="report-reason" onclick="sendChatReport(\''+messageId+'\',\''+r.value+'\')">'
+      +sanitize(r.label)+'</button>').join('')
+    +'<button class="report-reason" style="opacity:.6" onclick="document.getElementById(\'grep-'+messageId+'\').style.display=\'none\'">Cancel</button>';
+  box.style.display='block';
+}
+
+// Escape closes the room. A full-screen overlay with only a back arrow is a
+// trap on desktop.
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&chatRoom)closeChat();
+});
+
+// Stop polling when the tab is hidden and catch up when it comes back, rather
+// than firing a request every 8 seconds into a backgrounded tab for an hour.
+document.addEventListener('visibilitychange',function(){
+  if(!chatRoom)return;
+  if(document.hidden){ stopChatPolling(); }
+  else{ loadChatMessages(false); startChatPolling(); }
+});
+
+async function sendChatReport(messageId,reason){
+  const box=document.getElementById('grep-'+messageId);
+  try{
+    await apiSend('POST','reports',
+      [{target_type:'group_message',target_id:messageId,
+        reporter_id:currentUser.id,reason:reason}]);
+    logEvent('report','group_message',null);
+    if(box)box.innerHTML='<div style="font-size:11px;color:var(--accent);">Thanks — we will take a look.</div>';
+  }catch(e){
+    const msg=friendlyDbError(e.message);
+    if(box)box.innerHTML='<div style="font-size:11px;color:var(--muted);">'
+      +sanitize(/duplicate|unique/i.test(e.message)?'You have already reported this.':msg)+'</div>';
+  }
+}
+
 // ── ADMIN: open reports ──────────────────────────────────────────────────
 // Deliberately inside Profile rather than a separate page. RLS is what
 // actually protects this: a non-admin who unhid the section would still read
@@ -3623,29 +4020,49 @@ async function renderReports(){
   const list=document.getElementById('reports-list');
   list.innerHTML='<div class="comment-empty">Loading…</div>';
   try{
-    // No FK exists between reports.target_id and comments (target_type makes
-    // it polymorphic), so fetch the reports and then their comments.
+    // No FK exists between reports.target_id and anything: target_type makes it
+    // polymorphic. So the reports come first, then one lookup PER TYPE.
+    //
+    // Keyed on type AND id, never on id alone — comment 41 and group_message 41
+    // are different rows, and a single map would show one in place of the other
+    // with no sign anything was wrong.
     const reports=await apiGet('reports?select=id,target_type,target_id,reason,detail,created_at'
       +'&status=eq.open&order=created_at.desc&limit=50');
     if(!reports.length){ list.innerHTML='<div class="comment-empty">Nothing reported. </div>'; return; }
-    const ids=[...new Set(reports.map(r=>r.target_id))];
-    let byId={};
-    if(ids.length){
-      const cs=await apiGet('comments?select=id,content,user_id,deleted_at&id=in.('+ids.join(',')+')');
-      for(const c of cs)byId[c.id]=c;
+
+    const byKey={};
+    const idsFor=t=>[...new Set(reports.filter(r=>r.target_type===t).map(r=>r.target_id))];
+    const commentIds=idsFor('comment');
+    const messageIds=idsFor('group_message');
+    if(commentIds.length){
+      const cs=await apiGet('comments?select=id,content,user_id,deleted_at&id=in.('+commentIds.join(',')+')');
+      for(const c of cs)byKey['comment:'+c.id]=c;
     }
+    if(messageIds.length){
+      try{
+        const ms=await apiGet('group_messages?select=id,content,user_id,deleted_at&id=in.('+messageIds.join(',')+')');
+        for(const m of ms)byKey['group_message:'+m.id]=m;
+      }catch(e2){
+        // Rule 21: reports of a kind this deploy predates must not blank the queue.
+        console.warn('reports: group_messages lookup failed —',e2.message);
+      }
+    }
+
+    const LABEL={comment:'comment',group_message:'message'};
     list.innerHTML=reports.map(function(r){
-      const c=byId[r.target_id];
+      const kind=LABEL[r.target_type]||'item';
+      const c=byKey[r.target_type+':'+r.target_id];
       const gone=!c||c.deleted_at;
       return '<div class="report-card">'
-        +'<div class="report-head">'+sanitize(r.reason.replace('_',' '))
+        +'<div class="report-head">'+sanitize(r.reason.replace('_',' '))+' · '+sanitize(kind)
         +'<span class="comment-time">'+timeAgo(r.created_at)+'</span></div>'
         +'<div class="report-quote">'+(gone
-            ? '<em style="color:var(--muted)">Comment already removed.</em>'
+            ? '<em style="color:var(--muted)">This '+sanitize(kind)+' is already removed, or could not be read.</em>'
             : sanitize(c.content))+'</div>'
         +(r.detail?'<div class="report-detail">'+sanitize(r.detail)+'</div>':'')
         +'<div class="report-actions">'
-        +(gone?'':'<button class="report-btn danger" onclick="adminDelete('+r.id+','+r.target_id+')">Delete comment</button>')
+        +(gone?'':'<button class="report-btn danger" onclick="adminDelete('+r.id+',\''
+            +sanitize(r.target_type)+'\',\''+sanitize(String(r.target_id))+'\')">Delete '+sanitize(kind)+'</button>')
         +'<button class="report-btn" onclick="adminResolve('+r.id+',\'dismissed\')">Dismiss</button>'
         +'</div></div>';
     }).join('');
@@ -3662,17 +4079,26 @@ async function adminResolve(reportId,status){
   }catch(e){ alert(friendlyDbError(e.message)); }
 }
 
-async function adminDelete(reportId,commentId){
-  if(!confirm('Delete this comment? It stays in the database but nobody will see it.'))return;
+/** Soft delete from the moderation queue. Works for either target type. */
+async function adminDelete(reportId,targetType,targetId){
+  const kind=targetType==='group_message'?'message':'comment';
+  if(!confirm('Delete this '+kind+'? It stays in the database but nobody will see it.'))return;
+  const table=targetType==='group_message'?'group_messages':'comments';
   try{
-    await apiSend('PATCH','comments?id=eq.'+commentId,
+    await apiSend('PATCH',table+'?id=eq.'+encodeURIComponent(targetId),
       {deleted_at:new Date().toISOString(),deleted_by:currentUser.id});
     await adminResolve(reportId,'actioned');
-    // Drop it from any thread currently on screen.
-    for(const [itemId,s] of COMMENT_STATE){
-      const before=s.items.length;
-      s.items=s.items.filter(c=>c.id!==commentId);
-      if(s.items.length!==before){ s.total=Math.max(0,s.total-1); paintComments(itemId); }
+    // Drop it from anything currently on screen.
+    if(targetType==='group_message'){
+      const before=chatMessages.length;
+      chatMessages=chatMessages.filter(m=>String(m.id)!==String(targetId));
+      if(chatMessages.length!==before)paintChat(false);
+    }else{
+      for(const [itemId,s] of COMMENT_STATE){
+        const n=s.items.length;
+        s.items=s.items.filter(c=>String(c.id)!==String(targetId));
+        if(s.items.length!==n){ s.total=Math.max(0,s.total-1); paintComments(itemId); }
+      }
     }
   }catch(e){ alert(friendlyDbError(e.message)); }
 }
@@ -4224,6 +4650,10 @@ function filterWeekly(league, btn) {
   try{ renderModalClubs(); }catch(e){}
   try{ renderProfileClubs(); }catch(e){}
   try{ renderLangPrefs(); renderClubLangToggle(); }catch(e){}
+  // Chat summaries before the club cards paint, so the "Community chat" block
+  // is there on the first render rather than appearing a beat later.
+  try{ await loadChatOverview(); }catch(e){}
+  try{ renderSidebarChat(); }catch(e){}
   try{ renderMyClubCard(); renderClubsGrid(); }catch(e){}
   try{ await loadNews(); }catch(e){ console.error('loadNews:',e); }
   try{ loadSocialForFeed(); }catch(e){}

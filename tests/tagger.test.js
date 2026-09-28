@@ -167,13 +167,16 @@ export async function run(read) {
   // headlines and are tagged to real clubs, so neither the keyword list nor
   // the tag shortcut can catch them. Only the URL gives them away, and the
   // pattern has to beat the tag.
-  const SOUNDS = ['bbc\\.co\\.uk/sounds/'];
+  const SOUNDS = ['bbc\\.co\\.uk/sounds/', 'bbc\\.co\\.uk/iplayer/'];
   eq('football: per-source pattern matches the URL',
     isFootball('Monday Night Club', '', 0, SOUNDS,
       'https://www.bbc.co.uk/sounds/play/m002abcd'), false);
   eq('football: per-source pattern beats a club tag',
     isFootball('Monday Night Club - Man City reaction', '', 1, SOUNDS,
       'https://www.bbc.co.uk/sounds/play/m002abcd'), false);
+  eq('football: iPlayer blocked the same way',
+    isFootball('Match of the Day', '', 1, SOUNDS,
+      'https://www.bbc.co.uk/iplayer/episode/m002abcd'), false);
   eq('football: a BBC article URL is untouched by the Sounds pattern',
     isFootball('Man City held at home', '', 1, SOUNDS,
       'https://www.bbc.co.uk/sport/football/articles/c123xyz'), true);

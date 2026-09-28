@@ -24,6 +24,8 @@
 | **Package 3 — social** | Migration `008` — `comments`, `reactions`, `reports`, `events`, moderation lists, `is_admin()`. Reactions and comments on every news card, report + admin queue, event telemetry. **Covers C2 and the moderation half of C9.** Verified on production: comment, rate limit, react, report, admin delete, author delete, phone composer | live |
 | **Consistency pass** | `about.html` repositioned to the social network and stripped of every claim we cannot back. Scout Mode limited to the seven leagues we hold, budget filter removed. One page title across the site | live — pushed with package 2 |
 | **Package 3b — feed bugs + search** | Migration `009` — `duplicate_of`, a generated `search_vector` with a GIN index, and a two-pass dedup backfill. `stableGuid()` in `rss.js` fixes the cause at ingest. Plus search across headlines, a Trending tab ranked by `trendScore()` / `coverageBreadth()`, the redesigned comment UI, and the For You language leak fixed. Applied on production: **1,482 originals / 528 duplicates** | live |
+| **Package 3c — feed filter** | `loadNews()` never filtered `duplicate_of`, so `009` was invisible on Home, For You and Trending. Both news queries now share `liveItemPredicate()`. Migration `010` — BBC Sounds and iPlayer excluded by URL via `news_sources.exclude_patterns`, which now also match the URL and run before the club-tag shortcut | live |
+| **Package 4 — groups** | Migration `011` — one official community room per club (146), the 8 May groups retired, `club_chat_overview`, `group_message_guard()`, moderation shared with comments via `moderation_check()`. Full-screen chat on the Clubs tab, Home sidebar card, polymorphic admin queue. Covers **C3's room half**; `community.html`'s Groups tab is a signpost now | built — awaiting `011` |
 
 ### Infrastructure
 
@@ -96,6 +98,16 @@
 **Package 3b (feed bugs + search/trending), carried forward:**
 
 - **26% of the feed was duplicates.** 519 of 2,005 rows, and **517 were BBC**. The cause was the guid, not the headline: BBC emits `<article-url>#<position-in-feed>`, so one story returns with a new guid every time it moves — seven to nine copies, same URL, same publish time. `stableGuid()` in `rss.js` drops the fragment; `009` marks the rows already stored. A `(source, URL-without-fragment)` key caught exactly the same 519 rows as a normalised-headline key, and cannot collide two genuinely different articles, so it is the primary key with the 48h headline check as the safety net. **Production result: 1,482 originals / 528 duplicates.** That is nine more duplicates than measured against only five more rows, so the 48h headline pass did fire on a handful the URL key missed — which is exactly the job it was given, and the first evidence it earns its place.
+**Package 4 (groups), carried forward:**
+
+- **Membership is derived, not stored.** Your main club and your follows are your rooms. There is no join, no leave and no members table, so the member count cannot drift from the follows that produce it — it is a `union` inside `club_chat_overview`. The view exposes the count and never the members.
+- **One room per club, no language split** (decided). A club's chat runs in its own language on its own: Man City's is English, Botafogo's Portuguese. Revisit only if a single club shows real demand for two rooms — splitting on a guess would halve two rooms that each work.
+- **The May groups could not be migrated, only retired.** `groups.team_id` held the pre-package-2 25-slug key, which nothing in the product produces any more. All 8 were test chatter, so they are `active=false` with their messages still attached (rule 13) and 146 official rooms were created fresh from `teams`.
+- **`user_name` was denormalised at write time** in the May implementation, so a rename never reached old messages — the same bug as `saveName()`, already shipped. The column stays (rule 13) but the guard trigger forces it null and authors come from `public_profiles`. That old page also rendered `m.content` into `innerHTML` unescaped; the whole overlay is gone.
+- **Chat rate limits differ from comments deliberately:** 1 per 5s and 60 per hour, against 1 per 10s and 20 per hour. 20 an hour is one message every three minutes, which throttles a match-day room at the exact moment it is worth using.
+- **No ScoutMind auth account exists.** The pinned welcome is `is_system` with a null `user_id`, inserted by the migration. A real system account would be a password nobody holds and a session worth stealing. RLS forces `is_system` false on every insert from the app, so nobody can post as ScoutMind.
+- **`reports.target_id` is polymorphic and the admin queue was keying on it alone.** Comment 41 and group_message 41 are different rows; the queue would have shown one in place of the other with nothing to indicate it. Lookups are partitioned by `target_type` now. Found while adding the second target type — it was latent from the moment `target_type` existed.
+
 - **009 worked; the feed never asked.** Trending showed the same BBC item twice with the database already correct (`duplicate_of` set). `loadNews()` filtered `football_ok` and nothing else, and Home, For You and Trending all render from the `FEED_ITEMS` it fills — so one missing predicate broke three surfaces, while search, which had its own hand-written copy, was fine. Now behind `liveItemPredicate()`. **A correct migration proves nothing until a query uses it**, and a predicate copied by hand into two places will eventually only be half-right in one.
 - **BBC Sounds is not an article.** The two duplicate rows were `bbc.co.uk/sounds/play/...` — a live radio stream and a podcast episode — in the football RSS feed. They could not have been caught: `exclude_patterns` were matched against headline and summary only, and were skipped entirely for any item tagged to a club, and a Sounds episode is tagged to Man City under a normal football headline. So patterns now also see the URL and are checked **before** the club-tag shortcut: a tag is a heuristic we inferred, a per-source pattern is a decision someone made. The built-in keyword list still ignores the URL — article slugs contain tokens like `f1` that would fire on it. Migration `010`.
 - **One BBC fetch already repeats itself** — the frozen fixture has 86 items and 80 identities. The cron's per-batch `seen` set is what collapses those; the test asserts stripping never merges two different headlines.
@@ -481,7 +493,7 @@ Feed = union of, sorted by recency with light pinning:
 
 ### C5. Public profiles (must-have)
 
-**Build next, after groups.**
+**Build next.** Groups shipped as package 4, so this is the front of the queue.
 
 - `/profile.html?u=<id>` or in-app page
 - Shows: name, club badge, bio, join date, posts, followers/following, predictions record (once C7 exists), analyst badge if any

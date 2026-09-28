@@ -80,19 +80,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .acred{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);}
 .rbtn{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;color:var(--text);}
 .rbtn:hover{border-color:var(--accent);background:rgba(0,229,160,0.06);}
-.gcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
-.gcard:hover{border-color:rgba(0,229,160,0.3);transform:translateX(3px);}
-.gicon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.15);}
-.gcov{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
-.gcmod{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:min(660px,95vw);height:min(680px,90vh);display:flex;flex-direction:column;overflow:hidden;}
-.gchead{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
-.gcmsgs{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;}
-.gcmsg{display:flex;gap:10px;}
-.gcav{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;color:var(--accent);}
-.gcinputrow{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;}
-.gcinput{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;}
-.gcinput:focus{border-color:var(--accent);}
-.gcsend{background:var(--accent);color:#000;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+/* The .gcard/.gicon/.gc* group-chat styles were removed with the overlay in
+   package 4. Leaving them behind is how a stale .comment-toggle{width:100%}
+   survived package 3 and silently stretched the new comment button. */
 .wcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
 .wrank{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--muted);min-width:36px;line-height:1;}
 .wrank.top{color:var(--accent);}
@@ -259,23 +249,10 @@ body{padding-bottom:64px;}
     </div>
   </div>
 </div>
-<div id="gcov" class="gcov" style="display:none;">
-  <div class="gcmod">
-    <div class="gchead">
-      <div id="gc-icon" style="font-size:22px;">💬</div>
-      <div style="flex:1">
-        <div style="font-size:16px;font-weight:600" id="gc-name">Group</div>
-        <div style="font-size:11px;color:var(--muted)" id="gc-desc"></div>
-      </div>
-      <button onclick="closeGC()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;">✕</button>
-    </div>
-    <div class="gcmsgs" id="gcmsgs"><div class="sp"></div></div>
-    <div id="gc-input-area" class="gcinputrow">
-      <input class="gcinput" id="gc-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()">
-      <button class="gcsend" onclick="sendMsg()">Send</button>
-    </div>
-  </div>
-</div>
+<!-- The group-chat overlay that stood here was removed in package 4 along with
+     openG/loadMsgs/sendMsg. It rendered m.content straight into innerHTML with
+     no escaping, and it read m.user_name, which is no longer written. Chat is
+     in the app now: one official room per club. -->
 <script src="/club_names.js"></script>
 <script src="/leagues_data.js"></script>
 <script>
@@ -329,8 +306,8 @@ document.addEventListener('keydown',function(e){
 });
 
 function logout(){localStorage.removeItem('sm_current_user');window.location.href='/';}
-var AL='serie_a',AT=null,ATab='polls',AGid=null,GTimer=null;
-var GICONS=['🔴','💚','⚫','⭐','🔵','🟡','🔥','💪','🏆','🦁'];
+// AGid, GTimer and GICONS went with the group-chat overlay in package 4.
+var AL='serie_a',AT=null,ATab='polls';
 // ── Real numbers from Supabase ───────────────────────────────────────────
 // This page's team list comes from leagues_data.js (slug ids), while the
 // football tables key on teams.id. Until the page is moved onto `teams`
@@ -631,85 +608,23 @@ async function reactAI(pid,reaction){
   await _sb.from('analyst_posts').update({reactions:r}).eq('id',pid);
   renderTab();
 }
-async function doGroups(el,tk){
-  el.innerHTML='<div class="sp"></div>';
-  var res=await _sb.from('groups').select('*').eq('team_id',tk).order('created_at',{ascending:true});
-  var groups=res.data,err=res.error;
-  var html='';
-  html+='<div id="cgform" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;">'
-    +'<div class="pfi">Group name</div><input class="pfinput" id="cgname" placeholder="e.g. Estrela Solitária Match Day">'
-    +'<div class="pfi">Description</div><input class="pfinput" id="cgdesc" placeholder="What is this group about?">'
-    +'<button class="pfbtn" onclick="createG(\''+tk+'\')">Create Group</button>'
-    +'<button class="pfcancel" onclick="document.getElementById(\'cgform\').style.display=\'none\'">Cancel</button></div>'
-    +'<button onclick="var f=document.getElementById(\'cgform\');f.style.display=f.style.display===\'none\'?\'block\':\'none\';" style="width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);padding:12px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:14px;">+ Create a Group</button>';
-  if(err||!groups||groups.length===0){
-    html+='<div class="empty"><div style="font-size:32px;margin-bottom:10px;opacity:.3">💬</div><div style="font-size:14px;opacity:.4;margin-bottom:6px">No groups yet for this team</div><div style="font-size:12px">Create the first one above!</div></div>';
-  }else{
-    groups.forEach(function(g,i){
-      var icon=GICONS[i%GICONS.length];
-      var gid=g.id,gname=g.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'"),gdesc=(g.description||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      html+='<div class="gcard" onclick="openG(\''+gid+'\',\''+gname+'\',\''+icon+'\',\''+gdesc+'\')">'
-        +'<div class="gicon">'+icon+'</div>'
-        +'<div style="flex:1"><div style="font-size:14px;font-weight:600;margin-bottom:3px">'+g.name+'</div><div style="font-size:11px;color:var(--muted)">'+(g.description||'')+'</div></div>'
-        +'<div style="font-size:11px;color:var(--accent);white-space:nowrap">Open →</div></div>';
-    });
-  }
-  el.innerHTML=html;
-}
-async function createG(tk){
-  if(!requireAuth('Create a free account to start a group.'))return;
-  var name=document.getElementById('cgname')&&document.getElementById('cgname').value.trim();
-  var desc=document.getElementById('cgdesc')&&document.getElementById('cgdesc').value.trim();
-  if(!name){alert('Please enter a group name.');return;}
-  var r=await _sb.from('groups').insert({team_id:tk,name:name,description:desc,created_by:cu.id});
-  if(r.error){alert('Error creating group. Please try again.');return;}
-  renderTab();
-}
-function openG(gid,gname,icon,desc){
-  AGid=gid;
-  document.getElementById('gc-name').textContent=gname;
-  document.getElementById('gc-desc').textContent=desc;
-  document.getElementById('gc-icon').textContent=icon;
-  document.getElementById('gcov').style.display='flex';
-  document.body.style.overflow='hidden';
-  loadMsgs();
-  GTimer=setInterval(loadMsgs,8000);
-}
-function closeGC(){document.getElementById('gcov').style.display='none';document.body.style.overflow='';if(GTimer)clearInterval(GTimer);GTimer=null;AGid=null;}
-async function loadMsgs(){
-  if(!AGid)return;
-  var res=await _sb.from('group_messages').select('*').eq('group_id',AGid).order('created_at',{ascending:true}).limit(100);
-  var msgs=res.data;
-  var el=document.getElementById('gcmsgs');
-  if(!el)return;
-  var atBot=el.scrollHeight-el.scrollTop<=el.clientHeight+80;
-  if(!msgs||msgs.length===0){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No messages yet — be the first to say something!</div>';return;}
-  var html='';
-  msgs.forEach(function(m){
-    var me=m.user_id===(cu&&cu.id);
-    var ini=m.user_name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
-    html+='<div class="gcmsg" style="'+(me?'flex-direction:row-reverse':'')+'">'
-      +'<div class="gcav" style="'+(me?'background:rgba(0,229,160,0.15);color:var(--accent)':'')+'">'+(ini||'?')+'</div>'
-      +'<div>'
-      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;'+(me?'flex-direction:row-reverse':'')+'">'
-      +'<span style="font-size:12px;font-weight:600">'+(me?'You':m.user_name)+'</span>'
-      +'<span style="font-size:10px;color:var(--muted)">'+ago(m.created_at)+'</span>'
-      +'</div>'
-      +'<div style="font-size:13px;color:var(--muted);background:'+(me?'rgba(0,229,160,0.08)':'var(--bg3)')+';padding:8px 12px;border-radius:'+(me?'12px 4px 12px 12px':'4px 12px 12px 12px')+';display:inline-block;max-width:80%">'+m.content+'</div>'
-      +'</div></div>';
-  });
-  el.innerHTML=html;
-  if(atBot)el.scrollTop=el.scrollHeight;
-}
-async function sendMsg(){
-  if(!requireAuth('Create a free account to post in this group.'))return;
-  if(!AGid)return;
-  var inp=document.getElementById('gc-input');
-  var content=inp&&inp.value.trim();
-  if(!content)return;
-  inp.value='';
-  await _sb.from('group_messages').insert({group_id:AGid,user_id:cu.id,user_name:cu.name||cu.email.split('@')[0],content:content});
-  await loadMsgs();
+// Group chat moved into the app in package 4: one official room per club,
+// keyed on teams.id. This page still keys clubs on the pre-package-2 25-slug
+// `tk`, which nothing produces any more, so the old query here could only ever
+// find the eight retired May groups.
+//
+// It is a signpost now, not a second implementation. Rebuilding the room here
+// would mean two chat UIs against one table, on two different data layers
+// (this page uses supabase-js, the app uses PostgREST directly).
+function doGroups(el,tk){
+  el.innerHTML='<div class="empty" style="padding:36px 20px;">'
+    +'<div style="font-size:32px;margin-bottom:12px;opacity:.35">💬</div>'
+    +'<div style="font-size:15px;font-weight:600;margin-bottom:8px;">Community chat has moved</div>'
+    +'<div style="font-size:13px;color:var(--muted);line-height:1.6;max-width:340px;margin:0 auto 18px;">'
+    +'Every club now has one official room in the app, with moderation and your '
+    +'real profile name. Open it from the Clubs tab.</div>'
+    +'<a href="/?page=communities" class="pfbtn" style="display:inline-block;text-decoration:none;">Open the Clubs tab</a>'
+    +'</div>';
 }
 function doWishlist(el,tk){
   var d=getTD(tk);
