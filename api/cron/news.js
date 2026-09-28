@@ -119,6 +119,7 @@ export default withCron('news', async ({ req }) => {
   let tagsWritten = 0;
   let skippedForTime = 0;
   let nonFootball = 0;
+  let duplicatesSkipped = 0;
 
   for (const source of todo) {
     if (Date.now() - started > WALL_CLOCK_BUDGET_MS) {
@@ -147,14 +148,41 @@ export default withCron('news', async ({ req }) => {
       continue;
     }
 
+    // Second line of defence against repeats. stableGuid() in rss.js is the
+    // real fix — it strips the feed-position fragment BBC appends — but a
+    // source that changes the URL as well as the guid would still slip
+    // through, so also refuse a headline this source already used recently.
+    let recentTitles = new Set();
+    try {
+      const since = new Date(Date.now() - 48 * 3600_000).toISOString();
+      const recent = await select(
+        'news_items',
+        `select=title&source_id=eq.${source.id}&published_at=gte.${since}&limit=500`
+      );
+      recentTitles = new Set(recent.map((r) => normalise(r.title)));
+    } catch (e) {
+      // Not fatal: worst case a duplicate gets in and 009's backfill marks it.
+      console.warn(`dedupe lookup ${source.slug}:`, e.message);
+    }
+
     const rows = [];
     const tagsByGuid = new Map();
     const seen = new Set();
+    const seenTitles = new Set();
+    let skippedDupes = 0;
 
     for (const item of parsed) {
       if (!item.published) continue; // undateable items would sort unpredictably
       if (seen.has(item.guid)) continue; // some feeds repeat a guid
       seen.add(item.guid);
+
+      // Same headline from the same source inside 48 hours: same story.
+      const titleKey = normalise(item.title);
+      if (titleKey && (recentTitles.has(titleKey) || seenTitles.has(titleKey))) {
+        skippedDupes++;
+        continue;
+      }
+      if (titleKey) seenTitles.add(titleKey);
 
       // One snippet, used for tagging either way. Stored only when the source
       // is not headline_only.
@@ -205,8 +233,11 @@ export default withCron('news', async ({ req }) => {
       tagsWritten += tagRows.length;
     }
 
+    duplicatesSkipped += skippedDupes;
     const taggedCount = [...tagsByGuid.values()].filter((t) => t.length).length;
-    perSource[source.slug] = `${stored.length} items, ${taggedCount} tagged`;
+    perSource[source.slug] =
+      `${stored.length} items, ${taggedCount} tagged` +
+      (skippedDupes ? `, ${skippedDupes} duplicates skipped` : '');
 
     await update('news_sources', `id=eq.${source.id}`, {
       last_fetched_at: new Date().toISOString(),
@@ -220,6 +251,7 @@ export default withCron('news', async ({ req }) => {
     requests_used: 0, // no API-Football calls
     tags_written: tagsWritten,
     non_football_hidden: nonFootball,
+    duplicates_skipped: duplicatesSkipped,
     sources: perSource,
     skipped_for_time: skippedForTime,
     index_entries: index.entries.length,

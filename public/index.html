@@ -197,22 +197,11 @@ body{padding-bottom:64px;}
 .feed-actions{display:flex;gap:16px;}
 .feed-action-btn{background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;transition:color .2s;}
 .feed-action-btn:hover{color:var(--accent);}
-.comment-section{border-top:1px solid var(--border);padding:12px 18px;background:var(--bg2);}
-.comment-toggle{display:flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;transition:color .2s;width:100%;}
-.comment-toggle:hover{color:var(--accent);}
-.comments-body{display:none;margin-top:12px;}
-.comment-input-row{display:flex;gap:8px;margin-bottom:12px;}
-.comment-av{width:26px;height:26px;border-radius:50%;background:rgba(0,229,160,0.15);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--accent);flex-shrink:0;}
-.comment-input{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 11px;border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;}
-.comment-input:focus{border-color:var(--accent);}
-.comment-post-btn{background:var(--accent);color:#000;border:none;padding:7px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;flex-shrink:0;}
-.comment-item{display:flex;gap:8px;margin-bottom:10px;}
-.comment-body-wrap{flex:1;background:var(--bg3);border-radius:12px;padding:8px 12px;}
-.comment-author{font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:6px;}
-.comment-text{font-size:12px;color:#8892a4;line-height:1.5;}
-.comment-meta{font-size:10px;color:var(--muted);margin-top:4px;display:flex;gap:10px;}
-.comment-like{background:transparent;border:none;color:var(--muted);font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;transition:color .2s;}
-.comment-like:hover{color:var(--red);}
+/* The pre-package-3 comment CSS lived here (.comment-section, .comment-input-row,
+   .comment-like and an earlier .comment-toggle/.comments-body/.comment-item set).
+   It is superseded by the SOCIAL block below. It was left in place when the old
+   UI was removed, and its `.comment-toggle{width:100%}` then fought the new
+   count button, stretching it across the whole card. */
 .feed-side-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;}
 .feed-side-title{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
 .trending-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);}
@@ -284,16 +273,26 @@ body{padding-bottom:64px;}
 .filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
 .lang-chip{background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.5px;}
 .lang-chip:hover,.lang-chip.active{border-color:var(--accent2);color:var(--accent2);background:rgba(0,184,255,0.06);}
-/* ── SOCIAL: reactions + comments (mobile-first, rule 11) ── */
-.social-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding:9px 14px;background:var(--bg2);}
-.reaction-row{display:flex;gap:6px;flex:1;min-width:0;}
-.reaction{display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);transition:border-color .15s,background .15s;min-height:32px;}
+/* ── SEARCH ── */
+.search-wrap{position:relative;display:flex;align-items:center;margin-bottom:12px;}
+.search-icon{position:absolute;left:12px;font-size:13px;opacity:.6;pointer-events:none;}
+.search-box{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px 34px 10px 34px;border-radius:22px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;}
+.search-box:focus{border-color:var(--accent);}
+.search-box::-webkit-search-cancel-button{display:none;}
+.search-clear{position:absolute;right:10px;background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 6px;line-height:1;}
+.search-clear:hover{color:var(--text);}
+.search-summary{font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}/* ── SOCIAL: reactions + comments (mobile-first, rule 11) ── */
+.social-bar{display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding:9px 14px;background:var(--bg2);}
+.reaction-row{display:flex;gap:6px;flex:0 1 auto;min-width:0;}
+.reaction{display:inline-flex;align-items:center;gap:4px;background:transparent;border:1px solid var(--border);border-radius:16px;padding:3px 9px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);transition:border-color .15s,background .15s;min-height:28px;}
 .reaction:hover{border-color:var(--accent2);}
 .reaction.on{border-color:var(--accent);background:rgba(0,229,160,0.08);color:var(--accent);}
 .reaction-emoji{font-size:14px;line-height:1;}
 .reaction-n{font-family:'DM Mono',monospace;font-size:11px;}
-.comment-toggle{background:transparent;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:6px 2px;white-space:nowrap;min-height:32px;}
-.comment-toggle:hover{color:var(--accent);}
+/* Pushed to the right, and never stretched: it is a button, not a bar. */
+.comment-toggle{margin-left:auto;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:3px 11px;white-space:nowrap;min-height:28px;}
+.comment-toggle:hover{color:var(--accent);border-color:var(--accent);}
+.comment-toggle.open{color:var(--accent);border-color:var(--accent);background:rgba(0,229,160,0.06);}
 .comments-body{display:none;border-top:1px solid var(--border);padding:12px 14px 14px;background:var(--bg2);}
 .comment-empty{font-size:12px;color:var(--muted);text-align:center;padding:10px 0 14px;}
 .comment-showall{display:block;width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);font-size:11px;padding:7px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:10px;}
@@ -331,7 +330,12 @@ body{padding-bottom:64px;}
 .report-actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
 .report-btn{font-size:11px;padding:6px 12px;border-radius:16px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;min-height:30px;}
 .report-btn:hover{border-color:var(--accent);color:var(--accent);}
-.report-btn.danger:hover{border-color:var(--red);color:var(--red);}/* ── NEWS TAGS ── */
+.report-btn.danger:hover{border-color:var(--red);color:var(--red);}.comment-compose{margin-top:12px;display:flex;gap:9px;align-items:flex-start;}
+.compose-av{width:28px;height:28px;border-radius:50%;background:rgba(0,229,160,0.12);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;}
+.compose-box{flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:8px 10px;transition:border-color .15s;}
+.compose-box:focus-within{border-color:var(--accent);}
+.compose-box .comment-input{background:transparent;border:none;padding:0;border-radius:0;}
+.compose-box .comment-input:focus{border:none;}/* ── NEWS TAGS ── */
 .tag-transfer{background:rgba(0,229,160,0.1);color:var(--accent);}
 .tag-financial{background:rgba(0,184,255,0.1);color:var(--accent2);}
 .tag-injury{background:rgba(255,69,96,0.1);color:var(--red);}
@@ -446,17 +450,37 @@ if(!_cu){
 <div class="feed-page">
   <div class="feed-main">
     <div class="feed-tabs-bar">
-      <button class="ftab active" onclick="showFeedTab('transfers',this)">News</button>
+      <button class="ftab active" onclick="showFeedTab('trending',this)">Trending</button>
+      <button class="ftab" onclick="showFeedTab('transfers',this)">News</button>
       <button class="ftab" onclick="showFeedTab('foryou',this)">For you</button>
       <!-- SM Weekly is hidden until it is generated from real data in R9. The tab,
            #feedtab-weekly and renderWeeklyReport() are all intentionally kept. -->
       <button class="ftab" style="display:none;" onclick="showFeedTab('weekly',this)">SM Weekly</button>
     </div>
 
-    <!-- NEWS TAB — first and default. Real headlines from news_items. -->
-    <div id="feedtab-transfers">
+    <!-- TRENDING TAB — first and default. Ranked by engagement decayed by age,
+         with coverage breadth as the fallback signal. No cron: scored here. -->
+    <div id="feedtab-trending">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Trending</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px;">
+        What people are reacting to, and the stories the most outlets are covering right now.
+      </div>
+      <div id="trending-content"></div>
+    </div>
+
+    <!-- NEWS TAB. Real headlines from news_items. -->
+    <div id="feedtab-transfers" style="display:none;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">News</div>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input id="feed-search" class="search-box" type="search" inputmode="search"
+               placeholder="Search headlines…" autocomplete="off"
+               oninput="onSearchInput(this.value)">
+        <button class="search-clear" onclick="clearSearch()" title="Clear">✕</button>
       </div>
       <!-- Only the reader's own languages, and only when there is more than
            one to choose between. Rendered by renderLangChips(). -->
@@ -2566,7 +2590,7 @@ function showPage(id){
 
 // ── FEED TABS ──
 function showFeedTab(id,btn){
-  ['transfers','foryou','weekly'].forEach(t=>{
+  ['trending','transfers','foryou','weekly'].forEach(t=>{
     const el=document.getElementById('feedtab-'+t);
     if(el)el.style.display='none';
   });
@@ -2574,7 +2598,8 @@ function showFeedTab(id,btn){
   const target=document.getElementById('feedtab-'+id);
   if(target)target.style.display='block';
   if(btn)btn.classList.add('active');
-  if(id==='foryou') try{renderWeeklyReport();}catch(e){}
+  // Trending is scored from whatever is loaded, so re-rank on every visit.
+  if(id==='trending') try{renderTrending();}catch(e){}
   if(id==='weekly') try{renderWeeklyReport();}catch(e){}
 }
 
@@ -3324,34 +3349,7 @@ async function loadNews(){
         throw err;
       }
     }
-    FEED_ITEMS=rows.map(function(r){
-      const teams=(r.news_item_teams||[]).map(t=>t.teams).filter(Boolean);
-      const leagues=teams.map(t=>t.leagues&&t.leagues.slug).filter(Boolean);
-      // A tagged item takes its region from the club; only an untagged one
-      // falls back to where the publisher is.
-      let region=null;
-      for(const l of leagues){if(LEAGUE_REGION[l]){region=LEAGUE_REGION[l];break;}}
-      if(!region&&!teams.length)region=COUNTRY_REGION[(r.news_sources||{}).country]||null;
-      return {
-        type:'news',
-        id:r.id,
-        title:r.title,
-        excerpt:r.summary||'',
-        category:r.category||'general',
-        lang:r.lang,
-        url:r.source_url,
-        source:(r.news_sources||{}).name||'',
-        publishedAt:r.published_at,
-        teams:teams,
-        teamIds:teams.map(t=>t.api_team_id),
-        // A club named in the headline is what the piece is about; a club
-        // mentioned only in the summary is background.
-        // Empty before migration 006; ranking then falls back to recency.
-        headlineTeamIds:(r.news_item_teams||[]).filter(t=>t.in_title&&t.teams)
-                          .map(t=>t.teams.api_team_id),
-        region:region,
-      };
-    });
+    FEED_ITEMS=rows.map(mapNewsRow);
   }catch(e){
     console.error('loadNews:',e);
     FEED_ITEMS=[];
@@ -3434,7 +3432,7 @@ function renderNewsCard(n){
     +'</div>'
     +'<div class="social-bar">'
     +'<div class="reaction-row" id="rx-'+n.id+'">'+reactionButtons(n.id)+'</div>'
-    +'<button class="comment-toggle" id="ct-'+n.id+'" onclick="toggleComments('+n.id+')">'
+    +'<button class="comment-toggle'+(commentState(n.id).expanded?' open':'')+'" id="ct-'+n.id+'" onclick="toggleComments('+n.id+')">'
     +commentToggleLabel(n.id)+'</button>'
     +'</div>'
     +'<div class="comments-body" id="cb-'+n.id+'"></div>'
@@ -3444,8 +3442,8 @@ function renderNewsCard(n){
 
 function commentToggleLabel(itemId){
   const t=commentState(itemId).total;
-  const label=t===0?'Comment':(t+(t===1?' comment':' comments'));
-  return '&#x1F4AC; '+label;
+  // A count when there is one, an invitation when there is not.
+  return '&#x1F4AC; '+(t===0?'Comment':(t+(t===1?' comment':' comments')));
 }
 
 function reactionButtons(itemId){
@@ -3472,6 +3470,7 @@ function paintComments(itemId){
   const s=commentState(itemId);
   document.querySelectorAll('#ct-'+itemId).forEach(function(b){
     b.innerHTML=commentToggleLabel(itemId);
+    b.classList.toggle('open',s.expanded);
   });
   document.querySelectorAll('#cb-'+itemId).forEach(function(box){
     if(!s.expanded){ box.style.display='none'; box.innerHTML=''; return; }
@@ -3516,13 +3515,22 @@ function commentRow(itemId,c){
     +'</div></div>';
 }
 
+function myInitials(){
+  const n=(currentUser&&(currentUser.name||currentUser.email))||'?';
+  return n.split(/[\s@._]+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?';
+}
+
 function composerHtml(itemId){
   if(!currentUser){
     return '<div class="comment-signin">'
       +'<button class="comment-post-btn" onclick="requireAuth(\'Create a free account to join the conversation.\')">Sign in to comment</button>'
       +'</div>';
   }
+  // A message box with the reader's own initials beside it, so the composer
+  // reads as "you, about to say something" rather than as a form field.
   return '<div class="comment-compose">'
+    +'<span class="compose-av">'+sanitize(myInitials())+'</span>'
+    +'<div class="compose-box">'
     +'<textarea class="comment-input" id="ci-'+itemId+'" rows="1" maxlength="500"'
     +' placeholder="Add a comment…"'
     +' oninput="updateCommentCounter('+itemId+');autoGrow(this)"'
@@ -3530,11 +3538,11 @@ function composerHtml(itemId){
     +' onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();postComment('+itemId+');}"></textarea>'
     +'<div class="comment-compose-foot">'
     +'<span class="comment-counter" id="ccount-'+itemId+'">0/500</span>'
-    +'<span class="comment-hint">Ctrl + Enter</span>'
+    +'<span class="comment-hint">Ctrl + Enter to post</span>'
     +'<button class="comment-post-btn" id="cpost-'+itemId+'" onclick="postComment('+itemId+')">Post</button>'
     +'</div>'
     +'<div class="comment-error" id="cerr-'+itemId+'" style="display:none;"></div>'
-    +'</div>';
+    +'</div></div>';
 }
 
 function autoGrow(el){
@@ -3613,6 +3621,98 @@ async function adminDelete(reportId,commentId){
   }catch(e){ alert(friendlyDbError(e.message)); }
 }
 
+/**
+ * One PostgREST news row -> one feed item. Shared by the feed and by search,
+ * so a field added in one place cannot go missing in the other.
+ */
+function mapNewsRow(r){
+  const teams=(r.news_item_teams||[]).map(t=>t.teams).filter(Boolean);
+  const leagues=teams.map(t=>t.leagues&&t.leagues.slug).filter(Boolean);
+  // A tagged item takes its region from the club; only an untagged one falls
+  // back to where the publisher is.
+  let region=null;
+  for(const l of leagues){if(LEAGUE_REGION[l]){region=LEAGUE_REGION[l];break;}}
+  if(!region&&!teams.length)region=COUNTRY_REGION[(r.news_sources||{}).country]||null;
+  return {
+    type:'news',
+    id:r.id,
+    title:r.title,
+    excerpt:r.summary||'',
+    category:r.category||'general',
+    lang:r.lang,
+    url:r.source_url,
+    source:(r.news_sources||{}).name||'',
+    sourceSlug:(r.news_sources||{}).slug||'',
+    publishedAt:r.published_at,
+    teams:teams,
+    teamIds:teams.map(t=>t.api_team_id),
+    // A club named in the headline is what the piece is about; a club
+    // mentioned only in the summary is background.
+    // Empty before migration 006; ranking then falls back to recency.
+    headlineTeamIds:(r.news_item_teams||[]).filter(t=>t.in_title&&t.teams)
+                      .map(t=>t.teams.api_team_id),
+    region:region,
+  };
+}
+
+// ── SEARCH ───────────────────────────────────────────────────────────────
+// Server-side, against the tsvector in 009. Searching the 120 items already
+// in memory would only ever find what is already on screen; the point of a
+// search box is the 1,900 stories that are not.
+
+let SEARCH_QUERY='';
+let SEARCH_RESULTS=null;     // null = not searching, [] = searched, no hits
+let searchTimer=null;
+
+const TSCONFIG={'pt-BR':'portuguese',en:'english',es:'spanish',
+  it:'italian',de:'german',fr:'french'};
+
+function onSearchInput(value){
+  clearTimeout(searchTimer);
+  const q=String(value||'').trim();
+  if(q.length<2){
+    SEARCH_QUERY=''; SEARCH_RESULTS=null;
+    renderFeedNews();
+    return;
+  }
+  // Debounced: one request per pause, not one per keystroke.
+  searchTimer=setTimeout(function(){ runSearch(q); },300);
+}
+
+function clearSearch(){
+  const box=document.getElementById('feed-search');
+  if(box)box.value='';
+  SEARCH_QUERY=''; SEARCH_RESULTS=null;
+  renderFeedNews();
+}
+
+async function runSearch(q){
+  SEARCH_QUERY=q;
+  const langs=myLangs();
+  const cfg=TSCONFIG[langs[0]]||'simple';
+  const sel=[
+    'id','title','summary','source_url','lang','category','published_at',
+    'news_sources(slug,name,country)',
+    'news_item_teams(via,in_title,teams(api_team_id,name,logo_url,leagues!teams_league_id_fkey(slug)))'
+  ].join(',');
+  const params='select='+encodeURIComponent(sel)
+    +'&search_vector=wfts('+cfg+').'+encodeURIComponent(q)
+    +'&football_ok=is.true&duplicate_of=is.null'
+    +'&order=published_at.desc&limit=60';
+  try{
+    const rows=await apiGet('news_items?'+params);
+    SEARCH_RESULTS=rows.map(mapNewsRow);
+  }catch(e){
+    // Before 009 there is no search_vector; say so rather than showing nothing.
+    console.warn('search:',e.message);
+    SEARCH_RESULTS=[];
+    if(/search_vector|duplicate_of/.test(e.message)){
+      SEARCH_RESULTS.unavailable=true;
+    }
+  }
+  renderFeedNews();
+}
+
 let currentLangFilter='all';
 
 function filterLang(code,btn){
@@ -3640,7 +3740,85 @@ function renderLangChips(){
     }).join('');
 }
 
-function visibleFeedItems(){
+// ── TRENDING ─────────────────────────────────────────────────────────────
+// Engagement, decayed by age, with coverage breadth as the fallback signal.
+//
+// The fallback matters more than it sounds: until people are commenting,
+// engagement is zero for everything, and a Trending tab that ranks by zero is
+// just the news feed with extra steps. "How many different outlets covered
+// this club in the last six hours" is a real signal from day one — when five
+// sources all write about one club within a few hours, something happened.
+
+const TREND_HALF_LIFE_H=12;
+const TREND_COVERAGE_WINDOW_H=6;
+
+/** Comments count triple; reactions count single; both halve every 12 hours. */
+function trendScore(n,coverage){
+  const c=commentState(n.id).total||0;
+  const rs=reactionState(n.id).counts||{};
+  const r=Object.keys(rs).reduce((a,k)=>a+(rs[k]||0),0);
+  const engagement=c*3+r;
+
+  const ageH=Math.max(0,(Date.now()-new Date(n.publishedAt).getTime())/3600000);
+  const decay=Math.pow(0.5,ageH/TREND_HALF_LIFE_H);
+
+  // Coverage breadth: distinct sources writing about the same clubs nearby in
+  // time. Weighted below a real comment so genuine discussion always wins.
+  const breadth=Math.max(0,(coverage.get(n.id)||1)-1);
+  return (engagement+breadth*1.5)*decay;
+}
+
+/**
+ * For each item, how many DISTINCT sources published about the same tagged
+ * clubs within the window. Untagged items get 1 — no clubs, no breadth.
+ */
+function coverageBreadth(items){
+  const byClub=new Map();   // api_team_id -> [{t, source}]
+  for(const n of items){
+    const t=new Date(n.publishedAt).getTime();
+    for(const id of n.teamIds){
+      if(!byClub.has(id))byClub.set(id,[]);
+      byClub.get(id).push({t:t,source:n.sourceSlug||n.source});
+    }
+  }
+  const win=TREND_COVERAGE_WINDOW_H*3600000;
+  const out=new Map();
+  for(const n of items){
+    const t=new Date(n.publishedAt).getTime();
+    const sources=new Set();
+    for(const id of n.teamIds){
+      for(const e of (byClub.get(id)||[])){
+        if(Math.abs(e.t-t)<=win)sources.add(e.source);
+      }
+    }
+    out.set(n.id,Math.max(1,sources.size));
+  }
+  return out;
+}
+
+/** Top 30 by score, honouring the reader's languages and the chips. */
+function trendingItems(){
+  const pool=visibleFeedItems({ignoreCategory:true});
+  if(!pool.length)return [];
+  const coverage=coverageBreadth(pool);
+  return pool
+    .map(n=>({n:n,s:trendScore(n,coverage)}))
+    .sort((a,b)=>b.s-a.s||new Date(b.n.publishedAt)-new Date(a.n.publishedAt))
+    .slice(0,30)
+    .map(x=>x.n);
+}
+
+function renderTrending(){
+  const el=document.getElementById('trending-content');
+  if(!el)return;
+  const items=trendingItems();
+  el.innerHTML=items.length
+    ? items.map(renderFeedItem).join('')
+    : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
+      +'Nothing trending yet. The news job runs every 15 minutes.</div>';
+}
+
+function visibleFeedItems(opts){
   const langs=myLangs();
   const mine=myClubApiIds();
   const crossLang=showClubNewsAllLangs();
@@ -3654,6 +3832,9 @@ function visibleFeedItems(){
     // The chips filter strictly, so the feed never mixes languages when the
     // reader has said which one they want.
     if(currentLangFilter!=='all' && n.lang!==currentLangFilter)return false;
+    // Trending ranks across every category; the category chips belong to the
+    // News tab.
+    if(opts&&opts.ignoreCategory)return true;
     if(currentFeedFilter==='all')return true;
     if(currentFeedFilter==='transfers')return ['transfer','rumor','contract'].indexOf(n.category)>-1;
     if(currentFeedFilter==='brazil')return n.region==='brazil';
@@ -3679,13 +3860,50 @@ function visibleFeedItems(){
 
 function renderFeedNews(){
   renderLangChips();
-  const filtered=visibleFeedItems();
-  const html=filtered.map(renderFeedItem).join('');
   const el=document.getElementById('feed-news-main');
   if(el){
-    el.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories yet. The news job runs every 15 minutes.</div>';
+    if(SEARCH_RESULTS!==null){
+      el.innerHTML=searchResultsHtml();
+    }else{
+      const filtered=visibleFeedItems();
+      el.innerHTML=filtered.map(renderFeedItem).join('')
+        ||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories yet. The news job runs every 15 minutes.</div>';
+    }
   }
   renderForYou();
+  renderTrending();
+}
+
+/** Search results reuse the same card, so everything behaves identically. */
+function searchResultsHtml(){
+  if(SEARCH_RESULTS.unavailable){
+    return '<div style="text-align:center;padding:36px 20px;color:var(--muted);font-size:13px;line-height:1.7;">'
+      +'Search needs migration 009. Until it is applied, the filters above still work.</div>';
+  }
+  const langs=myLangs();
+  const mine=myClubApiIds();
+  const crossLang=showClubNewsAllLangs();
+  // Results obey the same language and club rules as the feed.
+  const rows=SEARCH_RESULTS.filter(function(n){
+    if(langs.indexOf(n.lang)<0){
+      if(!crossLang)return false;
+      if(!n.teamIds.some(id=>mine.indexOf(id)>-1))return false;
+    }
+    if(currentLangFilter!=='all'&&n.lang!==currentLangFilter)return false;
+    if(currentFeedFilter==='transfers')return ['transfer','rumor','contract'].indexOf(n.category)>-1;
+    if(currentFeedFilter==='brazil')return n.region==='brazil';
+    if(currentFeedFilter==='europe')return n.region==='europe';
+    if(currentFeedFilter!=='all')return n.category===currentFeedFilter;
+    return true;
+  });
+  const head='<div class="search-summary">'
+    +(rows.length?rows.length+(rows.length===1?' result':' results'):'No results')
+    +' for &ldquo;'+sanitize(SEARCH_QUERY)+'&rdquo;'
+    +' <button class="comment-link" onclick="clearSearch()">Clear</button></div>';
+  return head+(rows.length
+    ? rows.map(renderFeedItem).join('')
+    : '<div style="text-align:center;padding:30px 20px;color:var(--muted);font-size:13px;">'
+      +'Try a club name, a player, or a shorter phrase.</div>');
 }
 
 /** Load reaction and comment counts once, then repaint with the real numbers. */
@@ -3701,8 +3919,13 @@ function loadSocialForFeed(){
 }
 
 /**
- * For You: news about the clubs you follow. Headline mentions first, then
- * newest. Language is deliberately ignored here — you asked for these clubs.
+ * For You: news about the clubs you follow, headline mentions first.
+ *
+ * This used to ignore language entirely, on the reasoning that you had asked
+ * for these clubs. That stopped being right when content_langs became strict
+ * and the cross-language exception became opt-in: For You was showing French
+ * copy to a reader who had asked for Portuguese only. It now applies exactly
+ * the same language rule as All News.
  */
 function renderForYou(){
   const el=document.getElementById('foryou-content');
@@ -3717,8 +3940,13 @@ function renderForYou(){
       +'</div><button class="filter-btn" onclick="openTeamModal()">Choose your clubs</button></div>';
     return;
   }
+  const langs=myLangs();
+  const crossLang=showClubNewsAllLangs();
   const items=FEED_ITEMS
     .filter(n=>n.teamIds.some(id=>mine.indexOf(id)>-1))
+    // Same language rule as All News: your languages, unless you opted in to
+    // seeing your clubs in other languages too.
+    .filter(n=>langs.indexOf(n.lang)>-1||crossLang)
     .sort(function(a,b){
       const ah=a.headlineTeamIds.some(id=>mine.indexOf(id)>-1);
       const bh=b.headlineTeamIds.some(id=>mine.indexOf(id)>-1);

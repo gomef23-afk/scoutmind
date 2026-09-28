@@ -11,7 +11,7 @@
 // happened; if a rule is loosened, one of these starts failing.
 
 import { buildIndex, tagText, clipSummary, normalise, LEAGUE_LANG } from '../api/_lib/tagger.js';
-import { parseFeed, parseDate, decodeEntities } from '../api/_lib/rss.js';
+import { parseFeed, parseDate, decodeEntities, stableGuid } from '../api/_lib/rss.js';
 import { TEAM_ALIASES } from '../api/_lib/aliases.js';
 import { NEWS_SOURCES } from '../api/_lib/sources.js';
 import { isFootball } from '../api/_lib/football-filter.js';
@@ -204,6 +204,42 @@ export async function run(read) {
     for (const it of items) corpus.push({ ...it, src: s.slug, lang: s.lang });
   }
   eq('parse: 505 items across 10 fixtures', corpus.length, 505);
+
+  // BBC appends the feed position to the guid, so one story returns as a new
+  // row every time it moves. That produced 519 duplicates out of 2,005 rows in
+  // production — 26% of the feed. Only the fragment goes; a query string can
+  // carry the article id, and a non-URL guid is the publisher's own scheme.
+  eq('guid: feed-position fragment stripped',
+    stableGuid('https://www.bbc.co.uk/sport/football/articles/cmx2zv4e320do#7'),
+    'https://www.bbc.co.uk/sport/football/articles/cmx2zv4e320do');
+  eq('guid: two positions collapse to one identity',
+    stableGuid('https://x.co/a#0') === stableGuid('https://x.co/a#11'), true);
+  eq('guid: query string kept',
+    stableGuid('https://as.com/x.html?ref=rss&id=42'), 'https://as.com/x.html?ref=rss&id=42');
+  eq('guid: non-URL guid untouched', stableGuid('BR-PT-17.298.316'), 'BR-PT-17.298.316');
+  eq('guid: empty stays empty', stableGuid(''), '');
+  // The committed BBC fixture must actually contain the pattern this fixes.
+  const bbc = parseFeed(await read('tests/fixtures/rss/bbc_football.xml'));
+  check('guid: no BBC fixture guid keeps a fragment',
+    bbc.every((i) => !/#\d+$/.test(i.guid)),
+    bbc.filter((i) => /#\d+$/.test(i.guid)).slice(0, 3).map((i) => i.guid).join(', '));
+  // One BBC fetch already repeats the same story at several positions, so
+  // stripping collapses 86 items to 80 identities. The cron's per-batch `seen`
+  // set is what turns those into one row.
+  const bbcIds = new Set(bbc.map((i) => i.guid));
+  check('guid: stripping collapses repeats inside one fetch',
+    bbcIds.size < bbc.length, `${bbc.length} items, ${bbcIds.size} identities`);
+  // And it must not merge two genuinely different articles: every repeated
+  // identity has to carry the same headline.
+  const byGuid = new Map();
+  for (const i of bbc) {
+    if (!byGuid.has(i.guid)) byGuid.set(i.guid, new Set());
+    byGuid.get(i.guid).add(i.title);
+  }
+  const overMerged = [...byGuid.entries()].filter(([, titles]) => titles.size > 1);
+  check('guid: never merges two different headlines',
+    overMerged.length === 0,
+    overMerged.slice(0, 2).map(([g, t]) => g + ' -> ' + [...t].join(' / ')).join(' ; '));
   check(
     'parse: no item keeps a literal "null" summary',
     corpus.every((i) => i.summary !== 'null')

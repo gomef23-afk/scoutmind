@@ -92,6 +92,14 @@
 - **`events` has no SELECT policy at all** — the anon key cannot read it. Read it as the service role; the two weekly queries are at the bottom of `008`.
 - **Football filter:** added competition names (Laver Cup, Davis Cup, Team Europe, Grand Slam, ATP, WTA) after finding 2 leaks in 600 live rows. **We deliberately keep no list of athlete names** — it would need constant maintenance and would start eating coverage of footballers who share a surname with a tennis player. The limitation is that an athlete-name-only headline from a non-football sport can still slip through.
 - **Not verified by me:** the iOS keyboard with the inline composer, and the two-account RLS tests. Both need a real device and real accounts.
+**Package 3b (feed bugs + search/trending), carried forward:**
+
+- **26% of the feed was duplicates.** 519 of 2,005 rows, and **517 were BBC**. The cause was the guid, not the headline: BBC emits `<article-url>#<position-in-feed>`, so one story returns with a new guid every time it moves — seven to nine copies, same URL, same publish time. `stableGuid()` in `rss.js` drops the fragment; `009` marks the rows already stored. A `(source, URL-without-fragment)` key caught exactly the same 519 rows as a normalised-headline key, and cannot collide two genuinely different articles, so it is the primary key with the 48h headline check as the safety net.
+- **One BBC fetch already repeats itself** — the frozen fixture has 86 items and 80 identities. The cron's per-batch `seen` set is what collapses those; the test asserts stripping never merges two different headlines.
+- **For You was ignoring language.** It filtered on club only, with a comment saying language was deliberately ignored. That was written before `content_langs` became strict and the cross-language exception became opt-in, and it meant a Portuguese-only reader saw French RMC copy. It now uses the same rule as All News. Verified: 7 items about the followed clubs, 2 of them French, and only the 5 Portuguese ones show with the toggle off.
+- **A stale CSS rule stretched the new comment button.** The pre-package-3 `.comment-toggle{width:100%}` survived the old UI's removal and silently overrode the new count button, making it 314px wide and overlapping the reactions. Removed. Lesson: when a UI is replaced, its CSS has to go with it or it fights the replacement from a distance.
+- **Trending needs no cron.** Score is `comments*3 + reactions`, halving every 12h, with distinct-sources-within-6h as the fallback. The fallback is what makes the tab work before anyone has commented — five outlets writing about one club in a few hours is a real signal from day one.
+- **Search is server-side** against a generated `tsvector` with per-language configs. Searching the ~120 items already in memory would only ever find what is on screen; the point is the other 1,900.
 **Public claims — what `about.html` may say:**
 
 The rule is that every number on the marketing page is one we can point at in the database. Removed because nothing backed them: *30+ leagues covered*, *300+ / 545 real players*, *8 weakness zones detected*, *filtered by budget*, the FBref/Transfermarkt data-source sentence, *Join clubs, agents and fans already using ScoutMind*, the Série C answer, MLS and Série B in the league strip, and a mocked-up "Análise Flamengo" screenshot with players scored at 87% / 74% / 68% MATCH.
@@ -195,7 +203,48 @@ country** — otherwise the clubs exist but nothing is ever tagged to them,
 which is worse than not having them. Budget the alias review per batch; it
 was the slowest part of R8.
 
-#### 6. Betting — explicitly not built
+#### 6. Competitions beyond leagues — alongside league expansion
+
+Everything we hold today is a **domestic league**: 38 rounds, one table, every
+club plays every other twice. Cups and national teams do not fit that shape,
+and the model has to change before they can be added.
+
+**Cups:** Champions League, Europa League, Libertadores, Sudamericana, Copa do
+Brasil, FA Cup, Carabao Cup, Copa del Rey, DFB-Pokal, Coppa Italia.
+
+**National teams:** Nations League, World Cup qualifiers, Copa América, Euros.
+
+Fixtures, live scores and results for all of them.
+
+**What the model change actually involves:**
+
+- **Knockout rounds have no table.** `standings` assumes one row per club per
+  league per season. A cup has a bracket, not a ranking — group stages have a
+  table, knockout rounds do not. Either `standings.group_label` carries the
+  round, or knockouts skip the table entirely and the UI stops expecting one.
+- **Two-legged ties are one result across two fixtures**, decided on
+  aggregate, sometimes on away goals, sometimes on penalties. Two `fixtures`
+  rows already exist for the legs; the *tie* does not exist anywhere. Showing
+  "lost 1-0" for a club that went through 3-1 on aggregate would be wrong.
+- **National teams are a different kind of team.** They have no league, no
+  season table, no squad in the club sense. `teams.league_id` is currently
+  NOT NULL in spirit — a national team needs a team type, or its own table.
+  Club aliases do not transfer either: "Brazil" as a news alias would be
+  disastrous next to "Brasil" the country in Portuguese copy.
+- **Which stats tables they feed, and which they must not.** A Champions
+  League match is a real fixture and belongs in `fixtures`. It must **not**
+  feed `team_season_stats`, because those averages are per domestic season and
+  mixing competitions makes "goals per game" meaningless — Bayern against
+  Bochum and Bayern against Real Madrid are not the same sample. Either
+  `team_season_stats` gains a competition scope, or cup fixtures are excluded
+  from aggregation and say so.
+- **News tagging already half-works.** Club aliases catch "Real Madrid" in a
+  Champions League story today. National-team competitions are the gap.
+
+Sequence it **with** league expansion rather than before it: both need the
+same alias work, and a cup whose clubs we do not hold is not worth ingesting.
+
+#### 7. Betting — explicitly not built
 
 Not on the roadmap. The decision is deferred until after launch and a legal
 review, and if it ever happens it is 18+ only. Written down so the absence

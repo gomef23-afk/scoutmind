@@ -105,7 +105,7 @@ export function parseFeed(xml) {
 
     // guid is optional and is not always a URL; the link is the better
     // fallback identity, and the caller dedupes on whatever we return.
-    const guid = pick(block, 'guid') || pick(block, 'id') || link || '';
+    const guid = stableGuid(pick(block, 'guid') || pick(block, 'id') || link || '');
 
     if (!title || !/^https?:\/\//i.test(link)) continue;
 
@@ -119,6 +119,25 @@ export function parseFeed(xml) {
   }
 
   return items;
+}
+
+/**
+ * A guid that identifies the ARTICLE, not this appearance of it in the feed.
+ *
+ * BBC emits "<article-url>#<position-in-feed>", so the same story comes back
+ * with a new guid every time it moves up or down the list. Left alone that
+ * produced 519 duplicate rows out of 2,005 — 26% of the feed, 517 of them BBC,
+ * seven to nine copies of a single story with identical URLs and publish times.
+ *
+ * Only the fragment is dropped, and only when the guid looks like a URL. A
+ * query string can be meaningful (some feeds put the article id there), and a
+ * non-URL guid is left exactly as the publisher wrote it.
+ */
+export function stableGuid(raw) {
+  const g = String(raw || '').trim();
+  if (!/^https?:\/\//i.test(g)) return g;
+  const hash = g.indexOf('#');
+  return hash === -1 ? g : g.slice(0, hash);
 }
 
 /** RFC-822 / ISO-8601 / "EST"-style dates -> ISO string, or null. */

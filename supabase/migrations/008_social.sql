@@ -45,9 +45,18 @@ comment on function public.is_admin() is
 --
 -- security_invoker = false so the view runs as its owner and bypasses the
 -- profiles row policy, exposing only the columns listed here.
+--
+-- !! COLUMN ORDER MATTERS !! CREATE OR REPLACE VIEW can only APPEND columns.
+-- It cannot insert one in the middle, rename one, or reorder them — Postgres
+-- matches the existing view position by position. Putting main_club_id before
+-- created_at fails with:
+--   cannot change name of view column "created_at" to "main_club_id"
+--
+-- So new columns go on the END, always. Readers must select by name, never by
+-- position, which everything here already does.
 create or replace view public.public_profiles
 with (security_invoker = false) as
-  select id, name, plan, credential, main_club_id, created_at
+  select id, name, plan, credential, created_at, main_club_id
     from public.profiles;
 
 grant select on public.public_profiles to anon, authenticated;
@@ -149,14 +158,16 @@ comment on table public.events is
 -- shipped to the browser, so the list is not published to every visitor and
 -- cannot be read out of the JS bundle.
 --
--- `pattern` is matched against a NORMALISED copy of the comment (lowercased,
--- accents stripped, repeated letters collapsed, non-letters removed), so
--- "b@bacaa" and "bàbaca" collapse to the same thing.
---
 -- Slurs only. Ordinary swearing is not moderated — people swear about
 -- football. This list is a speed bump, not a guarantee; it will never be
 -- complete, and real moderation is the reports queue.
--- `mode` decides how hard the pattern bites:
+--
+-- `mode` decides how hard the pattern bites, and WHICH normaliser the pattern
+-- must be stored with. Get that pairing wrong and the entry silently never
+-- matches, so there is one rule: use the normaliser named after the mode.
+--
+--   mode 'word'      -> store with public.moderation_words(...)
+--   mode 'substring' -> store with public.moderation_normalise(...)
 --
 --   'word'      match whole words only, on a copy that keeps word breaks.
 --               Use for anything with an innocent sense or that is a
@@ -446,12 +457,24 @@ grant usage, select on sequence public.events_id_seq   to authenticated;
 -- Ordinary swearing is NOT here and should not be added: people swear about
 -- football, and moderating that would make the product worse.
 --
--- To extend:
---   insert into public.moderation_blocklist (pattern, lang, note)
---   values (public.moderation_normalise('<the term>'), 'pt', 'why');
+-- TO EXTEND — the normaliser must match the mode, or the entry never fires.
 --
--- Check what a term normalises to before inserting:
---   select public.moderation_normalise('Exãmple');
+--   Whole-word match (safer; use when the term has any innocent sense, or is
+--   a substring of an ordinary word):
+--     insert into public.moderation_blocklist (pattern, mode, lang, note)
+--     values (public.moderation_words('<the term>'), 'word', 'pt', 'why');
+--
+--   Match anywhere, obfuscation included (only for terms with no innocent
+--   reading at all):
+--     insert into public.moderation_blocklist (pattern, mode, lang, note)
+--     values (public.moderation_normalise('<the term>'), 'substring', 'pt', 'why');
+--
+-- Check what a term becomes before inserting — note they differ:
+--   select public.moderation_words('Exãmple');      -- 'example'
+--   select public.moderation_normalise('faggot');   -- 'fagot'  (gg collapsed)
+--
+-- If a new 'substring' pattern collapses onto a real word, add that word to
+-- moderation_allowlist rather than weakening the pattern.
 insert into public.moderation_blocklist (pattern, mode, lang, note) values
   -- 'word': has an innocent sense, or is a substring of an ordinary word.
   (public.moderation_words('macaco'),    'word', 'pt', 'racist abuse in football; also the ordinary word for monkey'),
@@ -509,9 +532,11 @@ update public.news_items i
 --   select column_name from information_schema.column_privileges
 --    where table_name='comments' and privilege_type='UPDATE' and grantee='authenticated';
 --
--- public_profiles must expose main_club_id and NOT email:
---   select column_name from information_schema.columns
+-- public_profiles must expose main_club_id and NOT email. main_club_id is
+-- LAST because CREATE OR REPLACE VIEW can only append:
+--   select ordinal_position, column_name from information_schema.columns
 --    where table_name='public_profiles' order by ordinal_position;
+--   -- id, name, plan, credential, created_at, main_club_id
 --
 -- Normalisation sanity:
 --   select public.moderation_normalise('Vi  aaa-do!!');   -- 'viado'
