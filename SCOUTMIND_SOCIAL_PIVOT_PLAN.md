@@ -21,6 +21,7 @@
 | **R8 + news slice of R9** | `/api/cron/news` — 10 RSS feeds → `news_items`, club-tagged via `team_aliases`. Migration `005`. Home feed renders real news through `renderFeedItem()`. Both fake widgets (Hot Rumors %, Fit Score Index) deleted. Costs **zero** API-Football requests | live |
 | **Nothing-fake pass** | Migration `006` (`football_ok`, `in_title`, `exclude_patterns`). Real crests everywhere, real Clubs-page numbers from `standings` + `team_season_stats`, football-only feed, headline-first ranking. Every hardcoded post, poll, wishlist entry, follower count, style badge and invented percentage removed | live |
 | **Accounts & clubs** | Migration `007` — `profiles.main_club_id` / `content_langs` / `onboarded_at`, and a `follows` table. Club picker on all **146** real teams keyed on `teams.id`; the 25-slug `ALL_CLUBS` list, `CLUB_API_ID` and `slugFor()` are gone. Two-step onboarding, one-time localStorage import, per-account content languages, Matches grouped by date, real sidebar fixtures | built, awaiting `007` |
+| **Package 3 — social** | Migration `008` — `comments`, `reactions`, `reports`, `events`, moderation lists, `is_admin()`. Reactions and comments on every news card, report + admin queue, event telemetry. Covers **C2 and part of C9**; groups are next | built — **mark shipped once the two-account tests pass** |
 | **Consistency pass** | `about.html` repositioned to the social network and stripped of every claim we cannot back. Scout Mode limited to the seven leagues we hold, budget filter removed. One page title across the site | built |
 
 ### Infrastructure
@@ -79,6 +80,18 @@
 - **Display names are a map, not an algorithm** (`public/club_names.js`). Stripping capitals would produce *Ac Milan* and *Rb Leipzig*. Pinned by tests, including an assertion that no override merely repeats the stored name — which caught a dead `Inter` entry the day it was written.
 - **`loadFixtures()` had the same ambiguous `leagues(...)` embed** as the news query and would have started returning HTTP 300 the moment anything touched it. Now `leagues!fixtures_league_id_fkey(...)`. Worth grepping for others.
 - **community.html matches clubs by name**, because its team list is still `leagues_data.js` slugs. 82% of the clubs in our seven leagues resolve; the rest show **no numbers rather than someone else's**, enforced by an ambiguity guard that burns any key two clubs share. R9 moves the page onto `teams` and this bridge goes away.
+**Package 3 (social), carried forward:**
+
+- **Nothing is hard-deleted.** A removed comment keeps its row with `deleted_at` / `deleted_by`; the RLS read policy filters it out, so it vanishes for everyone while staying auditable. Reactions are the one exception — a toggle has no history worth keeping.
+- **`content` is immutable once posted.** Soft delete needs an UPDATE policy, and a table-level grant would also let someone rewrite a comment after it was quoted or reported. The grant is column-level: `grant update(deleted_at, deleted_by)`.
+- **Rate limits and the blocklist live in a BEFORE INSERT trigger**, not in RLS. A `WITH CHECK` subquery counting rows in the table it is inserting into is fragile and can recurse; the trigger also returns a usable message. Client-side checks are feedback only.
+- **The blocklist is server-side only**, in `moderation_blocklist`. A client-side list would ship slurs to every visitor in the JS bundle and be bypassable from the console. Slurs only — ordinary swearing is not moderated, because people swear about football.
+- **Two match modes.** `word` matches whole words; `substring` matches a stripped, repeat-collapsed copy so `v-i-a-d-o` and `viiiado` are caught. Short or ambiguous terms must be `word`: `paki` is inside "Pakistan", `retard` is French for delay.
+- **`moderation_allowlist` exists because collapsing repeats creates collisions.** `nigger` collapses to `niger`, which would have blocked "Niger" and "Nigeria" — both entirely likely here. Allowlisted words are stripped before the substring pass, so "Nigeria played well" passes while "Nigeria you <slur>" is still caught. Verified across 12 cases.
+- **Accepted false positives:** `bicha` (queue), `macaco` (the animal), `retard` (French). The abusive reading is far likelier in a football comment than the innocent one. One `delete from moderation_blocklist` removes any of them.
+- **`events` has no SELECT policy at all** — the anon key cannot read it. Read it as the service role; the two weekly queries are at the bottom of `008`.
+- **Football filter:** added competition names (Laver Cup, Davis Cup, Team Europe, Grand Slam, ATP, WTA) after finding 2 leaks in 600 live rows. **We deliberately keep no list of athlete names** — it would need constant maintenance and would start eating coverage of footballers who share a surname with a tennis player. The limitation is that an athlete-name-only headline from a non-football sport can still slip through.
+- **Not verified by me:** the iOS keyboard with the inline composer, and the two-account RLS tests. Both need a real device and real accounts.
 **Public claims — what `about.html` may say:**
 
 The rule is that every number on the marketing page is one we can point at in the database. Removed because nothing backed them: *30+ leagues covered*, *300+ / 545 real players*, *8 weakness zones detected*, *filtered by budget*, the FBref/Transfermarkt data-source sentence, *Join clubs, agents and fans already using ScoutMind*, the Série C answer, MLS and Série B in the league strip, and a mocked-up "Análise Flamengo" screenshot with players scored at 87% / 74% / 68% MATCH.
@@ -100,8 +113,8 @@ Keep this list in mind before adding anything to that page.
 
 | # | Work | Notes |
 |---|---|---|
-| **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg`/`duels_won_pct` — the last three nulls in `team_season_stats` |
-| **R7** | League averages | Recompute `league_averages` from real data — the weakness thresholds become real |
+| **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg`/`duels_won_pct` — the last three nulls in `team_season_stats`. **Also ship `standings_snapshots` here** (roadmap 1) — it cannot be back-filled later. Unblocks fantasy picks (roadmap 3) |
+| **R7** | League averages | Recompute `league_averages` from real data — the weakness thresholds become real. Unblocks Match Previews (roadmap 2), which ships **before** R9 |
 | **R9** | Front end on real data | Scout Mode and SM Weekly read Supabase. The Matches and news slices are done. **Three engine decisions are queued here — see below** |
 | **B3** | Delete `news.html` | Superseded by the Home feed; nothing left to port — the two widgets it shared were invented numbers and are gone |
 | **B4** | i18n | `public/i18n.js` with en / pt-BR / es. Split: B4a infrastructure + extraction, B4b translation. ~250-400 strings |
@@ -109,6 +122,84 @@ Keep this list in mind before adding anything to that page.
 | **C** | Social layer | Posts, reactions, comments, follows, notifications, feed algorithm — the actual social network |
 
 R10 (delete `leagues_data.js` / `players_data.js`) follows R9.
+
+### Roadmap after the above
+
+Ordering here is not arbitrary — two of these have hard dependencies, and one
+of them cannot be recovered if it is skipped.
+
+#### 1. `standings_snapshots` — build it in the R6 package
+
+The daily standings cron appends a dated row per club instead of only
+overwriting the current table, so "biggest mover this week" and any
+week-over-week trend have something to compare against.
+
+**This is the one item that cannot be back-filled.** Every day it is not
+built is a day of history that does not exist — API-Football serves the
+table as it stands now, not as it stood last Tuesday. That is why it rides
+along with R6 rather than waiting for the feature that needs it.
+
+#### 2. Match Previews + Trends — after R7, **before** R9 Scout Mode
+
+For every upcoming fixture, a preview built only from data we hold:
+
+- last-5 form, goals for and against
+- home/away split
+- xG over- and under-performance
+- attack vs defence matchup against the league average
+- head-to-head
+- a W/D/L probability estimate from xG, **with the sample size shown**
+
+Per club, a **Trends** section alongside it.
+
+Three surfaces: the Matches card, an automated *"ScoutMind Preview"* post on
+Home for followed clubs on matchday, and the club page.
+
+Portuguese: **"Pré-jogo"** and **"Tendências"**.
+
+**Rules, not preferences:** no odds, no bookmaker links, and never the word
+"recommend". Every preview carries a one-line note that the numbers are
+estimates from team statistics. C7 (predictions) hangs off this, not the
+other way round.
+
+It lands before R9 because it needs R7's real league averages and nothing
+from Scout Mode — and because it is the feature that makes match day worth
+opening, which Scout Mode is not.
+
+#### 3. Fantasy round picks — after R6
+
+"Best picks this round" per position, from player stats plus fixture
+difficulty. Cartola-style scoring for Brazil, FPL-style for England.
+
+**Never uses Cartola's name, logo or data.** The wording is "works with
+Cartola-style scoring". Needs R6, since it is built on player data.
+
+#### 4. SM Weekly on real data — R9
+
+A weekly cron writes a stored report per league from `team_season_stats`,
+`league_averages` and `standings_snapshots`. The tab stays hidden until this
+exists; the code and markup are already in place and deliberately untouched.
+
+Depends on item 1 — without snapshots there is no "this week versus last".
+
+#### 5. League expansion, in batches, after R9
+
+| batch | leagues |
+|---|---|
+| 1 | Série B, MLS, Liga MX, Primeira Liga, Eredivisie |
+| 2 | Colombia, Chile, Uruguay, more of Europe |
+| 3 | Lower divisions of Brazil, England, Spain, Italy, Germany |
+
+Each batch needs **aliases for every new club** and **a news source for the
+country** — otherwise the clubs exist but nothing is ever tagged to them,
+which is worse than not having them. Budget the alias review per batch; it
+was the slowest part of R8.
+
+#### 6. Betting — explicitly not built
+
+Not on the roadmap. The decision is deferred until after launch and a legal
+review, and if it ever happens it is 18+ only. Written down so the absence
+is a decision rather than an oversight.
 
 ### Weakness-engine decisions queued for R9
 

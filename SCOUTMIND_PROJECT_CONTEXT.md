@@ -198,7 +198,7 @@ email and a bio. Only the dashboard (service role) reads them. Insert is
 
 ---
 
-## 6b. FOOTBALL DATA TABLES (migrations `003`–`007`, Phase R)
+## 6b. FOOTBALL DATA TABLES (migrations `003`–`008`, Phase R)
 
 Written only by the cron jobs. All public-read.
 
@@ -218,7 +218,11 @@ Written only by the cron jobs. All public-read.
 | `news_sources` | The 10 live feeds — `lang`, `country`, `headline_only`, `exclude_patterns`, health counters | seeded in `005` ✅ |
 | `news_items` | Headline + ≤300-char snippet + link. **Never full article text**. `football_ok` hides non-football without deleting it | `/api/cron/news` ✅ |
 | `news_item_teams` | Article → club, plus `via` (the alias that matched) and `in_title` (named in the headline, drives ranking) | `/api/cron/news` ✅ |
-| `follows` | User -> club. Public read (real follower counts), own-row write only | `007` ✅ || `ingest_runs` | Job telemetry + resumable cursor. **No read policy** — telemetry, not content | all jobs |
+| `follows` | User -> club. Public read (real follower counts), own-row write only | `007` ✅ || `comments` | News comments. Soft delete only (`deleted_at`); `content` immutable via column grant | `008` ✅ |
+| `reactions` | 🔥 👏 🤯, one of each per user per item. Counts are always COUNT(*) | `008` ✅ |
+| `reports` | Comment reports. One open report per user per target | `008` ✅ |
+| `events` | Insert-only telemetry. **No SELECT policy** — read as service role | `008` ✅ |
+| `moderation_blocklist` / `moderation_allowlist` | Server-side slur filter. RLS on, no policy: unreadable via the API | `008` ✅ || `ingest_runs` | Job telemetry + resumable cursor. **No read policy** — telemetry, not content | all jobs |
 
 ### Data the API does not provide — dropped
 Player **market value** (so the budget filter and currency switcher are gone),

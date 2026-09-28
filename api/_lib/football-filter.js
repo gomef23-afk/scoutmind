@@ -63,6 +63,20 @@ const NON_FOOTBALL = [
   /\bryder cup\b/,
   /\bpresidents cup\b/,
   /\bpga\b/,
+  // Competition names, not athlete names. Found by re-checking 600 live rows:
+  // Sky headlines an event without ever naming the sport ("Alcaraz beats Fritz
+  // in thriller as Team Europe lead Laver Cup").
+  //
+  // We deliberately do NOT keep a list of athlete names. It would need
+  // constant maintenance, it would age badly, and a footballer who shares a
+  // surname with a tennis player would start losing their own coverage.
+  // Competition names are stable and unambiguous; athlete names are neither.
+  /\blaver cup\b/,
+  /\bdavis cup\b/,
+  /\bteam europe\b/,
+  /\bgrand slam\b/,
+  /\batp\b/,
+  /\bwta\b/,
 ];
 
 /** Lowercase and strip diacritics so "tênis" and "tenis" match one pattern. */

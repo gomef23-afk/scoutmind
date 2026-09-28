@@ -284,7 +284,54 @@ body{padding-bottom:64px;}
 .filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
 .lang-chip{background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.5px;}
 .lang-chip:hover,.lang-chip.active{border-color:var(--accent2);color:var(--accent2);background:rgba(0,184,255,0.06);}
-/* ── NEWS TAGS ── */
+/* ── SOCIAL: reactions + comments (mobile-first, rule 11) ── */
+.social-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding:9px 14px;background:var(--bg2);}
+.reaction-row{display:flex;gap:6px;flex:1;min-width:0;}
+.reaction{display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);transition:border-color .15s,background .15s;min-height:32px;}
+.reaction:hover{border-color:var(--accent2);}
+.reaction.on{border-color:var(--accent);background:rgba(0,229,160,0.08);color:var(--accent);}
+.reaction-emoji{font-size:14px;line-height:1;}
+.reaction-n{font-family:'DM Mono',monospace;font-size:11px;}
+.comment-toggle{background:transparent;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:6px 2px;white-space:nowrap;min-height:32px;}
+.comment-toggle:hover{color:var(--accent);}
+.comments-body{display:none;border-top:1px solid var(--border);padding:12px 14px 14px;background:var(--bg2);}
+.comment-empty{font-size:12px;color:var(--muted);text-align:center;padding:10px 0 14px;}
+.comment-showall{display:block;width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);font-size:11px;padding:7px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:10px;}
+.comment-showall:hover{color:var(--accent);border-color:var(--accent);}
+.comment-item{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);}
+.comment-item:last-of-type{border-bottom:none;}
+.comment-av{width:18px;height:18px;border-radius:5px;background:var(--bg3);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);flex-shrink:0;}
+.comment-body-wrap{flex:1;min-width:0;}
+.comment-author{font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;}
+.comment-time{font-size:10px;color:var(--muted);font-weight:400;}
+.comment-text{font-size:13px;line-height:1.55;color:var(--text);margin-top:2px;overflow-wrap:anywhere;}
+.comment-meta{display:flex;gap:12px;margin-top:4px;}
+.comment-link{background:transparent;border:none;padding:0;font-size:10px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.comment-link:hover{color:var(--red);}
+.comment-report{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px;}
+.report-reason{font-size:10px;padding:4px 9px;border-radius:14px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.report-reason:hover{border-color:var(--accent);color:var(--accent);}
+.comment-compose{margin-top:10px;}
+/* 16px keeps iOS Safari from zooming the page when the field takes focus. */
+.comment-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:10px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;resize:none;line-height:1.5;}
+.comment-input:focus{border-color:var(--accent);}
+.comment-compose-foot{display:flex;align-items:center;gap:10px;margin-top:7px;}
+.comment-counter{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
+.comment-hint{font-size:10px;color:var(--muted);flex:1;}
+.comment-post-btn{background:var(--accent);color:#000;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;min-height:34px;}
+.comment-post-btn:disabled{opacity:.6;cursor:default;}
+.comment-error{font-size:11px;color:var(--red);margin-top:7px;line-height:1.5;}
+.comment-signin{margin-top:10px;text-align:center;}
+@media (min-width: 900px){
+  .comment-hint{display:inline;}
+}.report-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:9px;}
+.report-head{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--yellow);display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;}
+.report-quote{font-size:13px;line-height:1.55;color:var(--text);overflow-wrap:anywhere;}
+.report-detail{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5;}
+.report-actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
+.report-btn{font-size:11px;padding:6px 12px;border-radius:16px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;min-height:30px;}
+.report-btn:hover{border-color:var(--accent);color:var(--accent);}
+.report-btn.danger:hover{border-color:var(--red);color:var(--red);}/* ── NEWS TAGS ── */
 .tag-transfer{background:rgba(0,229,160,0.1);color:var(--accent);}
 .tag-financial{background:rgba(0,184,255,0.1);color:var(--accent2);}
 .tag-injury{background:rgba(255,69,96,0.1);color:var(--red);}
@@ -545,6 +592,11 @@ if(!_cu){
     </div>
     <div id="profile-lang-prefs" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
     <div id="profile-club-lang" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"></div>
+  </div>
+  <!-- Admins only. RLS is the real guard: a non-admin who unhid this reads nothing. -->
+  <div class="profile-section" id="profile-reports" style="display:none;">
+    <div class="profile-section-title">Open reports</div>
+    <div id="reports-list"></div>
   </div>
 
   <!-- Danger Zone -->
@@ -1902,6 +1954,250 @@ async function importLocalClubs(profile){
   }
 }
 
+// ── EVENTS ───────────────────────────────────────────────────────────────
+// Insert-only telemetry behind the north-star metric: weekly active users who
+// took a social action. Fire and forget — a failed write must never cost the
+// user their comment, so errors go to the console and nowhere else.
+
+function logEvent(type,refType,refId){
+  if(!currentUser)return;                      // guests are not logged
+  apiSend('POST','events',[{user_id:currentUser.id,type:type,
+    ref_type:refType||null,ref_id:refId||null}])
+    .catch(e=>console.warn('event '+type+':',e.message));
+}
+
+/** One 'session' per user per day, on first load. */
+function logSessionOnce(){
+  if(!currentUser)return;
+  const key='sm_session_logged_'+currentUser.id;
+  const today=localDayKey(new Date());
+  try{ if(localStorage.getItem(key)===today)return; localStorage.setItem(key,today); }catch(e){}
+  logEvent('session');
+}
+
+// ── REACTIONS AND COMMENTS ───────────────────────────────────────────────
+// Counts always come from the rows. There is no cached counter to drift.
+
+const REACTIONS=[
+  {type:'fire',       emoji:'🔥', label:'Fire'},
+  {type:'clap',       emoji:'👏', label:'Respect'},
+  {type:'mind_blown', emoji:'🤯', label:'No way'},
+];
+
+// news_item_id -> { counts:{type:n}, mine:Set<type> }
+const REACTION_STATE=new Map();
+// news_item_id -> { total, items:[], expanded:bool, loaded:bool }
+const COMMENT_STATE=new Map();
+
+function reactionState(id){
+  if(!REACTION_STATE.has(id))REACTION_STATE.set(id,{counts:{},mine:new Set()});
+  return REACTION_STATE.get(id);
+}
+function commentState(id){
+  if(!COMMENT_STATE.has(id))COMMENT_STATE.set(id,{total:0,items:[],expanded:false,loaded:false});
+  return COMMENT_STATE.get(id);
+}
+
+/**
+ * One round trip for the whole visible feed rather than one per card.
+ * Called after loadNews(); a failure leaves every card at zero, which is
+ * honest — better than showing a count we did not actually read.
+ */
+async function loadSocialCounts(ids){
+  if(!ids.length)return;
+  const list='('+ids.join(',')+')';
+  try{
+    const [reacts,comments]=await Promise.all([
+      apiGet('reactions?select=news_item_id,type,user_id&news_item_id=in.'+list+'&limit=5000'),
+      apiGet('comments?select=news_item_id&news_item_id=in.'+list+'&limit=5000'),
+    ]);
+    for(const r of reacts){
+      const s=reactionState(r.news_item_id);
+      s.counts[r.type]=(s.counts[r.type]||0)+1;
+      if(currentUser&&r.user_id===currentUser.id)s.mine.add(r.type);
+    }
+    for(const c of comments){
+      commentState(c.news_item_id).total++;
+    }
+  }catch(e){
+    console.warn('loadSocialCounts:',e.message);
+  }
+}
+
+/** Toggle a reaction. Optimistic, and reverts on failure. */
+async function toggleReaction(itemId,type){
+  if(!requireAuth('Create a free account to join the conversation.'))return;
+  const s=reactionState(itemId);
+  const had=s.mine.has(type);
+  // Apply immediately so the tap feels instant.
+  if(had){ s.mine.delete(type); s.counts[type]=Math.max(0,(s.counts[type]||1)-1); }
+  else   { s.mine.add(type);    s.counts[type]=(s.counts[type]||0)+1; }
+  paintReactions(itemId);
+  try{
+    if(had){
+      await apiSend('DELETE','reactions?news_item_id=eq.'+itemId
+        +'&user_id=eq.'+currentUser.id+'&type=eq.'+encodeURIComponent(type));
+    }else{
+      await apiSend('POST','reactions?on_conflict=news_item_id,user_id,type',
+        [{news_item_id:itemId,user_id:currentUser.id,type:type}],
+        'resolution=ignore-duplicates,return=minimal');
+      logEvent('reaction','news_item',itemId);
+    }
+  }catch(e){
+    // Put it back exactly as it was.
+    if(had){ s.mine.add(type); s.counts[type]=(s.counts[type]||0)+1; }
+    else   { s.mine.delete(type); s.counts[type]=Math.max(0,(s.counts[type]||1)-1); }
+    paintReactions(itemId);
+    console.warn('toggleReaction:',e.message);
+  }
+}
+
+/**
+ * Comments for one item. Author names and crests come from public_profiles —
+ * never from profiles, which holds email addresses and is not publicly
+ * readable. Soft-deleted rows are invisible: the RLS read policy filters them
+ * out, so the client never has to.
+ */
+async function loadComments(itemId,all){
+  const s=commentState(itemId);
+  const limit=all?200:2;
+  try{
+    const sel='id,user_id,content,created_at,'
+      +'public_profiles!comments_user_id_fkey(name,main_club_id)';
+    const rows=await apiGet('comments?select='+encodeURIComponent(sel)
+      +'&news_item_id=eq.'+itemId+'&order=created_at.desc&limit='+limit);
+    // Newest at the bottom, like a chat.
+    s.items=rows.reverse();
+    s.loaded=true;
+    if(all||rows.length<limit)s.total=Math.max(s.total,rows.length);
+  }catch(e){
+    console.warn('loadComments:',e.message);
+    s.loaded=true;
+  }
+  paintComments(itemId);
+}
+
+async function toggleComments(itemId){
+  const s=commentState(itemId);
+  s.expanded=!s.expanded;
+  paintComments(itemId);
+  if(s.expanded&&!s.loaded)await loadComments(itemId,false);
+}
+
+async function showAllComments(itemId){
+  await loadComments(itemId,true);
+}
+
+/** Plain text only. The server is the authority; this is for feedback. */
+function cleanComment(raw){
+  return String(raw||'').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().slice(0,500);
+}
+
+async function postComment(itemId){
+  if(!requireAuth('Create a free account to join the conversation.'))return;
+  const input=document.getElementById('ci-'+itemId);
+  if(!input)return;
+  const text=cleanComment(input.value);
+  if(text.length<2)return;
+
+  const btn=document.getElementById('cpost-'+itemId);
+  if(btn){ btn.disabled=true; btn.textContent='Posting…'; }
+  setCommentError(itemId,'');
+  try{
+    await apiSend('POST','comments',
+      [{news_item_id:itemId,user_id:currentUser.id,content:text}]);
+    input.value='';
+    updateCommentCounter(itemId);
+    const s=commentState(itemId);
+    s.total++;
+    await loadComments(itemId,s.items.length>2);
+    logEvent('comment','news_item',itemId);
+  }catch(e){
+    // The trigger's message is the useful part: rate limit, blocklist, length.
+    setCommentError(itemId,friendlyDbError(e.message));
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Post'; }
+  }
+}
+
+/** Surface the database's own message rather than a generic failure. */
+function friendlyDbError(msg){
+  const m=/"message":"([^"]+)"/.exec(msg||'');
+  const raw=m?m[1]:'';
+  if(raw)return raw;
+  if(/40[13]/.test(msg||''))return 'You need to be signed in to do that.';
+  return 'Could not post that. Try again in a moment.';
+}
+
+function setCommentError(itemId,text){
+  const el=document.getElementById('cerr-'+itemId);
+  if(!el)return;
+  el.textContent=text||'';
+  el.style.display=text?'block':'none';
+}
+
+function updateCommentCounter(itemId){
+  const input=document.getElementById('ci-'+itemId);
+  const out=document.getElementById('ccount-'+itemId);
+  if(!input||!out)return;
+  const n=input.value.length;
+  out.textContent=n+'/500';
+  out.style.color=n>500?'var(--red)':'var(--muted)';
+}
+
+/** Soft delete. The row stays; it just stops being visible to anyone. */
+async function deleteComment(itemId,commentId){
+  if(!requireAuth('Create a free account to do that.'))return;
+  if(!confirm('Delete this comment? This cannot be undone.'))return;
+  try{
+    await apiSend('PATCH','comments?id=eq.'+commentId,
+      {deleted_at:new Date().toISOString(),deleted_by:currentUser.id});
+    const s=commentState(itemId);
+    s.items=s.items.filter(c=>c.id!==commentId);
+    s.total=Math.max(0,s.total-1);
+    paintComments(itemId);
+  }catch(e){
+    alert(friendlyDbError(e.message));
+  }
+}
+
+const REPORT_REASONS=[
+  {value:'abuse',    label:'Abuse or harassment'},
+  {value:'hate',     label:'Hate speech'},
+  {value:'spam',     label:'Spam'},
+  {value:'off_topic',label:'Off topic'},
+  {value:'other',    label:'Something else'},
+];
+
+function openReport(itemId,commentId){
+  if(!requireAuth('Create a free account to report a comment.'))return;
+  const box=document.getElementById('crep-'+commentId);
+  if(!box)return;
+  const open=box.style.display==='block';
+  document.querySelectorAll('.comment-report').forEach(b=>b.style.display='none');
+  if(open)return;
+  box.innerHTML='<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Why are you reporting this?</div>'
+    +REPORT_REASONS.map(r=>'<button class="report-reason" onclick="sendReport('+itemId+','+commentId+',\''+r.value+'\')">'
+      +sanitize(r.label)+'</button>').join('')
+    +'<button class="report-reason" style="opacity:.6" onclick="document.getElementById(\'crep-'+commentId+'\').style.display=\'none\'">Cancel</button>';
+  box.style.display='block';
+}
+
+async function sendReport(itemId,commentId,reason){
+  const box=document.getElementById('crep-'+commentId);
+  try{
+    await apiSend('POST','reports',
+      [{target_type:'comment',target_id:commentId,reporter_id:currentUser.id,reason:reason}]);
+    logEvent('report','comment',commentId);
+    if(box)box.innerHTML='<div style="font-size:11px;color:var(--accent);">Thanks — we will take a look.</div>';
+  }catch(e){
+    const msg=friendlyDbError(e.message);
+    // The partial unique index means a second open report is a duplicate.
+    if(box)box.innerHTML='<div style="font-size:11px;color:var(--muted);">'
+      +sanitize(/duplicate|unique/i.test(e.message)?'You have already reported this.':msg)+'</div>';
+  }
+}
+
 /** Write the current selection to the account (no-op for guests). */
 async function saveMyClubsToAccount(){
   if(!currentUser)return;
@@ -2064,10 +2360,16 @@ function saveTeamSelection(){
     alert('Pick your main club first.');
     return;
   }
+  const before=new Set(followedClubIds());
+  const beforeMain=mainClubId();
   saveMyClubsLocal();
   localStorage.setItem(_getModalKey(), '1');
   closeTeamModal();
   applyClubSelection();
+  // Telemetry only — never blocks the save.
+  if(mainClubId()!==beforeMain)logEvent('club_set','team',mainClubId());
+  for(const id of followedClubIds())if(!before.has(id))logEvent('follow','team',id);
+  for(const id of before)if(followedClubIds().indexOf(id)<0)logEvent('unfollow','team',id);
   // Fire and forget: the UI already reflects the choice, and a failed write
   // is logged rather than blocking the user behind a spinner.
   saveMyClubsToAccount();
@@ -2255,7 +2557,7 @@ function showPage(id){
   document.querySelectorAll('.sm-tab').forEach(b=>{
     b.classList.toggle('active', b.dataset.tab===id);
   });
-  if(id==='profile') try{renderProfileClubs();renderLangPrefs();renderClubLangToggle();}catch(e){}
+  if(id==='profile') try{renderProfileClubs();renderLangPrefs();renderClubLangToggle();renderReports();}catch(e){}
   if(id==='communities'){ try{renderMyClubCard();renderClubsGrid();}catch(e){console.error('clubs page:',e);} }
   if(id==='feed') try{renderFeedNews();}catch(e){}
   if(id==='matches') try{renderMatchDay();}catch(e){}
@@ -3129,8 +3431,186 @@ function renderNewsCard(n){
     html+='<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">'+sanitize(n.excerpt)+'</div>';
   }
   html+='<a href="'+sanitize(n.url)+'" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--accent);text-decoration:none;">Read on '+sanitize(n.source)+' &rarr;</a>'
-    +'</div></div>';
+    +'</div>'
+    +'<div class="social-bar">'
+    +'<div class="reaction-row" id="rx-'+n.id+'">'+reactionButtons(n.id)+'</div>'
+    +'<button class="comment-toggle" id="ct-'+n.id+'" onclick="toggleComments('+n.id+')">'
+    +commentToggleLabel(n.id)+'</button>'
+    +'</div>'
+    +'<div class="comments-body" id="cb-'+n.id+'"></div>'
+    +'</div>';
   return html;
+}
+
+function commentToggleLabel(itemId){
+  const t=commentState(itemId).total;
+  const label=t===0?'Comment':(t+(t===1?' comment':' comments'));
+  return '&#x1F4AC; '+label;
+}
+
+function reactionButtons(itemId){
+  const s=reactionState(itemId);
+  return REACTIONS.map(function(r){
+    const n=s.counts[r.type]||0;
+    const on=s.mine.has(r.type);
+    return '<button class="reaction'+(on?' on':'')+'" title="'+r.label+'"'
+      +' onclick="toggleReaction('+itemId+',\''+r.type+'\')">'
+      +'<span class="reaction-emoji">'+r.emoji+'</span>'
+      +(n>0?'<span class="reaction-n">'+n+'</span>':'')
+      +'</button>';
+  }).join('');
+}
+
+/** Repaint just the reaction row — the whole feed does not need to re-render. */
+function paintReactions(itemId){
+  document.querySelectorAll('#rx-'+itemId).forEach(function(el){
+    el.innerHTML=reactionButtons(itemId);
+  });
+}
+
+function paintComments(itemId){
+  const s=commentState(itemId);
+  document.querySelectorAll('#ct-'+itemId).forEach(function(b){
+    b.innerHTML=commentToggleLabel(itemId);
+  });
+  document.querySelectorAll('#cb-'+itemId).forEach(function(box){
+    if(!s.expanded){ box.style.display='none'; box.innerHTML=''; return; }
+    box.style.display='block';
+    let html='';
+    if(!s.loaded){
+      html='<div class="comment-empty">Loading…</div>';
+    }else if(!s.items.length){
+      html='<div class="comment-empty">No comments yet. Say the first thing.</div>';
+    }else{
+      if(s.total>s.items.length){
+        html+='<button class="comment-showall" onclick="showAllComments('+itemId+')">'
+          +'Show all '+s.total+' comments</button>';
+      }
+      html+=s.items.map(c=>commentRow(itemId,c)).join('');
+    }
+    // Composer sits inline at the end of the thread rather than fixed to the
+    // viewport: a fixed composer fights the iOS keyboard and the bottom tab bar.
+    html+=composerHtml(itemId);
+    box.innerHTML=html;
+    updateCommentCounter(itemId);
+  });
+}
+
+function commentRow(itemId,c){
+  const p=c.public_profiles||{};
+  const name=p.name||'Someone';
+  const mine=currentUser&&c.user_id===currentUser.id;
+  const canDelete=mine||isAdmin();
+  const crest=p.main_club_id?clubCrestById(p.main_club_id,18)
+    :'<span class="comment-av">'+sanitize(name.slice(0,1).toUpperCase())+'</span>';
+  return '<div class="comment-item">'+crest
+    +'<div class="comment-body-wrap">'
+    +'<div class="comment-author">'+sanitize(name)
+    +'<span class="comment-time">'+timeAgo(c.created_at)+'</span></div>'
+    +'<div class="comment-text">'+sanitize(c.content)+'</div>'
+    +'<div class="comment-meta">'
+    +(currentUser&&!mine?'<button class="comment-link" onclick="openReport('+itemId+','+c.id+')">Report</button>':'')
+    +(canDelete?'<button class="comment-link" onclick="deleteComment('+itemId+','+c.id+')">Delete</button>':'')
+    +'</div>'
+    +'<div class="comment-report" id="crep-'+c.id+'" style="display:none;"></div>'
+    +'</div></div>';
+}
+
+function composerHtml(itemId){
+  if(!currentUser){
+    return '<div class="comment-signin">'
+      +'<button class="comment-post-btn" onclick="requireAuth(\'Create a free account to join the conversation.\')">Sign in to comment</button>'
+      +'</div>';
+  }
+  return '<div class="comment-compose">'
+    +'<textarea class="comment-input" id="ci-'+itemId+'" rows="1" maxlength="500"'
+    +' placeholder="Add a comment…"'
+    +' oninput="updateCommentCounter('+itemId+');autoGrow(this)"'
+    +' onfocus="this.scrollIntoView({block:\'center\',behavior:\'smooth\'})"'
+    +' onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();postComment('+itemId+');}"></textarea>'
+    +'<div class="comment-compose-foot">'
+    +'<span class="comment-counter" id="ccount-'+itemId+'">0/500</span>'
+    +'<span class="comment-hint">Ctrl + Enter</span>'
+    +'<button class="comment-post-btn" id="cpost-'+itemId+'" onclick="postComment('+itemId+')">Post</button>'
+    +'</div>'
+    +'<div class="comment-error" id="cerr-'+itemId+'" style="display:none;"></div>'
+    +'</div>';
+}
+
+function autoGrow(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,140)+'px';
+}
+
+function isAdmin(){
+  return Boolean(currentUser&&MY_PROFILE&&MY_PROFILE.plan==='admin');
+}
+
+// ── ADMIN: open reports ──────────────────────────────────────────────────
+// Deliberately inside Profile rather than a separate page. RLS is what
+// actually protects this: a non-admin who unhid the section would still read
+// nothing and be refused on every write.
+
+async function renderReports(){
+  const wrap=document.getElementById('profile-reports');
+  if(!wrap)return;
+  if(!isAdmin()){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  const list=document.getElementById('reports-list');
+  list.innerHTML='<div class="comment-empty">Loading…</div>';
+  try{
+    // No FK exists between reports.target_id and comments (target_type makes
+    // it polymorphic), so fetch the reports and then their comments.
+    const reports=await apiGet('reports?select=id,target_type,target_id,reason,detail,created_at'
+      +'&status=eq.open&order=created_at.desc&limit=50');
+    if(!reports.length){ list.innerHTML='<div class="comment-empty">Nothing reported. </div>'; return; }
+    const ids=[...new Set(reports.map(r=>r.target_id))];
+    let byId={};
+    if(ids.length){
+      const cs=await apiGet('comments?select=id,content,user_id,deleted_at&id=in.('+ids.join(',')+')');
+      for(const c of cs)byId[c.id]=c;
+    }
+    list.innerHTML=reports.map(function(r){
+      const c=byId[r.target_id];
+      const gone=!c||c.deleted_at;
+      return '<div class="report-card">'
+        +'<div class="report-head">'+sanitize(r.reason.replace('_',' '))
+        +'<span class="comment-time">'+timeAgo(r.created_at)+'</span></div>'
+        +'<div class="report-quote">'+(gone
+            ? '<em style="color:var(--muted)">Comment already removed.</em>'
+            : sanitize(c.content))+'</div>'
+        +(r.detail?'<div class="report-detail">'+sanitize(r.detail)+'</div>':'')
+        +'<div class="report-actions">'
+        +(gone?'':'<button class="report-btn danger" onclick="adminDelete('+r.id+','+r.target_id+')">Delete comment</button>')
+        +'<button class="report-btn" onclick="adminResolve('+r.id+',\'dismissed\')">Dismiss</button>'
+        +'</div></div>';
+    }).join('');
+  }catch(e){
+    list.innerHTML='<div class="comment-empty">Could not load reports: '+sanitize(friendlyDbError(e.message))+'</div>';
+  }
+}
+
+async function adminResolve(reportId,status){
+  try{
+    await apiSend('PATCH','reports?id=eq.'+reportId,
+      {status:status,resolved_at:new Date().toISOString(),resolved_by:currentUser.id});
+    renderReports();
+  }catch(e){ alert(friendlyDbError(e.message)); }
+}
+
+async function adminDelete(reportId,commentId){
+  if(!confirm('Delete this comment? It stays in the database but nobody will see it.'))return;
+  try{
+    await apiSend('PATCH','comments?id=eq.'+commentId,
+      {deleted_at:new Date().toISOString(),deleted_by:currentUser.id});
+    await adminResolve(reportId,'actioned');
+    // Drop it from any thread currently on screen.
+    for(const [itemId,s] of COMMENT_STATE){
+      const before=s.items.length;
+      s.items=s.items.filter(c=>c.id!==commentId);
+      if(s.items.length!==before){ s.total=Math.max(0,s.total-1); paintComments(itemId); }
+    }
+  }catch(e){ alert(friendlyDbError(e.message)); }
 }
 
 let currentLangFilter='all';
@@ -3206,6 +3686,18 @@ function renderFeedNews(){
     el.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories yet. The news job runs every 15 minutes.</div>';
   }
   renderForYou();
+}
+
+/** Load reaction and comment counts once, then repaint with the real numbers. */
+let SOCIAL_LOADED_FOR='';
+function loadSocialForFeed(){
+  const ids=FEED_ITEMS.map(i=>i.id);
+  const key=ids.join(',');
+  if(!ids.length||key===SOCIAL_LOADED_FOR)return;
+  SOCIAL_LOADED_FOR=key;
+  loadSocialCounts(ids).then(function(){
+    try{ renderFeedNews(); }catch(e){}
+  });
 }
 
 /**
@@ -3450,8 +3942,10 @@ function filterWeekly(league, btn) {
   try{ renderLangPrefs(); renderClubLangToggle(); }catch(e){}
   try{ renderMyClubCard(); renderClubsGrid(); }catch(e){}
   try{ await loadNews(); }catch(e){ console.error('loadNews:',e); }
+  try{ loadSocialForFeed(); }catch(e){}
   try{ renderMatchDay(); }catch(e){}
   try{ renderSidebarMatches(); }catch(e){}
+  try{ logSessionOnce(); }catch(e){}
   try{ maybeStartOnboarding(); }catch(e){ console.error('onboarding:',e); }
 })();
 try{initProfile();}catch(e){console.error('initProfile:',e);}
