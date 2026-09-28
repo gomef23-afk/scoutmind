@@ -188,7 +188,10 @@ export default withCron('news', async ({ req }) => {
       // is not headline_only.
       const snippet = clipSummary(item.summary, 300);
       const hits = tagText(index, item.title, snippet, source.lang);
-      const football = isFootball(item.title, snippet, hits.length, source.exclude_patterns);
+      // item.link matters: a source's exclude_patterns are matched against the
+      // URL too, which is the only thing separating a BBC Sounds episode from
+      // a BBC article.
+      const football = isFootball(item.title, snippet, hits.length, source.exclude_patterns, item.link);
       if (!football) nonFootball++;
 
       rows.push({

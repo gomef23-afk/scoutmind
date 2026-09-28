@@ -91,24 +91,43 @@ function fold(s) {
  * `extraPatterns` are per-source regex strings from news_sources.exclude_patterns,
  * so a feed that starts leaking something new can be fixed from the dashboard
  * without a deploy. A malformed pattern is ignored rather than failing the run.
+ *
+ * Two things about them differ from the built-in list above, and both were
+ * learned from BBC Sounds:
+ *
+ * 1. They are matched against the URL as well as the title and summary. A BBC
+ *    radio stream and a podcast episode are bbc.co.uk/sounds/play/... pages
+ *    with ordinary football headlines — there is nothing in the text to catch,
+ *    and the path is the only honest signal that it is not an article.
+ *    The built-in list stays on text only: URLs are hyphenated slugs, and a
+ *    pattern like /\bf1\b/ against a path would start dropping real articles.
+ *
+ * 2. They are checked BEFORE the club-tag shortcut, so a source pattern beats
+ *    a tag. "Monday Night Club — Man City reaction" is tagged to Man City and
+ *    would otherwise be football by definition. The tag rule is a heuristic we
+ *    inferred; an exclude pattern is an explicit decision someone made about
+ *    one source, so it wins. This is also why the column is per-source and not
+ *    global — a pattern this blunt should never apply to a feed nobody has
+ *    looked at.
  */
-export function isFootball(title, summary, tagCount = 0, extraPatterns = null) {
-  if (tagCount > 0) return true; // tagged to one of our clubs: football, by definition
-
+export function isFootball(title, summary, tagCount = 0, extraPatterns = null, url = '') {
   const text = fold(`${title || ''} ${summary || ''}`);
 
-  for (const re of NON_FOOTBALL) {
-    if (re.test(text)) return false;
-  }
-
   if (extraPatterns && extraPatterns.length) {
+    const withUrl = `${text} ${fold(url)}`;
     for (const p of extraPatterns) {
       try {
-        if (new RegExp(fold(p), 'i').test(text)) return false;
+        if (new RegExp(fold(p), 'i').test(withUrl)) return false;
       } catch {
         // Not a valid regex — ignore it rather than break ingestion.
       }
     }
+  }
+
+  if (tagCount > 0) return true; // tagged to one of our clubs: football, by definition
+
+  for (const re of NON_FOOTBALL) {
+    if (re.test(text)) return false;
   }
 
   return true;

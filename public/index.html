@@ -3340,6 +3340,24 @@ function hydrateGuestLangs(){
   }catch(e){}
 }
 
+/**
+ * The one definition of "an item a reader may see": it is football, and it is
+ * not a repeat of a story we already hold.
+ *
+ * Every query against news_items appends this. There are exactly two —
+ * loadNews() and runSearch() — and the News tab, For You and Trending all
+ * render from what loadNews() puts in FEED_ITEMS, so one predicate covers all
+ * three surfaces.
+ *
+ * It exists because Trending shipped showing the same BBC story twice: the
+ * predicate had been written out by hand in each query and only runSearch()
+ * got the duplicate_of half. Spelling it once is what stops the two drifting
+ * again.
+ */
+function liveItemPredicate(){
+  return '&football_ok=is.true&duplicate_of=is.null';
+}
+
 async function loadNews(){
   const select=[
     'id','title','summary','source_url','lang','category','published_at',
@@ -3364,13 +3382,22 @@ async function loadNews(){
   try{
     let rows;
     try{
-      rows=await ask(base+'&football_ok=is.true');
+      rows=await ask(base+liveItemPredicate());
     }catch(err){
       // The site deploys on push but migrations are run by hand, so the page
-      // can be live before 006 adds football_ok and in_title. Show the news
-      // rather than nothing, and say why once.
+      // can be live before a column exists (rule 21). Degrade one column at a
+      // time rather than dropping every filter at the first missing one — a
+      // feed with duplicates still beats a feed with tennis in it.
       const m=String(err.message);
-      if(m.indexOf('football_ok')>-1||m.indexOf('in_title')>-1){
+      if(m.indexOf('duplicate_of')>-1){
+        console.warn('news: migration 009 not applied yet — duplicates not filtered.');
+        try{
+          rows=await ask(base+'&football_ok=is.true');
+        }catch(err2){
+          console.warn('news: migration 006 not applied either — showing unfiltered, unranked news.');
+          rows=await ask(legacyBase);
+        }
+      }else if(m.indexOf('football_ok')>-1||m.indexOf('in_title')>-1){
         console.warn('news: migration 006 not applied yet — showing unfiltered, unranked news.');
         rows=await ask(legacyBase);
       }else{
@@ -3726,7 +3753,7 @@ async function runSearch(q){
   ].join(',');
   const params='select='+encodeURIComponent(sel)
     +'&search_vector=wfts('+cfg+').'+encodeURIComponent(q)
-    +'&football_ok=is.true&duplicate_of=is.null'
+    +liveItemPredicate()
     +'&order=published_at.desc&limit=60';
   try{
     const rows=await apiGet('news_items?'+params);

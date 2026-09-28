@@ -163,6 +163,26 @@ export async function run(read) {
   eq('football: a broken per-source pattern is ignored',
     isFootball('Flamengo vence', '', 0, ['(((']), true);
 
+  // BBC Sounds: radio streams and podcast episodes carry ordinary football
+  // headlines and are tagged to real clubs, so neither the keyword list nor
+  // the tag shortcut can catch them. Only the URL gives them away, and the
+  // pattern has to beat the tag.
+  const SOUNDS = ['bbc\\.co\\.uk/sounds/'];
+  eq('football: per-source pattern matches the URL',
+    isFootball('Monday Night Club', '', 0, SOUNDS,
+      'https://www.bbc.co.uk/sounds/play/m002abcd'), false);
+  eq('football: per-source pattern beats a club tag',
+    isFootball('Monday Night Club - Man City reaction', '', 1, SOUNDS,
+      'https://www.bbc.co.uk/sounds/play/m002abcd'), false);
+  eq('football: a BBC article URL is untouched by the Sounds pattern',
+    isFootball('Man City held at home', '', 1, SOUNDS,
+      'https://www.bbc.co.uk/sport/football/articles/c123xyz'), true);
+  // The built-in list must NOT see the URL: real article slugs contain tokens
+  // the keyword patterns would fire on.
+  eq('football: built-in patterns ignore the URL',
+    isFootball('Leeds sign winger', '', 0, null,
+      'https://www.skysports.com/f1/news/leeds-sign-winger'), true);
+
   // ── snippet clamping ────────────────────────────────────────────────────
   eq('clip: short text untouched', clipSummary('Short one.'), 'Short one.');
   eq('clip: strips html', clipSummary('<p>Hello <b>there</b></p>'), 'Hello there');
