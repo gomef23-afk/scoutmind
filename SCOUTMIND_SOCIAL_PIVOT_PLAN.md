@@ -20,9 +20,10 @@
 | **R5** | `/api/cron/fixture-stats` — all 18 stat types per fixture, aggregated into `team_season_stats`. Migration `004`. Self-limiting batches (40 fixtures or 20s) serve backfill and steady state from one job. Backlog at launch: **932 finished fixtures**, ~24 runs | live |
 | **R8 + news slice of R9** | `/api/cron/news` — 10 RSS feeds → `news_items`, club-tagged via `team_aliases`. Migration `005`. Home feed renders real news through `renderFeedItem()`. Both fake widgets (Hot Rumors %, Fit Score Index) deleted. Costs **zero** API-Football requests | live |
 | **Nothing-fake pass** | Migration `006` (`football_ok`, `in_title`, `exclude_patterns`). Real crests everywhere, real Clubs-page numbers from `standings` + `team_season_stats`, football-only feed, headline-first ranking. Every hardcoded post, poll, wishlist entry, follower count, style badge and invented percentage removed | live |
-| **Accounts & clubs** | Migration `007` — `profiles.main_club_id` / `content_langs` / `onboarded_at`, and a `follows` table. Club picker on all **146** real teams keyed on `teams.id`; the 25-slug `ALL_CLUBS` list, `CLUB_API_ID` and `slugFor()` are gone. Two-step onboarding, one-time localStorage import, per-account content languages, Matches grouped by date, real sidebar fixtures | built, awaiting `007` |
-| **Package 3 — social** | Migration `008` — `comments`, `reactions`, `reports`, `events`, moderation lists, `is_admin()`. Reactions and comments on every news card, report + admin queue, event telemetry. Covers **C2 and part of C9**; groups are next | built — **mark shipped once the two-account tests pass** |
-| **Consistency pass** | `about.html` repositioned to the social network and stripped of every claim we cannot back. Scout Mode limited to the seven leagues we hold, budget filter removed. One page title across the site | built |
+| **Accounts & clubs** | Migration `007` — `profiles.main_club_id` / `content_langs` / `onboarded_at`, and a `follows` table. Club picker on all **146** real teams keyed on `teams.id`; the 25-slug `ALL_CLUBS` list, `CLUB_API_ID` and `slugFor()` are gone. Two-step onboarding, one-time localStorage import, per-account content languages, Matches grouped by date, real sidebar fixtures | live |
+| **Package 3 — social** | Migration `008` — `comments`, `reactions`, `reports`, `events`, moderation lists, `is_admin()`. Reactions and comments on every news card, report + admin queue, event telemetry. **Covers C2 and the moderation half of C9.** Verified on production: comment, rate limit, react, report, admin delete, author delete, phone composer | live |
+| **Consistency pass** | `about.html` repositioned to the social network and stripped of every claim we cannot back. Scout Mode limited to the seven leagues we hold, budget filter removed. One page title across the site | live — pushed with package 2 |
+| **Package 3b — feed bugs + search** | Migration `009` — `duplicate_of`, a generated `search_vector` with a GIN index, and a two-pass dedup backfill. `stableGuid()` in `rss.js` fixes the cause at ingest. Plus search across headlines, a Trending tab ranked by `trendScore()` / `coverageBreadth()`, the redesigned comment UI, and the For You language leak fixed. Applied on production: **1,482 originals / 528 duplicates** | live |
 
 ### Infrastructure
 
@@ -91,10 +92,10 @@
 - **Accepted false positives:** `bicha` (queue), `macaco` (the animal), `retard` (French). The abusive reading is far likelier in a football comment than the innocent one. One `delete from moderation_blocklist` removes any of them.
 - **`events` has no SELECT policy at all** — the anon key cannot read it. Read it as the service role; the two weekly queries are at the bottom of `008`.
 - **Football filter:** added competition names (Laver Cup, Davis Cup, Team Europe, Grand Slam, ATP, WTA) after finding 2 leaks in 600 live rows. **We deliberately keep no list of athlete names** — it would need constant maintenance and would start eating coverage of footballers who share a surname with a tennis player. The limitation is that an athlete-name-only headline from a non-football sport can still slip through.
-- **Not verified by me:** the iOS keyboard with the inline composer, and the two-account RLS tests. Both need a real device and real accounts.
+- **Verified by Felipe on production, not by me:** the iOS keyboard with the inline composer, and the two-account RLS tests — both need a real device and real accounts. Comment, rate limit, react, report, admin delete from Profile and the author's own Delete button all passed. The anon-key negative checks were mine.
 **Package 3b (feed bugs + search/trending), carried forward:**
 
-- **26% of the feed was duplicates.** 519 of 2,005 rows, and **517 were BBC**. The cause was the guid, not the headline: BBC emits `<article-url>#<position-in-feed>`, so one story returns with a new guid every time it moves — seven to nine copies, same URL, same publish time. `stableGuid()` in `rss.js` drops the fragment; `009` marks the rows already stored. A `(source, URL-without-fragment)` key caught exactly the same 519 rows as a normalised-headline key, and cannot collide two genuinely different articles, so it is the primary key with the 48h headline check as the safety net.
+- **26% of the feed was duplicates.** 519 of 2,005 rows, and **517 were BBC**. The cause was the guid, not the headline: BBC emits `<article-url>#<position-in-feed>`, so one story returns with a new guid every time it moves — seven to nine copies, same URL, same publish time. `stableGuid()` in `rss.js` drops the fragment; `009` marks the rows already stored. A `(source, URL-without-fragment)` key caught exactly the same 519 rows as a normalised-headline key, and cannot collide two genuinely different articles, so it is the primary key with the 48h headline check as the safety net. **Production result: 1,482 originals / 528 duplicates.** That is nine more duplicates than measured against only five more rows, so the 48h headline pass did fire on a handful the URL key missed — which is exactly the job it was given, and the first evidence it earns its place.
 - **One BBC fetch already repeats itself** — the frozen fixture has 86 items and 80 identities. The cron's per-batch `seen` set is what collapses those; the test asserts stripping never merges two different headlines.
 - **For You was ignoring language.** It filtered on club only, with a comment saying language was deliberately ignored. That was written before `content_langs` became strict and the cross-language exception became opt-in, and it meant a Portuguese-only reader saw French RMC copy. It now uses the same rule as All News. Verified: 7 items about the followed clubs, 2 of them French, and only the 5 Portuguese ones show with the toggle off.
 - **A stale CSS rule stretched the new comment button.** The pre-package-3 `.comment-toggle{width:100%}` survived the old UI's removal and silently overrode the new count button, making it 314px wide and overlapping the reactions. Removed. Lesson: when a UI is replaced, its CSS has to go with it or it fights the replacement from a distance.
@@ -477,9 +478,63 @@ Feed = union of, sorted by recency with light pinning:
 - Empty-state must NEVER be empty: if a user follows nothing, show Série A + Premier League AI content
 
 ### C5. Public profiles (must-have)
+
+**Build next, after groups.**
+
 - `/profile.html?u=<id>` or in-app page
 - Shows: name, club badge, bio, join date, posts, followers/following, predictions record (once C7 exists), analyst badge if any
-- "Edit name" button finally gets wired (existing pending item) + add bio + avatar (Supabase Storage or emoji/initials avatar to avoid file uploads at launch)
+
+#### Identity: the avatar is the person, the crest is a badge
+
+The avatar represents **the person**, never the club. Default to initials; a
+photo upload is optional.
+
+- Photo upload to Supabase Storage, with a **small size limit** and a
+  **square crop done client-side** before upload — never ship the original.
+  Needs its own bucket with RLS: a user writes only their own avatar path,
+  everyone reads.
+- The **club crest moves to a small badge beside the name**, the way the
+  comment rows already render it. It never becomes the avatar.
+
+Why it matters beyond aesthetics: if the crest is the avatar, every Flamengo
+supporter in a thread looks identical, and a conversation between eight
+people reads as one voice arguing with itself.
+
+#### "Show my club" toggle
+
+A `profiles` boolean, user-changeable either way, with different defaults by
+role:
+
+| plan | default |
+|---|---|
+| `fan` | **on** — supporting a club is the point |
+| `analyst` | **off** — a journalist's club allegiance colours how their analysis is read, and many would rather not declare it |
+
+Comments and posts both follow the toggle. Wherever a crest renders today
+(`commentRow()` is the live example), it has to consult this first.
+
+#### Display name: editable, and actually saved
+
+**This is a live bug, not a new feature.** `saveName()` in `index.html`
+writes only `localStorage.sm_current_user` — it never touches
+`profiles.name`. So a user renames themselves, sees the new name in their own
+nav, and **their comments still show the old one**, because comment authors
+are read from `public_profiles`. That was invisible before package 3 and is
+visible now.
+
+The fix:
+
+- Write to `profiles.name` and treat localStorage as a cache, the same shape
+  as `main_club_id` in 007.
+- A length limit, enforced in the database as a CHECK, not only in the form.
+- A light **impersonation check**: no claiming `ScoutMind`, `Admin`,
+  `Botafogo Oficial`, or any club name plus an official-sounding word. A
+  blocklist in the same spirit as `moderation_blocklist` — a speed bump that
+  catches the obvious, not a guarantee. Verified badges are what actually
+  establish authority.
+- Names are **not unique**. Two people called João Silva are two people, and
+  forcing uniqueness pushes them into joao_silva_1993. Impersonation is the
+  thing to block, not collision.
 
 ### C6. Notifications (must-have, minimal)
 - Table `notifications`: `id, user_id, type ('reaction'|'comment'|'follow'|'mention'|'match'|'poll_result'), actor_name, ref_id, read BOOLEAN, created_at`
