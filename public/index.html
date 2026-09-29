@@ -346,6 +346,12 @@ body{padding-bottom:64px;}
 .like-thumb{font-size:13px;filter:grayscale(1);opacity:.55;transition:filter .15s,opacity .15s,transform .15s;}
 .like-btn.liked .like-thumb{filter:none;opacity:1;transform:scale(1.12);}
 .like-count{font-family:'DM Mono',monospace;min-width:6px;}
+/* Load more, and the end of the window. */
+.feed-more{display:flex;justify-content:center;padding:18px 0 28px;}
+.feed-more-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:11px 26px;border-radius:22px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;min-height:42px;transition:border-color .15s,color .15s;}
+.feed-more-btn:hover{border-color:var(--accent);color:var(--accent);}
+.feed-more-btn:disabled{opacity:.6;cursor:default;}
+.feed-end{text-align:center;padding:24px 20px 32px;color:var(--muted);font-size:12px;line-height:1.7;}
 /* The sort row. Not shown until a thread has more than one comment. */
 .csort{display:flex;gap:6px;margin:2px 0 8px;}
 .csort-btn{font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;min-height:26px;}
@@ -1096,6 +1102,21 @@ const isGuest=!currentUser;
 // flag exists to end.
 let sessionLapsed=false;
 function isGuestNow(){ return isGuest||sessionLapsed; }
+
+/**
+ * The user id to stamp on a write, and to compare a row's user_id against.
+ *
+ * SMAuth.userId() is the JWT's subject — what auth.uid() returns inside every
+ * RLS policy. currentUser.id is a localStorage copy and is only a fallback for
+ * the first render, before the session read resolves.
+ *
+ * Using the copy is what made "B's like removes A's like" possible: with a
+ * stale copy, `row.user_id === currentUser.id` marked somebody else's like as
+ * mine, and the next tap sent a delete for a row that was never mine.
+ */
+function myUserId(){
+  return SMAuth.userId()||(currentUser&&currentUser.id)||null;
+}
 
 // Swap the nav between guest (Sign in) and signed-in (name + avatar + sign out).
 function renderAuthUi(){
@@ -2095,7 +2116,7 @@ async function loadMyAccount(){
 
 function logEvent(type,refType,refId){
   if(!currentUser)return;                      // guests are not logged
-  apiSend('POST','events',[{user_id:currentUser.id,type:type,
+  apiSend('POST','events',[{user_id:myUserId(),type:type,
     ref_type:refType||null,ref_id:refId||null}])
     .catch(e=>console.warn('event '+type+':',e.message));
 }
@@ -2103,7 +2124,7 @@ function logEvent(type,refType,refId){
 /** One 'session' per user per day, on first load. */
 function logSessionOnce(){
   if(!currentUser)return;
-  const key='sm_session_logged_'+currentUser.id;
+  const key='sm_session_logged_'+myUserId();
   const today=localDayKey(new Date());
   try{ if(localStorage.getItem(key)===today)return; localStorage.setItem(key,today); }catch(e){}
   logEvent('session');
@@ -2174,7 +2195,7 @@ async function loadCommentLikes(commentIds,byItem){
     for(const r of rows){
       const s=commentLikes(r.comment_id);
       s.count++;
-      if(currentUser&&r.user_id===currentUser.id)s.mine=true;
+      if(currentUser&&r.user_id===myUserId())s.mine=true;
       if(byItem){
         const itemId=byItem.get(String(r.comment_id));
         if(itemId!=null)ITEM_COMMENT_LIKES.set(itemId,(ITEM_COMMENT_LIKES.get(itemId)||0)+1);
@@ -2196,7 +2217,7 @@ async function loadMessageLikes(messageIds){
     for(const r of rows){
       const s=messageLikes(r.message_id);
       s.count++;
-      if(currentUser&&r.user_id===currentUser.id)s.mine=true;
+      if(currentUser&&r.user_id===myUserId())s.mine=true;
     }
   }catch(e){
     console.warn('loadMessageLikes:',e.message);
@@ -2236,6 +2257,12 @@ function paintLike(kind,id){
  */
 async function toggleLike(kind,id){
   if(!requireAuth('Create a free account to like this.'))return;
+  // The session's id, not the localStorage copy — and re-read here rather than
+  // trusted from boot, so a session that changed under us is caught before we
+  // write somebody else's user_id.
+  const me=await SMAuth.resolveUser();
+  if(!me){ SMAuth.endSession('like attempted with no session'); return; }
+
   const map=kind==='comment'?COMMENT_LIKES:MESSAGE_LIKES;
   const table=kind==='comment'?'comment_likes':'message_likes';
   const col=kind==='comment'?'comment_id':'message_id';
@@ -2244,22 +2271,39 @@ async function toggleLike(kind,id){
   s.mine=!had;
   s.count=Math.max(0,s.count+(had?-1:1));
   paintLike(kind,id);
+
+  const revert=()=>{
+    s.mine=had;
+    s.count=Math.max(0,s.count+(had?1:-1));
+    paintLike(kind,id);
+  };
+
   try{
     if(had){
-      await apiSend('DELETE',table+'?'+col+'=eq.'+encodeURIComponent(id)
-        +'&user_id=eq.'+currentUser.id);
+      // return=representation so we can see WHAT was deleted. A DELETE that
+      // matches nothing returns 204 and would otherwise read as success —
+      // which is exactly how a mis-attributed unlike painted as done while the
+      // row it claimed to remove was never touched.
+      const gone=await apiSend('DELETE',
+        table+'?'+col+'=eq.'+encodeURIComponent(id)+'&user_id=eq.'+me,
+        null,'return=representation');
+      if(!gone||!gone.length){
+        // We thought it was ours and it was not. Re-read rather than guess.
+        revert();
+        if(kind==='comment')await loadCommentLikes([id],null);
+        else await loadMessageLikes([id]);
+        paintLike(kind,id);
+        return;
+      }
     }else{
-      await apiSend('POST',table,[{[col]:id,user_id:currentUser.id}]);
+      await apiSend('POST',table,[{[col]:id,user_id:me}]);
       logEvent('like',kind,String(id));
     }
   }catch(e){
     if(!had&&/duplicate|unique|23505/i.test(e.message)){
       return;                                  // already liked: nothing is wrong
     }
-    // Put it back the way it was and say why.
-    s.mine=had;
-    s.count=Math.max(0,s.count+(had?1:-1));
-    paintLike(kind,id);
+    revert();
     console.warn('toggleLike:',e.message);
   }
 }
@@ -2286,7 +2330,7 @@ async function loadSocialCounts(ids){
     for(const r of reacts){
       const s=reactionState(r.news_item_id);
       s.counts[r.type]=(s.counts[r.type]||0)+1;
-      if(currentUser&&r.user_id===currentUser.id)s.mine.add(r.type);
+      if(currentUser&&r.user_id===myUserId())s.mine.add(r.type);
     }
     const byItem=new Map();          // comment_id (string) -> news_item_id
     for(const c of comments){
@@ -2311,10 +2355,10 @@ async function toggleReaction(itemId,type){
   try{
     if(had){
       await apiSend('DELETE','reactions?news_item_id=eq.'+itemId
-        +'&user_id=eq.'+currentUser.id+'&type=eq.'+encodeURIComponent(type));
+        +'&user_id=eq.'+myUserId()+'&type=eq.'+encodeURIComponent(type));
     }else{
       await apiSend('POST','reactions?on_conflict=news_item_id,user_id,type',
-        [{news_item_id:itemId,user_id:currentUser.id,type:type}],
+        [{news_item_id:itemId,user_id:myUserId(),type:type}],
         'resolution=ignore-duplicates,return=minimal');
       logEvent('reaction','news_item',itemId);
     }
@@ -2443,7 +2487,7 @@ async function postComment(itemId){
   setCommentError(itemId,'');
   try{
     await apiSend('POST','comments',
-      [{news_item_id:itemId,user_id:currentUser.id,content:text}]);
+      [{news_item_id:itemId,user_id:myUserId(),content:text}]);
     input.value='';
     updateCommentCounter(itemId);
     const s=commentState(itemId);
@@ -2489,7 +2533,7 @@ async function deleteComment(itemId,commentId){
   if(!confirm('Delete this comment? This cannot be undone.'))return;
   try{
     await apiSend('PATCH','comments?id=eq.'+commentId,
-      {deleted_at:new Date().toISOString(),deleted_by:currentUser.id});
+      {deleted_at:new Date().toISOString(),deleted_by:myUserId()});
     const s=commentState(itemId);
     s.items=s.items.filter(c=>c.id!==commentId);
     s.total=Math.max(0,s.total-1);
@@ -2525,7 +2569,7 @@ async function sendReport(itemId,commentId,reason){
   const box=document.getElementById('crep-'+commentId);
   try{
     await apiSend('POST','reports',
-      [{target_type:'comment',target_id:commentId,reporter_id:currentUser.id,reason:reason}]);
+      [{target_type:'comment',target_id:commentId,reporter_id:myUserId(),reason:reason}]);
     logEvent('report','comment',commentId);
     if(box)box.innerHTML='<div style="font-size:11px;color:var(--accent);">Thanks — we will take a look.</div>';
   }catch(e){
@@ -2542,7 +2586,7 @@ async function saveMyClubsToAccount(){
   const main=mainClubId();
   const follow=followedClubIds().filter(id=>id!==main);
   try{
-    await apiSend('PATCH','profiles?id=eq.'+currentUser.id,
+    await apiSend('PATCH','profiles?id=eq.'+myUserId(),
       {main_club_id:main,onboarded_at:new Date().toISOString()});
     // Replace the follow set: delete what is gone, insert what is new.
     const existing=(await apiGet('follows?select=team_id')).map(f=>f.team_id);
@@ -2550,11 +2594,11 @@ async function saveMyClubsToAccount(){
     const toRemove=existing.filter(id=>follow.indexOf(id)<0);
     if(toAdd.length){
       await apiSend('POST','follows?on_conflict=user_id,team_id',
-        toAdd.map(id=>({user_id:currentUser.id,team_id:id})),
+        toAdd.map(id=>({user_id:myUserId(),team_id:id})),
         'resolution=ignore-duplicates,return=minimal');
     }
     for(const id of toRemove){
-      await apiSend('DELETE','follows?user_id=eq.'+currentUser.id+'&team_id=eq.'+id);
+      await apiSend('DELETE','follows?user_id=eq.'+myUserId()+'&team_id=eq.'+id);
     }
   }catch(e){
     console.warn('saveMyClubsToAccount:',e.message);
@@ -2975,7 +3019,7 @@ async function finishOnboarding(){
   // Always stamp onboarded_at, even on a skip, so nobody is asked twice.
   if(currentUser){
     try{
-      await apiSend('PATCH','profiles?id=eq.'+currentUser.id,
+      await apiSend('PATCH','profiles?id=eq.'+myUserId(),
         {main_club_id:mainClubId(),onboarded_at:new Date().toISOString()});
       await saveMyClubsToAccount();
     }catch(e){ console.warn('finishOnboarding:',e.message); }
@@ -3681,7 +3725,7 @@ async function setMyLangs(langs){
   MY_PROFILE.content_langs=clean;
   SMAuth.setJSON('sm_content_langs',clean);
   if(currentUser){
-    try{ await apiSend('PATCH','profiles?id=eq.'+currentUser.id,{content_langs:clean}); }
+    try{ await apiSend('PATCH','profiles?id=eq.'+myUserId(),{content_langs:clean}); }
     catch(e){ console.warn('setMyLangs:',e.message); }
   }
   renderLangChips();
@@ -3735,7 +3779,7 @@ async function toggleClubLangs(){
   renderClubLangToggle();
   renderFeedNews();
   try{
-    await apiSend('PATCH','profiles?id=eq.'+currentUser.id,
+    await apiSend('PATCH','profiles?id=eq.'+myUserId(),
       {show_club_news_all_langs:MY_PROFILE.show_club_news_all_langs});
   }catch(e){ console.warn('toggleClubLangs:',e.message); }
 }
@@ -3783,31 +3827,69 @@ function liveItemPredicate(){
   return '&football_ok=is.true&duplicate_of=is.null';
 }
 
-async function loadNews(){
-  const select=[
-    'id','title','summary','source_url','lang','category','published_at',
-    'news_sources(slug,name,country)',
-    // `leagues` must be disambiguated: standings also joins teams to leagues,
-    // so a bare leagues(...) is ambiguous and PostgREST answers 300 PGRST201.
-    'news_item_teams(via,in_title,teams(api_team_id,name,logo_url,leagues!teams_league_id_fkey(slug)))'
-  ].join(',');
+// ── THE WEEK OF NEWS ─────────────────────────────────────────────────────
+// The database keeps everything; the feed used to show one page of 120 and
+// stop, so a story from Tuesday was unreachable by Thursday. Seven days is the
+// window now, fetched a page at a time by a published_at cursor.
+//
+// A cursor, not an offset: `offset=120` re-reads and re-sorts the first 120
+// rows on every page, and — worse — the ingest job runs every 15 minutes, so
+// rows arriving mid-scroll shift every offset and duplicate items across pages.
+// `published_at < <last item seen>` cannot do that.
+const FEED_DAYS=7;
+const FEED_PAGE=60;
+
+let feedCursor=null;        // published_at of the oldest item held
+let feedExhausted=false;    // the 7-day window has been read to its end
+let feedLoading=false;
+
+/** The oldest instant the feed will show. Recomputed per call, not cached. */
+function feedWindowStart(){
+  return new Date(Date.now()-FEED_DAYS*86400000).toISOString();
+}
+
+const NEWS_SELECT=[
+  'id','title','summary','source_url','lang','category','published_at',
+  'news_sources(slug,name,country)',
+  // `leagues` must be disambiguated: standings also joins teams to leagues,
+  // so a bare leagues(...) is ambiguous and PostgREST answers 300 PGRST201.
+  'news_item_teams(via,in_title,teams(api_team_id,name,logo_url,leagues!teams_league_id_fkey(slug)))'
+].join(',');
+
+async function askNews(q){
+  const res=await fetch(`${SUPA_URL}/rest/v1/news_items?${q}`,{
+    headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`}
+  });
+  // PostgREST puts the real reason in the body; HTTP 300 for an ambiguous
+  // embed is invisible otherwise.
+  if(!res.ok)throw new Error('HTTP '+res.status+' — '+(await res.text()).slice(0,300));
+  return res.json();
+}
+
+/**
+ * One page of news. `append` false resets the feed; true adds the next page.
+ *
+ * The language and club filters stay client-side, in visibleFeedItems(): they
+ * depend on the reader's settings and on the opt-in cross-language exception,
+ * and pushing them into the query would mean a different cursor per filter —
+ * so switching a chip would refetch the whole week rather than re-filter what
+ * is already in hand.
+ */
+async function loadNews(append){
+  if(feedLoading)return;
+  if(append&&feedExhausted)return;
+  feedLoading=true;
+  const since=feedWindowStart();
+  const page='select='+encodeURIComponent(NEWS_SELECT)
+    +'&order=published_at.desc&limit='+FEED_PAGE
+    +'&published_at=gte.'+encodeURIComponent(since)
+    +(append&&feedCursor?'&published_at=lt.'+encodeURIComponent(feedCursor):'');
   // Without migration 006 there is no in_title and no football_ok.
-  const legacySelect=select.replace('via,in_title,','via,');
-  const base='select='+encodeURIComponent(select)+'&order=published_at.desc&limit=120';
-  const legacyBase='select='+encodeURIComponent(legacySelect)+'&order=published_at.desc&limit=120';
-  const ask=async(q)=>{
-    const res=await fetch(`${SUPA_URL}/rest/v1/news_items?${q}`,{
-      headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`}
-    });
-    // PostgREST puts the real reason in the body; HTTP 300 for an ambiguous
-    // embed is invisible otherwise.
-    if(!res.ok)throw new Error('HTTP '+res.status+' — '+(await res.text()).slice(0,300));
-    return res.json();
-  };
+  const legacyPage=page.replace(encodeURIComponent('via,in_title,'),encodeURIComponent('via,'));
   try{
     let rows;
     try{
-      rows=await ask(base+liveItemPredicate());
+      rows=await askNews(page+liveItemPredicate());
     }catch(err){
       // The site deploys on push but migrations are run by hand, so the page
       // can be live before a column exists (rule 21). Degrade one column at a
@@ -3817,24 +3899,90 @@ async function loadNews(){
       if(m.indexOf('duplicate_of')>-1){
         console.warn('news: migration 009 not applied yet — duplicates not filtered.');
         try{
-          rows=await ask(base+'&football_ok=is.true');
+          rows=await askNews(page+'&football_ok=is.true');
         }catch(err2){
           console.warn('news: migration 006 not applied either — showing unfiltered, unranked news.');
-          rows=await ask(legacyBase);
+          rows=await askNews(legacyPage);
         }
       }else if(m.indexOf('football_ok')>-1||m.indexOf('in_title')>-1){
         console.warn('news: migration 006 not applied yet — showing unfiltered, unranked news.');
-        rows=await ask(legacyBase);
+        rows=await askNews(legacyPage);
       }else{
         throw err;
       }
     }
-    FEED_ITEMS=rows.map(mapNewsRow);
+    const mapped=rows.map(mapNewsRow);
+    if(append){
+      // Belt and braces against a duplicate at a page boundary: two items can
+      // share a published_at to the microsecond, and `lt` would drop the second
+      // rather than repeat it — but an id check costs nothing and makes the
+      // seam impossible to get wrong.
+      const have=new Set(FEED_ITEMS.map(i=>i.id));
+      FEED_ITEMS=FEED_ITEMS.concat(mapped.filter(i=>!have.has(i.id)));
+    }else{
+      FEED_ITEMS=mapped;
+    }
+    if(mapped.length)feedCursor=mapped[mapped.length-1].publishedAt;
+    // Short page means the window is spent. Note this is about the WINDOW, not
+    // the database: there is more news, it is just older than seven days.
+    if(rows.length<FEED_PAGE)feedExhausted=true;
   }catch(e){
     console.error('loadNews:',e);
-    FEED_ITEMS=[];
+    if(!append)FEED_ITEMS=[];
+  }finally{
+    feedLoading=false;
   }
   renderFeedNews();
+}
+
+/** "Load more" — and what the scroll sentinel calls. */
+async function loadMoreNews(){
+  if(feedLoading||feedExhausted)return;
+  document.querySelectorAll('.feed-more-btn').forEach(function(b){
+    b.disabled=true; b.textContent='Loading…';
+  });
+  await loadNews(true);
+  // The new items need their counts, or they render as zero for everyone.
+  try{ await loadSocialForFeed(); }catch(e){}
+  renderFeedNews();
+}
+
+/**
+ * The footer under the feed: a real button, plus an observer that presses it
+ * when the reader gets near. The button is not a fallback for the observer —
+ * it is the accessible control, and the observer is the convenience.
+ */
+function feedMoreHtml(scope){
+  if(feedExhausted){
+    return '<div class="feed-end">That is the last seven days. '
+      +'Older stories are still in the archive and searchable.</div>';
+  }
+  return '<div class="feed-more">'
+    +'<button class="feed-more-btn" id="feed-more-btn-'+(scope||'news')+'" onclick="loadMoreNews()">Load more</button>'
+    +'</div>';
+}
+
+let feedObserver=null;
+
+/**
+ * Re-arm the near-bottom observer after each paint.
+ *
+ * Observes every .feed-more on the page — News and For You each render one, and
+ * only the visible tab's can intersect, so whichever the reader is actually
+ * scrolling is the one that fires.
+ */
+function armFeedObserver(){
+  if(feedObserver){ feedObserver.disconnect(); feedObserver=null; }
+  if(feedExhausted)return;
+  if(typeof IntersectionObserver==='undefined')return;   // the button still works
+  const els=document.querySelectorAll('.feed-more');
+  if(!els.length)return;
+  feedObserver=new IntersectionObserver(function(entries){
+    for(const e of entries){
+      if(e.isIntersecting&&!feedLoading&&!feedExhausted)loadMoreNews();
+    }
+  },{rootMargin:'400px'});     // start fetching before they reach the end
+  els.forEach(el=>feedObserver.observe(el));
 }
 
 function timeAgo(iso){
@@ -3988,7 +4136,7 @@ function commentRow(itemId,c){
   // Merged client-side from the AUTHORS cache, not from an embed.
   const p=AUTHORS.get(c.user_id)||{};
   const name=p.name||'Someone';
-  const mine=currentUser&&c.user_id===currentUser.id;
+  const mine=currentUser&&c.user_id===myUserId();
   const canDelete=mine||isAdmin();
   const crest=p.main_club_id?clubCrestById(p.main_club_id,18)
     :'<span class="comment-av">'+sanitize(name.slice(0,1).toUpperCase())+'</span>';
@@ -4217,7 +4365,7 @@ function chatMsgRow(m){
   const system=Boolean(m.is_system);
   const p=system?{}:(AUTHORS.get(m.user_id)||{});
   const name=system?'ScoutMind':(p.name||'Someone');
-  const mine=Boolean(currentUser&&m.user_id&&m.user_id===currentUser.id);
+  const mine=Boolean(currentUser&&m.user_id&&m.user_id===myUserId());
   const canDelete=!system&&(mine||isAdmin());
   const av=system
     ? '<span class="comment-av" style="color:var(--accent);">S</span>'
@@ -4307,7 +4455,7 @@ async function sendChatMessage(){
   setChatError('');
   try{
     await apiSend('POST','group_messages',
-      [{group_id:chatRoom.groupId,user_id:currentUser.id,content:text}]);
+      [{group_id:chatRoom.groupId,user_id:myUserId(),content:text}]);
     input.value='';
     autoGrow(input);
     updateChatCounter();
@@ -4327,7 +4475,7 @@ async function deleteChatMessage(messageId){
   if(!confirm('Delete this message? This cannot be undone.'))return;
   try{
     await apiSend('PATCH','group_messages?id=eq.'+encodeURIComponent(messageId),
-      {deleted_at:new Date().toISOString(),deleted_by:currentUser.id});
+      {deleted_at:new Date().toISOString(),deleted_by:myUserId()});
     chatMessages=chatMessages.filter(m=>String(m.id)!==String(messageId));
     paintChat(false);
   }catch(e){
@@ -4368,7 +4516,7 @@ async function sendChatReport(messageId,reason){
   try{
     await apiSend('POST','reports',
       [{target_type:'group_message',target_id:messageId,
-        reporter_id:currentUser.id,reason:reason}]);
+        reporter_id:myUserId(),reason:reason}]);
     logEvent('report','group_message',null);
     if(box)box.innerHTML='<div style="font-size:11px;color:var(--accent);">Thanks — we will take a look.</div>';
   }catch(e){
@@ -4445,7 +4593,7 @@ async function renderReports(){
 async function adminResolve(reportId,status){
   try{
     await apiSend('PATCH','reports?id=eq.'+reportId,
-      {status:status,resolved_at:new Date().toISOString(),resolved_by:currentUser.id});
+      {status:status,resolved_at:new Date().toISOString(),resolved_by:myUserId()});
     renderReports();
   }catch(e){ alert(friendlyDbError(e.message)); }
 }
@@ -4457,7 +4605,7 @@ async function adminDelete(reportId,targetType,targetId){
   const table=targetType==='group_message'?'group_messages':'comments';
   try{
     await apiSend('PATCH',table+'?id=eq.'+encodeURIComponent(targetId),
-      {deleted_at:new Date().toISOString(),deleted_by:currentUser.id});
+      {deleted_at:new Date().toISOString(),deleted_by:myUserId()});
     await adminResolve(reportId,'actioned');
     // Drop it from anything currently on screen.
     if(targetType==='group_message'){
@@ -4602,10 +4750,25 @@ function renderLangChips(){
 // this club in the last six hours" is a real signal from day one — when five
 // sources all write about one club within a few hours, something happened.
 
-const TREND_HALF_LIFE_H=12;
+// Halving every 12 hours meant a story was worth a sixteenth of itself by the
+// next morning: anything still being argued about overnight had already decayed
+// out of Trending. 48 hours lets a genuine talking point stay up for the couple
+// of days it is actually a talking point, without a week-old story holding the
+// top of the tab forever.
+const TREND_HALF_LIFE_H=48;
 const TREND_COVERAGE_WINDOW_H=6;
+// Two windows, chosen by the toggle. "This week" matches the feed's own 7 days,
+// so Trending can never point at a story the feed cannot show.
+const TREND_WINDOWS={today:24,week:FEED_DAYS*24};
+let trendWindow='week';
 
-/** Comments count triple; reactions count single; both halve every 12 hours. */
+function setTrendWindow(w){
+  if(trendWindow===w)return;
+  trendWindow=w;
+  renderTrending();
+}
+
+/** Comments count triple; reactions and likes count single; all decay. */
 function trendScore(n,coverage){
   const c=commentState(n.id).total||0;
   const rs=reactionState(n.id).counts||{};
@@ -4656,8 +4819,13 @@ function coverageBreadth(items){
 
 /** Top 30 by score, honouring the reader's languages and the chips. */
 function trendingItems(){
-  const pool=visibleFeedItems({ignoreCategory:true});
+  const hours=TREND_WINDOWS[trendWindow]||TREND_WINDOWS.week;
+  const cutoff=Date.now()-hours*3600000;
+  const pool=visibleFeedItems({ignoreCategory:true})
+    .filter(n=>new Date(n.publishedAt).getTime()>=cutoff);
   if(!pool.length)return [];
+  // Breadth is measured within the same window, so a story does not inherit
+  // coverage from items that are no longer being ranked against it.
   const coverage=coverageBreadth(pool);
   return pool
     .map(n=>({n:n,s:trendScore(n,coverage)}))
@@ -4670,10 +4838,19 @@ function renderTrending(){
   const el=document.getElementById('trending-content');
   if(!el)return;
   const items=trendingItems();
-  el.innerHTML=items.length
+  const toggle='<div class="csort" style="margin-bottom:12px;">'
+    +'<button class="csort-btn'+(trendWindow==='today'?' active':'')
+    +'" onclick="setTrendWindow(\'today\')">Today</button>'
+    +'<button class="csort-btn'+(trendWindow==='week'?' active':'')
+    +'" onclick="setTrendWindow(\'week\')">This week</button>'
+    +'</div>';
+  el.innerHTML=toggle+(items.length
     ? items.map(renderFeedItem).join('')
     : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
-      +'Nothing trending yet. The news job runs every 15 minutes.</div>';
+      +(trendWindow==='today'
+        ? 'Nothing from today yet. Try This week.'
+        : 'Nothing trending yet. The news job runs every 15 minutes.')
+      +'</div>');
 }
 
 function visibleFeedItems(opts){
@@ -4724,12 +4901,24 @@ function renderFeedNews(){
       el.innerHTML=searchResultsHtml();
     }else{
       const filtered=visibleFeedItems();
-      el.innerHTML=filtered.map(renderFeedItem).join('')
-        ||'<div style="text-align:center;padding:40px;color:var(--muted)">No stories yet. The news job runs every 15 minutes.</div>';
+      // "Load more" belongs under the list even when a filter has emptied the
+      // page: the next page may hold items this filter keeps, and hiding the
+      // control would strand the reader on an empty screen with a week of news
+      // behind it.
+      el.innerHTML=(filtered.length
+        ? filtered.map(renderFeedItem).join('')
+        : '<div style="text-align:center;padding:40px;color:var(--muted)">'
+          +(feedExhausted
+            ? 'Nothing here in the last seven days. Try another language or category.'
+            : 'No stories yet. The news job runs every 15 minutes.')
+          +'</div>')
+        +feedMoreHtml('news');
     }
   }
   renderForYou();
   renderTrending();
+  // After the paint, not before: the sentinel it watches has just been written.
+  armFeedObserver();
 }
 
 /** Search results reuse the same card, so everything behaves identically. */
@@ -4769,9 +4958,11 @@ let SOCIAL_LOADED_FOR='';
 function loadSocialForFeed(){
   const ids=FEED_ITEMS.map(i=>i.id);
   const key=ids.join(',');
-  if(!ids.length||key===SOCIAL_LOADED_FOR)return;
+  // Returns a promise so loadMoreNews() can wait for it — a page that painted
+  // before its counts arrived would show every new card at zero.
+  if(!ids.length||key===SOCIAL_LOADED_FOR)return Promise.resolve();
   SOCIAL_LOADED_FOR=key;
-  loadSocialCounts(ids).then(function(){
+  return loadSocialCounts(ids).then(function(){
     try{ renderFeedNews(); }catch(e){}
   });
 }
@@ -4811,10 +5002,17 @@ function renderForYou(){
       if(ah!==bh)return ah?-1:1;
       return new Date(b.publishedAt)-new Date(a.publishedAt);
     });
-  el.innerHTML=items.length
+  // Shares FEED_ITEMS with News, so "Load more" here widens both — and the
+  // button matters more on this tab: a reader following two clubs can easily
+  // have a whole page of news with nothing of theirs in it.
+  el.innerHTML=(items.length
     ? items.map(renderFeedItem).join('')
     : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
-      +'Nothing about your clubs in the last batch. The news job runs every 15 minutes.</div>';
+      +(feedExhausted
+        ? 'Nothing about your clubs in the last seven days.'
+        : 'Nothing about your clubs yet — keep loading, or the news job runs every 15 minutes.')
+      +'</div>')
+    +feedMoreHtml('foryou');
 }
 
 
@@ -5021,7 +5219,12 @@ function filterWeekly(league, btn) {
   // A cached sm_current_user with no live Supabase session is the state that
   // produced 401s for an hour while the nav insisted everything was fine.
   try{
-    if(currentUser&&!(await SMAuth.isSignedIn())){
+    // resolveUser() both proves there is a session and reconciles the cached
+    // sm_current_user against it — so myUserId() is authoritative from here,
+    // and another account's scoped caches are dropped before anything reads
+    // them. This runs before loadMyAccount and before any social read.
+    const me=await SMAuth.resolveUser();
+    if(currentUser&&!me){
       SMAuth.endSession('no live session for the cached user');
     }
   }catch(e){ console.warn('session check:',e.message); }
@@ -5039,7 +5242,7 @@ function filterWeekly(league, btn) {
   try{ await loadChatOverview(); }catch(e){}
   try{ renderSidebarChat(); }catch(e){}
   try{ renderMyClubCard(); renderClubsGrid(); }catch(e){}
-  try{ await loadNews(); }catch(e){ console.error('loadNews:',e); }
+  try{ await loadNews(false); }catch(e){ console.error('loadNews:',e); }
   try{ loadSocialForFeed(); }catch(e){}
   try{ renderMatchDay(); }catch(e){}
   try{ renderSidebarMatches(); }catch(e){}

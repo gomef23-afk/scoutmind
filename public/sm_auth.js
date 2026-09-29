@@ -44,6 +44,15 @@
   var signedOutCbs = [];
   var watchTimer = null;
   var gaveUp = false;           // stops a dead session retrying forever
+  // The signed-in user id AS THE SERVER SEES IT — session.user.id, which is the
+  // JWT's subject and the value auth.uid() returns inside every RLS policy.
+  //
+  // This exists because localStorage's `sm_current_user.id` is a copy, and a
+  // copy can be stale. When it was, the app attributed writes to the wrong
+  // account: an insert was rejected by `with check (auth.uid() = user_id)` and a
+  // delete matched nothing, both while the UI cheerfully showed the change.
+  // Anything that decides "is this mine" or stamps a user_id must use this.
+  var sessionUid = null;
 
   function nowMs() { return Date.now(); }
 
@@ -71,6 +80,7 @@
   function giveUp(reason) {
     if (gaveUp) return;
     gaveUp = true;
+    sessionUid = null;
     stopWatch();
     console.warn('SMAuth: session ended —', reason);
     clearAccountCaches();
@@ -85,10 +95,45 @@
     if (!client || !client.auth) return null;
     try {
       var r = await client.auth.getSession();
-      return (r && r.data && r.data.session) || null;
+      var s = (r && r.data && r.data.session) || null;
+      if (s && s.user && s.user.id) sessionUid = s.user.id;
+      return s;
     } catch (e) {
       return null;
     }
+  }
+
+  /** The authoritative user id, once a session has been read. Null for guests. */
+  function userId() { return sessionUid; }
+
+  /**
+   * Read the session and reconcile localStorage against it.
+   *
+   * Returns the authoritative user id, or null. Call this before anything that
+   * writes a user_id or decides whether a row is yours.
+   */
+  async function resolveUser() {
+    var s = await currentSession();
+    if (!s || !s.user) return null;
+    var stored = null;
+    try {
+      var cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
+      stored = (cu && cu.id) || null;
+    } catch (e) {}
+    if (stored && stored !== s.user.id) {
+      // localStorage belongs to a different account than the live session. Drop
+      // every scoped cache and let the page rebuild from the session; keeping
+      // either side would leave one account's data under the other's name.
+      console.warn('SMAuth: cached user', stored, 'does not match session',
+                   s.user.id, '— clearing stale caches.');
+      claimFor(s.user.id);
+      try {
+        var raw = JSON.parse(localStorage.getItem('sm_current_user') || 'null') || {};
+        raw.id = s.user.id;
+        localStorage.setItem('sm_current_user', JSON.stringify(raw));
+      } catch (e) {}
+    }
+    return s.user.id;
   }
 
   /**
@@ -213,7 +258,12 @@
 
   var SCOPED = ['sm_main_club', 'sm_following_clubs', 'sm_content_langs', 'sm_club_selected'];
 
+  // Cache keys prefer the session's id and fall back to the cached one, which
+  // is all that is available in the synchronous render path before the first
+  // session read resolves. resolveUser() clears the other account's keys the
+  // moment it finds a mismatch, so the fallback cannot outlive the truth.
   function uid() {
+    if (sessionUid) return sessionUid;
     try {
       var cu = JSON.parse(localStorage.getItem('sm_current_user') || 'null');
       return (cu && cu.id) || 'guest';
@@ -314,6 +364,8 @@
     rest: rest,
     isSignedIn: isSignedIn,
     session: currentSession,
+    userId: userId,
+    resolveUser: resolveUser,
     onSignedOut: onSignedOut,
     endSession: giveUp,
     uid: uid,

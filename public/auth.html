@@ -89,6 +89,7 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/sm_auth.js"></script>
 <script>
 var SURL = 'https://kdhbpzooyjxcglbxbuya.supabase.co';
 var SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
@@ -129,6 +130,14 @@ function clearMsgs() {
 }
 
 function saveUser(id, email, name, userPlan) {
+  // Drop every other account's scoped cache BEFORE writing this one. Signing in
+  // here never cleared them, so a second account on the same browser started
+  // life looking at the first account's clubs. Sign-out clears everything, but
+  // sign-out is not guaranteed to have happened — a session can lapse, or a tab
+  // can just be closed.
+  if (window.SMAuth) {
+    try { SMAuth.claimFor(id); } catch (e) {}
+  }
   localStorage.setItem('sm_current_user', JSON.stringify({
     id: id, email: email, name: name, plan: userPlan || 'fan'
   }));
