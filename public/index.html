@@ -346,6 +346,14 @@ body{padding-bottom:64px;}
 .like-thumb{font-size:13px;filter:grayscale(1);opacity:.55;transition:filter .15s,opacity .15s,transform .15s;}
 .like-btn.liked .like-thumb{filter:none;opacity:1;transform:scale(1.12);}
 .like-count{font-family:'DM Mono',monospace;min-width:6px;}
+/* Toast. Above the bottom tab bar on mobile (z-index 120 there), and above the
+   chat overlay (520) so a failure inside a room is still visible. */
+.sm-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(74px + env(safe-area-inset-bottom));z-index:900;max-width:min(440px,calc(100vw - 32px));background:var(--bg2);border:1px solid var(--accent);color:var(--text);padding:12px 18px;border-radius:12px;font-size:13px;line-height:1.5;box-shadow:0 8px 28px rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
+.sm-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.sm-toast.error{border-color:var(--red);}
+@media (min-width: 900px){
+  .sm-toast{bottom:28px;}
+}
 /* Load more, and the end of the window. */
 .feed-more{display:flex;justify-content:center;padding:18px 0 28px;}
 .feed-more-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:11px 26px;border-radius:22px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;min-height:42px;transition:border-color .15s,color .15s;}
@@ -1966,7 +1974,7 @@ document.getElementById('playerLeagueSel').addEventListener('change',updateFilte
     <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Also following</div>
     <div id="modal-following-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;min-height:32px;"></div>
 
-    <button onclick="saveTeamSelection()" style="width:100%;background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">SAVE MY CLUB</button>
+    <button id="save-club-btn" onclick="saveTeamSelection()" style="width:100%;background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">SAVE MY CLUB</button>
     <button onclick="skipTeamModal()" style="width:100%;background:transparent;border:none;color:var(--muted);padding:10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;">Skip for now — I'll set this later</button>
   </div>
 </div>
@@ -2056,13 +2064,13 @@ async function apiGet(path){
 }
 
 async function apiSend(method,path,body,prefer){
-  // Checked before sending so a lapsed session surfaces as the sign-in sheet
-  // rather than as a 401 the caller has to interpret.
+  // A missing token here means "not signed in right now" — it does NOT mean
+  // the session is unrecoverable, so this must not end it. SMAuth ends a
+  // session only when a refresh has actually failed; everything else just
+  // reports. Calling endSession() here was a regression that signed people out
+  // over a single rejected write.
   const tok=await SMAuth.token(false);
-  if(!tok){
-    SMAuth.endSession('write attempted with no session');
-    throw new Error('not signed in');
-  }
+  if(!tok)throw new Error('not signed in');
   const res=await SMAuth.rest(path,{
     method:method,
     headers:{'Content-Type':'application/json',Prefer:prefer||'return=minimal'},
@@ -2070,12 +2078,35 @@ async function apiSend(method,path,body,prefer){
   });
   if(!res.ok){
     const text=(await res.text()).slice(0,200);
-    // SMAuth.rest has already retried once with a fresh token. A 401 that
-    // survives that is a session we cannot recover.
-    if(res.status===401)SMAuth.endSession('401 after refresh');
+    // A 401 here is almost always RLS refusing ONE table, not a dead session.
+    // SMAuth.rest has already retried once with a fresh token; if the token
+    // were the problem that retry would have fixed it.
     throw new Error(method+' '+path+' HTTP '+res.status+' — '+text);
   }
   return res.status===204?null:res.json().catch(()=>null);
+}
+
+// ── VISIBLE FAILURE ──────────────────────────────────────────────────────
+// Saves used to fail into console.warn. That is how "I cannot change my main
+// club" survived a deploy: nothing on screen changed, nothing was logged as an
+// error, and the only trace was a warning in a filtered console.
+//
+// Anything that writes on the user's behalf now says so when it does not work.
+function toast(message,kind){
+  let el=document.getElementById('sm-toast');
+  if(!el){
+    el=document.createElement('div');
+    el.id='sm-toast';
+    el.className='sm-toast';
+    document.body.appendChild(el);
+  }
+  el.textContent=message;
+  el.className='sm-toast show'+(kind==='error'?' error':'');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(function(){
+    const t=document.getElementById('sm-toast');
+    if(t)t.className='sm-toast';
+  },kind==='error'?6000:3000);
 }
 
 /** Load the signed-in user's clubs and languages. The account is the truth. */
@@ -2102,8 +2133,11 @@ async function loadMyAccount(){
     followingClubs=follows.map(f=>f.team_id).filter(id=>id!==selectedMainClub);
     saveMyClubsLocal();
   }catch(e){
-    // A failed profile read must not cost the user their cached clubs.
-    console.warn('loadMyAccount:',e.message);
+    // A failed profile read must not cost the user their cached clubs — but it
+    // must not be invisible either. If this fails, the account's clubs never
+    // arrive and the cached ones are all the reader has.
+    console.error('loadMyAccount:',e.message);
+    toast('Could not load your account. Showing your saved clubs for now.','error');
   }
 }
 
@@ -2115,9 +2149,14 @@ async function loadMyAccount(){
 // user their comment, so errors go to the console and nowhere else.
 
 function logEvent(type,refType,refId){
-  if(!currentUser)return;                      // guests are not logged
-  apiSend('POST','events',[{user_id:myUserId(),type:type,
-    ref_type:refType||null,ref_id:refId||null}])
+  if(isGuestNow())return;                      // guests are not logged
+  const me=myUserId();
+  if(!me)return;                               // nothing to attribute it to
+  // Telemetry must never be able to affect the session or surface to the user.
+  // It could before: this went through apiSend, which ended the session on a
+  // 401 — so one rejected `events` insert signed the user out mid-action.
+  apiSend('POST','events',[{user_id:me,type:type,
+    ref_type:refType||null,ref_id:refId==null?null:String(refId)}])
     .catch(e=>console.warn('event '+type+':',e.message));
 }
 
@@ -2261,7 +2300,14 @@ async function toggleLike(kind,id){
   // trusted from boot, so a session that changed under us is caught before we
   // write somebody else's user_id.
   const me=await SMAuth.resolveUser();
-  if(!me){ SMAuth.endSession('like attempted with no session'); return; }
+  // No session: say so and offer sign-in. Do NOT end the session over it —
+  // ending a session is for a refresh that actually failed, and SMAuth does
+  // that itself.
+  if(!me){
+    toast('You are signed out. Sign in again to like this.','error');
+    openSigninSheet('Sign in again to like this.');
+    return;
+  }
 
   const map=kind==='comment'?COMMENT_LIKES:MESSAGE_LIKES;
   const table=kind==='comment'?'comment_likes':'message_likes';
@@ -2580,28 +2626,52 @@ async function sendReport(itemId,commentId,reason){
   }
 }
 
-/** Write the current selection to the account (no-op for guests). */
+/**
+ * Write the current selection to the account.
+ *
+ * Returns true only if the account was actually updated. It used to return
+ * nothing and swallow every failure into console.warn, which is how a broken
+ * save looked identical to a working one.
+ */
 async function saveMyClubsToAccount(){
-  if(!currentUser)return;
+  if(isGuestNow())return false;
+  // Re-read the session rather than trusting boot: this is the write that
+  // matters most, and an id from a stale cache would PATCH another row (or
+  // `profiles?id=eq.null`, which quietly matches nothing).
+  const me=await SMAuth.resolveUser();
+  if(!me){
+    toast('You are signed out. Sign in again to save your clubs.','error');
+    openSigninSheet('Sign in again to save your clubs.');
+    return false;
+  }
   const main=mainClubId();
   const follow=followedClubIds().filter(id=>id!==main);
   try{
-    await apiSend('PATCH','profiles?id=eq.'+myUserId(),
-      {main_club_id:main,onboarded_at:new Date().toISOString()});
+    // return=representation so a PATCH that matched no row is visible. With
+    // return=minimal, `id=eq.<wrong uuid>` answers 204 and reads as saved.
+    const updated=await apiSend('PATCH','profiles?id=eq.'+encodeURIComponent(me),
+      {main_club_id:main,onboarded_at:new Date().toISOString()},
+      'return=representation');
+    if(!updated||!updated.length){
+      throw new Error('no profile row matched '+me);
+    }
     // Replace the follow set: delete what is gone, insert what is new.
     const existing=(await apiGet('follows?select=team_id')).map(f=>f.team_id);
     const toAdd=follow.filter(id=>existing.indexOf(id)<0);
     const toRemove=existing.filter(id=>follow.indexOf(id)<0);
     if(toAdd.length){
       await apiSend('POST','follows?on_conflict=user_id,team_id',
-        toAdd.map(id=>({user_id:myUserId(),team_id:id})),
+        toAdd.map(id=>({user_id:me,team_id:id})),
         'resolution=ignore-duplicates,return=minimal');
     }
     for(const id of toRemove){
-      await apiSend('DELETE','follows?user_id=eq.'+myUserId()+'&team_id=eq.'+id);
+      await apiSend('DELETE','follows?user_id=eq.'+me+'&team_id=eq.'+id);
     }
+    return true;
   }catch(e){
-    console.warn('saveMyClubsToAccount:',e.message);
+    console.error('saveMyClubsToAccount:',e.message);
+    toast('Could not save your clubs: '+friendlyDbError(e.message),'error');
+    return false;
   }
 }
 
@@ -2705,25 +2775,39 @@ function unfollowClub(id){
 // and so clearAccountCaches() can find it.
 function _getModalKey(){return SMAuth.key('sm_club_selected');}
 
-function saveTeamSelection(){
+async function saveTeamSelection(){
   if(!requireAuth('Create a free account to follow your club.'))return;
   if(!mainClubId()){
-    alert('Pick your main club first.');
+    toast('Pick your main club first.','error');
     return;
   }
   const before=new Set(followedClubIds());
   const beforeMain=mainClubId();
+
+  // The account write happens FIRST and is awaited. It used to be fire and
+  // forget after the modal had already closed, so a failed save looked exactly
+  // like a successful one until the next reload put the old club back.
+  const btn=document.getElementById('save-club-btn');
+  if(btn){ btn.disabled=true; btn.textContent='SAVING…'; }
+  let ok=true;
+  try{
+    ok=await saveMyClubsToAccount();
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='SAVE MY CLUB'; }
+  }
+  // saveMyClubsToAccount has already said what went wrong. Keep the modal open
+  // so the choice is not lost.
+  if(!ok)return;
+
   saveMyClubsLocal();
   localStorage.setItem(_getModalKey(), '1');
   closeTeamModal();
   applyClubSelection();
-  // Telemetry only — never blocks the save.
+  toast('Saved.');
+  // Telemetry only — never blocks the save, and can never end the session.
   if(mainClubId()!==beforeMain)logEvent('club_set','team',mainClubId());
   for(const id of followedClubIds())if(!before.has(id))logEvent('follow','team',id);
   for(const id of before)if(followedClubIds().indexOf(id)<0)logEvent('unfollow','team',id);
-  // Fire and forget: the UI already reflects the choice, and a failed write
-  // is logged rather than blocking the user behind a spinner.
-  saveMyClubsToAccount();
 }
 
 // ── ONBOARDING ───────────────────────────────────────────────────────────
@@ -3017,12 +3101,17 @@ async function finishOnboarding(){
   if(MY_PROFILE)MY_PROFILE.onboarded_at=new Date().toISOString();
   applyClubSelection();
   // Always stamp onboarded_at, even on a skip, so nobody is asked twice.
-  if(currentUser){
-    try{
-      await apiSend('PATCH','profiles?id=eq.'+myUserId(),
-        {main_club_id:mainClubId(),onboarded_at:new Date().toISOString()});
-      await saveMyClubsToAccount();
-    }catch(e){ console.warn('finishOnboarding:',e.message); }
+  // saveMyClubsToAccount() writes main_club_id and onboarded_at itself and
+  // reports its own failure, so the duplicate PATCH that used to sit here is
+  // gone — it wrote the same two columns and swallowed its errors.
+  if(!isGuestNow()){
+    const ok=await saveMyClubsToAccount();
+    if(!ok&&mainClubId()){
+      // The local cache holds the choice, so nothing is lost — but say so,
+      // rather than letting the next reload quietly revert it.
+      toast('Your club is set on this device but did not reach your account. '
+        +'It may reset on another device.','error');
+    }
   }
 }
 
@@ -3726,7 +3815,10 @@ async function setMyLangs(langs){
   SMAuth.setJSON('sm_content_langs',clean);
   if(currentUser){
     try{ await apiSend('PATCH','profiles?id=eq.'+myUserId(),{content_langs:clean}); }
-    catch(e){ console.warn('setMyLangs:',e.message); }
+    catch(e){
+      console.error('setMyLangs:',e.message);
+      toast('Language saved on this device only: '+friendlyDbError(e.message),'error');
+    }
   }
   renderLangChips();
   renderLangPrefs();
@@ -3781,7 +3873,10 @@ async function toggleClubLangs(){
   try{
     await apiSend('PATCH','profiles?id=eq.'+myUserId(),
       {show_club_news_all_langs:MY_PROFILE.show_club_news_all_langs});
-  }catch(e){ console.warn('toggleClubLangs:',e.message); }
+  }catch(e){
+    console.error('toggleClubLangs:',e.message);
+    toast('Could not save that setting: '+friendlyDbError(e.message),'error');
+  }
 }
 
 function toggleLang(code){
@@ -4954,14 +5049,17 @@ function searchResultsHtml(){
 }
 
 /** Load reaction and comment counts once, then repaint with the real numbers. */
-let SOCIAL_LOADED_FOR='';
+// Which item ids already have their counts. Tracked as a set rather than as a
+// joined key: the feed paginates to seven days, and at roughly 120 items per
+// eight hours that is a couple of thousand rows. Re-asking for every id on
+// every page made the request grow with the square of the pages loaded.
+const SOCIAL_LOADED=new Set();
 function loadSocialForFeed(){
-  const ids=FEED_ITEMS.map(i=>i.id);
-  const key=ids.join(',');
+  const ids=FEED_ITEMS.map(i=>i.id).filter(id=>!SOCIAL_LOADED.has(id));
   // Returns a promise so loadMoreNews() can wait for it — a page that painted
   // before its counts arrived would show every new card at zero.
-  if(!ids.length||key===SOCIAL_LOADED_FOR)return Promise.resolve();
-  SOCIAL_LOADED_FOR=key;
+  if(!ids.length)return Promise.resolve();
+  for(const id of ids)SOCIAL_LOADED.add(id);
   return loadSocialCounts(ids).then(function(){
     try{ renderFeedNews(); }catch(e){}
   });

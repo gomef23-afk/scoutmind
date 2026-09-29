@@ -76,6 +76,16 @@
    * The session is gone and cannot be recovered. Callers are told once, and
    * every later token request returns null rather than hammering the refresh
    * endpoint with a refresh token the server has already rejected.
+   *
+   * ONLY call this when a REFRESH HAS ACTUALLY FAILED. It signs the user out
+   * and clears their caches, so calling it on any other signal is destructive.
+   *
+   * It used to be called from two other places, and that was a regression that
+   * made the main club unsaveable: `apiSend` called it on any 401, and a 401 is
+   * usually an RLS denial on ONE table, which says nothing about the session.
+   * One rejected write — including a fire-and-forget telemetry insert — would
+   * sign a perfectly good session out, after which every later write failed
+   * with "not signed in" into a console.warn nobody was filtering for.
    */
   function giveUp(reason) {
     if (gaveUp) return;
