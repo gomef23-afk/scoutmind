@@ -336,6 +336,38 @@ body{padding-bottom:64px;}
 .compose-box:focus-within{border-color:var(--accent);}
 .compose-box .comment-input{background:transparent;border:none;padding:0;border-radius:0;}
 .compose-box .comment-input:focus{border:none;}
+/* ── CLUB PICKER ──
+   Two columns at 375px, three from 900px. Section headers span every column,
+   so "Popular" and each league read as a band across the list rather than as a
+   cell inside it. Rows are 40px tall so a thumb can hit one without zooming. */
+.picker-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;align-content:start;}
+.picker-head{grid-column:1/-1;font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:12px 0 2px;position:relative;}
+.picker-head:first-child{margin-top:0;}
+.picker-row{display:flex;align-items:center;gap:8px;min-height:40px;padding:7px 9px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);transition:border-color .15s,background .15s;}
+.picker-row:hover{border-color:var(--accent2);}
+.picker-row.is-main{background:rgba(0,229,160,0.08);border-color:var(--accent);}
+.picker-row.is-following{background:rgba(0,184,255,0.06);border-color:var(--accent2);}
+.picker-row.is-locked{cursor:default;opacity:.75;}
+.picker-row.is-locked:hover{border-color:var(--accent);}
+.picker-name{flex:1;min-width:0;font-size:11px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.picker-badge{font-size:9px;font-weight:700;flex-shrink:0;}
+.picker-badge.g{color:var(--accent);}
+.picker-badge.b{color:var(--accent2);}
+.picker-empty{grid-column:1/-1;font-size:11px;color:var(--muted);padding:10px 0;}
+/* Sticky search: the list is 46vh of scrolling and the box must not leave with
+   it, or filtering 146 clubs means scrolling back up to retype. */
+.picker-search-wrap{position:sticky;top:0;z-index:2;background:var(--bg2);padding-bottom:8px;}
+/* .club-search had no rule at all — the onboarding search box was rendering as
+   a browser-default input next to the modal's styled one. 16px on the font
+   size: anything smaller makes iOS Safari zoom the page on focus. */
+.club-search{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+.club-search:focus{border-color:var(--accent);}
+@media (min-width: 900px){
+  .club-search{font-size:13px;}
+}
+@media (min-width: 900px){
+  .picker-grid{grid-template-columns:repeat(3,1fr);}
+}
 /* ── CLUB COMMUNITY CHAT ──
    Three fixed rows: header, scrolling messages, composer. The body is the only
    thing that scrolls, so the composer cannot be pushed off screen when a
@@ -406,8 +438,15 @@ body{padding-bottom:64px;}
 <body>
 
 <!-- SESSION HYDRATION — no auth guard. Guests get the full read-only app. -->
+<script src="/sm_auth.js"></script>
 <script>
 const _supa = window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
+// One token source for the whole page. Everything authenticated goes through
+// SMAuth from here on — nothing reads a token out of storage by hand.
+SMAuth.init(_supa,{
+  url:'https://kdhbpzooyjxcglbxbuya.supabase.co',
+  anonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw'
+});
 const _cu = JSON.parse(localStorage.getItem('sm_current_user')||'null');
 function _hydrate(user){
   return _supa.from('profiles').select('*').eq('id',user.id).single().then(function(res){
@@ -1036,30 +1075,50 @@ function getProfile(weaknessType,positionFilter){
 const currentUser=JSON.parse(localStorage.getItem('sm_current_user')||'null');
 const isGuest=!currentUser;
 
+// `currentUser` comes from localStorage, which has no expiry; the Supabase
+// session does. When the session ends and cannot be refreshed, SMAuth sets this
+// and the app treats the reader as a guest again — otherwise the nav keeps
+// saying "signed in" while every write is rejected, which is the bug this
+// flag exists to end.
+let sessionLapsed=false;
+function isGuestNow(){ return isGuest||sessionLapsed; }
+
 // Swap the nav between guest (Sign in) and signed-in (name + avatar + sign out).
 function renderAuthUi(){
+  const guest=isGuestNow();
   const userBlock=document.getElementById('nav-user');
   const signinBtn=document.getElementById('nav-signin');
-  if(userBlock)userBlock.style.display=isGuest?'none':'flex';
-  if(signinBtn)signinBtn.style.display=isGuest?'block':'none';
-  if(!isGuest){
+  if(userBlock)userBlock.style.display=guest?'none':'flex';
+  if(signinBtn)signinBtn.style.display=guest?'block':'none';
+  if(!guest){
     const nameEl=document.getElementById('nav-name');
     if(nameEl)nameEl.textContent=currentUser.name||'User';
   }
   // Profile page: guest pitch vs the real account sections.
   const pGuest=document.getElementById('profile-guest');
   const pSignedIn=document.getElementById('profile-signedin');
-  if(pGuest)pGuest.style.display=isGuest?'block':'none';
-  if(pSignedIn)pSignedIn.style.display=isGuest?'none':'block';
+  if(pGuest)pGuest.style.display=guest?'block':'none';
+  if(pSignedIn)pSignedIn.style.display=guest?'none':'block';
 }
 renderAuthUi();
+
+// The session has ended for good: say so once, in the sheet, rather than
+// letting the next write fail with "permission denied for table profiles".
+SMAuth.onSignedOut(function(){
+  sessionLapsed=true;
+  try{ renderAuthUi(); }catch(e){}
+  try{ stopChatPolling(); }catch(e){}
+  openSigninSheet('Your session expired. Sign in again to pick up where you left off.');
+});
 
 // ── GUEST WRITE GATE ──
 // Every write action calls requireAuth() FIRST and bails if it returns false.
 // Gating at function entry (not on the button) so programmatic callers are covered too.
 function requireAuth(message){
-  if(!isGuest)return true;
-  openSigninSheet(message);
+  if(!isGuestNow())return true;
+  openSigninSheet(sessionLapsed
+    ?'Your session expired. Sign in again to pick up where you left off.'
+    :message);
   return false;
 }
 function openSigninSheet(message){
@@ -1083,11 +1142,20 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape')closeSigninSheet();
 });
 
-// FIX 1: logout now waits for signOut to complete before redirecting
+// Waits for signOut before redirecting, and clears every per-account cache on
+// the way out — not just sm_current_user. Leaving the club caches behind is how
+// the next account to sign in on this browser inherited the last one's clubs.
+//
+// It uses `_supa`, the page's own client. It used to build a second client here,
+// which meant two clients sharing one storage key and each able to invalidate
+// the other's refresh token.
 function logout(){
-  var s=window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
-  s.auth.signOut().then(function(){
-    localStorage.removeItem('sm_current_user');
+  _supa.auth.signOut().then(function(){
+    SMAuth.clearAccountCaches();
+    window.location.href='/';
+  }).catch(function(){
+    // A failed signOut must not trap someone in a session they asked to leave.
+    SMAuth.clearAccountCaches();
     window.location.href='/';
   });
 }
@@ -1854,9 +1922,11 @@ document.getElementById('playerLeagueSel').addEventListener('change',updateFilte
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Pick your main club and follow others to personalise your feed.</div>
 
     <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Main club</div>
-    <input type="text" id="club-search" placeholder="Search clubs..." oninput="filterModalClubs()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:12px;transition:border .2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+    <div class="picker-search-wrap">
+      <input type="text" id="club-search" class="club-search" placeholder="Search clubs..." oninput="filterModalClubs()">
+    </div>
 
-    <div id="modal-club-list" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:320px;overflow-y:auto;margin-bottom:18px;"></div>
+    <div id="modal-club-list" class="picker-grid" style="max-height:320px;overflow-y:auto;margin-bottom:18px;"></div>
 
     <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Also following</div>
     <div id="modal-following-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;min-height:32px;"></div>
@@ -1903,19 +1973,15 @@ let modalFilter = '';
  */
 function mainClubId(){
   if(selectedMainClub)return selectedMainClub;
-  try{
-    const m=JSON.parse(localStorage.getItem('sm_main_club')||'null');
-    if(m&&typeof m.id==='number')return m.id;
-  }catch(e){}
+  const m=SMAuth.getJSON('sm_main_club',null);
+  if(m&&typeof m.id==='number')return m.id;
   return null;
 }
 
 function followedClubIds(){
   if(followingClubs.length)return followingClubs.slice();
-  try{
-    const f=JSON.parse(localStorage.getItem('sm_following_clubs')||'[]');
-    if(Array.isArray(f))return f.filter(x=>typeof x==='number');
-  }catch(e){}
+  const f=SMAuth.getJSON('sm_following_clubs',[]);
+  if(Array.isArray(f))return f.filter(x=>typeof x==='number');
   return [];
 }
 
@@ -1939,61 +2005,63 @@ function myClubApiIds(){
 let MY_PROFILE=null;          // { main_club_id, content_langs, onboarded_at }
 let PROFILE_LOADED=false;
 
-function authedHeaders(){
-  const h={apikey:SUPA_KEY,'Content-Type':'application/json'};
-  // The Supabase client holds the session; fall back to the anon key so a
-  // read still works (and simply returns nothing) when signed out.
-  const tok=(_supa&&_supa.auth&&_supa.auth.__token)||null;
-  h.Authorization='Bearer '+(tok||SUPA_KEY);
-  return h;
-}
+// authedHeaders() used to live here. It read `_supa.auth.__token`, which is not
+// a property supabase-js has, so it always fell through to the anon key. It was
+// never called, which is the only reason it did no harm.
 
-/** The access token for the signed-in user, or null. */
+/** The access token for the signed-in user, or null. Refreshes when due. */
 async function accessToken(){
-  try{
-    const r=await _supa.auth.getSession();
-    return (r&&r.data&&r.data.session&&r.data.session.access_token)||null;
-  }catch(e){ return null; }
+  return SMAuth.token(false);
 }
 
 async function apiGet(path){
-  const tok=await accessToken();
-  const res=await fetch(`${SUPA_URL}/rest/v1/${path}`,{
-    headers:{apikey:SUPA_KEY,Authorization:'Bearer '+(tok||SUPA_KEY)}
-  });
+  const res=await SMAuth.rest(path);
   if(!res.ok)throw new Error(path+' HTTP '+res.status+' — '+(await res.text()).slice(0,200));
   return res.json();
 }
 
 async function apiSend(method,path,body,prefer){
-  const tok=await accessToken();
-  if(!tok)throw new Error('not signed in');
-  const res=await fetch(`${SUPA_URL}/rest/v1/${path}`,{
-    method,
-    headers:{apikey:SUPA_KEY,Authorization:'Bearer '+tok,
-      'Content-Type':'application/json',Prefer:prefer||'return=minimal'},
+  // Checked before sending so a lapsed session surfaces as the sign-in sheet
+  // rather than as a 401 the caller has to interpret.
+  const tok=await SMAuth.token(false);
+  if(!tok){
+    SMAuth.endSession('write attempted with no session');
+    throw new Error('not signed in');
+  }
+  const res=await SMAuth.rest(path,{
+    method:method,
+    headers:{'Content-Type':'application/json',Prefer:prefer||'return=minimal'},
     body:body?JSON.stringify(body):undefined
   });
-  if(!res.ok)throw new Error(method+' '+path+' HTTP '+res.status+' — '+(await res.text()).slice(0,200));
+  if(!res.ok){
+    const text=(await res.text()).slice(0,200);
+    // SMAuth.rest has already retried once with a fresh token. A 401 that
+    // survives that is a session we cannot recover.
+    if(res.status===401)SMAuth.endSession('401 after refresh');
+    throw new Error(method+' '+path+' HTTP '+res.status+' — '+text);
+  }
   return res.status===204?null:res.json().catch(()=>null);
 }
 
-/**
- * Load the signed-in user's clubs and languages, importing anything left in
- * localStorage exactly once (guarded by onboarded_at).
- */
+/** Load the signed-in user's clubs and languages. The account is the truth. */
 async function loadMyAccount(){
   PROFILE_LOADED=true;
-  if(!currentUser)return;
+  if(!currentUser||sessionLapsed)return;   // nothing to read as anon
   try{
     const rows=await apiGet('profiles?select=main_club_id,content_langs,onboarded_at,show_club_news_all_langs&limit=1');
     MY_PROFILE=rows[0]||null;
     const follows=await apiGet('follows?select=team_id');
 
-    if(MY_PROFILE&&!MY_PROFILE.onboarded_at){
-      const imported=await importLocalClubs(MY_PROFILE);
-      if(imported)return loadMyAccount();
-    }
+    // importLocalClubs() used to run here whenever `onboarded_at` was null. It
+    // read the UNKEYED sm_main_club / sm_following_clubs and wrote them onto
+    // whichever account signed in next — so a second account on the same
+    // browser silently adopted the first account's club and follows, as real
+    // rows in `follows`, not just as a cached display.
+    //
+    // It is gone rather than fixed. Its only legitimate job was lifting
+    // pre-package-2 picks onto an account, and package 2 has been live long
+    // enough that anyone who had those has had them imported. The account is
+    // now the only source of clubs for a signed-in user.
 
     selectedMainClub=(MY_PROFILE&&MY_PROFILE.main_club_id)||null;
     followingClubs=follows.map(f=>f.team_id).filter(id=>id!==selectedMainClub);
@@ -2004,33 +2072,7 @@ async function loadMyAccount(){
   }
 }
 
-/**
- * One-time lift of sm_main_club / sm_following_clubs onto the account. Only
- * runs while onboarded_at is null, so it can never overwrite a later choice.
- * Returns true if anything was written.
- */
-async function importLocalClubs(profile){
-  let main=null,follow=[];
-  try{
-    const m=JSON.parse(localStorage.getItem('sm_main_club')||'null');
-    if(m&&typeof m.id==='number'&&CLUB_DATA.has(m.id))main=m.id;
-    const f=JSON.parse(localStorage.getItem('sm_following_clubs')||'[]');
-    if(Array.isArray(f))follow=f.filter(id=>typeof id==='number'&&CLUB_DATA.has(id));
-  }catch(e){}
-  if(!main&&!follow.length)return false;
-  try{
-    await apiSend('PATCH','profiles?id=eq.'+currentUser.id,
-      {main_club_id:main,onboarded_at:new Date().toISOString()});
-    const rows=follow.filter(id=>id!==main).map(id=>({user_id:currentUser.id,team_id:id}));
-    if(rows.length)await apiSend('POST','follows?on_conflict=user_id,team_id',rows,
-      'resolution=ignore-duplicates,return=minimal');
-    console.info('Imported '+(main?1:0)+' main club and '+rows.length+' follows into the account.');
-    return true;
-  }catch(e){
-    console.warn('importLocalClubs:',e.message);
-    return false;
-  }
-}
+// importLocalClubs() was removed here. See loadMyAccount() for why.
 
 // ── EVENTS ───────────────────────────────────────────────────────────────
 // Insert-only telemetry behind the north-star metric: weekly active users who
@@ -2329,18 +2371,20 @@ async function saveMyClubsToAccount(){
   }
 }
 
-/** Persist to localStorage. Cache only; the account is the truth. */
+/**
+ * Persist to localStorage. Cache only; the account is the truth.
+ * Scoped to the current user id via SMAuth — an unscoped key here is what let
+ * one account's clubs show up under another's on the same browser.
+ */
 function saveMyClubsLocal(){
-  try{
-    const main=mainClubId();
-    if(main){
-      const c=CLUB_DATA.get(main);
-      localStorage.setItem('sm_main_club',JSON.stringify({id:main,name:c?c.label:''}));
-    }else{
-      localStorage.removeItem('sm_main_club');
-    }
-    localStorage.setItem('sm_following_clubs',JSON.stringify(followedClubIds()));
-  }catch(e){}
+  const main=mainClubId();
+  if(main){
+    const c=CLUB_DATA.get(main);
+    SMAuth.setJSON('sm_main_club',{id:main,name:c?c.label:''});
+  }else{
+    SMAuth.remove('sm_main_club');
+  }
+  SMAuth.setJSON('sm_following_clubs',followedClubIds());
 }
 
 function filterModalClubs(){
@@ -2352,52 +2396,16 @@ function renderModalClubs(){
   const el = document.getElementById('modal-club-list');
   if(!el) return;
   if(CLUB_DATA.size === 0){
-    el.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:10px 0;">Loading clubs…</div>';
+    el.innerHTML = '<div class="picker-empty">Loading clubs…</div>';
     return;
   }
-  const main = mainClubId();
-  const following = followedClubIds();
-  const q = modalFilter.trim();
-  const groups = clubsByLeague();
-  // League order puts the Brazilian and European majors first; the rest follow
-  // in a stable order so the list never reshuffles between renders.
-  const ORDER = ['serie_a','premier_league','la_liga','serie_a_it','bundesliga','ligue_1','argentina'];
-  const keys = [...groups.keys()].sort((a,b)=>{
-    const ai = ORDER.indexOf(a), bi = ORDER.indexOf(b);
-    return (ai<0?99:ai) - (bi<0?99:bi) || a.localeCompare(b);
+  el.innerHTML = clubPickerHtml({
+    mode:'main',
+    query:modalFilter,
+    mainId:mainClubId(),
+    selected:followedClubIds(),
+    handler:'selectModalClub'
   });
-
-  let html = '', shown = 0;
-  for(const key of keys){
-    const league = LEAGUE_LABEL[key] || key;
-    const rows = groups.get(key).filter(c =>
-      !q || c.label.toLowerCase().includes(q) || league.toLowerCase().includes(q)
-    );
-    if(!rows.length) continue;
-    shown += rows.length;
-    html += '<div style="grid-column:1/-1;font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:10px 0 2px;">'
-      + sanitize(league) + '</div>';
-    for(const c of rows){
-      const isMain = main === c.id;
-      const isFollowing = following.indexOf(c.id) > -1;
-      const state = isMain ? 'Main club — click to follow instead'
-                  : isFollowing ? 'Following — click to remove'
-                  : 'Click to follow';
-      html += '<div onclick="selectModalClub(' + c.id + ')" title="' + state + '"'
-        + ' style="background:' + (isMain?'rgba(0,229,160,0.08)':isFollowing?'rgba(0,184,255,0.06)':'var(--bg3)')
-        + ';border:1px solid ' + (isMain?'var(--accent)':isFollowing?'var(--accent2)':'var(--border)')
-        + ';border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;">'
-        + clubCrestById(c.id,22)
-        + '<div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;color:var(--text);">'
-        + sanitize(c.label) + '</div></div>'
-        + (isMain ? '<span style="font-size:9px;color:var(--accent);font-weight:700;">MAIN</span>' : '')
-        + (isFollowing && !isMain ? '<span style="font-size:9px;color:var(--accent2);font-weight:700;">+</span>' : '')
-        + '</div>';
-    }
-  }
-  el.innerHTML = shown
-    ? html
-    : '<div style="grid-column:1/-1;font-size:11px;color:var(--muted);padding:10px 0;">No club matches “' + sanitize(q) + '”.</div>';
 }
 
 function renderFollowingChips(){
@@ -2458,7 +2466,10 @@ function unfollowClub(id){
   renderFollowingChips();
 }
 
-function _getModalKey(){return 'sm_club_selected_'+(currentUser?.id||'guest');}
+// Was already per-user, but with its own ad-hoc suffix. Routed through
+// SMAuth.key() so there is one scoping rule rather than two spellings of it —
+// and so clearAccountCaches() can find it.
+function _getModalKey(){return SMAuth.key('sm_club_selected');}
 
 function saveTeamSelection(){
   if(!requireAuth('Create a free account to follow your club.'))return;
@@ -2488,7 +2499,173 @@ function saveTeamSelection(){
 
 // Curated rather than by league position — a fan picking a second club is not
 // picking by September form.
-const BIG_CLUBS=[127,121,131,120,541,529,33,50,40,42,157,165,85,496,505,489,451,435];
+// ── THE CLUB PICKER ──────────────────────────────────────────────────────
+// One component behind four call sites: the team modal (which is also the
+// Profile route), onboarding step 1, and onboarding step 2. They used to be
+// three different orderings of the same 146 clubs — the modal grouped by
+// league, onboarding step 1 was one flat alphabetical run of all 146, and step
+// 2 showed an 18-club suggestion list with no sections at all.
+//
+// Popular is matched BY NAME, not by API id. The ids would have to be typed in
+// by hand from memory, and a wrong id does not fail loudly — it silently puts
+// the wrong club in front of every new user. A name that fails to resolve just
+// drops out of Popular and says so in the console.
+const POPULAR_CLUBS=[
+  {name:'Flamengo',          match:['flamengo']},
+  {name:'Corinthians',       match:['corinthians']},
+  {name:'Palmeiras',         match:['palmeiras']},
+  {name:'São Paulo',         match:['sao paulo']},
+  {name:'Botafogo',          match:['botafogo']},
+  {name:'Vasco da Gama',     match:['vasco da gama','vasco']},
+  {name:'Fluminense',        match:['fluminense']},
+  {name:'Grêmio',            match:['gremio']},
+  {name:'Internacional',     match:['internacional','sc internacional']},
+  {name:'Real Madrid',       match:['real madrid']},
+  {name:'Barcelona',         match:['barcelona','fc barcelona']},
+  {name:'Manchester United', match:['manchester united']},
+  {name:'Manchester City',   match:['manchester city']},
+  {name:'Liverpool',         match:['liverpool']},
+  {name:'Arsenal',           match:['arsenal']},
+  {name:'Bayern',            match:['bayern munich','bayern munchen','bayern']},
+  {name:'PSG',               match:['paris saint germain','psg','paris sg']},
+  {name:'Juventus',          match:['juventus']},
+  {name:'Boca Juniors',      match:['boca juniors','boca']},
+  {name:'River Plate',       match:['river plate']},
+];
+
+// Fixed league order. The reader's own league is hoisted in front of it.
+const PICKER_LEAGUE_ORDER=['serie_a','premier_league','la_liga','serie_a_it',
+                           'bundesliga','ligue_1','argentina'];
+
+/** Lowercase, unaccent, collapse punctuation — so "Grêmio" matches "gremio". */
+function pickerNorm(s){
+  return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+
+let _popularResolved=null;
+
+/**
+ * POPULAR_CLUBS -> club rows, in the order given, skipping anything that does
+ * not resolve. Memoised per CLUB_DATA load.
+ */
+function popularClubs(){
+  if(_popularResolved&&_popularResolved.size===CLUB_DATA.size)return _popularResolved.rows;
+  const rows=[],misses=[];
+  const index=new Map();
+  for(const c of CLUB_DATA.values()){
+    for(const cand of [c.label,c.name]){
+      const k=pickerNorm(cand);
+      if(!k)continue;
+      if(!index.has(k))index.set(k,c);
+    }
+  }
+  for(const entry of POPULAR_CLUBS){
+    let found=null;
+    for(const m of entry.match){
+      const k=pickerNorm(m);
+      if(index.has(k)){ found=index.get(k); break; }
+    }
+    // Only if an exact name did not land: a unique prefix match. Anything
+    // ambiguous is treated as a miss rather than guessed at.
+    if(!found){
+      for(const m of entry.match){
+        const k=pickerNorm(m);
+        const hits=[...index.entries()].filter(([key])=>key.startsWith(k)).map(([,v])=>v);
+        const uniq=[...new Set(hits)];
+        if(uniq.length===1){ found=uniq[0]; break; }
+      }
+    }
+    if(found&&rows.indexOf(found)<0)rows.push(found);
+    else if(!found)misses.push(entry.name);
+  }
+  if(misses.length)console.warn('picker: no club matched '+misses.join(', ')
+    +' — they are omitted from Popular rather than guessed at.');
+  _popularResolved={size:CLUB_DATA.size,rows:rows};
+  return rows;
+}
+
+/**
+ * The picker's markup. One function, four callers.
+ *
+ * opts:
+ *   mode      'main' (pick one) | 'follow' (toggle many)
+ *   query     search text; filters within every section
+ *   mainId    the current main club
+ *   selected  array of followed club ids
+ *   handler   global function name called with a club id
+ */
+function clubPickerHtml(opts){
+  const mode=opts.mode||'main';
+  const q=pickerNorm(opts.query||'');
+  const mainId=opts.mainId||null;
+  const selected=opts.selected||[];
+  const handler=opts.handler||'selectModalClub';
+
+  const matches=c=>{
+    if(!q)return true;
+    return pickerNorm(c.label).indexOf(q)>-1
+        || pickerNorm(c.name||'').indexOf(q)>-1
+        || pickerNorm(LEAGUE_LABEL[c.league]||'').indexOf(q)>-1;
+  };
+
+  const row=c=>{
+    const isMain=mainId===c.id;
+    // In follow mode the main club is shown so it reads as already yours, but
+    // it is not a follow and must not be togglable into one.
+    const locked=mode==='follow'&&isMain;
+    const isFollowing=selected.indexOf(c.id)>-1;
+    const on=isMain||isFollowing;
+    const cls='picker-row'+(isMain?' is-main':isFollowing?' is-following':'')
+      +(locked?' is-locked':'');
+    const badge=isMain?'<span class="picker-badge g">MAIN</span>'
+      :isFollowing?'<span class="picker-badge b">✓</span>':'';
+    const click=locked?'':' onclick="'+handler+'('+c.id+')"';
+    const title=locked?'Your main club'
+      :isMain?'Main club — click to follow instead'
+      :isFollowing?'Following — click to remove'
+      :mode==='main'?'Click to make this your main club':'Click to follow';
+    return '<div class="'+cls+'"'+click+' title="'+title+'" aria-pressed="'+(on?'true':'false')+'">'
+      +clubCrestById(c.id,22)
+      +'<span class="picker-name">'+sanitize(c.label)+'</span>'
+      +badge+'</div>';
+  };
+
+  const section=(title,rows)=>{
+    const keep=rows.filter(matches);
+    if(!keep.length)return '';
+    return '<div class="picker-head">'+sanitize(title)+'</div>'
+      +keep.map(row).join('');
+  };
+
+  const groups=clubsByLeague();
+  const byLeague=key=>(groups.get(key)||[]).slice()
+    .sort((a,b)=>a.label.localeCompare(b.label));
+
+  let html='';
+
+  // Follow mode leads with the main club's own league: the rivals are the
+  // follows people actually want, and they are never all in one Popular list.
+  if(mode==='follow'&&mainId){
+    const main=CLUB_DATA.get(mainId);
+    if(main&&main.league){
+      html+=section('Same league as '+(main.label||'your club'),
+        byLeague(main.league).filter(c=>c.id!==mainId));
+    }
+  }
+
+  html+=section('Popular',popularClubs());
+
+  // A fixed order, deliberately not reordered around the reader's own league:
+  // picking a main club re-renders this list, and hoisting their league would
+  // make every section jump under their thumb the moment they tapped.
+  const order=PICKER_LEAGUE_ORDER;
+  for(const key of [...order,...[...groups.keys()].filter(k=>order.indexOf(k)<0).sort()]){
+    html+=section(LEAGUE_LABEL[key]||key,byLeague(key));
+  }
+
+  return html||'<div class="picker-empty">No club matches “'+sanitize(opts.query||'')+'”.</div>';
+}
 
 function maybeStartOnboarding(){
   if(!currentUser)return;                       // guests are never interrupted
@@ -2519,28 +2696,22 @@ function renderOnboard(){
   if(onboardStep===1){
     title.textContent='Pick your club';
     sub.textContent='Your feed, your matches and your club page are built around it.';
-    const groups=clubsByLeague();
-    const ORDER=['serie_a','premier_league','la_liga','serie_a_it','bundesliga','ligue_1','argentina'];
-    let html='<input id="onboard-search" class="club-search" placeholder="Search clubs…" oninput="renderOnboardList()" style="margin-bottom:10px;">'
-      +'<div id="onboard-list" class="clubs-grid" style="max-height:46vh;overflow-y:auto;"></div>';
-    body.innerHTML=html;
+    // Same markup as the modal and as step 2 — one picker, three callers.
+    body.innerHTML='<div class="picker-search-wrap">'
+      +'<input id="onboard-search" class="club-search" placeholder="Search clubs…" oninput="renderOnboardList()">'
+      +'</div>'
+      +'<div id="onboard-list" class="picker-grid" style="max-height:46vh;overflow-y:auto;"></div>';
     renderOnboardList();
     document.getElementById('onboard-next').textContent=main?'Continue':'Skip for now';
   }else{
     const c=CLUB_DATA.get(main);
     title.textContent='Follow a few more';
-    sub.textContent=c?('Rivals and big clubs alongside '+c.label+'. Optional.'):'Optional.';
-    const suggestions=suggestClubs(main);
-    body.innerHTML='<div class="clubs-grid" style="max-height:46vh;overflow-y:auto;">'
-      +suggestions.map(function(t){
-        const on=followedClubIds().indexOf(t.id)>-1;
-        return '<div onclick="toggleOnboardFollow('+t.id+')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;'
-          +'background:'+(on?'rgba(0,184,255,0.06)':'var(--bg3)')+';border:1px solid '+(on?'var(--accent2)':'var(--border)')+';">'
-          +clubCrestById(t.id,22)
-          +'<div style="flex:1;min-width:0;font-size:11px;font-weight:600;">'+sanitize(t.label)+'</div>'
-          +(on?'<span style="font-size:9px;color:var(--accent2);font-weight:700;">✓</span>':'')
-          +'</div>';
-      }).join('')+'</div>';
+    sub.textContent=c?('Rivals first, then the clubs everyone follows. Optional.'):'Optional.';
+    body.innerHTML='<div class="picker-search-wrap">'
+      +'<input id="onboard-follow-search" class="club-search" placeholder="Search clubs…" oninput="renderOnboardFollowList()">'
+      +'</div>'
+      +'<div id="onboard-follow-list" class="picker-grid" style="max-height:46vh;overflow-y:auto;"></div>';
+    renderOnboardFollowList();
     document.getElementById('onboard-next').textContent='Done';
   }
 }
@@ -2548,20 +2719,31 @@ function renderOnboard(){
 function renderOnboardList(){
   const el=document.getElementById('onboard-list');
   if(!el)return;
-  const q=(document.getElementById('onboard-search')||{value:''}).value.trim().toLowerCase();
-  const main=mainClubId();
-  const rows=[...CLUB_DATA.values()]
-    .filter(c=>!q||c.label.toLowerCase().includes(q)||(LEAGUE_LABEL[c.league]||'').toLowerCase().includes(q))
-    .sort((a,b)=>(a.league||'').localeCompare(b.league||'')||a.label.localeCompare(b.label));
-  el.innerHTML=rows.map(function(c){
-    const on=main===c.id;
-    return '<div onclick="pickOnboardMain('+c.id+')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;'
-      +'background:'+(on?'rgba(0,229,160,0.08)':'var(--bg3)')+';border:1px solid '+(on?'var(--accent)':'var(--border)')+';">'
-      +clubCrestById(c.id,22)
-      +'<div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;">'+sanitize(c.label)+'</div>'
-      +'<div style="font-size:9px;color:var(--muted);">'+sanitize(LEAGUE_LABEL[c.league]||'')+'</div></div>'
-      +(on?'<span style="font-size:9px;color:var(--accent);font-weight:700;">MAIN</span>':'')+'</div>';
-  }).join('')||'<div style="grid-column:1/-1;font-size:11px;color:var(--muted);padding:10px 0;">No club matches that.</div>';
+  el.innerHTML=clubPickerHtml({
+    mode:'main',
+    query:(document.getElementById('onboard-search')||{value:''}).value,
+    mainId:mainClubId(),
+    selected:followedClubIds(),
+    handler:'pickOnboardMain'
+  });
+}
+
+/**
+ * Step 2. Same component, follow mode: the main club's league leads, then
+ * Popular, then every league. It replaced an 18-club `suggestClubs()` list —
+ * with 146 clubs available, capping the list at 18 meant most people could not
+ * find the club they wanted at all.
+ */
+function renderOnboardFollowList(){
+  const el=document.getElementById('onboard-follow-list');
+  if(!el)return;
+  el.innerHTML=clubPickerHtml({
+    mode:'follow',
+    query:(document.getElementById('onboard-follow-search')||{value:''}).value,
+    mainId:mainClubId(),
+    selected:followedClubIds(),
+    handler:'toggleOnboardFollow'
+  });
 }
 
 function pickOnboardMain(id){
@@ -2572,28 +2754,17 @@ function pickOnboardMain(id){
 }
 
 function toggleOnboardFollow(id){
+  if(id===mainClubId())return;            // the main club is not a follow
   const i=followingClubs.indexOf(id);
   if(i>-1)followingClubs.splice(i,1); else followingClubs.push(id);
-  renderOnboard();
+  // Repaint only the list: renderOnboard() would rebuild the whole step and
+  // throw away the search box and the scroll position on every tick.
+  renderOnboardFollowList();
 }
 
-/** Same-league clubs first, then the curated big ones. */
-function suggestClubs(mainId){
-  const main=CLUB_DATA.get(mainId);
-  const out=[],seen=new Set(mainId?[mainId]:[]);
-  if(main){
-    for(const c of CLUB_DATA.values()){
-      if(c.league===main.league&&!seen.has(c.id)){ out.push(c); seen.add(c.id); }
-    }
-    out.sort((a,b)=>(a.rank==null?99:a.rank)-(b.rank==null?99:b.rank));
-  }
-  const rest=[];
-  for(const api of BIG_CLUBS){
-    const c=CLUB_BY_API.get(api);
-    if(c&&!seen.has(c.id)){ rest.push(c); seen.add(c.id); }
-  }
-  return out.slice(0,10).concat(rest).slice(0,18);
-}
+// suggestClubs() and BIG_CLUBS lived here. They built the 18-club step-2 list
+// from API-Football ids; clubPickerHtml({mode:'follow'}) shows all 146 with the
+// main club's league first, so both are gone rather than left to rot.
 
 function onboardNext(){
   if(onboardStep===1){
@@ -3318,7 +3489,7 @@ async function setMyLangs(langs){
   if(!clean.length)return;                    // never leave the feed with nothing
   if(!MY_PROFILE)MY_PROFILE={};
   MY_PROFILE.content_langs=clean;
-  try{ localStorage.setItem('sm_content_langs',JSON.stringify(clean)); }catch(e){}
+  SMAuth.setJSON('sm_content_langs',clean);
   if(currentUser){
     try{ await apiSend('PATCH','profiles?id=eq.'+currentUser.id,{content_langs:clean}); }
     catch(e){ console.warn('setMyLangs:',e.message); }
@@ -3400,10 +3571,8 @@ function applyPageLang(){
 /** Restore a guest's saved language choice on boot. */
 function hydrateGuestLangs(){
   if(currentUser)return;
-  try{
-    const s=JSON.parse(localStorage.getItem('sm_content_langs')||'null');
-    if(Array.isArray(s)&&s.length){ MY_PROFILE=MY_PROFILE||{}; MY_PROFILE.content_langs=s; }
-  }catch(e){}
+  const s=SMAuth.getJSON('sm_content_langs',null);
+  if(Array.isArray(s)&&s.length){ MY_PROFILE=MY_PROFILE||{}; MY_PROFILE.content_langs=s; }
 }
 
 /**
@@ -4509,7 +4678,7 @@ function renderWeeklyReport() {
   if (!el) return;
 
   // Get user's main league preference
-  const mainClub = JSON.parse(localStorage.getItem('sm_main_club') || 'null');
+  const mainClub = SMAuth.getJSON('sm_main_club', null);
   const userLeagueMap = {
     serie_a:'Série A', premier_league:'Premier League', la_liga:'La Liga',
     bundesliga:'Bundesliga', serie_a_it:'Serie A Italy', ligue_1:'Ligue 1', argentina:'Argentina'
@@ -4641,6 +4810,14 @@ function filterWeekly(league, btn) {
 // Club data first: crests and real numbers should be in hand before the feed
 // and the pickers paint. A failure here is logged and everything still renders.
 (async function(){
+  // Reconcile the two ideas of "signed in" before anything reads the account.
+  // A cached sm_current_user with no live Supabase session is the state that
+  // produced 401s for an hour while the nav insisted everything was fine.
+  try{
+    if(currentUser&&!(await SMAuth.isSignedIn())){
+      SMAuth.endSession('no live session for the cached user');
+    }
+  }catch(e){ console.warn('session check:',e.message); }
   try{ hydrateGuestLangs(); }catch(e){}
   try{ await loadClubData(); }catch(e){ console.error('loadClubData:',e); }
   // Needs CLUB_DATA: the localStorage import validates ids against it.

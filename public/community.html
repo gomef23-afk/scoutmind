@@ -254,10 +254,15 @@ body{padding-bottom:64px;}
      no escaping, and it read m.user_name, which is no longer written. Chat is
      in the app now: one official room per club. -->
 <script src="/club_names.js"></script>
+<script src="/sm_auth.js"></script>
 <script src="/leagues_data.js"></script>
 <script>
 var _SB_URL='https://kdhbpzooyjxcglbxbuya.supabase.co',_SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
 var _sb=window.supabase.createClient(_SB_URL,_SB_KEY);
+// Same token source as index.html. This page's own writes go through the
+// supabase-js client, which refreshes itself; SMAuth is what makes its raw
+// PostgREST reads and its sign-out behave identically to the app's.
+SMAuth.init(_sb,{url:_SB_URL,anonKey:_SB_KEY});
 var cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
 var isGuest=!cu;
 var isAnalyst=cu&&cu.plan==='analyst';
@@ -305,7 +310,17 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape')closeSigninSheet();
 });
 
-function logout(){localStorage.removeItem('sm_current_user');window.location.href='/';}
+// Clears every per-account cache, not just sm_current_user, and actually ends
+// the Supabase session — this used to leave both behind.
+function logout(){
+  _sb.auth.signOut().then(function(){
+    SMAuth.clearAccountCaches();
+    window.location.href='/';
+  }).catch(function(){
+    SMAuth.clearAccountCaches();
+    window.location.href='/';
+  });
+}
 // AGid, GTimer and GICONS went with the group-chat overlay in package 4.
 var AL='serie_a',AT=null,ATab='polls';
 // ── Real numbers from Supabase ───────────────────────────────────────────
@@ -364,10 +379,9 @@ function _indexKey(map,key,row){
 
 async function loadRealStats(){
   try{
-    var url='https://kdhbpzooyjxcglbxbuya.supabase.co/rest/v1/';
-    var key=_sb.supabaseKey||_SB_KEY;
-    var h={apikey:key,Authorization:'Bearer '+key};
-    var get=async function(p){var r=await fetch(url+p,{headers:h});if(!r.ok)throw new Error(p+' '+r.status);return r.json();};
+    // Through SMAuth so a signed-in reader sends a live token and a guest sends
+    // the anon key, without this page deciding which for itself.
+    var get=async function(p){var r=await SMAuth.rest(p);if(!r.ok)throw new Error(p+' '+r.status);return r.json();};
     var res=await Promise.all([
       get('teams?select=id,api_team_id,name&limit=500'),
       get('standings?select=team_id,rank,points,played&limit=500'),
