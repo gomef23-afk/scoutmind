@@ -48,8 +48,14 @@ begin;
 -- ---------------------------------------------------------------------------
 -- 0. FRESH-ENVIRONMENT ONLY — skipped entirely on production
 -- ---------------------------------------------------------------------------
+-- Both primary keys are UUIDs, confirmed against production after 011 ran —
+-- not the bigserial this file first guessed. The guess was harmless because
+-- `if not exists` skipped these blocks on production, but a fresh environment
+-- would have got bigints and then diverged from prod forever. Anything keyed to
+-- a message or a group must be uuid: see 012, where reports.target_id had to be
+-- widened because a bigint cannot hold one.
 create table if not exists public.groups (
-  id          bigserial primary key,
+  id          uuid primary key default gen_random_uuid(),
   team_id     text,
   name        text not null,
   description text,
@@ -58,8 +64,8 @@ create table if not exists public.groups (
 );
 
 create table if not exists public.group_messages (
-  id         bigserial primary key,
-  group_id   bigint not null references public.groups(id) on delete cascade,
+  id         uuid primary key default gen_random_uuid(),
+  group_id   uuid not null references public.groups(id) on delete cascade,
   user_id    uuid references auth.users(id) on delete cascade,
   user_name  text,
   content    text not null,
@@ -521,8 +527,9 @@ revoke insert, update, delete on public.group_messages from anon;
 revoke all                    on public.groups         from anon;
 grant  select                 on public.groups         to   anon;
 
--- The id sequence, only if these tables actually use one — the live schema is
--- a reconstruction and may use uuids.
+-- Both ids are uuids, so there is no sequence to grant — confirmed on
+-- production. The guard is kept because it costs nothing and a fresh
+-- environment built from an older copy of this file may still have sequences.
 do $$
 begin
   if exists (select 1 from pg_class where relkind='S' and relname='group_messages_id_seq') then

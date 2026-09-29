@@ -8,6 +8,23 @@
 -- next person can re-run it rather than reconstruct it.
 --
 -- ---------------------------------------------------------------------------
+-- RESULT, 28 Sept 2026 — run BEFORE the fix shipped: NOTHING TO CLEAN UP
+-- ---------------------------------------------------------------------------
+-- Only two accounts hold any follows at all (Felipe's, and one real user with a
+-- single follow). So no account ever had another account's follows written to
+-- it: the leak was display-only, in the onboarding UI, from the shared
+-- localStorage cache.
+--
+-- The write path in importLocalClubs() was real, so this could have happened —
+-- it just did not. The likeliest reason is the session-expiry bug fixed
+-- alongside it: the import wrote through apiSend(), which was sending the anon
+-- key once a session had lapsed, and its failure went to console.warn and
+-- nowhere else. One bug quietly preventing another.
+--
+-- Kept because it is the query that established that, and the one to re-run if
+-- this is ever suspected again.
+--
+-- ---------------------------------------------------------------------------
 -- WHAT WENT WRONG
 -- ---------------------------------------------------------------------------
 -- Until this fix, `importLocalClubs()` ran for any signed-in user whose

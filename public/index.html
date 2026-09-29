@@ -336,6 +336,20 @@ body{padding-bottom:64px;}
 .compose-box:focus-within{border-color:var(--accent);}
 .compose-box .comment-input{background:transparent;border:none;padding:0;border-radius:0;}
 .compose-box .comment-input:focus{border:none;}
+/* ── LIKES ──
+   Sits in .comment-meta beside Report and Delete, so it works unchanged in a
+   comment thread and in the chat. 28px minimum height: it is a thumb target,
+   not a text link, even though its neighbours are. */
+.like-btn{display:inline-flex;align-items:center;gap:4px;background:transparent;border:none;padding:0 2px;margin:0;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:10px;color:var(--muted);min-height:28px;line-height:1;}
+.like-btn:hover{color:var(--accent);}
+.like-btn.liked{color:var(--accent);}
+.like-thumb{font-size:13px;filter:grayscale(1);opacity:.55;transition:filter .15s,opacity .15s,transform .15s;}
+.like-btn.liked .like-thumb{filter:none;opacity:1;transform:scale(1.12);}
+.like-count{font-family:'DM Mono',monospace;min-width:6px;}
+/* The sort row. Not shown until a thread has more than one comment. */
+.csort{display:flex;gap:6px;margin:2px 0 8px;}
+.csort-btn{font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;min-height:26px;}
+.csort-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.07);}
 /* ── CLUB PICKER ──
    Two columns at 375px, three from 900px. Section headers span every column,
    so "Popular" and each league read as a band across the list rather than as a
@@ -2114,9 +2128,144 @@ function reactionState(id){
   return REACTION_STATE.get(id);
 }
 function commentState(id){
-  if(!COMMENT_STATE.has(id))COMMENT_STATE.set(id,{total:0,items:[],expanded:false,loaded:false});
+  if(!COMMENT_STATE.has(id))COMMENT_STATE.set(id,
+    {total:0,items:[],expanded:false,loaded:false,sort:'top'});
   return COMMENT_STATE.get(id);
 }
+
+// ── LIKES ────────────────────────────────────────────────────────────────
+// One 👍 per person, on a comment or a chat message. Separate from the news
+// reactions, which stay as they are: a reaction is how you feel about an
+// article, a like is agreement with a person.
+//
+// There are no downvotes. Not an omission — a downvote on a football opinion
+// is a rival button, and the first thing it would be used for is burying
+// supporters of the other club.
+//
+// Two maps rather than one because the ids are different types: comment ids are
+// bigints, message ids are uuids, and one map keyed on a bare id would collide
+// the moment a bigint stringified to something a uuid could equal.
+const COMMENT_LIKES=new Map();   // comment_id -> {count, mine}
+const MESSAGE_LIKES=new Map();   // message_id -> {count, mine}
+// news_item_id -> total likes across its comments, for the Trending score.
+const ITEM_COMMENT_LIKES=new Map();
+
+function likeState(map,id){
+  const k=String(id);
+  if(!map.has(k))map.set(k,{count:0,mine:false});
+  return map.get(k);
+}
+function commentLikes(id){ return likeState(COMMENT_LIKES,id); }
+function messageLikes(id){ return likeState(MESSAGE_LIKES,id); }
+
+/**
+ * Likes for a set of comments, in one request. Also totals them per news item
+ * so Trending can count them without a second pass.
+ */
+async function loadCommentLikes(commentIds,byItem){
+  if(!commentIds.length)return;
+  try{
+    const rows=await apiGet('comment_likes?select=comment_id,user_id'
+      +'&comment_id=in.('+commentIds.join(',')+')&limit=5000');
+    // Reset only the ids we asked about, so a partial load cannot leave a
+    // stale count behind for a comment that has since been unliked.
+    for(const id of commentIds){ const s=commentLikes(id); s.count=0; s.mine=false; }
+    if(byItem)for(const itemId of byItem.values())ITEM_COMMENT_LIKES.set(itemId,0);
+    for(const r of rows){
+      const s=commentLikes(r.comment_id);
+      s.count++;
+      if(currentUser&&r.user_id===currentUser.id)s.mine=true;
+      if(byItem){
+        const itemId=byItem.get(String(r.comment_id));
+        if(itemId!=null)ITEM_COMMENT_LIKES.set(itemId,(ITEM_COMMENT_LIKES.get(itemId)||0)+1);
+      }
+    }
+  }catch(e){
+    // Rule 21: this page deploys before 012 runs. No likes is honest; a
+    // fabricated zero-that-looks-loaded is not, so nothing is painted as liked.
+    console.warn('loadCommentLikes:',e.message);
+  }
+}
+
+async function loadMessageLikes(messageIds){
+  if(!messageIds.length)return;
+  try{
+    const rows=await apiGet('message_likes?select=message_id,user_id'
+      +'&message_id=in.('+messageIds.join(',')+')&limit=5000');
+    for(const id of messageIds){ const s=messageLikes(id); s.count=0; s.mine=false; }
+    for(const r of rows){
+      const s=messageLikes(r.message_id);
+      s.count++;
+      if(currentUser&&r.user_id===currentUser.id)s.mine=true;
+    }
+  }catch(e){
+    console.warn('loadMessageLikes:',e.message);
+  }
+}
+
+/** The 👍 button. `kind` is 'comment' or 'message'. */
+function likeButtonHtml(kind,id){
+  const s=kind==='comment'?commentLikes(id):messageLikes(id);
+  const fn=kind==='comment'?'toggleCommentLike':'toggleMessageLike';
+  return '<button class="like-btn'+(s.mine?' liked':'')+'" id="like-'+kind+'-'+id+'"'
+    +' onclick="'+fn+'(\''+id+'\')"'
+    +' aria-pressed="'+(s.mine?'true':'false')+'"'
+    +' title="'+(s.mine?'You liked this':'Like')+'">'
+    +'<span class="like-thumb">👍</span>'
+    +'<span class="like-count">'+(s.count||'')+'</span></button>';
+}
+
+/** Repaint one like button in place, rather than re-rendering the thread. */
+function paintLike(kind,id){
+  const el=document.getElementById('like-'+kind+'-'+id);
+  if(!el)return;
+  const s=kind==='comment'?commentLikes(id):messageLikes(id);
+  el.classList.toggle('liked',s.mine);
+  el.setAttribute('aria-pressed',s.mine?'true':'false');
+  el.title=s.mine?'You liked this':'Like';
+  const c=el.querySelector('.like-count');
+  if(c)c.textContent=s.count||'';
+}
+
+/**
+ * Optimistic, and reverts on failure.
+ *
+ * The primary key is (target, user), so a double-tap that races itself inserts
+ * once and the second call comes back as a duplicate — treated as success,
+ * because the end state the user asked for is exactly what the database holds.
+ */
+async function toggleLike(kind,id){
+  if(!requireAuth('Create a free account to like this.'))return;
+  const map=kind==='comment'?COMMENT_LIKES:MESSAGE_LIKES;
+  const table=kind==='comment'?'comment_likes':'message_likes';
+  const col=kind==='comment'?'comment_id':'message_id';
+  const s=likeState(map,id);
+  const had=s.mine;
+  s.mine=!had;
+  s.count=Math.max(0,s.count+(had?-1:1));
+  paintLike(kind,id);
+  try{
+    if(had){
+      await apiSend('DELETE',table+'?'+col+'=eq.'+encodeURIComponent(id)
+        +'&user_id=eq.'+currentUser.id);
+    }else{
+      await apiSend('POST',table,[{[col]:id,user_id:currentUser.id}]);
+      logEvent('like',kind,String(id));
+    }
+  }catch(e){
+    if(!had&&/duplicate|unique|23505/i.test(e.message)){
+      return;                                  // already liked: nothing is wrong
+    }
+    // Put it back the way it was and say why.
+    s.mine=had;
+    s.count=Math.max(0,s.count+(had?1:-1));
+    paintLike(kind,id);
+    console.warn('toggleLike:',e.message);
+  }
+}
+
+function toggleCommentLike(id){ return toggleLike('comment',id); }
+function toggleMessageLike(id){ return toggleLike('message',id); }
 
 /**
  * One round trip for the whole visible feed rather than one per card.
@@ -2129,16 +2278,22 @@ async function loadSocialCounts(ids){
   try{
     const [reacts,comments]=await Promise.all([
       apiGet('reactions?select=news_item_id,type,user_id&news_item_id=in.'+list+'&limit=5000'),
-      apiGet('comments?select=news_item_id&news_item_id=in.'+list+'&limit=5000'),
+      // `id` as well as news_item_id now: the like totals that feed Trending are
+      // per comment, so the mapping back to the item has to come from here.
+      apiGet('comments?select=id,news_item_id&news_item_id=in.'+list
+        +'&deleted_at=is.null&limit=5000'),
     ]);
     for(const r of reacts){
       const s=reactionState(r.news_item_id);
       s.counts[r.type]=(s.counts[r.type]||0)+1;
       if(currentUser&&r.user_id===currentUser.id)s.mine.add(r.type);
     }
+    const byItem=new Map();          // comment_id (string) -> news_item_id
     for(const c of comments){
       commentState(c.news_item_id).total++;
+      byItem.set(String(c.id),c.news_item_id);
     }
+    await loadCommentLikes(comments.map(c=>c.id),byItem);
   }catch(e){
     console.warn('loadSocialCounts:',e.message);
   }
@@ -2209,15 +2364,19 @@ async function loadAuthors(userIds){
  */
 async function loadComments(itemId,all){
   const s=commentState(itemId);
-  const limit=all?200:2;
+  // Always the whole thread now (capped at 200). The old default loaded two
+  // rows, which was fine when the only order was newest-first — but sorting a
+  // two-row sample by likes and labelling it "Top" would be a lie.
+  const limit=200;
   try{
     const rows=await apiGet('comments?select=id,user_id,content,created_at'
       +'&news_item_id=eq.'+itemId+'&order=created_at.desc&limit='+limit);
     await loadAuthors(rows.map(r=>r.user_id));
-    // Newest at the bottom, like a chat.
-    s.items=rows.reverse();
+    await loadCommentLikes(rows.map(r=>r.id),null);
+    // Held newest-first; sortedComments() decides what is actually shown.
+    s.items=rows;
     s.loaded=true;
-    if(all||rows.length<limit)s.total=Math.max(s.total,rows.length);
+    s.total=Math.max(rows.length,rows.length<limit?rows.length:s.total);
   }catch(e){
     console.warn('loadComments:',e.message);
     s.loaded=true;
@@ -2225,11 +2384,42 @@ async function loadComments(itemId,all){
   paintComments(itemId);
 }
 
+/**
+ * "Top" is likes then newest; "Newest" is newest first. Top is the default
+ * because a thread's best line should not sink just because someone replied
+ * after it.
+ *
+ * Sorting client-side rather than in the query: the thread is already loaded in
+ * full, so flipping the order costs nothing and a round trip would make the
+ * toggle feel broken on a slow connection.
+ */
+function sortedComments(itemId){
+  const s=commentState(itemId);
+  const rows=s.items.slice();
+  if(s.sort==='newest'){
+    rows.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  }else{
+    rows.sort((a,b)=>
+      (commentLikes(b.id).count-commentLikes(a.id).count)
+      || (new Date(b.created_at)-new Date(a.created_at)));
+  }
+  // Oldest at the bottom for Newest, highest at the top for Top: both read
+  // downwards, so the thread never needs scrolling up to find the start.
+  return rows;
+}
+
+function setCommentSort(itemId,sort){
+  const s=commentState(itemId);
+  if(s.sort===sort)return;
+  s.sort=sort;
+  paintComments(itemId);
+}
+
 async function toggleComments(itemId){
   const s=commentState(itemId);
   s.expanded=!s.expanded;
   paintComments(itemId);
-  if(s.expanded&&!s.loaded)await loadComments(itemId,false);
+  if(s.expanded&&!s.loaded)await loadComments(itemId,true);
 }
 
 async function showAllComments(itemId){
@@ -3771,11 +3961,20 @@ function paintComments(itemId){
     }else if(!s.items.length){
       html='<div class="comment-empty">No comments yet. Say the first thing.</div>';
     }else{
+      // The sort row only earns its space once there is something to sort.
+      if(s.items.length>1){
+        html+='<div class="csort">'
+          +'<button class="csort-btn'+(s.sort==='top'?' active':'')
+          +'" onclick="setCommentSort('+itemId+',\'top\')">Top</button>'
+          +'<button class="csort-btn'+(s.sort==='newest'?' active':'')
+          +'" onclick="setCommentSort('+itemId+',\'newest\')">Newest</button>'
+          +'</div>';
+      }
       if(s.total>s.items.length){
         html+='<button class="comment-showall" onclick="showAllComments('+itemId+')">'
           +'Show all '+s.total+' comments</button>';
       }
-      html+=s.items.map(c=>commentRow(itemId,c)).join('');
+      html+=sortedComments(itemId).map(c=>commentRow(itemId,c)).join('');
     }
     // Composer sits inline at the end of the thread rather than fixed to the
     // viewport: a fixed composer fights the iOS keyboard and the bottom tab bar.
@@ -3799,6 +3998,7 @@ function commentRow(itemId,c){
     +'<span class="comment-time">'+timeAgo(c.created_at)+'</span></div>'
     +'<div class="comment-text">'+sanitize(c.content)+'</div>'
     +'<div class="comment-meta">'
+    +likeButtonHtml('comment',c.id)
     +(currentUser&&!mine?'<button class="comment-link" onclick="openReport('+itemId+','+c.id+')">Report</button>':'')
     +(canDelete?'<button class="comment-link" onclick="deleteComment('+itemId+','+c.id+')">Delete</button>':'')
     +'</div>'
@@ -4000,6 +4200,7 @@ async function loadChatMessages(scroll){
       +'&deleted_at=is.null&order=created_at.desc&limit='+CHAT_PAGE);
     if(!chatRoom||chatRoom.groupId!==room)return;   // the room changed mid-flight
     await loadAuthors(rows.map(r=>r.user_id).filter(Boolean));
+    await loadMessageLikes(rows.filter(r=>!r.is_system).map(r=>r.id));
     chatMessages=rows.reverse();
     paintChat(scroll);
   }catch(e){
@@ -4028,6 +4229,7 @@ function chatMsgRow(m){
     +'<span class="comment-time">'+timeAgo(m.created_at)+'</span></div>'
     +'<div class="chat-msg-text">'+sanitize(m.content)+'</div>'
     +(system?'':'<div class="comment-meta">'
+      +likeButtonHtml('message',m.id)
       +(currentUser&&!mine?'<button class="comment-link" onclick="openChatReport(\''+m.id+'\')">Report</button>':'')
       +(canDelete?'<button class="comment-link" onclick="deleteChatMessage(\''+m.id+'\')">Delete</button>':'')
       +'</div>'
@@ -4408,7 +4610,12 @@ function trendScore(n,coverage){
   const c=commentState(n.id).total||0;
   const rs=reactionState(n.id).counts||{};
   const r=Object.keys(rs).reduce((a,k)=>a+(rs[k]||0),0);
-  const engagement=c*3+r;
+  // Comment likes count too, at the same weight as a reaction: liking someone's
+  // comment is a smaller act than writing one, which is why a comment is still
+  // worth three. Without this a thread where one line got forty likes and no
+  // replies would read as dead.
+  const l=ITEM_COMMENT_LIKES.get(n.id)||0;
+  const engagement=c*3+r+l;
 
   const ageH=Math.max(0,(Date.now()-new Date(n.publishedAt).getTime())/3600000);
   const decay=Math.pow(0.5,ageH/TREND_HALF_LIFE_H);
