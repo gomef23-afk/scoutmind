@@ -42,6 +42,7 @@
   var cfg = { anonKey: null, url: null };
   var refreshing = null;        // the in-flight refresh promise, shared
   var signedOutCbs = [];
+  var mismatchCbs = [];     // fired when the session is a different account
   var watchTimer = null;
   var gaveUp = false;           // stops a dead session retrying forever
   // The signed-in user id AS THE SERVER SEES IT — session.user.id, which is the
@@ -70,6 +71,10 @@
 
   function onSignedOut(cb) {
     if (typeof cb === 'function') signedOutCbs.push(cb);
+  }
+
+  function onAccountMismatch(cb) {
+    if (typeof cb === 'function') mismatchCbs.push(cb);
   }
 
   /**
@@ -116,6 +121,57 @@
   /** The authoritative user id, once a session has been read. Null for guests. */
   function userId() { return sessionUid; }
 
+  /** Decode a JWT payload. No verification — this is for inspection only. */
+  function decodeJwt(token) {
+    try {
+      var part = String(token).split('.')[1];
+      if (!part) return null;
+      var b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      return JSON.parse(decodeURIComponent(atob(b64).split('').map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join('')));
+    } catch (e) { return null; }
+  }
+
+  /**
+   * Who is this page ACTUALLY acting as? Run `await SMAuth.whoami()` in the
+   * console.
+   *
+   * It reads the identity out of the access token itself — the same bytes the
+   * server reads to compute auth.uid() — rather than from any cache. That is
+   * the point: the nav can say one account while every write lands on another,
+   * and only the token settles which is true.
+   */
+  async function whoami() {
+    var s = await currentSession();
+    var cached = null;
+    try { cached = JSON.parse(localStorage.getItem('sm_current_user') || 'null'); } catch (e) {}
+    if (!s) {
+      return { signedIn: false, jwt: null, cachedUser: cached,
+               warning: cached ? 'Cached user with NO session — every write goes out as anon.' : null };
+    }
+    var claims = decodeJwt(s.access_token) || {};
+    var out = {
+      signedIn: true,
+      jwtUserId: claims.sub || null,
+      jwtEmail: claims.email || null,
+      sessionUserId: s.user && s.user.id,
+      sessionEmail: s.user && s.user.email,
+      cachedUserId: cached && cached.id,
+      cachedEmail: cached && cached.email,
+      expiresAt: s.expires_at ? new Date(s.expires_at * 1000).toISOString() : null
+    };
+    // The whole point of this helper.
+    out.match = out.jwtUserId === out.cachedUserId;
+    if (!out.match) {
+      out.warning = 'MISMATCH — the page is acting as ' + out.jwtEmail
+        + ' while showing ' + out.cachedEmail
+        + '. Every write lands on ' + out.jwtEmail + '.';
+    }
+    return out;
+  }
+
   /**
    * Read the session and reconcile localStorage against it.
    *
@@ -131,17 +187,35 @@
       stored = (cu && cu.id) || null;
     } catch (e) {}
     if (stored && stored !== s.user.id) {
-      // localStorage belongs to a different account than the live session. Drop
-      // every scoped cache and let the page rebuild from the session; keeping
-      // either side would leave one account's data under the other's name.
-      console.warn('SMAuth: cached user', stored, 'does not match session',
-                   s.user.id, '— clearing stale caches.');
+      // The cached account and the live session are DIFFERENT PEOPLE.
+      //
+      // This used to overwrite the cached id with the session's and carry on —
+      // which papered over exactly the bug it should have shouted about: the
+      // nav kept showing one account's name while every write went to the
+      // other's rows, with full permission, because the token really was
+      // theirs. Writes landed on the wrong account and nothing said so.
+      //
+      // The session wins, because the session is what the server obeys. But
+      // the cached record is replaced WHOLESALE from the session rather than
+      // patched, so no part of the other account's identity survives, and it
+      // is reported as an error.
+      console.error('SMAuth: session belongs to', s.user.email || s.user.id,
+                    'but this browser cached', stored,
+                    '— the cached account has been dropped. Run SMAuth.whoami().');
       claimFor(s.user.id);
       try {
-        var raw = JSON.parse(localStorage.getItem('sm_current_user') || 'null') || {};
-        raw.id = s.user.id;
-        localStorage.setItem('sm_current_user', JSON.stringify(raw));
+        localStorage.setItem('sm_current_user', JSON.stringify({
+          id: s.user.id,
+          email: s.user.email || null,
+          name: (s.user.user_metadata && s.user.user_metadata.name)
+                || (s.user.email ? s.user.email.split('@')[0] : 'User'),
+          plan: 'fan'      // re-read from profiles by the app on load
+        }));
       } catch (e) {}
+      var cbs = mismatchCbs.slice();
+      for (var i = 0; i < cbs.length; i++) {
+        try { cbs[i](s.user.email || s.user.id); } catch (e) {}
+      }
     }
     return s.user.id;
   }
@@ -377,6 +451,8 @@
     userId: userId,
     resolveUser: resolveUser,
     onSignedOut: onSignedOut,
+    onAccountMismatch: onAccountMismatch,
+    whoami: whoami,
     endSession: giveUp,
     uid: uid,
     key: key,

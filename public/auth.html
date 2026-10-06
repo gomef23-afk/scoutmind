@@ -51,6 +51,16 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
   <div class="msg error" id="msg-error"></div>
   <div class="msg success" id="msg-success"></div>
 
+  <!-- Shown when a session already exists. This page used to redirect to '/'
+       instead, which raced against a sign-in already in flight. -->
+  <div id="already-signed-in" style="display:none;background:rgba(0,229,160,0.07);border:1px solid rgba(0,229,160,0.3);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.6;color:#c7d3e4;">
+    Already signed in as <strong id="already-email"></strong>.
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="/" style="background:#00e5a0;color:#000;text-decoration:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:700;">Continue</a>
+      <button onclick="signOutAndStay()" style="background:transparent;border:1px solid #2a3a52;color:#8fa3bf;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;">Sign out and use another account</button>
+    </div>
+  </div>
+
   <!-- LOGIN -->
   <div class="form-section active" id="sec-login">
     <div class="field">
@@ -95,12 +105,41 @@ var SURL = 'https://kdhbpzooyjxcglbxbuya.supabase.co';
 var SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
 var sb = supabase.createClient(SURL, SKEY);
 
-// Check if already logged in
-sb.auth.getSession().then(function(res) {
-  if (res.data && res.data.session) {
-    window.location.href = '/';
-  }
+// An existing session used to redirect straight to '/'. That was a race, and
+// it is how one account's writes ended up on another account:
+//
+//   getSession() is async, so the form is usable before the redirect fires.
+//   Type credentials, press Sign In, and the pending window.location.href='/'
+//   navigates away MID sign-in — the new session never finishes persisting,
+//   the old one survives in storage, and the app carries on as the previous
+//   user while the nav shows the new one's name.
+//
+// So: no redirect. Say who is signed in and make switching explicit.
+sb.auth.getSession().then(function (res) {
+  var session = res && res.data && res.data.session;
+  if (!session) return;
+  var box = document.getElementById('already-signed-in');
+  var who = document.getElementById('already-email');
+  if (who) who.textContent = (session.user && session.user.email) || 'another account';
+  if (box) box.style.display = 'block';
 });
+
+/**
+ * End any existing session before starting a new one.
+ *
+ * scope 'local' on purpose: a global sign-out calls the server, and if that
+ * call fails supabase-js can leave the local session in place — which is the
+ * other half of the same bug. Local always clears storage, which is the part
+ * that decides who the next request is sent as.
+ */
+async function clearExistingSession() {
+  try { await sb.auth.signOut({ scope: 'local' }); } catch (e) {}
+  if (window.SMAuth) { try { SMAuth.clearAccountCaches(); } catch (e) {} }
+}
+
+function signOutAndStay() {
+  clearExistingSession().then(function () { window.location.reload(); });
+}
 
 // Check URL params
 var params = new URLSearchParams(window.location.search);
@@ -151,15 +190,30 @@ async function doLogin() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Please enter a valid email address.');
   var btn = document.getElementById('l-btn');
   btn.textContent = 'Signing in...'; btn.disabled = true;
+  // Any previous session goes first, or signing in as a second account on this
+  // browser leaves the first one's token in storage.
+  await clearExistingSession();
   var res = await sb.auth.signInWithPassword({email: email, password: pass});
   if (res.error) {
     showError(res.error.message === 'Invalid login credentials' ? 'Wrong email or password.' : res.error.message);
     btn.textContent = 'Sign In'; btn.disabled = false;
     return;
   }
-  var profRes = await sb.from('profiles').select('*').eq('id', res.data.user.id).single();
+  // Prove the session in storage is the one we just created before handing over
+  // to the app. If these disagree, the app would act as whoever the stored
+  // session belongs to — silently, and with full write access to their data.
+  var check = await sb.auth.getSession();
+  var live = check && check.data && check.data.session;
+  if (!live || !live.user || live.user.id !== res.data.user.id) {
+    showError('Sign-in did not complete cleanly. Close other ScoutMind tabs and try again.');
+    await clearExistingSession();
+    btn.textContent = 'Sign In'; btn.disabled = false;
+    return;
+  }
+  var profRes = await sb.from('profiles').select('*').eq('id', live.user.id).single();
   var prof = profRes.data;
-  saveUser(res.data.user.id, email, prof ? prof.name : email.split('@')[0], prof ? prof.plan : 'fan');
+  saveUser(live.user.id, live.user.email || email,
+           prof ? prof.name : email.split('@')[0], prof ? prof.plan : 'fan');
   window.location.href = '/';
 }
 
@@ -177,6 +231,7 @@ async function doRegister() {
   if (!/[\d!@#$%^&*]/.test(pass)) return showError('Password must include at least one number or special character (!@#$%^&*).');
   var btn = document.getElementById('r-btn');
   btn.textContent = 'Creating account...'; btn.disabled = true;
+  await clearExistingSession();
   var res = await sb.auth.signUp({email: email, password: pass, options: {data: {name: name, plan: 'fan'}}});
   if (res.error) {
     showError(res.error.message);

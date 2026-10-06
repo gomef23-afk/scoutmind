@@ -360,6 +360,10 @@ body{padding-bottom:64px;}
 .feed-more-btn:hover{border-color:var(--accent);color:var(--accent);}
 .feed-more-btn:disabled{opacity:.6;cursor:default;}
 .feed-end{text-align:center;padding:24px 20px 32px;color:var(--muted);font-size:12px;line-height:1.7;}
+/* The two halves of the one-screen picker. */
+.picker-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.picker-change{background:transparent;border:none;color:var(--accent);font-size:11px;letter-spacing:0;text-transform:none;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:4px 2px;min-height:28px;}
+.picker-current{display:flex;align-items:center;gap:10px;background:rgba(0,229,160,0.08);border:1px solid var(--accent);border-radius:10px;padding:10px 12px;}
 /* The sort row. Not shown until a thread has more than one comment. */
 .csort{display:flex;gap:6px;margin:2px 0 8px;}
 .csort-btn{font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;min-height:26px;}
@@ -371,7 +375,10 @@ body{padding-bottom:64px;}
 .picker-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;align-content:start;}
 .picker-head{grid-column:1/-1;font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:12px 0 2px;position:relative;}
 .picker-head:first-child{margin-top:0;}
-.picker-row{display:flex;align-items:center;gap:8px;min-height:40px;padding:7px 9px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);transition:border-color .15s,background .15s;}
+/* min-width:0 is load-bearing: a grid item defaults to min-width:auto, so
+   "Manchester United" would refuse to shrink below its own width and push the
+   column past the container — the whole picker scrolled sideways at 375px. */
+.picker-row{display:flex;align-items:center;gap:8px;min-width:0;min-height:40px;padding:7px 9px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);transition:border-color .15s,background .15s;}
 .picker-row:hover{border-color:var(--accent2);}
 .picker-row.is-main{background:rgba(0,229,160,0.08);border-color:var(--accent);}
 .picker-row.is-following{background:rgba(0,184,255,0.06);border-color:var(--accent2);}
@@ -1145,6 +1152,18 @@ function renderAuthUi(){
 }
 renderAuthUi();
 
+// The live session belongs to a different account than the one this browser
+// had cached. Reload rather than carry on: half the page is already painted
+// with the other account's clubs, and every write from here lands on whoever
+// the session belongs to.
+SMAuth.onAccountMismatch(function(email){
+  try{
+    alert('You are signed in as '+email+', not the account this page was showing.\n\n'
+      +'Reloading so nothing is saved to the wrong account.');
+  }catch(e){}
+  window.location.reload();
+});
+
 // The session has ended for good: say so once, in the sheet, rather than
 // letting the next write fail with "permission denied for table profiles".
 SMAuth.onSignedOut(function(){
@@ -1192,15 +1211,19 @@ document.addEventListener('keydown',function(e){
 // It uses `_supa`, the page's own client. It used to build a second client here,
 // which meant two clients sharing one storage key and each able to invalidate
 // the other's refresh token.
-function logout(){
-  _supa.auth.signOut().then(function(){
-    SMAuth.clearAccountCaches();
-    window.location.href='/';
-  }).catch(function(){
-    // A failed signOut must not trap someone in a session they asked to leave.
-    SMAuth.clearAccountCaches();
-    window.location.href='/';
-  });
+async function logout(){
+  // scope 'local' first, and always. A default (global) signOut calls the
+  // server, and if that call fails supabase-js can leave the local session in
+  // place — so the user "signs out", the caches clear, and the NEXT account to
+  // sign in on this browser inherits the old session token and writes as the
+  // previous user. Local clears storage, which is what decides who a request
+  // is sent as.
+  try{ await _supa.auth.signOut({scope:'local'}); }
+  catch(e){ console.warn('logout (local):',e&&e.message); }
+  // Best-effort server-side revocation, after storage is already clean.
+  try{ await _supa.auth.signOut(); }catch(e){}
+  try{ SMAuth.clearAccountCaches(); }catch(e){}
+  window.location.href='/';
 }
 
 // ── APP STATE ──
@@ -1964,12 +1987,15 @@ document.getElementById('playerLeagueSel').addEventListener('change',updateFilte
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Pick your main club and follow others to personalise your feed.</div>
 
-    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Main club</div>
+    <!-- No "Main club" heading here: combinedPickerHtml() renders its own, and
+         two of them stacked read as a bug. Nor `class="picker-grid"` on the
+         list — it supplies a grid per section, and a grid inside a grid put
+         every row in one 2-column cell and overflowed the modal sideways. -->
     <div class="picker-search-wrap">
       <input type="text" id="club-search" class="club-search" placeholder="Search clubs..." oninput="filterModalClubs()">
     </div>
 
-    <div id="modal-club-list" class="picker-grid" style="max-height:320px;overflow-y:auto;margin-bottom:18px;"></div>
+    <div id="modal-club-list" style="max-height:46vh;overflow-y:auto;margin-bottom:18px;"></div>
 
     <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Also following</div>
     <div id="modal-following-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;min-height:32px;"></div>
@@ -2703,13 +2729,32 @@ function renderModalClubs(){
     el.innerHTML = '<div class="picker-empty">Loading clubs…</div>';
     return;
   }
-  el.innerHTML = clubPickerHtml({
-    mode:'main',
+  // Same one-screen layout as onboarding: main club on top, follows below.
+  el.innerHTML = combinedPickerHtml({
     query:modalFilter,
     mainId:mainClubId(),
     selected:followedClubIds(),
-    handler:'selectModalClub'
+    handlerMain:'pickModalMain',
+    handlerFollow:'toggleModalFollow'
   });
+}
+
+/** Single-select: sets the main club and collapses the chooser. */
+function pickModalMain(id){
+  selectedMainClub=(selectedMainClub===id)?null:id;
+  followingClubs=followingClubs.filter(x=>x!==selectedMainClub);
+  if(selectedMainClub)pickerMainOpen=false;
+  renderModalClubs();
+  renderFollowingChips();
+}
+
+/** Multi-select. The main club is locked out of it. */
+function toggleModalFollow(id){
+  if(id===mainClubId())return;
+  const i=followingClubs.indexOf(id);
+  if(i>-1)followingClubs.splice(i,1); else followingClubs.push(id);
+  renderModalClubs();
+  renderFollowingChips();
 }
 
 function renderFollowingChips(){
@@ -2913,6 +2958,64 @@ function popularClubs(){
  *   selected  array of followed club ids
  *   handler   global function name called with a club id
  */
+// Whether the main-club chooser is expanded. Collapsed by default once a club
+// is set: 146 rows of single-select above 146 rows of multi-select is a lot of
+// scrolling to change something most people set once.
+let pickerMainOpen=false;
+
+function togglePickerMain(){
+  pickerMainOpen=!pickerMainOpen;
+  repaintCombinedPickers();
+}
+
+/**
+ * Both halves of the picker on ONE screen: main club at the top, everything
+ * else below, one search filtering both.
+ *
+ * Replaces the two-step onboarding, which made you commit to a main club
+ * before it would show you the follow list — and then gave you no way back
+ * without losing the step.
+ *
+ * `handlerMain` and `handlerFollow` are global function names, so the same
+ * markup serves onboarding and the team modal with their own save paths.
+ */
+function combinedPickerHtml(o){
+  const mainId=o.mainId||null;
+  const main=mainId?CLUB_DATA.get(mainId):null;
+  const open=pickerMainOpen||!mainId;     // nothing chosen yet: start open
+
+  let html='<div class="picker-section-head">'
+    +'<span>Main club</span>'
+    +(main?'<button class="picker-change" onclick="togglePickerMain()">'
+      +(open?'Done':'Change')+'</button>':'')
+    +'</div>';
+
+  if(main&&!open){
+    html+='<div class="picker-current">'+clubCrestById(main.id,28)
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:13px;font-weight:600;">'+sanitize(main.label)+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);">'
+      +sanitize(LEAGUE_LABEL[main.league]||'')+'</div></div>'
+      +'<span class="picker-badge g">MAIN</span></div>';
+  }else{
+    html+='<div class="picker-grid">'
+      +clubPickerHtml({mode:'main',query:o.query,mainId:mainId,
+                       selected:o.selected,handler:o.handlerMain})
+      +'</div>';
+  }
+
+  html+='<div class="picker-section-head" style="margin-top:18px;">'
+    +'<span>Also following</span>'
+    +'<span style="font-size:10px;color:var(--muted);font-weight:400;">'
+    +(o.selected.length?o.selected.length+' selected':'optional')+'</span>'
+    +'</div>'
+    +'<div class="picker-grid">'
+    +clubPickerHtml({mode:'follow',query:o.query,mainId:mainId,
+                     selected:o.selected,handler:o.handlerFollow})
+    +'</div>';
+  return html;
+}
+
 function clubPickerHtml(opts){
   const mode=opts.mode||'main';
   const q=pickerNorm(opts.query||'');
@@ -2997,102 +3100,80 @@ function maybeStartOnboarding(){
 function openOnboarding(){
   const m=document.getElementById('onboard-modal');
   if(!m)return;
-  onboardStep=1;
+  pickerMainOpen=false;
   renderOnboard();
   m.style.display='flex';
 }
 
-let onboardStep=1;
-
+/**
+ * Onboarding is ONE screen now: main club at the top, everything else below,
+ * one search filtering both.
+ *
+ * It was two steps — pick a main club, press Continue, then choose follows.
+ * That made you commit before the follow list existed, and there was no way
+ * back without losing the step. Nothing about picking a club needs a wizard.
+ */
 function renderOnboard(){
   const body=document.getElementById('onboard-body');
   const title=document.getElementById('onboard-title');
   const sub=document.getElementById('onboard-sub');
   if(!body)return;
-  const main=mainClubId();
-
-  if(onboardStep===1){
-    title.textContent='Pick your club';
-    sub.textContent='Your feed, your matches and your club page are built around it.';
-    // Same markup as the modal and as step 2 — one picker, three callers.
-    body.innerHTML='<div class="picker-search-wrap">'
-      +'<input id="onboard-search" class="club-search" placeholder="Search clubs…" oninput="renderOnboardList()">'
-      +'</div>'
-      +'<div id="onboard-list" class="picker-grid" style="max-height:46vh;overflow-y:auto;"></div>';
-    renderOnboardList();
-    document.getElementById('onboard-next').textContent=main?'Continue':'Skip for now';
-  }else{
-    const c=CLUB_DATA.get(main);
-    title.textContent='Follow a few more';
-    sub.textContent=c?('Rivals first, then the clubs everyone follows. Optional.'):'Optional.';
-    body.innerHTML='<div class="picker-search-wrap">'
-      +'<input id="onboard-follow-search" class="club-search" placeholder="Search clubs…" oninput="renderOnboardFollowList()">'
-      +'</div>'
-      +'<div id="onboard-follow-list" class="picker-grid" style="max-height:46vh;overflow-y:auto;"></div>';
-    renderOnboardFollowList();
-    document.getElementById('onboard-next').textContent='Done';
-  }
+  title.textContent='Pick your clubs';
+  sub.textContent='Your main club shapes the feed. Follow as many others as you like.';
+  body.innerHTML='<div class="picker-search-wrap">'
+    +'<input id="onboard-search" class="club-search" placeholder="Search clubs…" oninput="renderOnboardPicker()">'
+    +'</div>'
+    +'<div id="onboard-picker" style="max-height:52vh;overflow-y:auto;"></div>';
+  renderOnboardPicker();
+  const next=document.getElementById('onboard-next');
+  if(next)next.textContent=mainClubId()?'Done':'Skip for now';
 }
 
-function renderOnboardList(){
-  const el=document.getElementById('onboard-list');
+function renderOnboardPicker(){
+  const el=document.getElementById('onboard-picker');
   if(!el)return;
-  el.innerHTML=clubPickerHtml({
-    mode:'main',
+  el.innerHTML=combinedPickerHtml({
     query:(document.getElementById('onboard-search')||{value:''}).value,
     mainId:mainClubId(),
     selected:followedClubIds(),
-    handler:'pickOnboardMain'
+    handlerMain:'pickOnboardMain',
+    handlerFollow:'toggleOnboardFollow'
   });
+  const next=document.getElementById('onboard-next');
+  if(next)next.textContent=mainClubId()?'Done':'Skip for now';
 }
 
-/**
- * Step 2. Same component, follow mode: the main club's league leads, then
- * Popular, then every league. It replaced an 18-club `suggestClubs()` list —
- * with 146 clubs available, capping the list at 18 meant most people could not
- * find the club they wanted at all.
- */
-function renderOnboardFollowList(){
-  const el=document.getElementById('onboard-follow-list');
-  if(!el)return;
-  el.innerHTML=clubPickerHtml({
-    mode:'follow',
-    query:(document.getElementById('onboard-follow-search')||{value:''}).value,
-    mainId:mainClubId(),
-    selected:followedClubIds(),
-    handler:'toggleOnboardFollow'
-  });
+/** Repaint whichever combined picker is on screen, without losing the search. */
+function repaintCombinedPickers(){
+  if(document.getElementById('onboard-picker'))renderOnboardPicker();
+  if(document.getElementById('modal-club-list'))renderModalClubs();
 }
 
 function pickOnboardMain(id){
   selectedMainClub=(selectedMainClub===id)?null:id;
   followingClubs=followingClubs.filter(x=>x!==selectedMainClub);
-  renderOnboardList();
-  document.getElementById('onboard-next').textContent=mainClubId()?'Continue':'Skip for now';
+  // Choosing collapses the main chooser, so the follow list is in view rather
+  // than 146 rows below the fold.
+  if(selectedMainClub)pickerMainOpen=false;
+  renderOnboardPicker();
 }
 
 function toggleOnboardFollow(id){
   if(id===mainClubId())return;            // the main club is not a follow
   const i=followingClubs.indexOf(id);
   if(i>-1)followingClubs.splice(i,1); else followingClubs.push(id);
-  // Repaint only the list: renderOnboard() would rebuild the whole step and
+  // Repaint only the picker: renderOnboard() would rebuild the whole screen and
   // throw away the search box and the scroll position on every tick.
-  renderOnboardFollowList();
+  renderOnboardPicker();
 }
 
 // suggestClubs() and BIG_CLUBS lived here. They built the 18-club step-2 list
 // from API-Football ids; clubPickerHtml({mode:'follow'}) shows all 146 with the
 // main club's league first, so both are gone rather than left to rot.
 
-function onboardNext(){
-  if(onboardStep===1){
-    if(!mainClubId())return finishOnboarding();   // "Skip for now"
-    onboardStep=2;
-    renderOnboard();
-    return;
-  }
-  finishOnboarding();
-}
+// One screen, so one button. It used to advance to step 2 first; the follow
+// list is on the same screen now, so there is nothing to advance to.
+function onboardNext(){ return finishOnboarding(); }
 
 async function finishOnboarding(){
   const m=document.getElementById('onboard-modal');
