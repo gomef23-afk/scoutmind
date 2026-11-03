@@ -1,9 +1,9 @@
 # ScoutMind — Social Pivot Master Plan
-*Created: September 14, 2026. Last updated September 23, 2026. Companion to SCOUTMIND_PROJECT_CONTEXT — the monetization sections it used to supersede have now been deleted from that document outright.*
+*Created: September 14, 2026. Last updated November 2, 2026. Companion to SCOUTMIND_PROJECT_CONTEXT — the monetization sections it used to supersede have now been deleted from that document outright.*
 
 ---
 
-## STATUS AS OF SEPTEMBER 23, 2026
+## STATUS AS OF NOVEMBER 2, 2026
 
 ### Shipped
 
@@ -26,9 +26,11 @@
 | **Package 3b — feed bugs + search** | Migration `009` — `duplicate_of`, a generated `search_vector` with a GIN index, and a two-pass dedup backfill. `stableGuid()` in `rss.js` fixes the cause at ingest. Plus search across headlines, a Trending tab ranked by `trendScore()` / `coverageBreadth()`, the redesigned comment UI, and the For You language leak fixed. Applied on production: **1,482 originals / 528 duplicates** | live |
 | **Package 3c — feed filter** | `loadNews()` never filtered `duplicate_of`, so `009` was invisible on Home, For You and Trending. Both news queries now share `liveItemPredicate()`. Migration `010` — BBC Sounds and iPlayer excluded by URL via `news_sources.exclude_patterns`, which now also match the URL and run before the club-tag shortcut | live |
 | **Package 4 — groups** | Migration `011` — one official community room per club (146), the 8 May groups retired, `club_chat_overview`, `group_message_guard()`, moderation shared with comments via `moderation_check()`. Full-screen chat on the Clubs tab, Home sidebar card, polymorphic admin queue. Covers **C3's room half**; `community.html`'s Groups tab is a signpost now | live |
-| **Package 4a — session + accounts** | `public/sm_auth.js` — one token source for both pages, refresh ahead of expiry, one shared in-flight refresh, 401 retry, sign-in sheet on real failure. `importLocalClubs()` deleted; every cache key scoped by user id. One `clubPickerHtml()` for all four call sites with a Popular section resolved by name | built — push and verify with two accounts |
-| **Package 4b — likes** | Migration `012` — `comment_likes`, `message_likes`, PK on the pair, no downvotes. Also widens `reports.target_id` and `events.ref_id` to `text`: `group_messages.id` is a uuid, so **011's Report button on a chat message could never have worked**. Top/Newest thread sort, likes in the Trending score | `012` applied — behaviour under re-test |
-| **Package 4c — a week of news** | Feed paginated by `published_at` cursor, 60 a page, 7-day window, Load more + near-bottom observer on News and For You. Trending half-life 12h → 48h with a Today / This week toggle. Also fixes the like bug's root cause: identity now comes from the JWT (`myUserId()`), not from the localStorage copy, at all 23 write sites | built — push and re-test with two accounts |
+| **Package 4a — session + accounts** | `public/sm_auth.js` — one token source for both pages, refresh ahead of expiry, one shared in-flight refresh, 401 retry, sign-in sheet on real failure. `importLocalClubs()` deleted; every cache key scoped by user id. One `clubPickerHtml()` for all four call sites with a Popular section resolved by name | live — two-account test passed 2 Nov |
+| **Package 4b — likes** | Migration `012` — `comment_likes`, `message_likes`, PK on the pair, no downvotes. Also widens `reports.target_id` and `events.ref_id` to `text`: `group_messages.id` is a uuid, so **011's Report button on a chat message could never have worked**. Top/Newest thread sort, likes in the Trending score | live — cross-user delete refused and chat report stored with a uuid target, both on production 2 Nov. Admin queue not rendering is open |
+| **Package 4c — a week of news** | Feed paginated by `published_at` cursor, 60 a page, 7-day window, Load more + near-bottom observer on News and For You. Trending half-life 12h → 48h with a Today / This week toggle. Also fixes the like bug's root cause: identity now comes from the JWT (`myUserId()`), not from the localStorage copy, at all 23 write sites | live — like bug confirmed display-only 2 Nov; pagination verified locally, not re-checked on production |
+| **Package 4d — silent saves** | `endSession()` fires only when a refresh has actually failed, not on a single 401. Every user-facing write failure raises a toast; `saveTeamSelection()` awaits the write and keeps the modal open on failure | live — club save confirmed on production 2 Nov |
+| **Package 4e — writes on the wrong account** | Removes `auth.html`'s redirect race, clears any existing session before sign-in, `scope:'local'` on sign-out, `resolveUser()` replaces a mismatched cache instead of patching it, `SMAuth.whoami()`. The club picker becomes one screen | live — two-account test passed 2 Nov: `whoami` matched on both, the club write landed on the right row |
 
 ### Infrastructure
 
@@ -36,7 +38,7 @@
   *The free tier was abandoned: it serves only seasons 2022-2024 and rejects the `next`/`last` fixture parameters.*
 - **cron-job.org** drives `/api/cron/fixtures` (daily), `/api/cron/standings` (daily), `/api/cron/live` (**every 10 min**), `/api/cron/fixture-stats` (every 15 min) and `/api/cron/news` (every 15 min), each authenticated with `CRON_SECRET` via an `Authorization: Bearer` header. Vercel's own cron was not used — the Hobby plan allows only 2 jobs at daily granularity. `/api/cron/teams` is run manually.
 - **Season backfill done (23 Sept).** One `/api/cron/fixtures?back=400&ahead=21` run took `fixtures` from 83 to **1,033 rows, 932 finished**, no league paginated. Série A's 300 rows are 30 complete rounds x 10 matches, not an API cap — cross-checked against `standings.played`. Argentina holds **both** Apertura and Clausura (32 distinct round labels, max round 16).
-- **Supabase migrations 001, 002, 003 and 004 applied; `005_news.sql` is pending.** `003` carries a SCHEMA PATCHES section so re-running it always brings an existing database up to date. `005` is idempotent and order-independent: its alias seed joins on `teams.api_team_id`, so it can be run before or after the teams job.
+- **Supabase migrations `001`–`012` are all applied.** `003` carries a SCHEMA PATCHES section so re-running it always brings an existing database up to date. `005` is idempotent and order-independent: its alias seed joins on `teams.api_team_id`, so it can be run before or after the teams job.
 - **Vercel env:** `API_FOOTBALL_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (new-format `sb_secret_…`), `CRON_SECRET`. The service key never reaches the browser; the client uses the anon key against public-read tables only.
 
 ### Known state to carry forward
@@ -373,7 +375,7 @@ should be split per tournament. Splitting would need a `tournament` dimension on
 | **Real stats API** | ✅ done — API-Football Pro |
 | **scoutmind.app connected to Vercel** | ✅ done |
 | **Real-time match data** | ✅ done — `/api/cron/live` |
-| **Official club logos** | ✅ done — `teams.logo_url` from the API, not yet shown in the UI |
+| **Official club logos** | ✅ done — `teams.logo_url` from the API, shown as crests in the UI |
 | **Historical tracking** | now possible on Pro; not scheduled |
 | **Terms + Privacy pages** | ⚠️ still `showLegal()` modals on `about.html`; real pages needed before public launch (Phase G) |
 | **Account deletion path** | ⚠️ not built. Required by LGPD |

@@ -28,7 +28,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 2. After any HTML change, verify div balance: strip `<script>` blocks, count `<div` vs `</div>` — must be equal. Report the numbers.
 3. No duplicate `function` / `const` / `let` declarations across script blocks in the same file.
 4. `community.html` team selection uses the `_ft` array + `pickTeam(idx)` — never inline strings in onclick.
-5. Nav is duplicated across `app.html`, `community.html`, `news.html` — any nav change must be applied to all three.
+5. Nav is duplicated across `index.html`, `about.html`, `community.html`, `news.html` — any nav change must be applied to all four. (`app.html` is only a redirect.)
 6. Modals: `display:none` in HTML, `display:flex` set only in JS.
 7. `badge_applications` — do not send `user_id` (FK fails for localStorage users).
 8. `leagues_data.js` must load before `init()` — keep the `typeof TEAMS !== 'undefined'` pattern.

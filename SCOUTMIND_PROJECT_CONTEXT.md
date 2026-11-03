@@ -50,7 +50,7 @@ The core value proposition: "What position does your team need? Here are the 10 
 - The free tier is unusable here: seasons 2022-2024 only, and it rejects the `next`/`last` fixture parameters
 
 ### Vercel environment variables
-`API_FOOTBALL_KEY` · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `CRON_SECRET`
+`API_FOOTBALL_KEY` · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `CRON_SECRET` (rotated November 2026)
 
 ### Cron endpoints (cron-job.org, `Authorization: Bearer $CRON_SECRET`)
 | Endpoint | Schedule | Cost |
