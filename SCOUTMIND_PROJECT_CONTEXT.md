@@ -129,6 +129,8 @@ show_club_news_all_langs BOOLEAN -- 007. opt-in: club news in other languages to
 onboarded_at TIMESTAMPTZ  -- 007. set when onboarding completes OR is skipped;
                           --      also guards the one-time localStorage import
 ```
+⚠️ **`plan` and `credential` cannot be written from the app** (`013`). Set them in the dashboard or SQL editor. A new column the app writes needs its own `grant update`.
+
 ⚠️ **`profiles` is NOT publicly readable** — it holds email addresses. A signed-in
 user can read and update only their own row. Public/social reads go through:
 
@@ -208,6 +210,7 @@ Written only by the cron jobs. All public-read.
 | `teams` | 146 teams — venue, founded, logo, coach | `/api/cron/teams` ✅ |
 | `team_aliases` | Club aliases for news tagging, with `kind` / `langs` / `short_ok` | seeded in `005` from `api/_lib/aliases.js` ✅ |
 | `standings` | Rank, points, form, `group_label` | `/api/cron/standings` ✅ |
+| `standings_snapshots` | One row per club per UTC day: rank, points, played, W/D/L, GF/GA, form, `group_label`. Cannot be back-filled | `/api/cron/standings` (`013`) |
 | `fixtures` | Kickoff, status, elapsed, score, venue | `/api/cron/fixtures` ✅ |
 | `fixture_stats` | All 18 `/fixtures/statistics` types incl. `expected_goals`, `goals_prevented` | `/api/cron/fixture-stats` ✅ |
 | `team_season_stats` | The weakness engine's inputs — `gc gs yel pa pos_pct fouls sh sot tk int duels_won_pct xg_pg xga_pg` | R5 ✅ (`tk`/`int`/`duels` await R6) |

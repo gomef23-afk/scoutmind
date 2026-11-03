@@ -244,7 +244,8 @@ async function doRegister() {
     // means there is no session here, so this client write runs as `anon`.
     // Kept as a harmless fallback for the session-exists case.
     try {
-      await sb.from('profiles').upsert({id: res.data.user.id, name: name, email: email, plan: 'fan', created_at: new Date().toISOString()});
+      // No `plan`: 013 locks it, and the column default already makes this a fan.
+      await sb.from('profiles').upsert({id: res.data.user.id, name: name, email: email, created_at: new Date().toISOString()});
     } catch (e) { /* trigger already handled it */ }
     saveUser(res.data.user.id, email, name, 'fan');
   }

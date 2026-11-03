@@ -46,6 +46,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 20. **Disambiguate PostgREST embeds.** `teams` and `leagues` are joined by *two* paths (`teams.league_id` and the `standings` junction), so a bare `leagues(...)` embed returns **HTTP 300 PGRST201**, not an error row. Always write `leagues!teams_league_id_fkey(...)`. And never treat a non-2xx as a bare status — log the response body, or the real reason stays invisible.
 21. **The front end deploys before migrations run.** Vercel auto-deploys on push; Felipe runs SQL by hand afterwards. Any query using a brand-new column must degrade to a working query when that column is missing, not blank the page.
 22. **`about.html` may only claim what the database can show.** Every number on the marketing page must be checkable against Supabase. The plan doc lists what was removed and why — read it before adding a figure there.
+23. **`profiles.plan` and `profiles.credential` are never written from the client.** Migration `013` locks them with a column grant and the `profiles_role_guard` trigger; roles change only from the SQL editor or dashboard. `authenticated` holds UPDATE per column, so **a new `profiles` column the app writes needs its own `grant update (col)`**, or saves fail with `42501`.
 
 ## Workflow
 - Before editing, grep and list every hit you plan to change. Wait for approval on anything that removes or restructures more than one section.

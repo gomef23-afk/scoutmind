@@ -31,6 +31,8 @@
 | **Package 4c — a week of news** | Feed paginated by `published_at` cursor, 60 a page, 7-day window, Load more + near-bottom observer on News and For You. Trending half-life 12h → 48h with a Today / This week toggle. Also fixes the like bug's root cause: identity now comes from the JWT (`myUserId()`), not from the localStorage copy, at all 23 write sites | live — like bug confirmed display-only 2 Nov; pagination verified locally, not re-checked on production |
 | **Package 4d — silent saves** | `endSession()` fires only when a refresh has actually failed, not on a single 401. Every user-facing write failure raises a toast; `saveTeamSelection()` awaits the write and keeps the modal open on failure | live — club save confirmed on production 2 Nov |
 | **Package 4e — writes on the wrong account** | Removes `auth.html`'s redirect race, clears any existing session before sign-in, `scope:'local'` on sign-out, `resolveUser()` replaces a mismatched cache instead of patching it, `SMAuth.whoami()`. The club picker becomes one screen | live — two-account test passed 2 Nov: `whoami` matched on both, the club write landed on the right row |
+| **`standings_snapshots`** | Migration `013` — one dated row per club per UTC day, seeded from `standings` on the day it is applied, then upserted by `/api/cron/standings`. Split out of R6 because history cannot be back-filled. Roadmap item 1 | built — applied by hand before the push |
+| **Role lock** | Also in `013` — `profiles.plan` and `credential` can no longer be written by `anon` or `authenticated`: column grants plus the `profiles_role_guard` trigger. Any signed-in user could previously make themselves an admin | built — applied by hand before the push |
 
 ### Infrastructure
 
@@ -107,6 +109,13 @@
 
 - **`isAdmin()` read a column nobody fetched.** It checks `MY_PROFILE.plan`, and `loadMyAccount()` never selected `plan`, in any commit since package 3 added the queue. So the queue stayed hidden for every admin, and so did the admin Delete buttons on other people's comments and chat messages. RLS was never the problem: `reports` answered 200 the whole time. The 28 Sept "admin delete from Profile" pass cannot have used this path, so treat admin moderation as first verified after this fix.
 - **A direct load of `?page=profile` had a second cause.** `showPage()` runs before `loadMyAccount()` resolves, and nothing rendered the queue again afterwards. Boot now renders it once the account has loaded.
+
+**Role lock (013), carried forward:**
+
+- **`authenticated` could set its own `profiles.plan`, confirmed on production 2 Nov.** `is_admin()` trusts that column, so any signed-in user could have read every report and soft-deleted any comment or message. `013` carries an audit query for who holds a role today.
+- **A column revoke alone would have done nothing.** The table-level UPDATE grant still covers the column, so the table grant is removed and UPDATE granted back per column. The catch is in rule 23: a new `profiles` column the app writes needs its own grant.
+- **The trigger also covers INSERT.** `profiles` has self-delete and self-insert policies, so deleting your row and inserting it again as an admin was a second route. The grant does not stop that; the trigger does.
+- **The trigger blocks `anon` and `authenticated` rather than allowing only `service_role`.** The SQL editor runs as `postgres` and signup's `handle_new_user()` as its owner, and an allow-list would have broken analyst approval and every new signup.
 
 **Package 4e (writes landing on the wrong account), carried forward:**
 
@@ -200,7 +209,7 @@ Keep this list in mind before adding anything to that page.
 
 | # | Work | Notes |
 |---|---|---|
-| **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg`/`duels_won_pct` — the last three nulls in `team_season_stats`. **Also ship `standings_snapshots` here** (roadmap 1) — it cannot be back-filled later. Unblocks fantasy picks (roadmap 3) |
+| **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg`/`duels_won_pct` — the last three nulls in `team_season_stats`. Its migration is `014`; `standings_snapshots` already shipped separately as `013`. Unblocks fantasy picks (roadmap 3) |
 | **R7** | League averages | Recompute `league_averages` from real data — the weakness thresholds become real. Unblocks Match Previews (roadmap 2), which ships **before** R9 |
 | **R9** | Front end on real data | Scout Mode and SM Weekly read Supabase. The Matches and news slices are done. **Three engine decisions are queued here — see below** |
 | **B3** | Delete `news.html` | Superseded by the Home feed; nothing left to port — the two widgets it shared were invented numbers and are gone |
@@ -215,7 +224,7 @@ R10 (delete `leagues_data.js` / `players_data.js`) follows R9.
 Ordering here is not arbitrary — two of these have hard dependencies, and one
 of them cannot be recovered if it is skipped.
 
-#### 1. `standings_snapshots` — build it in the R6 package
+#### 1. `standings_snapshots` — shipped ahead of R6 as migration `013`
 
 The daily standings cron appends a dated row per club instead of only
 overwriting the current table, so "biggest mover this week" and any
@@ -223,8 +232,9 @@ week-over-week trend have something to compare against.
 
 **This is the one item that cannot be back-filled.** Every day it is not
 built is a day of history that does not exist — API-Football serves the
-table as it stands now, not as it stood last Tuesday. That is why it rides
-along with R6 rather than waiting for the feature that needs it.
+table as it stands now, not as it stood last Tuesday. That is why it went
+ahead of R6 rather than waiting for the feature that needs it. History starts
+on the day `013` is applied; nothing before that can be recovered.
 
 #### 2. Match Previews + Trends — after R7, **before** R9 Scout Mode
 

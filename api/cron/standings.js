@@ -6,14 +6,19 @@
 
 import { createClient } from '../_lib/apifootball.js';
 import { activeLeagues, teamIdMap, upsert } from '../_lib/supabase.js';
-import { withCron } from '../_lib/cron.js';
+import { withCron, isoDate } from '../_lib/cron.js';
 
 export default withCron('standings', async () => {
   const api = createClient();
   const leagues = await activeLeagues();
   const teams = await teamIdMap(leagues.map((l) => l.id));
 
+  // Fixed once per run, so a run that crosses midnight UTC stays on one date.
+  const snapshotDate = isoDate();
+
   let rows = 0;
+  let snapshotRows = 0;
+  const snapshotFailures = [];
   const skipped = [];
   const byLeague = [];
 
@@ -84,6 +89,36 @@ export default withCron('standings', async () => {
     const written = await upsert('standings', standingRows, 'league_id,season,team_id');
     rows += written;
 
+    // History cannot be back-filled, so write it league by league: a failure
+    // here must not cost the remaining leagues their table or their snapshot.
+    let snapshotted = 0;
+    try {
+      snapshotted = await upsert(
+        'standings_snapshots',
+        standingRows.map((r) => ({
+          league_id: r.league_id,
+          season: r.season,
+          team_id: r.team_id,
+          snapshot_date: snapshotDate,
+          rank: r.rank,
+          points: r.points,
+          played: r.played,
+          won: r.win,
+          drawn: r.draw,
+          lost: r.lose,
+          gf: r.goals_for,
+          ga: r.goals_against,
+          form: r.form,
+          group_label: r.group_label,
+        })),
+        'league_id,season,team_id,snapshot_date'
+      );
+      snapshotRows += snapshotted;
+    } catch (e) {
+      console.error('[standings] snapshot', lg.slug, e.message);
+      snapshotFailures.push(`${lg.slug}: ${e.message}`);
+    }
+
     const diag = {
       league: lg.slug,
       groups: groups.length,
@@ -91,14 +126,23 @@ export default withCron('standings', async () => {
       unique_teams: standingRows.length,
       duplicates_collapsed: collapsed,
       written,
+      snapshotted,
     };
     byLeague.push(diag);
     console.log('[standings]', JSON.stringify(diag));
   }
 
+  // Every league's table is written by now. Fail the run so cron-job.org goes
+  // red: a missed snapshot is a day of history that cannot be recovered.
+  if (snapshotFailures.length) {
+    throw new Error(`standings_snapshots failed — ${snapshotFailures.join(' | ')}`);
+  }
+
   const s = api.stats();
   return {
     rows_written: rows,
+    snapshot_date: snapshotDate,
+    snapshot_rows: snapshotRows,
     requests_used: s.used,
     quota_remaining: s.remaining,
     skipped_unknown_teams: skipped.length,
