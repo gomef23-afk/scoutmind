@@ -2071,7 +2071,7 @@ function myClubApiIds(){
 // Signed in, the account is the source of truth. localStorage is a cache so
 // the first paint is not blank, and the only store a guest has.
 
-let MY_PROFILE=null;          // { main_club_id, content_langs, onboarded_at }
+let MY_PROFILE=null;          // { plan, main_club_id, content_langs, onboarded_at }
 let PROFILE_LOADED=false;
 
 // authedHeaders() used to live here. It read `_supa.auth.__token`, which is not
@@ -2140,7 +2140,8 @@ async function loadMyAccount(){
   PROFILE_LOADED=true;
   if(!currentUser||sessionLapsed)return;   // nothing to read as anon
   try{
-    const rows=await apiGet('profiles?select=main_club_id,content_langs,onboarded_at,show_club_news_all_langs&limit=1');
+    // `plan` is what isAdmin() reads. Without it every admin looks like a fan.
+    const rows=await apiGet('profiles?select=plan,main_club_id,content_langs,onboarded_at,show_club_news_all_langs&limit=1');
     MY_PROFILE=rows[0]||null;
     const follows=await apiGet('follows?select=team_id');
 
@@ -3244,7 +3245,11 @@ function showPage(id){
   document.querySelectorAll('.sm-tab').forEach(b=>{
     b.classList.toggle('active', b.dataset.tab===id);
   });
-  if(id==='profile') try{renderProfileClubs();renderLangPrefs();renderClubLangToggle();renderReports();}catch(e){}
+  if(id==='profile'){
+    try{renderProfileClubs();renderLangPrefs();renderClubLangToggle();}catch(e){}
+    // Separate, so a failure above cannot silently cost an admin the queue.
+    renderReports().catch(e=>console.error('renderReports:',e));
+  }
   if(id==='communities'){ try{renderMyClubCard();renderClubsGrid();}catch(e){console.error('clubs page:',e);} }
   if(id==='feed') try{renderFeedNews();}catch(e){}
   if(id==='matches') try{renderMatchDay();}catch(e){}
@@ -5416,6 +5421,9 @@ function filterWeekly(league, btn) {
   try{ renderModalClubs(); }catch(e){}
   try{ renderProfileClubs(); }catch(e){}
   try{ renderLangPrefs(); renderClubLangToggle(); }catch(e){}
+  // A direct load of ?page=profile calls showPage() before the account arrives,
+  // when isAdmin() cannot be true yet, so the queue has to render again here.
+  renderReports().catch(e=>console.error('renderReports:',e));
   // Chat summaries before the club cards paint, so the "Community chat" block
   // is there on the first render rather than appearing a beat later.
   try{ await loadChatOverview(); }catch(e){}
