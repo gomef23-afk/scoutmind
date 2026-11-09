@@ -54,8 +54,10 @@ function player(fixtureId, name) {
   eq('Fábio: breakdown', b.breakdown, {
     minutes: { count: 90, points: 2 }, clean_sheet: { count: 1, points: 4 }, saves: { count: 5, points: 1 },
   });
-  eq('Fábio as a tier-2 captain (4x +1 additive): 7 x 5 = 35',
-    scorePick(row, { locked_multiplier: 4, is_captain: true }, { ownGoals }).total, 35);
+  eq('Fábio as a tier-2 captain (1.2x +1 additive = 2.2x): 7 x 2.2 = 15.4',
+    scorePick(row, { locked_multiplier: TIER_MULTIPLIER[2], is_captain: true }, { ownGoals }).total, 15.4);
+  eq('Fábio as a tier-5 pick, no captain: 7 x 1 = 7',
+    scorePick(row, { locked_multiplier: TIER_MULTIPLIER[5], is_captain: false }, { ownGoals }).total, 7);
 }
 
 // ── 2. Kaio Jorge, F, 1492402 (lost 4-2; he scored an own goal) ───────────
@@ -75,8 +77,8 @@ function player(fixtureId, name) {
     minutes: { count: 90, points: 2 }, assists: { count: 1, points: 3 }, conceded: { count: 4, points: 0 },
     shots_on: { count: 3, points: 1.5 }, key_passes: { count: 2, points: 1 }, own_goals: { count: 1, points: -2 },
   });
-  eq('Kaio Jorge unranked (3x): 5.5 x 3 = 16.5',
-    scorePick(row, { locked_multiplier: null, locked_tier: null, is_captain: false }, { ownGoals }).total, 16.5);
+  eq('Kaio Jorge unranked (1.35x): 5.5 x 1.35 = 7.43',
+    scorePick(row, { locked_multiplier: null, locked_tier: null, is_captain: false }, { ownGoals }).total, 7.43);
 }
 
 // ── 3. Kannemann, D, 1492416 (yellow, then sent off at 73') ───────────────
@@ -89,8 +91,8 @@ function player(fixtureId, name) {
   const b = basePoints(row, ownGoals);
   eq('Kannemann: base -2', b.base, -2);
   check('Kannemann: the red replaces the yellow', b.breakdown.red && !b.breakdown.yellow, JSON.stringify(b.breakdown));
-  eq('Kannemann as a tier-1 captain: still -2, never -2 x 6',
-    scorePick(row, { locked_multiplier: 5, is_captain: true, locked_contrarian: true }, { ownGoals }).total, -2);
+  eq('Kannemann as a tier-1 contrarian captain: still -2, never scaled',
+    scorePick(row, { locked_multiplier: TIER_MULTIPLIER[1], is_captain: true, locked_contrarian: true }, { ownGoals }).total, -2);
 }
 
 // ── a reduced-feed row: penalty fields null -> 0, never NaN ───────────────
@@ -102,14 +104,21 @@ function player(fixtureId, name) {
 }
 
 // ── multipliers ───────────────────────────────────────────────────────────
-eq('ladder: tier 5 -> 1x ... tier 1 -> 5x', [5, 4, 3, 2, 1].map((t) => TIER_MULTIPLIER[t]), [1, 2, 3, 4, 5]);
-eq('unranked default 3x', [tierMultiplier(null), tierMultiplier(undefined), UNRANKED_MULTIPLIER], [3, 3, 3]);
+eq('ladder (half compensation): tier 5 -> 1x ... tier 1 -> 1.35x',
+  [5, 4, 3, 2, 1].map((t) => TIER_MULTIPLIER[t]), [1, 1.05, 1.1, 1.2, 1.35]);
+eq('unranked default 1.35x, paid like tier 1',
+  [tierMultiplier(null), tierMultiplier(undefined), UNRANKED_MULTIPLIER], [1.35, 1.35, 1.35]);
+check('the ladder rises from tier 5 to tier 1',
+  [5, 4, 3, 2, 1].every((t, i, a) => i === 0 || TIER_MULTIPLIER[t] > TIER_MULTIPLIER[a[i - 1]]));
 eq('the default captain mode is additive', CAPTAIN_MODE, 'additive');
-eq('additive: tier 4 (2x) captain -> 3x', effectiveMultiplier({ tierMult: 2, captain: true }), 3);
-eq('additive: tier 1 captain contrarian 5+1+0.5 -> capped at 6x',
-  effectiveMultiplier({ tierMult: 5, captain: true, contrarian: true }), 6);
-eq('multiplicative: tier 3 captain 3x2 -> 6x', effectiveMultiplier({ tierMult: 3, captain: true, mode: 'multiplicative' }), 6);
-eq('multiplicative: tier 2 captain 4x2 -> capped at 6x', effectiveMultiplier({ tierMult: 4, captain: true, mode: 'multiplicative' }), 6);
+eq('additive: tier 4 captain 1.05 + 1 -> 2.05x', effectiveMultiplier({ tierMult: TIER_MULTIPLIER[4], captain: true }), 2.05);
+eq('additive: the most any pick can reach today, tier 1 captain contrarian 1.35 + 1 + 0.5 -> 2.85x',
+  effectiveMultiplier({ tierMult: TIER_MULTIPLIER[1], captain: true, contrarian: true }), 2.85);
+// The 6x cap is a rule that binds any future ladder, so it is tested with
+// values the current ladder cannot produce.
+eq('cap: 5 + 1 + 0.5 additive -> capped at 6x', effectiveMultiplier({ tierMult: 5, captain: true, contrarian: true }), 6);
+eq('cap: multiplicative 4 x 2 -> capped at 6x', effectiveMultiplier({ tierMult: 4, captain: true, mode: 'multiplicative' }), 6);
+eq('multiplicative: tier 2 captain 1.2 x 2 -> 2.4x', effectiveMultiplier({ tierMult: TIER_MULTIPLIER[2], captain: true, mode: 'multiplicative' }), 2.4);
 eq('the cap is 6x', MAX_MULTIPLIER, 6);
 eq('a zero base stays zero', pickTotal(0, 6), 0);
 eq('a positive base is multiplied', pickTotal(4.5, 2), 9);

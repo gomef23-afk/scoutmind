@@ -30,10 +30,20 @@ export const POINTS = {
   red:           { G: -3, D: -3, M: -3, F: -3 },   // replaces the yellow
 };
 
-/** Tier 5 is the obvious pick and pays least; tier 1 the least rated and pays most. */
-export const TIER_MULTIPLIER = { 5: 1, 4: 2, 3: 3, 2: 4, 1: 5 };
-/** Below the minutes threshold: playable, but not a free lunch. */
-export const UNRANKED_MULTIPLIER = 3;
+/**
+ * Tier 5 is the obvious pick and pays least; tier 1 the least rated and pays
+ * most. "Half compensation": each tier is paid back half its earning gap to
+ * tier 5, 1 + (1/r - 1) / 2 with r = its realised base over tier 5's.
+ *
+ * Adopted after docs/backtest-2026-11.md. The first ladder (1x .. 5x) made
+ * picking the best players the worst strategy: a tier-1 pick earns 0.58 of a
+ * tier-5 pick, so any tier-1 multiplier above ~1.73x inverts the order. Under
+ * this ladder the top tiers beat random picks by ~17% and the bottom tiers
+ * stay within reach.
+ */
+export const TIER_MULTIPLIER = { 5: 1, 4: 1.05, 3: 1.1, 2: 1.2, 1: 1.35 };
+/** Below the minutes threshold: paid like tier 1. They play only ~40% of the time. */
+export const UNRANKED_MULTIPLIER = 1.35;
 
 /**
  * Captain. 'additive' (the default): the captain adds +100% of base, i.e. +1
@@ -45,7 +55,11 @@ export const CAPTAIN_MODE = 'additive';
 /** Contrarian: under this share of a round's entries, with enough of them. */
 export const CONTRARIAN = { maxOwnershipPct: 5, minParticipants: 50, bonus: 0.5 };
 
-/** No single pick's effective multiplier ever exceeds this. */
+/**
+ * No single pick's effective multiplier ever exceeds this. A rule, kept even
+ * though the current ladder cannot reach it (1.35 + 1 + 0.5 = 2.85x): it binds
+ * any future ladder too.
+ */
 export const MAX_MULTIPLIER = 6;
 
 const POS = new Set(['G', 'D', 'M', 'F']);

@@ -11,7 +11,9 @@
 -- points from what that footballer did in the round (api/_lib/scout-game.js
 -- holds the table), times a multiplier from his TIER: the quintile of his
 -- season so far within his league and position. Tier 5 (the obvious names)
--- pays 1x and tier 1 pays 5x, so spotting a player nobody rates pays more.
+-- pays least and tier 1 most, so spotting a player nobody rates pays more.
+-- The ladder itself lives in api/_lib/scout-game.js (1x .. 1.35x since the
+-- backtest in docs/backtest-2026-11.md; 018 widened locked_multiplier for it).
 --
 -- WHERE THE RULES LIVE
 -- ---------------------------------------------------------------------------
@@ -134,7 +136,7 @@ alter table public.game_picks
   add column if not exists player_id            bigint references public.players(id),
   add column if not exists is_captain           boolean not null default false,
   add column if not exists locked_tier          smallint,      -- null = below the minutes threshold
-  add column if not exists locked_multiplier    numeric(3,1),
+  add column if not exists locked_multiplier    numeric(4,2),  -- two decimals: 1.05, 1.35 (018)
   add column if not exists locked_ownership_pct numeric(5,2),
   add column if not exists locked_contrarian    boolean,
   add column if not exists locked_at            timestamptz,

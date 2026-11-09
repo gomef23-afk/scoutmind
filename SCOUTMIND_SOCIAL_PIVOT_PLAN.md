@@ -35,7 +35,7 @@
 | **Soft-delete fix** | Migration `014` — an author/admin read policy on `comments` and `group_messages`, so a soft delete is no longer refused by the `deleted_at is null` read policy. One client `softDelete()` with `return=representation`: a delete that matched nothing now says so, and the admin queue never marks a report actioned while the message is still up | built — applied by hand before the push |
 | **R6** | Migration `015` — `player_fixture_stats` (one row per player who played, per fixture) and `fixture_events`, the source the Scout Game scores. `/api/cron/player-stats` reads `/fixtures?ids=`, 20 fixtures a request: **67 requests** for the 1,334-fixture backfill instead of 1,334. Season rows and team `tk_pg` / `int_pg` / `duels_won_pct` (+ `player_sample`) are recomputed from those rows inside the database. Bios from `/api/cron/players`: 245 pages once, then a pass a week. Parser pinned by `tests/players.test.js` against 22 real fixtures | built — `015` applied by hand before the push |
 | **R7** | Migration `016` — `league_averages` becomes a view (team means with their own `n` and denominator, replacing the empty 003 table) and `league_position_rates` (per-90 means and SDs by league and position, the Scout Game's tier baselines). Clubs page and `community.html` show "lg avg" beside goals, conceded and pass %. Also repairs team pass accuracy, which R5 had averaged with missing values as 0% (new `pa_sample`). Zero API requests | built — `016` applied by hand before the push |
-| **Scout Game, part 1** | Migration `017` — rounds from fixtures (regular season only; deadline = first kickoff, window to the next round or 6 days), entries and picks written only through `submit_picks()` before the deadline, tiers snapshotted at the deadline by `player_tiers_at()`, scores per pick per fixture, round results, streaks, 8 badges, and ranking views (round, competition, overall, torcida, torcida table). Scoring rides on `player-stats` (no API cost) using `api/_lib/scout-game.js`: the agreed points table, tier ladder 5→1x … 1→5x, unranked 3x, captain +100% of base, contrarian +50%, any pick capped at 6x, negative base unscaled. Backtest pending the R6 backfill. **Follow-up:** Argentina's Apertura knockouts are not rounds yet | built — `017` applied by hand before the push |
+| **Scout Game, part 1** | Migration `017` — rounds from fixtures (regular season only; deadline = first kickoff, window to the next round or 6 days), entries and picks written only through `submit_picks()` before the deadline, tiers snapshotted at the deadline by `player_tiers_at()`, scores per pick per fixture, round results, streaks, 8 badges, and ranking views (round, competition, overall, torcida, torcida table). Scoring rides on `player-stats` (no API cost) using `api/_lib/scout-game.js`: the agreed points table, the half-compensation ladder 1 / 1.05 / 1.1 / 1.2 / 1.35 (unranked 1.35×; the 1×–5× ladder was rejected by [`docs/backtest-2026-11.md`](docs/backtest-2026-11.md)), captain +100% of base, contrarian +50%, any pick capped at 6×, negative base unscaled. `018` stores the multiplier to two decimals. **Follow-up:** Argentina's Apertura knockouts are not rounds yet | built — `017` applied by hand before the push |
 | **Layout pass A** | Home: news cards with one line of metadata and one action row (react · comment · Read ↗), language and category chips in one sideways-scrolling row, and a "Your club" sidebar card (position, next match, last result, the room) that absorbed the chat card. Matches: a date strip (Yesterday · Today · Tomorrow · next 4 days) with the selected day's fixtures grouped by league and your clubs pinned first, replacing "your clubs, then everything". No new queries; checked at 375px | built — HTML only |
 | **Role lock** | Also in `013` — `profiles.plan` and `credential` can no longer be written by `anon` or `authenticated`: column grants plus the `profiles_role_guard` trigger. Any signed-in user could previously make themselves an admin | built — applied by hand before the push |
 
@@ -280,6 +280,26 @@ difficulty. Cartola-style scoring for Brazil, FPL-style for England.
 
 **Never uses Cartola's name, logo or data.** The wording is "works with
 Cartola-style scoring". Needs R6, since it is built on player data.
+
+**Built as the Scout Game (migrations `017`, `018`).** Five picks and a
+captain per competition per round; base points times a multiplier from the
+player's tier (the quintile of his season within league and position).
+
+- **Ladder: half compensation, 1 / 1.05 / 1.1 / 1.2 / 1.35, unranked 1.35×,
+  captain additive (+100% of base), any pick capped at 6×.** Adopted after the
+  backtest in [`docs/backtest-2026-11.md`](docs/backtest-2026-11.md).
+- **The first ladder, 1× (tier 5) to 5× (tier 1), was rejected by that
+  backtest.** It made picking the best players the worst strategy (top five
+  19.7 a round against random 37.0 and bottom five 37.8): a tier-1 pick earns
+  0.58 of a tier-5 pick, so any tier-1 multiplier above ~1.73× inverts the
+  order. Under half compensation the top beats random by ~17% and the bottom
+  stays within reach.
+- **Follow-ups:**
+  - a **probability-based difficulty model**: each pick's multiplier from how
+    likely that player is to deliver this round, instead of from his tier;
+  - **Argentina's tier weights**: top tiers trail random there under every
+    ladder, so the composite predicts Argentine points poorly;
+  - **Argentina's Apertura knockouts** as playable rounds.
 
 #### 4. SM Weekly on real data — R9
 
