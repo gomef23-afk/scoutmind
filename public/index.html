@@ -474,6 +474,41 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-rank-gap{text-align:center;color:var(--muted);font-size:12px;padding:2px 0;}
 .sg-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
 .sg-badge{font-size:11px;font-weight:600;padding:5px 10px;border-radius:14px;border:1px solid rgba(0,229,160,0.3);color:var(--accent);background:rgba(0,229,160,0.06);}
+/* ── MATCH PANEL (Day 4) ── */
+.match-tap{cursor:pointer;}
+.match-tap:hover{border-color:rgba(0,229,160,0.3)!important;}
+.mo-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(24px + env(safe-area-inset-bottom));}
+.mo-inner{max-width:720px;margin:0 auto;}
+.mo-meta{font-size:11px;color:var(--muted);text-align:center;line-height:1.6;}
+.mo-score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:16px 0 6px;}
+.mo-team{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0;font-size:13px;font-weight:600;}
+.mo-team span{overflow-wrap:anywhere;}
+.mo-goals-n{font-family:'DM Mono',monospace;font-size:32px;font-weight:600;white-space:nowrap;}
+.mo-status{font-size:11px;font-weight:700;letter-spacing:1px;text-align:center;color:var(--muted);}
+.mo-status.live{color:var(--accent);}
+.mo-section{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:22px 0 8px;display:flex;justify-content:space-between;gap:8px;}
+.mo-section span{letter-spacing:0;text-transform:none;font-weight:500;}
+.mo-goal{display:flex;gap:8px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);}
+.mo-goal.away{flex-direction:row-reverse;text-align:right;}
+.mo-min{font-family:'DM Mono',monospace;color:var(--muted);flex:0 0 40px;}
+.mo-goal.away .mo-min{text-align:right;}
+.mo-sub{font-size:10px;color:var(--muted);}
+.mo-cols{display:grid;grid-template-columns:1fr;gap:18px;}
+.mo-col-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-bottom:4px;}
+.mo-pl{display:flex;align-items:center;gap:8px;min-height:36px;font-size:12px;border-bottom:1px solid var(--border);}
+.mo-shirt{flex:0 0 22px;text-align:right;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+.mo-pl-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mo-pl-x{font-size:10px;color:var(--muted);white-space:nowrap;}
+.mo-rating{flex:0 0 32px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;}
+.mo-form{display:flex;gap:4px;}
+.mo-wdl{width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:var(--bg3);color:var(--muted);}
+.mo-wdl.W{background:rgba(0,229,160,0.15);color:var(--accent);}
+.mo-wdl.L{background:rgba(255,69,96,0.12);color:var(--red);}
+.mo-row{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px;padding:8px 0;border-bottom:1px solid var(--border);}
+.mo-note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px;}
+@media (min-width: 900px){
+  .mo-cols{grid-template-columns:1fr 1fr;}
+}
 @media (min-width: 900px){
   .sg-page{padding:24px 24px 32px;}
   .sg-tabs,.sg-chips{margin-left:0;margin-right:0;padding-left:0;padding-right:0;}
@@ -981,6 +1016,16 @@ async function logout(){
   </div>
   <div class="chat-body" id="chat-body"></div>
   <div class="chat-foot" id="chat-foot"></div>
+</div>
+
+<!-- MATCH PANEL — one fixture, from rpc match_detail (019). Full screen like the
+     chat. display:none here, display:flex only in JS (rule 6). -->
+<div id="match-overlay" style="display:none;position:fixed;inset:0;z-index:530;background:var(--bg);flex-direction:column;">
+  <div class="chat-head">
+    <button class="chat-back" onclick="closeMatch()" aria-label="Close match">←</button>
+    <div class="chat-title" id="mo-title" style="flex:1;min-width:0;">Match</div>
+  </div>
+  <div class="mo-body" id="mo-body"></div>
 </div>
 
 <script>
@@ -2305,7 +2350,8 @@ async function loadFixtures(){
   const from = new Date(Date.now() - 7*24*3600*1000).toISOString();
   const to   = new Date(Date.now() + 21*24*3600*1000).toISOString();
   const q = new URLSearchParams({
-    select: 'api_fixture_id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id,'
+    // `id` opens the match panel (match_detail takes fixtures.id).
+    select: 'id,api_fixture_id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id,venue_name,'
           + 'home_team:teams!fixtures_home_team_id_fkey(name,api_team_id),'
           + 'away_team:teams!fixtures_away_team_id_fkey(name,api_team_id),'
           + 'league:leagues!fixtures_league_id_fkey(name,flag)',
@@ -2332,6 +2378,8 @@ async function loadFixtures(){
       // "today" from "next Tuesday" both need the date, in the viewer's zone.
     const kickoff = new Date(r.kickoff_utc);
     return {
+      id: r.id,
+      venue: r.venue_name || null,
       comp: comp.toUpperCase(),
       compTier: COMP_TIER[comp] || 8,
       flag: r.league?.flag || '⚽',
@@ -2520,7 +2568,10 @@ function matchCard(m, featured, label, hideDay) {
     ? dayHeading(m.dayKey) + ((isLive || isFinished) && m.time ? ' · ' + m.time : '')
     : '';
 
-  let html = '<div style="background:var(--bg2);border:1px solid ' + borderColor + ';border-radius:12px;padding:14px 16px;margin-bottom:8px;">';
+  // A real fixture opens the match panel; the static fallback has no id.
+  const tap = m.id ? ' class="match-tap" role="button" tabindex="0" onclick="openMatch(' + Number(m.id) + ')"'
+    + ' onkeydown="if(event.key===\'Enter\')openMatch(' + Number(m.id) + ')"' : '';
+  let html = '<div' + tap + ' style="background:var(--bg2);border:1px solid ' + borderColor + ';border-radius:12px;padding:14px 16px;margin-bottom:8px;">';
   if (label) {
     html += '<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent2);margin-bottom:6px;">'
       + sanitize(label) + '</div>';
@@ -2797,7 +2848,8 @@ function renderSidebarMatches(){
     const score=m.score?('<span style="font-family:\'DM Mono\',monospace;color:var(--text);">'+sanitize(m.score)+'</span>')
       :('<span style="color:var(--muted);font-size:10px;">vs</span>');
     const when=(m.status==='live')?'LIVE':(m.status==='finished'?'FT':m.time);
-    return '<div class="match-row-sm"><div><div class="match-comp-sm">'+sanitize(m.comp)+' · '+sanitize(when)+'</div>'
+    const tap=m.id?' match-tap" role="button" tabindex="0" onclick="openMatch('+Number(m.id)+')':'';
+    return '<div class="match-row-sm'+tap+'"><div><div class="match-comp-sm">'+sanitize(m.comp)+' · '+sanitize(when)+'</div>'
       +'<div class="match-teams-sm">'+sanitize(m.home)+' '+score+' '+sanitize(m.away)+'</div></div></div>';
   }).join('');
 }
@@ -3536,12 +3588,14 @@ function renderSidebarYourClub(){
       const home=m.teamIds[0]===id;
       return (home?'vs ':'at ')+(home?m.away:m.home);
     };
+    // Each line opens that match's panel.
+    const tap=(m)=>m.id?' match-tap" role="button" tabindex="0" onclick="openMatch('+Number(m.id)+')':'';
     if(live){
-      html+='<div class="yc-line"><span class="yc-k" style="color:var(--accent);">Live</span>'
+      html+='<div class="yc-line'+tap(live)+'"><span class="yc-k" style="color:var(--accent);">Live</span>'
         +'<span class="yc-v">'+sanitize(opp(live))+' · '+sanitize(live.score||'')+'</span></div>';
     }
     if(next){
-      html+='<div class="yc-line"><span class="yc-k">Next</span>'
+      html+='<div class="yc-line'+tap(next)+'"><span class="yc-k">Next</span>'
         +'<span class="yc-v">'+sanitize(opp(next))+' · '+sanitize(dayHeading(next.dayKey))+' '+sanitize(next.time||'')+'</span></div>';
     }
     if(last&&last.homeGoals!=null&&last.awayGoals!=null){
@@ -3549,7 +3603,7 @@ function renderSidebarYourClub(){
       const f=home?last.homeGoals:last.awayGoals, a=home?last.awayGoals:last.homeGoals;
       const res=f>a?'W':f<a?'L':'D';
       const col=f>a?'var(--accent)':f<a?'var(--red)':'var(--muted)';
-      html+='<div class="yc-line"><span class="yc-k">Last</span>'
+      html+='<div class="yc-line'+tap(last)+'"><span class="yc-k">Last</span>'
         +'<span class="yc-v"><span style="color:'+col+';font-weight:700;">'+res+'</span> '
         +f+'–'+a+' '+sanitize(opp(last))+'</span></div>';
     }
@@ -4709,14 +4763,16 @@ async function sgLoadBase(force){
   SG.loadedAt=Date.now();
 }
 
-/** Competitions with an open or in-play round, in a stable order. */
+/** Competitions with an open or in-play round: my main club's first, then by next deadline. */
 function sgLeagues(){
   const seen=new Map();
   for(const r of SG.rounds){
     if(r.status!=='open'&&r.status!=='locked') continue;
     if(!seen.has(r.league_id)) seen.set(r.league_id,r);
   }
-  return [...seen.values()];
+  const main=CLUB_DATA.get(mainClubId());
+  const mine=r=>main&&r.leagues&&r.leagues.slug===main.league?0:1;
+  return [...seen.values()].sort((a,b)=>mine(a)-mine(b));
 }
 function sgRoundsFor(leagueId){ return SG.rounds.filter(r=>r.league_id===leagueId); }
 function sgRound(id){ return SG.rounds.find(r=>r.id===id)||null; }
@@ -5124,7 +5180,7 @@ function sgRenderFixtures(rows){
     const done=['FT','AET','PEN'].indexOf(f.status_short)>=0;
     const live=['1H','HT','2H','ET','BT','P','LIVE'].indexOf(f.status_short)>=0;
     const score=(done||live)&&f.home_goals!=null?f.home_goals+'–'+f.away_goals:sgWhen(f.kickoff_utc);
-    return '<div class="sg-fx-row">'
+    return '<div class="sg-fx-row match-tap" role="button" tabindex="0" onclick="openMatch('+Number(f.id)+')">'
       +'<span class="sg-fx-team">'+clubCrestById(f.home_team_id,16)+'<span>'+sanitize(clubLabel(f.home_team_id))+'</span></span>'
       +'<span class="sg-fx-score'+(live?' live':'')+'">'+sanitize(String(score))+(live&&f.elapsed?' · '+f.elapsed+'\'':'')+'</span>'
       +'<span class="sg-fx-team r"><span>'+sanitize(clubLabel(f.away_team_id))+'</span>'+clubCrestById(f.away_team_id,16)+'</span>'
@@ -5258,6 +5314,139 @@ async function renderProfileGame(){
     console.error('renderProfileGame:',e);
     el.innerHTML='<div style="font-size:12px;color:var(--muted);">Your Scout Game record could not load just now.</div>';
   }
+}
+
+// ── MATCH PANEL ──────────────────────────────────────────────────────────
+// One fixture from rpc match_detail (019): score, goals, who played with
+// API-Football's ratings, your Scout points in it, or, before kickoff, each
+// club's position and last five. No previews and no predictions.
+let MO_OPEN=null;   // fixture id on screen; guards a slow reply landing late
+
+async function openMatch(id){
+  if(!id) return;
+  const ov=document.getElementById('match-overlay');
+  const body=document.getElementById('mo-body');
+  if(!ov||!body) return;
+  MO_OPEN=id;
+  document.getElementById('mo-title').textContent='Match';
+  body.innerHTML='<div class="sg-empty">Loading the match…</div>';
+  ov.style.display='flex';
+  document.body.style.overflow='hidden';
+  try{
+    const d=await sgRpc('match_detail',{p_fixture_id:id});
+    if(MO_OPEN!==id) return;
+    if(!d||!d.fixture){ body.innerHTML='<div class="sg-empty">That match could not be found.</div>'; return; }
+    renderMatchDetail(d);
+  }catch(e){
+    console.error('match_detail:',e);
+    if(MO_OPEN!==id) return;
+    // Rule 21: before 019 runs there is no match_detail to call.
+    body.innerHTML='<div class="sg-empty">Match details are not available yet. Check back soon.</div>';
+  }
+}
+function closeMatch(){
+  MO_OPEN=null;
+  const ov=document.getElementById('match-overlay');
+  if(ov) ov.style.display='none';
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&MO_OPEN) closeMatch();
+});
+
+function moTeamName(t){
+  if(!t) return '—';
+  return clubLabel(t.id)||clubDisplayName({api_team_id:t.api_team_id,name:t.name})||t.name||'—';
+}
+
+function renderMatchDetail(d){
+  const f=d.fixture, body=document.getElementById('mo-body');
+  if(!body) return;
+  const FIN=['FT','AET','PEN'], LIVE=['1H','HT','2H','ET','BT','P','LIVE'];
+  const done=FIN.indexOf(f.status)>=0, live=LIVE.indexOf(f.status)>=0, started=done||live;
+  const kick=f.kickoff_utc?new Date(f.kickoff_utc):null;
+  const when=kick?kick.toLocaleString([], {weekday:'long',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+  const home=f.home||{}, away=f.away||{};
+  document.getElementById('mo-title').textContent=moTeamName(home)+' v '+moTeamName(away);
+
+  const roundNo=/(\d+)\s*$/.exec(f.round||'');
+  let html='<div class="mo-inner">'
+    +'<div class="mo-meta">'+sanitize((f.league_flag?f.league_flag+' ':'')+(f.league||''))
+    +(roundNo?' · Round '+roundNo[1]:'')+'<br>'+sanitize(when)+(f.venue?' · '+sanitize(f.venue):'')+'</div>';
+
+  const status=done?(f.status==='FT'?'Full time':f.status==='AET'?'After extra time':'After penalties')
+    :live?(f.status==='HT'?'Half time':'Live'+(f.elapsed?' · '+f.elapsed+'\'':''))
+    :(['PST','CANC','ABD','SUSP','INT'].indexOf(f.status)>=0?({PST:'Postponed',CANC:'Cancelled',ABD:'Abandoned',SUSP:'Suspended',INT:'Interrupted'})[f.status]:'Kickoff '+(kick?kick.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):''));
+  html+='<div class="mo-score">'
+    +'<div class="mo-team">'+clubCrestById(home.id,44)+'<span>'+sanitize(moTeamName(home))+'</span></div>'
+    +'<div class="mo-goals-n">'+(started&&f.home_goals!=null?f.home_goals+' – '+f.away_goals:'vs')+'</div>'
+    +'<div class="mo-team">'+clubCrestById(away.id,44)+'<span>'+sanitize(moTeamName(away))+'</span></div>'
+    +'</div><div class="mo-status'+(live?' live':'')+'">'+sanitize(status)+'</div>';
+
+  if(started){
+    // Goals, each on its scoring side. Own goals sit with the team credited.
+    const goals=d.goals||[];
+    if(goals.length){
+      html+='<div class="mo-section">Goals</div>'+goals.map(g=>{
+        const side=g.team_id===away.id?' away':'';
+        const tag=g.detail==='Own Goal'?' (OG)':g.detail==='Penalty'?' (pen)':'';
+        return '<div class="mo-goal'+side+'"><span class="mo-min">'+(g.minute!=null?g.minute+(g.extra?'+'+g.extra:'')+'\'':'')+'</span>'
+          +'<span>'+sanitize((g.player||'—')+tag)+(g.assist&&g.detail!=='Own Goal'?'<div class="mo-sub">'+sanitize(g.assist)+'</div>':'')+'</span></div>';
+      }).join('');
+    }
+
+    // The reader's Scout points in this match (empty for guests and non-players).
+    const mp=d.my_points||[];
+    if(mp.length){
+      html+='<div class="mo-section">Your Scout points</div>'+mp.map(p=>
+        '<div class="mo-row"><span>'+sanitize(p.name||'Player')+(p.captain?' <span class="sg-tag">Captain</span>':'')+'</span>'
+        +'<span class="mo-pl-x">'+sgPts(p.base)+(Number(p.base)>0?' '+sgMult(p.multiplier):'')+' = <b style="color:var(--text);">'+sgPts(p.total)+'</b></span></div>').join('');
+    }
+
+    // Who played, per club: starters, then the subs who came on.
+    const pl=d.players||[];
+    if(pl.length){
+      const col=t=>{
+        const mine=pl.filter(p=>p.team_id===t.id);
+        if(!mine.length) return '';
+        const row=p=>{
+          const icons=(p.goals?' ⚽'+(p.goals>1?'×'+p.goals:''):'')+(p.assists?' 👟'+(p.assists>1?'×'+p.assists:''):'')
+            +(p.red?' 🟥':p.yellow?' 🟨':'');
+          const mins=p.started?(p.minute_off!=null?'off '+p.minute_off+'\'':''):(p.minute_on!=null?'on '+p.minute_on+'\'':'');
+          return '<div class="mo-pl"><span class="mo-shirt">'+(p.shirt!=null?p.shirt:'')+'</span>'
+            +'<span class="mo-pl-name">'+sanitize(p.name||'—')+icons+'</span>'
+            +'<span class="mo-pl-x">'+(SG_POS_LABEL[p.position]||'')+(mins?' · '+mins:'')+'</span>'
+            +'<span class="mo-rating">'+(p.rating!=null?Number(p.rating).toFixed(1):'—')+'</span></div>';
+        };
+        const xi=mine.filter(p=>p.started), subs=mine.filter(p=>!p.started);
+        return '<div><div class="mo-col-head">'+clubCrestById(t.id,18)+sanitize(moTeamName(t))+'</div>'
+          +xi.map(row).join('')
+          +(subs.length?'<div class="mo-sub" style="margin:8px 0 2px;">Came on</div>'+subs.map(row).join(''):'')+'</div>';
+      };
+      html+='<div class="mo-section">Who played <span>Rating by API-Football</span></div>'
+        +'<div class="mo-cols">'+col(home)+col(away)+'</div>'
+        +(f.players_unidentified?'<div class="mo-note">'+Number(f.players_unidentified)+' player'+(f.players_unidentified===1?' was':'s were')+' not identified by the data provider and '+(f.players_unidentified===1?'is':'are')+' not listed.</div>':'');
+    }else if(done){
+      html+='<div class="mo-section">Who played</div><div class="mo-note">Player ratings and Scout points arrive a few hours after full time.</div>';
+    }
+  }else{
+    // Before kickoff: where each club stands and how it has been doing.
+    const form=d.form||{};
+    const side=(t,fm)=>{
+      fm=fm||{};
+      const last=(fm.last5||[]).slice().reverse();   // oldest first, newest on the right
+      return '<div class="mo-row"><span style="display:flex;align-items:center;gap:6px;min-width:0;">'+clubCrestById(t.id,18)
+        +'<span class="mo-pl-name">'+sanitize(moTeamName(t))+'</span></span>'
+        +'<span class="mo-pl-x">'+(fm.rank!=null?sanitize(ordinal(fm.rank))+(fm.points!=null?' · '+fm.points+' pts':''):'—')+'</span></div>'
+        +'<div class="mo-form" style="margin:8px 0 4px;">'+(last.length?last.map(r=>
+          '<span class="mo-wdl '+sanitize(r.result)+'" title="'+sanitize((r.home?'vs ':'at ')+(r.opponent||'')+' '+(r.score||''))+'">'+sanitize(r.result)+'</span>').join('')
+          :'<span class="mo-sub">No league results yet this season.</span>')+'</div>';
+    };
+    html+='<div class="mo-section">League position and last five <span>oldest → newest</span></div>'
+      +side(home,form.home)+side(away,form.away);
+  }
+  html+='</div>';
+  body.innerHTML=html;
 }
 
 // The Scout tab may be the landing page (?page=scout): showPage ran before
