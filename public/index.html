@@ -2112,6 +2112,21 @@ async function apiSend(method,path,body,prefer){
   return res.status===204?null:res.json().catch(()=>null);
 }
 
+/**
+ * Soft-delete one comment or chat message, and prove it happened.
+ *
+ * return=representation because PostgREST answers 204 for a PATCH that matched
+ * nothing, which would read as deleted. Before 014 the deleted row was not
+ * readable at all, so this asked for something RLS refused; 014's author/admin
+ * read policy is what makes it work.
+ */
+async function softDelete(table,id){
+  const rows=await apiSend('PATCH',table+'?id=eq.'+encodeURIComponent(id),
+    {deleted_at:new Date().toISOString(),deleted_by:myUserId()},
+    'return=representation');
+  if(!rows||!rows.length)throw new Error('Nothing was deleted. It may already be gone.');
+}
+
 // ── VISIBLE FAILURE ──────────────────────────────────────────────────────
 // Saves used to fail into console.warn. That is how "I cannot change my main
 // club" survived a deploy: nothing on screen changed, nothing was logged as an
@@ -2486,8 +2501,10 @@ async function loadComments(itemId,all){
   // two-row sample by likes and labelling it "Top" would be a lie.
   const limit=200;
   try{
+    // deleted_at filtered here as well as by RLS: since 014 an author and an
+    // admin can read deleted rows, and they must not reappear in the thread.
     const rows=await apiGet('comments?select=id,user_id,content,created_at'
-      +'&news_item_id=eq.'+itemId+'&order=created_at.desc&limit='+limit);
+      +'&news_item_id=eq.'+itemId+'&deleted_at=is.null&order=created_at.desc&limit='+limit);
     await loadAuthors(rows.map(r=>r.user_id));
     await loadCommentLikes(rows.map(r=>r.id),null);
     // Held newest-first; sortedComments() decides what is actually shown.
@@ -2581,6 +2598,8 @@ function friendlyDbError(msg){
   const raw=m?m[1]:'';
   if(raw)return raw;
   if(/40[13]/.test(msg||''))return 'You need to be signed in to do that.';
+  // Our own errors, which carry no HTTP status, are already written for people.
+  if(msg&&!/HTTP \d{3}/.test(msg))return msg;
   return 'Could not post that. Try again in a moment.';
 }
 
@@ -2605,8 +2624,7 @@ async function deleteComment(itemId,commentId){
   if(!requireAuth('Create a free account to do that.'))return;
   if(!confirm('Delete this comment? This cannot be undone.'))return;
   try{
-    await apiSend('PATCH','comments?id=eq.'+commentId,
-      {deleted_at:new Date().toISOString(),deleted_by:myUserId()});
+    await softDelete('comments',commentId);
     const s=commentState(itemId);
     s.items=s.items.filter(c=>c.id!==commentId);
     s.total=Math.max(0,s.total-1);
@@ -4655,8 +4673,7 @@ async function deleteChatMessage(messageId){
   if(!requireAuth('Create a free account to do that.'))return;
   if(!confirm('Delete this message? This cannot be undone.'))return;
   try{
-    await apiSend('PATCH','group_messages?id=eq.'+encodeURIComponent(messageId),
-      {deleted_at:new Date().toISOString(),deleted_by:myUserId()});
+    await softDelete('group_messages',messageId);
     chatMessages=chatMessages.filter(m=>String(m.id)!==String(messageId));
     paintChat(false);
   }catch(e){
@@ -4785,8 +4802,9 @@ async function adminDelete(reportId,targetType,targetId){
   if(!confirm('Delete this '+kind+'? It stays in the database but nobody will see it.'))return;
   const table=targetType==='group_message'?'group_messages':'comments';
   try{
-    await apiSend('PATCH',table+'?id=eq.'+encodeURIComponent(targetId),
-      {deleted_at:new Date().toISOString(),deleted_by:myUserId()});
+    // Throws if nothing was deleted, so a report is never marked actioned while
+    // the message is still up.
+    await softDelete(table,targetId);
     await adminResolve(reportId,'actioned');
     // Drop it from anything currently on screen.
     if(targetType==='group_message'){

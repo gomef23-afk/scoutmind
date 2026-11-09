@@ -32,6 +32,7 @@
 | **Package 4d — silent saves** | `endSession()` fires only when a refresh has actually failed, not on a single 401. Every user-facing write failure raises a toast; `saveTeamSelection()` awaits the write and keeps the modal open on failure | live — club save confirmed on production 2 Nov |
 | **Package 4e — writes on the wrong account** | Removes `auth.html`'s redirect race, clears any existing session before sign-in, `scope:'local'` on sign-out, `resolveUser()` replaces a mismatched cache instead of patching it, `SMAuth.whoami()`. The club picker becomes one screen | live — two-account test passed 2 Nov: `whoami` matched on both, the club write landed on the right row |
 | **`standings_snapshots`** | Migration `013` — one dated row per club per UTC day, seeded from `standings` on the day it is applied, then upserted by `/api/cron/standings`. Split out of R6 because history cannot be back-filled. Roadmap item 1 | built — applied by hand before the push |
+| **Soft-delete fix** | Migration `014` — an author/admin read policy on `comments` and `group_messages`, so a soft delete is no longer refused by the `deleted_at is null` read policy. One client `softDelete()` with `return=representation`: a delete that matched nothing now says so, and the admin queue never marks a report actioned while the message is still up | built — applied by hand before the push |
 | **Role lock** | Also in `013` — `profiles.plan` and `credential` can no longer be written by `anon` or `authenticated`: column grants plus the `profiles_role_guard` trigger. Any signed-in user could previously make themselves an admin | built — applied by hand before the push |
 
 ### Infrastructure
@@ -109,6 +110,13 @@
 
 - **`isAdmin()` read a column nobody fetched.** It checks `MY_PROFILE.plan`, and `loadMyAccount()` never selected `plan`, in any commit since package 3 added the queue. So the queue stayed hidden for every admin, and so did the admin Delete buttons on other people's comments and chat messages. RLS was never the problem: `reports` answered 200 the whole time. The 28 Sept "admin delete from Profile" pass cannot have used this path, so treat admin moderation as first verified after this fix.
 - **A direct load of `?page=profile` had a second cause.** `showPage()` runs before `loadMyAccount()` resolves, and nothing rendered the queue again afterwards. Boot now renders it once the account has loaded.
+
+**Soft deletes (014), carried forward:**
+
+- **Every soft delete was refused, by the read policy, not the update policy.** Found on production 9 Nov: the admin queue's Delete message returned 403 "new row violates row-level security policy". When an UPDATE has to read the row, which every PostgREST PATCH does through its `id=eq.` filter, Postgres also checks the new row against the SELECT policies. `deleted_at is null` was the only one, and a soft delete is exactly the update that makes it false. The `Prefer` header made no difference: the live client already sent `return=minimal`.
+- **`comments` had the same shape**, so author and admin comment deletes were broken too. The Sept "author delete" and "admin delete" passes cannot both have been real on these policies; treat both as first verified after `014`.
+- **The new read policy is separate and `authenticated`-only.** Folding `or is_admin()` into the public policy would break every guest read: `anon` cannot execute `is_admin()`, and Postgres checks EXECUTE on every function in the expression when it sets it up, not when it reaches it.
+- **Authors and admins can now read deleted rows through the API**, so every client read of `comments` and `group_messages` filters `deleted_at=is.null` itself. The admin queue's target lookup deliberately does not, so it can say "already removed".
 
 **Role lock (013), carried forward:**
 
@@ -209,7 +217,7 @@ Keep this list in mind before adding anything to that page.
 
 | # | Work | Notes |
 |---|---|---|
-| **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg`/`duels_won_pct` — the last three nulls in `team_season_stats`. Its migration is `014`; `standings_snapshots` already shipped separately as `013`. Unblocks fantasy picks (roadmap 3) |
+| **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg`/`duels_won_pct` — the last three nulls in `team_season_stats`. Its migration is `015`; `standings_snapshots` already shipped separately as `013`, and `014` fixed soft deletes. Unblocks fantasy picks (roadmap 3) |
 | **R7** | League averages | Recompute `league_averages` from real data — the weakness thresholds become real. Unblocks Match Previews (roadmap 2), which ships **before** R9 |
 | **R9** | Front end on real data | Scout Mode and SM Weekly read Supabase. The Matches and news slices are done. **Three engine decisions are queued here — see below** |
 | **B3** | Delete `news.html` | Superseded by the Home feed; nothing left to port — the two widgets it shared were invented numbers and are gone |

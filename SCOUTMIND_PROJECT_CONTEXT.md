@@ -221,7 +221,7 @@ Written only by the cron jobs. All public-read.
 | `news_sources` | The 10 live feeds — `lang`, `country`, `headline_only`, `exclude_patterns`, health counters | seeded in `005` ✅ |
 | `news_items` | Headline + ≤300-char snippet + link. **Never full article text**. `football_ok` hides non-football without deleting it | `/api/cron/news` ✅ |
 | `news_item_teams` | Article → club, plus `via` (the alias that matched) and `in_title` (named in the headline, drives ranking) | `/api/cron/news` ✅ |
-| `follows` | User -> club. Public read (real follower counts), own-row write only | `007` ✅ || `comments` | News comments. Soft delete only (`deleted_at`); `content` immutable via column grant | `008` ✅ |
+| `follows` | User -> club. Public read (real follower counts), own-row write only | `007` ✅ || `comments` | News comments. Soft delete only (`deleted_at`); `content` immutable via column grant. Authors and admins can read deleted rows (`014`), so every client read filters `deleted_at=is.null` | `008` ✅ |
 | `reactions` | 🔥 👏 🤯, one of each per user per item. Counts are always COUNT(*) | `008` ✅ |
 | `reports` | Comment reports. One open report per user per target | `008` ✅ |
 | `events` | Insert-only telemetry. **No SELECT policy** — read as service role | `008` ✅ |
