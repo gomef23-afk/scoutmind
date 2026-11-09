@@ -38,6 +38,7 @@
 | **Scout Game, part 1** | Migration `017` — rounds from fixtures (regular season only; deadline = first kickoff, window to the next round or 6 days), entries and picks written only through `submit_picks()` before the deadline, tiers snapshotted at the deadline by `player_tiers_at()`, scores per pick per fixture, round results, streaks, 8 badges, and ranking views (round, competition, overall, torcida, torcida table). Scoring rides on `player-stats` (no API cost) using `api/_lib/scout-game.js`: the agreed points table, the half-compensation ladder 1 / 1.05 / 1.1 / 1.2 / 1.35 (unranked 1.35×; the 1×–5× ladder was rejected by [`docs/backtest-2026-11.md`](docs/backtest-2026-11.md)), captain +100% of base, contrarian +50%, any pick capped at 6×, negative base unscaled. `018` stores the multiplier to two decimals. **Follow-up:** Argentina's Apertura knockouts are not rounds yet | built — `017` applied by hand before the push |
 | **Layout pass A** | Home: news cards with one line of metadata and one action row (react · comment · Read ↗), language and category chips in one sideways-scrolling row, and a "Your club" sidebar card (position, next match, last result, the room) that absorbed the chat card. Matches: a date strip (Yesterday · Today · Tomorrow · next 4 days) with the selected day's fixtures grouped by league and your clubs pinned first, replacing "your clubs, then everything". No new queries; checked at 375px | built — HTML only |
 | **Role lock** | Also in `013` — `profiles.plan` and `credential` can no longer be written by `anon` or `authenticated`: column grants plus the `profiles_role_guard` trigger. Any signed-in user could previously make themselves an admin | built — applied by hand before the push |
+| **Scout Game, part 2 — the Scout tab** | Migration `019` — `game_config` carries the ladder (written by `player-stats` from `scout-game.js` on every run, so the page holds no copy), `game_pickable_players(round)`, `match_detail(fixture)` + `match_form()`, and `post_round_messages()`: one ScoutMind message per club room when a round is final, top 3 of that torcida, only for ≥ max(3, `torcida_min_members`) fans, once (`game_round_posts`). **Scout Mode is gone**: the Scout tab is the game — competition tabs (only leagues with an open or in-play round), round chips, pick screen with search / position / club filters, "Level n · ×1.20" labels, sticky save bar, in-play and final views with per-pick breakdowns, rankings (round, competition, overall, my torcida + torcida table), and a Scout Game section on Profile. `players_data.js` and jsPDF deleted | built — `019` applied by hand before the push |
 
 ### Infrastructure
 
@@ -54,7 +55,7 @@
 - **Dropped for good** (API-Football does not provide them): player market value — and with it the budget filter and currency switcher — plus `subpos`, clearances, and aerial-duel split. "Aerial vulnerability" becomes **"Duel vulnerability"** on `duels_won_pct`.
 - **Gained**: `expected_goals` and `goals_prevented` per fixture — better signals for "Poor finishing" and "Goalkeeper weakness" than raw shot counts.
 - `passes.accuracy` is null for ~95% of players. Team-level pass accuracy is fine (from `fixtures/statistics`), but the player profiles that weight `pass_acc` need reweighting in R6.
-- `leagues_data.js` and `players_data.js` are still the live data source for Scout Mode and the weakness engine. They are replaced in R9 and deleted in R10.
+- **Scout Mode was removed on Day 4 (Nov 2026)** — the Scout tab is the Scout Game, on Supabase data only. `players_data.js` is deleted. `leagues_data.js` stays: `community.html` still reads its team list and the weakness engine's averages from it until R9, and it is deleted in R10.
 
 **News (R8), carried forward:**
 
@@ -85,7 +86,7 @@
 - **`gs` and `gc` in `team_season_stats` are already per-game.** `matches` is the denominator that produced them, not one to apply again. Dividing twice showed Flamengo at 0.07 goals/g before it was caught.
 - **Crests** come from `teams.logo_url` on `media.api-sports.io` — `Access-Control-Allow-Origin: *`, `max-age=172800`, all 146 non-null. Lazy-loaded, fixed size, initials fallback on error. ⚠️ `auth.html` sets `img-src 'self' data:`; add the host there before showing a crest on that page.
 - **Community page has no stats right now.** Its badges, four stat cards and "ScoutMind Weekly Verdict" all came from hardcoded `leagues_data.js` and were removed. They return in R9 when `community.html` reads Supabase like the Clubs page does.
-- **Scout Mode still shows market values** from `players_data.js` via `fmtVal()`. The currency *switcher* is gone (the API has no market values), but the numbers remain until Scout Mode moves to Supabase in R9. **Open question for Felipe.**
+- ~~**Scout Mode still shows market values** from `players_data.js`.~~ Closed on Day 4: Scout Mode and `players_data.js` are gone, and no market value appears anywhere.
 - The Scout-instead-of-Home landing bug **could not be reproduced** logged out, with a simulated logged-in user, or after a hard refresh on production. Closed: it was the browser's URL autocomplete serving `/?page=scout`.
 
 **Accounts & clubs (007), carried forward:**
@@ -221,13 +222,13 @@ Keep this list in mind before adding anything to that page.
 
 | # | Work | Notes |
 |---|---|---|
-| **R9** | Front end on real data | Scout Mode and SM Weekly read Supabase. The Matches and news slices are done. **Three engine decisions are queued here — see below** |
+| **R9** | Front end on real data | SM Weekly and `community.html` read Supabase. The Matches and news slices are done, and Scout Mode was replaced by the Scout Game on Day 4. **Three engine decisions are queued here — see below** |
 | **B3** | Delete `news.html` | Superseded by the Home feed; nothing left to port — the two widgets it shared were invented numbers and are gone |
 | **B4** | i18n | `public/i18n.js` with en / pt-BR / es. Split: B4a infrastructure + extraction, B4b translation. ~250-400 strings |
 | **F** | Mobile | Invert the remaining desktop-first CSS, then PWA manifest + service worker. *(The feed grid is done — it collapsed to a 75px column at 375px and now stacks below 900px.)* |
 | **C** | Social layer | Posts, reactions, comments, follows, notifications, feed algorithm — the actual social network |
 
-R10 (delete `leagues_data.js` / `players_data.js`) follows R9.
+R10 (delete `leagues_data.js`) follows R9. `players_data.js` went on Day 4 with Scout Mode.
 
 ### Roadmap after the above
 
@@ -299,7 +300,11 @@ player's tier (the quintile of his season within league and position).
     likely that player is to deliver this round, instead of from his tier;
   - **Argentina's tier weights**: top tiers trail random there under every
     ladder, so the composite predicts Argentine points poorly;
-  - **Argentina's Apertura knockouts** as playable rounds.
+  - **Argentina's Apertura knockouts** as playable rounds;
+  - **store full lineups (startXI + bench)** from the `/fixtures?ids=` payload
+    `player-stats` already fetches, so unused subs can appear in the match
+    panel and "didn't play" is distinguishable from "not in squad" (today a
+    player with no row reads as "Didn't play last match" either way).
 
 #### 4. SM Weekly on real data — R9
 

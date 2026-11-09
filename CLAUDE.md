@@ -19,7 +19,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 - `public/community.html` — team communities (polls, analyst insights, groups, wishlist)
 - `public/auth.html` — login/signup
 - `public/news.html` — the old standalone transfer-news page. Superseded by the Home feed; still present, queued for deletion in B3.
-- `public/leagues_data.js`, `public/players_data.js` — Scout Mode data (still the source for Scout Mode until R9)
+- `public/leagues_data.js` — static team list and averages, now used only by `community.html` (deleted in R10). Scout Mode and `players_data.js` were removed on Day 4: the Scout tab in `index.html` is the Scout Game, on Supabase data only
 - `api/_lib/`, `api/cron/` — serverless ingest (see Stack)
 - `tests/` — `node tests/tagger.test.js`, no dependencies
 
@@ -31,7 +31,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 5. Nav is duplicated across `index.html`, `about.html`, `community.html`, `news.html` — any nav change must be applied to all four. (`app.html` is only a redirect.)
 6. Modals: `display:none` in HTML, `display:flex` set only in JS.
 7. `badge_applications` — do not send `user_id` (FK fails for localStorage users).
-8. `leagues_data.js` must load before `init()` — keep the `typeof TEAMS !== 'undefined'` pattern.
+8. In `community.html`, `leagues_data.js` must load before `init()` — keep the `typeof TEAMS !== 'undefined'` pattern. `index.html` no longer loads it.
 9. Every new Supabase table needs RLS. Write the SQL in `supabase/migrations/` (create the folder) — Felipe runs it in the dashboard.
 10. No social data in localStorage. Only session/UI preferences. Anything other users should see goes in Supabase.
 11. Mobile-first CSS: base styles for ~375px, `@media (min-width: 900px)` for desktop.

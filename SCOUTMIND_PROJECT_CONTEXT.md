@@ -74,14 +74,14 @@ It serves both the backfill and steady state — no manual looping.
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `public/index.html` | **The app** — Home feed, Clubs, Scout Mode, Matches, Profile | ✅ Live (was `app.html`) |
+| `public/index.html` | **The app** — Home feed, Clubs, Scout (the Scout Game), Matches, Profile | ✅ Live (was `app.html`) |
 | `public/app.html` | Redirect stub to `/`, preserves query + hash | ✅ Live |
 | `public/about.html` | Marketing page — hero, how it works, for who, FAQ, for clubs | ✅ Live |
 | `public/community.html` | Team communities — polls, analyst insights, groups, wishlist | ✅ Live |
 | `public/auth.html` | Login / Signup | ✅ Live |
 | `public/news.html` | Transfer news | ⚠️ Deleted in B3 → `/?filter=transfers` |
-| `public/leagues_data.js` | Static team/league data | ⚠️ Replaced in R9, deleted in R10 |
-| `public/players_data.js` | Static player database | ⚠️ Replaced in R9, deleted in R10 |
+| `public/leagues_data.js` | Static team/league data — `community.html` only since Day 4 | ⚠️ Replaced in R9, deleted in R10 |
+| `public/players_data.js` | Static player database for Scout Mode | 🗑️ Deleted on Day 4 (Nov 2026) with Scout Mode |
 | `api/_lib/*.js` | API-Football client, PostgREST helper, cron scaffolding | ✅ Live |
 | `api/cron/*.js` | teams · fixtures · standings · live · health | ✅ Live |
 | `supabase/migrations/*.sql` | 001, 002, 003 | ✅ Applied |
@@ -287,13 +287,17 @@ renumbering everything and breaking those links.*
 
 ## 8. APP ARCHITECTURE (`index.html`)
 
-### Pages (CSS class `.page`, toggled with `.active`)
-- `#page-scout` — Scout Mode (default on load)
-- `#page-feed` — Feed
-- `#page-profile` — User Profile
+*Rewritten for Day 4 (Nov 2026). The feed notes below predate the pivot in places; the plan's Status table is the current record.*
+
+### Pages (CSS class `.page`, toggled with `.active`; `showPage(id)`, `?page=` on load)
+- `#page-feed` — Home (default on load)
+- `#page-communities` — Clubs
+- `#page-scout` — the Scout Game
+- `#page-matches` — Matches
+- `#page-profile` — Profile (includes a Scout Game section, `renderProfileGame()`)
 
 ### Nav
-Scout Mode | Feed | Communities (→ community.html)
+Home · Clubs · Scout · Matches · Profile — top bar on desktop, fixed bottom bar on mobile (B2), duplicated across index / about / community / news (rule 5).
 
 ### Feed Tabs
 **Transfer news** | **For you** | **SM Weekly** | **Match day**
@@ -306,14 +310,16 @@ Scout Mode | Feed | Communities (→ community.html)
 ### Feed Sidebar (sticky right column)
 Hot Rumors % | Fit Score Index | Today's Matches | My Clubs
 
-### Scout Mode
-- League dropdown (12 leagues)
-- Team selector → shows team weakness analysis
-- Player recommendations algorithm: scores players on how well they address the team's specific weaknesses (aerial, pressing, passing, goals, possession)
-- Free: Top 10 players shown, rest blurred
-- Pro: Full database
-- PDF export button (Pro only)
-- Currency switcher: EUR / USD / BRL / GBP
+### Scout tab — the Scout Game (Day 4)
+Scout Mode (static `players_data.js`, weakness-fit ranking, PDF export) was removed. The tab is now the Scout Game: free, points only, every number read from Supabase. Rules and scoring live in `api/_lib/scout-game.js` and migrations `017`–`019`; the plan's roadmap item 3 has the design and the backtest.
+
+- **State:** one `SG` object in the Scout Game `<script>` block at the end of `index.html`. `renderScout()` loads rounds (`game_rounds`, open + locked + final within 14 days) and `game_config` (`select=*`, so a missing column degrades instead of 400ing), then my entries (`game_entries` + `game_picks`).
+- **Competition tabs:** only leagues with an open or in-play round; default is the main club's league. A Rankings tab sits at the end.
+- **Round chips:** Open / In play / Final. Default round: an in-play round I entered, else the earliest open one.
+- **Pick screen (open round):** five slots and a captain, the pick list from `rpc/game_pickable_players` (same eligibility as `submit_picks`), search + position + club filters, at most 120 rows shown. Each row: club, position, **"Level n · ×1.20"** (from `game_config.ladder`; "Not enough minutes · ×1.35" when unranked; "×—" before 019), two per-90 lines for the position, last-match status. Client checks (five, one goalkeeper, a captain) are feedback only; `rpc/submit_picks` decides, and its messages are shown verbatim through `friendlyDbError()`. Sticky save bar above the mobile tab bar; guests get "Sign in to play".
+- **In play / final:** total and rank (`game_round_rankings`), each pick's locked level and points from `game_pick_scores` with a tap-to-open breakdown, the round's matches, the round's top 10. In play reads "Points arrive a few hours after full time."
+- **Rankings:** this round, competition, overall, my torcida (fans of my main club, plus the club-vs-club torcida table, clubs shown only with ≥ max(3, `torcida_min_members`) fans). Top 50, with my row pinned below when I am outside it.
+- **Copy rule:** never "odds", "bet", "win money" or a quote format; multipliers only as "Level n · ×1.20", never as probabilities. `tests/scout-game.test.js` greps the game files and `index.html` for it.
 
 ---
 
@@ -486,7 +492,7 @@ top of SCOUTMIND_SOCIAL_PIVOT_PLAN.
 7. **Modal display** — `display:none` in HTML only, `display:flex` set in JS only
 8. **community.html and news.html are separate files** — nav changes must be replicated manually in both
 9. **Supabase user_id in badge_applications** — column is nullable, don't send user_id (FK constraint fails with localStorage users)
-10. **leagues_data.js must load before init()** — use `if(typeof TEAMS !== 'undefined'){init();}else{window.addEventListener('load',init);}` pattern
+10. **leagues_data.js must load before init() in community.html** (index.html no longer loads it) — use `if(typeof TEAMS !== 'undefined'){init();}else{window.addEventListener('load',init);}` pattern
 
 ---
 
@@ -520,7 +526,7 @@ When setting up the Claude Project, attach these files alongside this context do
 | `app.html` | Main app — most complex file, most work happens here |
 | `community.html` | Community page — second most complex |
 | `leagues_data.js` | Team/league data — referenced by both app.html and community.html |
-| `players_data.js` | Player database — used by Scout Mode algorithm |
+| ~~`players_data.js`~~ | Deleted on Day 4 with Scout Mode |
 | `auth.html` | Auth page — needs plan selection added |
 | `index.html` | Landing page — needs pricing update |
 | `news.html` | Transfer news page — needs nav + pricing update |
