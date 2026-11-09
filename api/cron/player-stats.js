@@ -22,7 +22,9 @@ import { createClient } from '../_lib/apifootball.js';
 import { select, upsert, update, rpc, activeLeagues, teamIdMap, count } from '../_lib/supabase.js';
 import { withCron } from '../_lib/cron.js';
 import { parseFixture } from '../_lib/players.js';
-import { scorePick, TIER_MULTIPLIER, UNRANKED_MULTIPLIER, CONTRARIAN } from '../_lib/scout-game.js';
+import {
+  scorePick, TIER_MULTIPLIER, UNRANKED_MULTIPLIER, CONTRARIAN, CAPTAIN_MODE, MAX_MULTIPLIER,
+} from '../_lib/scout-game.js';
 
 const FINISHED = ['FT', 'AET', 'PEN'];
 
@@ -223,8 +225,10 @@ export default withCron('player-stats', async ({ req }) => {
 });
 
 // ── Scout Game ───────────────────────────────────────────────────────────────
-// 1. sync rounds from fixtures   2. lock rounds past their deadline
-// 3. score the rounds this run touched   4. totals, streaks, final, badges.
+// 0. publish the rules to game_config   1. sync rounds from fixtures
+// 2. lock rounds past their deadline    3. score the rounds this run touched
+// 4. totals, streaks, final, badges     5. post each final round's torcida
+//    top 3 in the club rooms.
 // Every step is recomputed rather than incremented, so a re-run is harmless.
 // A failure is reported in the run's output and logged, and never costs the
 // player ingest above it (the run is still ok: those rows are written).
@@ -243,6 +247,20 @@ async function selectIn(table, column, ids, rest) {
 export async function runScoutGame(ingestedFixtureIds) {
   const out = { rounds_synced: 0, rounds_locked: 0, rounds_scored: 0, scores_written: 0 };
   try {
+    // The browser reads the multipliers from game_config, so it shows exactly
+    // what lock_due_rounds() below is handed. scout-game.js stays the only
+    // place the numbers are written.
+    await update('game_config', 'id=is.true', {
+      ladder: TIER_MULTIPLIER,
+      unranked_multiplier: UNRANKED_MULTIPLIER,
+      captain_mode: CAPTAIN_MODE,
+      max_multiplier: MAX_MULTIPLIER,
+      contrarian_max_pct: CONTRARIAN.maxOwnershipPct,
+      contrarian_min_participants: CONTRARIAN.minParticipants,
+      contrarian_bonus: CONTRARIAN.bonus,
+      rules_synced_at: new Date().toISOString(),
+    });
+
     out.rounds_synced = (await rpc('sync_game_rounds')) ?? 0;
 
     const locked = ((await rpc('lock_due_rounds', {
@@ -274,6 +292,10 @@ export async function runScoutGame(ingestedFixtureIds) {
     // Always: totals for the rounds scored, plus finalising and badges, which
     // depend on the clock as much as on new data.
     out.results_written = (await rpc('refresh_game_results', { p_round_ids: roundIds })) ?? 0;
+
+    // Once per final round per club, and never for fewer than
+    // max(3, torcida_min_members) fans: the function enforces both.
+    out.room_posts = (await rpc('post_round_messages')) ?? 0;
   } catch (e) {
     console.error('[player-stats] scout game:', e.message);
     out.error = e.message.slice(0, 300);

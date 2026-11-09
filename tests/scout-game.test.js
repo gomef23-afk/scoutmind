@@ -123,12 +123,50 @@ eq('the cap is 6x', MAX_MULTIPLIER, 6);
 eq('a zero base stays zero', pickTotal(0, 6), 0);
 eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
 
+// ── the job's game steps, with Supabase stubbed ──────────────────────────
+// No network: fetch answers from memory. Checks the order of the steps, that
+// the ladder written to game_config is the one in scout-game.js, and that the
+// room post runs after the results.
+{
+  process.env.SUPABASE_URL = 'https://stub.supabase.co';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'sb_secret_stub';
+  const calls = [];
+  let configWrite = null;
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    const path = new URL(url).pathname.replace('/rest/v1/', '');
+    calls.push(`${init.method || 'GET'} ${path}`);
+    if (path === 'game_config' && init.method === 'PATCH') configWrite = JSON.parse(init.body);
+    const body = path === 'rpc/lock_due_rounds' ? [] : path.startsWith('rpc/') ? 0 : null;
+    return new Response(body === null ? null : JSON.stringify(body),
+      { status: body === null ? 204 : 200, headers: { 'content-type': 'application/json' } });
+  };
+  try {
+    const { runScoutGame } = await import('../api/cron/player-stats.js');
+    const out = await runScoutGame([]);
+    eq('job: game steps in order', calls, [
+      'PATCH game_config', 'POST rpc/sync_game_rounds', 'POST rpc/lock_due_rounds',
+      'POST rpc/refresh_game_results', 'POST rpc/post_round_messages',
+    ]);
+    eq('job: game_config gets the ladder from scout-game.js',
+      [configWrite?.ladder, configWrite?.unranked_multiplier, configWrite?.captain_mode, configWrite?.max_multiplier],
+      [TIER_MULTIPLIER, UNRANKED_MULTIPLIER, 'additive', MAX_MULTIPLIER]);
+    check('job: no error reported', !out.error, out.error);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+}
+
 // ── no money language in the game's code ─────────────────────────────────
 {
   const word = ['od', 'ds'].join('');   // spelt this way so this file passes its own check
-  const files = ['api/_lib/scout-game.js', 'api/cron/player-stats.js', 'supabase/migrations/017_scout_game.sql'];
-  const hits = files.filter((f) => new RegExp(`\\b${word}\\b`, 'i').test(read(f)));
-  eq(`the word "${word}" appears in none of the game files`, hits, []);
+  const files = ['api/_lib/scout-game.js', 'api/cron/player-stats.js', 'supabase/migrations/017_scout_game.sql',
+    'supabase/migrations/018_scout_game_ladder.sql', 'supabase/migrations/019_scout_game_reads.sql'];
+  // Money words, spelt in pieces so this file passes its own check.
+  const banned = [word, ['b', 'et'].join(''), ['win', ' money'].join('')];
+  const hits = [];
+  for (const f of files) for (const w of banned) if (new RegExp(`\\b${w}\\b`, 'i').test(read(f))) hits.push(`${f}: ${w}`);
+  eq('no money language in any game file', hits, []);
 }
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
