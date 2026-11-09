@@ -33,6 +33,7 @@
 | **Package 4e — writes on the wrong account** | Removes `auth.html`'s redirect race, clears any existing session before sign-in, `scope:'local'` on sign-out, `resolveUser()` replaces a mismatched cache instead of patching it, `SMAuth.whoami()`. The club picker becomes one screen | live — two-account test passed 2 Nov: `whoami` matched on both, the club write landed on the right row |
 | **`standings_snapshots`** | Migration `013` — one dated row per club per UTC day, seeded from `standings` on the day it is applied, then upserted by `/api/cron/standings`. Split out of R6 because history cannot be back-filled. Roadmap item 1 | built — applied by hand before the push |
 | **Soft-delete fix** | Migration `014` — an author/admin read policy on `comments` and `group_messages`, so a soft delete is no longer refused by the `deleted_at is null` read policy. One client `softDelete()` with `return=representation`: a delete that matched nothing now says so, and the admin queue never marks a report actioned while the message is still up | built — applied by hand before the push |
+| **R6** | Migration `015` — `player_fixture_stats` (one row per player who played, per fixture) and `fixture_events`, the source the Scout Game scores. `/api/cron/player-stats` reads `/fixtures?ids=`, 20 fixtures a request: **67 requests** for the 1,334-fixture backfill instead of 1,334. Season rows and team `tk_pg` / `int_pg` / `duels_won_pct` (+ `player_sample`) are recomputed from those rows inside the database. Bios from `/api/cron/players`: 245 pages once, then a pass a week. Parser pinned by `tests/players.test.js` against 22 real fixtures | built — `015` applied by hand before the push |
 | **Role lock** | Also in `013` — `profiles.plan` and `credential` can no longer be written by `anon` or `authenticated`: column grants plus the `profiles_role_guard` trigger. Any signed-in user could previously make themselves an admin | built — applied by hand before the push |
 
 ### Infrastructure
@@ -217,7 +218,6 @@ Keep this list in mind before adding anything to that page.
 
 | # | Work | Notes |
 |---|---|---|
-| **R6** | Players | ~58 pages per league, ~400 requests. Resumable via `ingest_runs.cursor`. Derives team `tk_pg`/`int_pg`/`duels_won_pct` — the last three nulls in `team_season_stats`. Its migration is `015`; `standings_snapshots` already shipped separately as `013`, and `014` fixed soft deletes. Unblocks fantasy picks (roadmap 3) |
 | **R7** | League averages | Recompute `league_averages` from real data — the weakness thresholds become real. Unblocks Match Previews (roadmap 2), which ships **before** R9 |
 | **R9** | Front end on real data | Scout Mode and SM Weekly read Supabase. The Matches and news slices are done. **Three engine decisions are queued here — see below** |
 | **B3** | Delete `news.html` | Superseded by the Home feed; nothing left to port — the two widgets it shared were invented numbers and are gone |

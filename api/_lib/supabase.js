@@ -74,9 +74,14 @@ export async function select(table, query = 'select=*') {
  * `onConflict` must name the unique/primary key columns so Postgres merges
  * instead of erroring on re-ingest — every cron job is expected to re-run over
  * data it has already written.
+ *
+ * `{ ignoreDuplicates: true }` inserts only rows that do not exist yet and
+ * leaves existing ones untouched — for a job that may create a row another job
+ * owns (player-stats creates players; the bio job fills them in).
  */
-export async function upsert(table, rows, onConflict) {
+export async function upsert(table, rows, onConflict, { ignoreDuplicates = false } = {}) {
   if (!rows || rows.length === 0) return 0;
+  const resolution = ignoreDuplicates ? 'ignore-duplicates' : 'merge-duplicates';
 
   // PostgREST has a practical payload ceiling; chunk so a big players page or a
   // full fixture list never fails as one oversized request.
@@ -89,7 +94,7 @@ export async function upsert(table, rows, onConflict) {
     const res = await fetch(`${URL_()}/rest/v1/${table}${qs}`, {
       method: 'POST',
       headers: headers({
-        Prefer: 'resolution=merge-duplicates,return=minimal',
+        Prefer: `resolution=${resolution},return=minimal`,
       }),
       body: JSON.stringify(batch),
     });
@@ -144,6 +149,23 @@ export async function update(table, filter, patch) {
   if (!res.ok) {
     throw new Error(`Supabase update ${table} ${res.status}: ${await res.text()}`);
   }
+}
+
+/**
+ * Call a Postgres function through PostgREST (`/rpc/<fn>`). Used for the R6
+ * refresh functions, which recompute season rows inside the database instead
+ * of shipping every player's fixtures to the job and back.
+ */
+export async function rpc(fn, args = {}) {
+  const res = await fetch(`${URL_()}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify(args),
+  });
+  if (!res.ok) {
+    throw new Error(`Supabase rpc ${fn} ${res.status}: ${await res.text()}`);
+  }
+  return res.status === 204 ? null : res.json();
 }
 
 /** Insert one row and return it (used for ingest_runs). */

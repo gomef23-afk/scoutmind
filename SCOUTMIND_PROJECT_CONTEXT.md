@@ -60,6 +60,8 @@ The core value proposition: "What position does your team need? Here are the 10 
 | `/api/cron/live` | **every 10 min** | 1 (144/day) |
 | `/api/cron/fixture-stats` | every 15 min | ≤40 (0 when the queue is empty) |
 | `/api/cron/teams` | manual | 7, or ~150 with `?coaches=1` |
+| `/api/cron/player-stats` | every 15 min | 1 per 20 finished fixtures (`/fixtures?ids=`); 0 when the queue is empty |
+| `/api/cron/players` | hourly | ≤15 `/players` pages a run until a pass of 245 completes, then 0 until it is 7 days old |
 | `/api/cron/health` | manual | 0 |
 
 `fixture-stats` is self-limiting: max 40 fixtures **or** 20 s of wall clock,
@@ -213,10 +215,12 @@ Written only by the cron jobs. All public-read.
 | `standings_snapshots` | One row per club per UTC day: rank, points, played, W/D/L, GF/GA, form, `group_label`. Cannot be back-filled | `/api/cron/standings` (`013`) |
 | `fixtures` | Kickoff, status, elapsed, score, venue | `/api/cron/fixtures` ✅ |
 | `fixture_stats` | All 18 `/fixtures/statistics` types incl. `expected_goals`, `goals_prevented` | `/api/cron/fixture-stats` ✅ |
-| `team_season_stats` | The weakness engine's inputs — `gc gs yel pa pos_pct fouls sh sot tk int duels_won_pct xg_pg xga_pg` | R5 ✅ (`tk`/`int`/`duels` await R6) |
+| `team_season_stats` | The weakness engine's inputs — `gc gs yel pa pos_pct fouls sh sot tk int duels_won_pct xg_pg xga_pg` | R5 ✅; `tk`/`int`/`duels_won_pct` + `player_sample` from player rows, R6 (`015`) |
 | `league_averages` | Per-league baselines the weakness thresholds compare against | R7 |
-| `players` | Name, age, nationality, height, photo | R6 |
-| `player_season_stats` | Apps, minutes, rating, goals, passes, tackles, duels, cards | R6 |
+| `players` | Name, age, nationality, height, photo. Created by `player-stats` on first appearance; bio filled by `/api/cron/players` | R6 (`015`) |
+| `player_fixture_stats` | **One row per player who played, per fixture** — the Scout Game's source. Position as played, `started` (from the lineup), minutes, on/off minute, rating, goals, assists, saves, derived `goals_conceded`, `clean_sheet`, shots, key passes, tackles, interceptions, duels, cards and more | `/api/cron/player-stats` (`015`) |
+| `fixture_events` | Goals, cards, substitutions, VAR per fixture, in API order (`seq`). Conceded and clean sheet are recomputable from here | `/api/cron/player-stats` (`015`) |
+| `player_season_stats` | Season totals **summed from `player_fixture_stats`** by `refresh_player_season_stats()`, never fetched. `rated_apps` is the rating denominator; `position` is the one played most minutes | R6 (`015`) |
 | `player_season_rates` | **VIEW** — per-appearance rates computed, never stored | derived |
 | `news_sources` | The 10 live feeds — `lang`, `country`, `headline_only`, `exclude_patterns`, health counters | seeded in `005` ✅ |
 | `news_items` | Headline + ≤300-char snippet + link. **Never full article text**. `football_ok` hides non-football without deleting it | `/api/cron/news` ✅ |
@@ -226,6 +230,13 @@ Written only by the cron jobs. All public-read.
 | `reports` | Comment reports. One open report per user per target | `008` ✅ |
 | `events` | Insert-only telemetry. **No SELECT policy** — read as service role | `008` ✅ |
 | `moderation_blocklist` / `moderation_allowlist` | Server-side slur filter. RLS on, no policy: unreadable via the API | `008` ✅ || `ingest_runs` | Job telemetry + resumable cursor. **No read policy** — telemetry, not content | all jobs |
+
+### Player rows: what absence means (R6)
+- **Once a fixture has `players_fetched_at` set, no `player_fixture_stats` row for a player means they did not play.** Unused substitutes get no row. The Scout Game relies on this. The one exception is `fixtures.players_unidentified`: players the API sent with id 0, who played but could not be stored.
+- **Clean sheet:** 60+ minutes and no goals conceded while on the pitch, own goals included. `goals_conceded` and `clean_sheet` are null for a fixture whose goal events do not add up to its score.
+- **Rule 14 per fixture:** a counting field that is null for every player in a fixture is "not provided" (the Premier League sends no `goals.conceded`, `dribbles.past` or `penalty.won`) and stays null; otherwise null means 0.
+- **Starters come from `lineups.startXI`**, not the API's `substitute` flag, which is false for everyone in the Premier League.
+- `team_season_stats.player_sample` is the denominator for `tk_pg`, `int_pg` and `duels_won_pct`: fixtures with player rows that carried tackle data. It is `<= matches` and independent of `fixtures_sampled` and `xg_sample`.
 
 ### Data the API does not provide — dropped
 Player **market value** (so the budget filter and currency switcher are gone),
