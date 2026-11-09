@@ -216,7 +216,8 @@ Written only by the cron jobs. All public-read.
 | `fixtures` | Kickoff, status, elapsed, score, venue | `/api/cron/fixtures` ✅ |
 | `fixture_stats` | All 18 `/fixtures/statistics` types incl. `expected_goals`, `goals_prevented` | `/api/cron/fixture-stats` ✅ |
 | `team_season_stats` | The weakness engine's inputs — `gc gs yel pa pos_pct fouls sh sot tk int duels_won_pct xg_pg xga_pg` | R5 ✅; `tk`/`int`/`duels_won_pct` + `player_sample` from player rows, R6 (`015`) |
-| `league_averages` | Per-league baselines the weakness thresholds compare against | R7 |
+| `league_averages` | **VIEW** (`016`, replaced the empty 003 table). Per league and season, the unweighted mean across teams of every `team_season_stats` metric, each with `<m>_n` (teams) and `<m>_games` (its denominator summed). `is_current` picks the live season | derived, R7 |
+| `league_position_rates` | **VIEW** (`016`). Per league, season and position: mean and SD of per-90 goals, assists, shots on target, key passes, saves, plus rating and clean-sheet rate, over players with minutes ≥ max(270, 30% of team minutes). `n_players` behind every mean. The Scout Game's tier baselines | derived, R7 |
 | `players` | Name, age, nationality, height, photo. Created by `player-stats` on first appearance; bio filled by `/api/cron/players` | R6 (`015`) |
 | `player_fixture_stats` | **One row per player who played, per fixture** — the Scout Game's source. Position as played, `started` (from the lineup), minutes, on/off minute, rating, goals, assists, saves, derived `goals_conceded`, `clean_sheet`, shots, key passes, tackles, interceptions, duels, cards and more | `/api/cron/player-stats` (`015`) |
 | `fixture_events` | Goals, cards, substitutions, VAR per fixture, in API order (`seq`). Conceded and clean sheet are recomputable from here | `/api/cron/player-stats` (`015`) |
@@ -251,7 +252,8 @@ Getting these wrong produces plausible-looking nonsense, so they are explicit:
 | Column | Counts | Denominator for |
 |---|---|---|
 | `matches` | games played (from `fixtures`) | `gs`, `gc` |
-| `fixtures_sampled` | games we hold stats for | `pa`, `pos_pct`, `sh_pg`, `sot_pg`, `fouls_pg`, `yel_pg` |
+| `fixtures_sampled` | games we hold stats for | `pos_pct`, `sh_pg`, `sot_pg`, `fouls_pg`, `yel_pg` |
+| `pa_sample` | games with a published pass % (`016`); until then a missing pass % was averaged in as 0% | `pa` |
 | `xg_sample` | games with non-null xG **on both sides** | `xg_pg`, `xga_pg` |
 
 `matches >= fixtures_sampled >= xg_sample`. When they diverge the averages are

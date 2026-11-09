@@ -383,15 +383,22 @@ async function loadRealStats(){
     // the anon key, without this page deciding which for itself.
     var get=async function(p){var r=await SMAuth.rest(p);if(!r.ok)throw new Error(p+' '+r.status);return r.json();};
     var res=await Promise.all([
-      get('teams?select=id,api_team_id,name&limit=500'),
+      get('teams?select=id,api_team_id,name,leagues!teams_league_id_fkey(slug)&limit=500'),
       get('standings?select=team_id,rank,points,played&limit=500'),
       get('team_season_stats?select=team_id,gs,gc,pa&limit=500')
     ]);
     var teams=res[0],standings=res[1],stats=res[2];
+    // League baselines (016). Fetched apart so a 404 before 016 is applied
+    // costs the "lg avg" labels only (rule 21).
+    var avgBySlug={};
+    try{
+      var avgs=await get('league_averages?select=slug,gs,gc,pa&is_current=is.true');
+      avgs.forEach(function(a){ avgBySlug[a.slug]=a; });
+    }catch(e2){ console.warn('league_averages unavailable (016 not applied yet?):',e2.message); }
     var byId={};
     teams.forEach(function(t){
       var label=(typeof clubDisplayName==='function')?clubDisplayName(t):t.name;
-      var row={label:label};
+      var row={label:label,avg:avgBySlug[t.leagues&&t.leagues.slug]||null};
       byId[t.id]=row;
       _indexKey(REAL_STATS,_norm(label),row);
       _indexKey(REAL_STATS,_norm(t.name),row);
@@ -416,16 +423,21 @@ function realStatsRow(teamName){
   var r=REAL_STATS[n]||REAL_STATS[_core(teamName)]
     ||(bridged?(REAL_STATS[bridged]||REAL_STATS[_core(bridged)]):null);
   if(!r)return '';   // null means ambiguous, undefined means unknown — both: nothing
-  var cell=function(label,val){
+  var cell=function(label,val,avg){
     if(val==null||val==='')return '';
-    return '<div class="sc"><div class="sv">'+val+'</div><div class="sl">'+label+'</div></div>';
+    return '<div class="sc"><div class="sv">'+val+'</div><div class="sl">'+label+'</div>'
+      +(avg!=null?'<div class="sl" style="margin-top:2px;font-family:\'DM Mono\',monospace;">lg avg '+avg+'</div>':'')
+      +'</div>';
   };
   var ord=function(n){ if(n==null)return null; var s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
+  var dp=function(v){ return v!=null?Number(v).toFixed(2):null; };
+  var pc=function(v){ return v!=null?Math.round(v)+'%':null; };
+  var a=r.avg||{};
   var cells=cell('Position',ord(r.rank))
     +cell('Points',r.points)
-    +cell('Goals/game',r.gs!=null?Number(r.gs).toFixed(2):null)
-    +cell('Conceded/game',r.gc!=null?Number(r.gc).toFixed(2):null)
-    +cell('Pass accuracy',r.pa!=null?Math.round(r.pa)+'%':null);
+    +cell('Goals/game',dp(r.gs),dp(a.gs))
+    +cell('Conceded/game',dp(r.gc),dp(a.gc))
+    +cell('Pass accuracy',pc(r.pa),pc(a.pa));
   return cells?('<div class="stats4" style="grid-template-columns:repeat(auto-fit,minmax(88px,1fr));">'+cells+'</div>'):'';
 }
 

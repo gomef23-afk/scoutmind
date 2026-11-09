@@ -187,10 +187,11 @@ async function ensureCoverage(api, leagues) {
 }
 
 // ── aggregation ────────────────────────────────────────────────────────────
-// Three denominators, documented in migration 004:
-//   matches          games played          -> gs, gc
-//   fixtures_sampled games with stats      -> pa, pos_pct, sh_pg, sot_pg, fouls_pg, yel_pg
-//   xg_sample        games with non-null xG -> xg_pg, xga_pg
+// Denominators, documented in migrations 004 and 016:
+//   matches          games played              -> gs, gc
+//   fixtures_sampled games with stats          -> pos_pct, sh_pg, sot_pg, fouls_pg, yel_pg
+//   pa_sample        games with a pass %       -> pa
+//   xg_sample        games with non-null xG    -> xg_pg, xga_pg
 async function aggregateTeams(touched, leagues) {
   if (!touched.size) return 0;
 
@@ -243,7 +244,7 @@ async function aggregateTeams(touched, leagues) {
  */
 export function computeTeamRow(teamId, season, mine, statsByFixture) {
   let gf = 0, ga = 0, cleanSheets = 0, failedToScore = 0;
-  const acc = { sh: 0, sot: 0, fouls: 0, yel: 0, pos: 0, pa: 0, n: 0 };
+  const acc = { sh: 0, sot: 0, fouls: 0, yel: 0, pos: 0, pa: 0, paN: 0, n: 0 };
   const xg = { for: 0, against: 0, n: 0 };
   let gpTotal = 0, gpN = 0;
   let leagueId = null;
@@ -270,7 +271,10 @@ export function computeTeamRow(teamId, season, mine, statsByFixture) {
       acc.fouls += ours.fouls ?? 0;
       acc.yel += ours.yellow ?? 0;
       acc.pos += Number(ours.possession_pct ?? 0);
-      acc.pa += Number(ours.passes_pct ?? 0);
+      // Pass % is null when the API did not publish it, which is ~30% of
+      // fixtures (more than half in Europe). It used to be averaged in as 0%,
+      // dragging every club's figure down; it now has its own denominator.
+      if (present(ours.passes_pct)) { acc.pa += Number(ours.passes_pct); acc.paN++; }
       acc.n++;
       if (present(ours.goals_prevented)) { gpTotal += Number(ours.goals_prevented); gpN++; }
     }
@@ -302,7 +306,8 @@ export function computeTeamRow(teamId, season, mine, statsByFixture) {
     fouls_pg: acc.n ? r3(acc.fouls / acc.n) : null,
     yel_pg: acc.n ? r3(acc.yel / acc.n) : null,
     pos_pct: acc.n ? r2(acc.pos / acc.n) : null,
-    pa: acc.n ? r2(acc.pa / acc.n) : null,
+    pa: acc.paN ? r2(acc.pa / acc.paN) : null,
+    pa_sample: acc.paN,               // denominator for pa (016)
     xg_sample: xg.n,                  // denominator for xg_pg/xga_pg
     xg_pg: xg.n ? r3(xg.for / xg.n) : null,
     xga_pg: xg.n ? r3(xg.against / xg.n) : null,

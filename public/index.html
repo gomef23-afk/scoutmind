@@ -3573,6 +3573,10 @@ let FEED_ITEMS=[];
 //             rank, points, played, matches, gs, gc, pa }
 const CLUB_DATA=new Map();      // teams.id      -> row
 const CLUB_BY_API=new Map();    // api_team_id   -> row
+// League slug -> current-season baselines from the league_averages view (016).
+// Empty until it loads, and empty for good before 016 is applied: every "lg
+// avg" then simply does not render.
+const LEAGUE_AVG=new Map();
 
 /** Every club we hold, grouped by league slug, for the picker. */
 function clubsByLeague(){
@@ -3631,19 +3635,31 @@ async function loadClubData(){
   }catch(e){
     console.error('loadClubData:',e);
   }
+  // Separate from the Promise.all above on purpose (rule 21): the front end
+  // deploys before 016 runs, and a 404 here must cost the "lg avg" labels only,
+  // never the clubs.
+  try{
+    const avgs=await get('league_averages?select=slug,gs,gs_n,gc,gc_n,pa,pa_n&is_current=is.true');
+    for(const a of avgs)LEAGUE_AVG.set(a.slug,a);
+  }catch(e){
+    console.warn('league_averages unavailable (016 not applied yet?):',e.message);
+  }
 }
 
 /**
  * One stat cell. Renders nothing at all when we have no real value — a dash
- * would still be a claim that the number exists.
+ * would still be a claim that the number exists. `avg` is the league average
+ * for the same stat, shown only when there is one.
  */
-function statCell(label,value,colour){
+function statCell(label,value,colour,avg){
   if(value==null||value==='')return '';
   return '<div style="padding:8px 0;text-align:center;flex:1;">'
     +'<div style="font-size:14px;font-weight:700;font-family:\'DM Mono\',monospace;'
     +(colour?'color:'+colour+';':'')+'">'+sanitize(String(value))+'</div>'
     +'<div style="font-size:8px;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:1px;">'
-    +sanitize(label)+'</div></div>';
+    +sanitize(label)+'</div>'
+    +(avg!=null?'<div style="font-size:9px;color:var(--muted);margin-top:2px;font-family:\'DM Mono\',monospace;">lg avg '+sanitize(String(avg))+'</div>':'')
+    +'</div>';
 }
 
 function ordinal(n){
@@ -3671,9 +3687,9 @@ function renderMyClubCard(){
     .filter(Boolean).join(' · ');
   const cells=statCell('Position',ordinal(s.rank),'var(--accent)')
     +statCell('Points',s.points)
-    +statCell('Goals/g',s.goalsFor)
-    +statCell('Conceded/g',s.goalsAgainst)
-    +statCell('Pass',s.passPct);
+    +statCell('Goals/g',s.goalsFor,null,s.lgGoalsFor)
+    +statCell('Conceded/g',s.goalsAgainst,null,s.lgGoalsAgainst)
+    +statCell('Pass',s.passPct,null,s.lgPassPct);
   el.innerHTML='<div onclick="window.location.href=\'/community.html\'" style="background:var(--bg2);border:1px solid rgba(0,229,160,0.2);border-radius:12px;overflow:hidden;cursor:pointer;">'
     +'<div style="padding:14px 16px;display:flex;align-items:center;gap:14px;">'
     +clubCrestById(id,44)
@@ -3700,10 +3716,12 @@ function renderClubsGrid(){
     const s=clubStats(c.id)||{};
     const sub=[LEAGUE_LABEL[c.league]||null,(s.rank!=null?ordinal(s.rank)+' place':null)]
       .filter(Boolean).join(' · ');
+    const num=(v)=>'<span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+v+'</span>';
+    const lg=(v)=>v!=null?' · lg avg '+v:'';
     const bits=[
-      s.goalsFor!=null?'Goals/g <span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+s.goalsFor+'</span>':null,
-      s.goalsAgainst!=null?'Conc/g <span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+s.goalsAgainst+'</span>':null,
-      s.passPct!=null?'Pass <span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+s.passPct+'</span>':null,
+      s.goalsFor!=null?'Goals/g '+num(s.goalsFor)+lg(s.lgGoalsFor):null,
+      s.goalsAgainst!=null?'Conc/g '+num(s.goalsAgainst)+lg(s.lgGoalsAgainst):null,
+      s.passPct!=null?'Pass '+num(s.passPct)+lg(s.lgPassPct):null,
     ].filter(Boolean);
     // The card used to send every club to /community.html, which had no idea
     // which club had been clicked. It opens that club's own room now.
@@ -3826,6 +3844,10 @@ function clubStats(id){
   // `matches` as the denominator that produced it (003: "goals scored / game").
   // Dividing by matches again is the rule-15 mistake.
   const rate=(v)=>(v!=null)?Number(v).toFixed(2):null;
+  const pct=(v)=>(v!=null)?Math.round(v)+'%':null;
+  // The league average for the same stat, from league_averages (016). Absent
+  // before 016 is applied, and for a league with no value: then no label.
+  const a=LEAGUE_AVG.get(d.league)||{};
   return {
     rank:d.rank??null,
     points:d.points??null,
@@ -3833,7 +3855,10 @@ function clubStats(id){
     matches:d.matches??null,
     goalsFor:rate(d.gs),
     goalsAgainst:rate(d.gc),
-    passPct:(d.pa!=null)?Math.round(d.pa)+'%':null,
+    passPct:pct(d.pa),
+    lgGoalsFor:rate(a.gs),
+    lgGoalsAgainst:rate(a.gc),
+    lgPassPct:pct(a.pa),
   };
 }
 

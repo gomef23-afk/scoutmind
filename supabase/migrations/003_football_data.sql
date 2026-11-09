@@ -371,6 +371,12 @@ begin
     'team_season_stats','league_averages','players','player_season_stats',
     'news_items','news_item_teams'
   ] loop
+    -- 016 replaced league_averages with a VIEW of the same name. RLS is a table
+    -- property, so a re-run of this file skips anything that is no longer one.
+    if (select c.relkind from pg_class c
+         where c.oid = to_regclass('public.' || t)) is distinct from 'r' then
+      continue;
+    end if;
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists "%s: public read" on public.%I', t, t);
     execute format(
