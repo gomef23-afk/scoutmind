@@ -209,6 +209,32 @@ body{padding-bottom:64px;}
 .trending-name{font-size:11px;color:var(--text);font-weight:500;}
 .trending-sub{font-size:9px;color:var(--muted);}
 .trending-up{font-size:10px;color:var(--accent);}
+/* ── LAYOUT PASS A ── one scrolling chip row, compact cards, the date strip.
+   Mobile first: the rows scroll sideways at 375px instead of wrapping into
+   three lines of buttons above the first headline. */
+.chip-scroll{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;overflow-x:auto;margin:0 -16px 16px;padding:0 16px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.chip-scroll::-webkit-scrollbar{display:none;}
+.chip-scroll>*{flex:0 0 auto;}
+.chip-group{display:flex;gap:6px;}
+.chip-group:empty{display:none;}
+@media (min-width: 900px){ .chip-scroll{margin:0 0 16px;padding:0;} }
+.news-meta{display:flex;align-items:center;gap:6px;min-width:0;margin-bottom:8px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;}
+.news-meta .nm-text{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.news-meta .nm-crests{display:inline-flex;gap:3px;flex:0 0 auto;}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.read-link{flex:0 0 auto;font-size:11px;font-weight:600;color:var(--accent);text-decoration:none;white-space:nowrap;padding:3px 2px;}
+.date-strip{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 18px;padding:0 16px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.date-strip::-webkit-scrollbar{display:none;}
+@media (min-width: 900px){ .date-strip{margin:0 0 18px;padding:0;} }
+.date-chip{flex:0 0 auto;min-width:72px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;text-align:center;line-height:1.3;}
+.date-chip .dc-n{display:block;font-size:9px;font-weight:500;margin-top:2px;}
+.date-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+.date-chip.empty{opacity:.55;}
+.md-league{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);margin:16px 0 8px;display:flex;align-items:center;gap:6px;}
+.md-section{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:4px 0 10px;display:flex;align-items:center;gap:6px;color:var(--accent);}
+.yc-line{display:flex;gap:8px;font-size:11px;padding:6px 0;border-top:1px solid var(--border);min-width:0;}
+.yc-k{color:var(--muted);flex:0 0 34px;}
+.yc-v{color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .match-row-sm{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
 .match-row-sm:last-child{border-bottom:none;}
 .match-comp-sm{font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:3px;}
@@ -586,10 +612,11 @@ if(!_cu){
                oninput="onSearchInput(this.value)">
         <button class="search-clear" onclick="clearSearch()" title="Clear">✕</button>
       </div>
-      <!-- Only the reader's own languages, and only when there is more than
-           one to choose between. Rendered by renderLangChips(). -->
-      <div id="feed-lang-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;">
+      <!-- One row that scrolls sideways: the reader's languages (rendered by
+           renderLangChips(), only when there is more than one), then the
+           categories. It used to wrap into up to three rows on a phone. -->
+      <div class="chip-scroll">
+        <div id="feed-lang-chips" class="chip-group"></div>
         <button class="filter-btn active" onclick="filterFeed('all',this)">All News</button>
         <button class="filter-btn" onclick="filterFeed('transfers',this)">🔄 Transfers</button>
         <button class="filter-btn" onclick="filterFeed('match',this)">⚽ Match</button>
@@ -614,19 +641,19 @@ if(!_cu){
     </div>
 </div><!-- /feed-main -->
   <div class="feed-side">
+    <!-- Your club: position, next match, last result and the room, in one card.
+         It absorbed the "Your club's chat" card. Hidden for guests and for
+         anyone without a main club. Rendered by renderSidebarYourClub(). -->
+    <div class="feed-side-card" id="sidebar-club-card" style="display:none;">
+      <div class="feed-side-title">Your club</div>
+      <div id="sidebar-club"></div>
+    </div>
     <div class="feed-side-card">
       <!-- Was three hardcoded rows (Botafogo-Fluminense 21:00, Arsenal-Chelsea,
            Real Madrid-Sevilla). Now real fixtures for today in the viewer's
            timezone, falling back to the next matchday. -->
       <div class="feed-side-title" id="sidebar-matches-title">Today's matches</div>
       <div id="sidebar-matches"></div>
-    </div>
-    <!-- Your club's chat. Hidden for guests and for anyone without a main
-         club — there is no honest thing to show them here. Rendered by
-         renderSidebarChat(). -->
-    <div class="feed-side-card" id="sidebar-chat-card" style="display:none;">
-      <div class="feed-side-title">Your club's chat</div>
-      <div id="sidebar-chat"></div>
     </div>
     <div class="feed-side-card">
       <div class="feed-side-title">My clubs</div>
@@ -643,8 +670,11 @@ if(!_cu){
 <div style="max-width:1100px;margin:0 auto;padding:24px 16px;">
   <div style="margin-bottom:18px;">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;">Matches</div>
-    <div style="font-size:13px;color:var(--muted);">Your clubs first, then every fixture by date. Times are your local time.</div>
+    <div style="font-size:13px;color:var(--muted);">Pick a day. Your clubs come first, then every league. Times are your local time.</div>
   </div>
+  <!-- Yesterday, today, tomorrow and the next four days. Rendered by
+       renderMatchDay() from the fixtures it already loads. -->
+  <div id="matches-date-strip" class="date-strip"></div>
   <div id="matchday-content"></div>
 </div>
 </div>
@@ -3225,11 +3255,11 @@ function applyClubSelection(){
   try{ renderProfileClubs(); }catch(e){}
   try{ renderFeedNews(); }catch(e){}
   try{ renderMatchDay(); }catch(e){}
-  try{ renderSidebarChat(); }catch(e){}
+  try{ renderSidebarYourClub(); }catch(e){}
   // Changing your clubs changes the member counts, so re-read them and paint
   // the club cards again once they land.
   loadChatOverview().then(function(){
-    try{ renderSidebarChat(); renderMyClubCard(); renderClubsGrid(); }catch(e){}
+    try{ renderSidebarYourClub(); renderMyClubCard(); renderClubsGrid(); }catch(e){}
   });
   // DO NOT rename the nav — always stays "Clubs"
 }
@@ -3380,6 +3410,8 @@ async function loadFixtures(){
       status: st,
       minute: r.elapsed ? String(r.elapsed) : undefined,
       score: (r.home_goals!=null && r.away_goals!=null) ? `${r.home_goals} – ${r.away_goals}` : undefined,
+      homeGoals: r.home_goals,
+      awayGoals: r.away_goals,
       teamIds: [r.home_team_id, r.away_team_id]
     };
   });
@@ -3405,96 +3437,139 @@ function dayHeading(key){
   return d.toLocaleDateString([], {weekday:'long',day:'numeric',month:'short'});
 }
 
+// The day the Matches page shows, as a localDayKey. Null until the reader
+// picks one: then it is today, or the first day in the strip with fixtures.
+// UI state only, kept in memory (rule 10).
+let MATCH_DAY = null;
+
+/** Yesterday, today, tomorrow and the next four days, in the viewer's zone. */
+function stripDays() {
+  const now = new Date();
+  const out = [];
+  for (let i = -1; i <= 5; i++) {
+    out.push(localDayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12)));
+  }
+  return out;
+}
+
+/** "Yesterday" / "Today" / "Tomorrow", then "Thu 13". Short, for a chip. */
+function stripLabel(key) {
+  const h = dayHeading(key);
+  if (h === 'Today' || h === 'Tomorrow' || h === 'Yesterday') return h;
+  return new Date(key + 'T12:00:00').toLocaleDateString([], {weekday: 'short', day: 'numeric'});
+}
+
+function selectMatchDay(key) {
+  MATCH_DAY = key;
+  renderMatchDay();
+}
+
 function renderMatchDay() {
   const el = document.getElementById('matchday-content');
+  const strip = document.getElementById('matches-date-strip');
   if (!el) return;
 
   // Kick off the Supabase load once; re-render when it lands.
   if (LIVE_MATCHES === null) {
     LIVE_MATCHES = [];
     loadFixtures()
-      .then(m => { LIVE_MATCHES = m; renderMatchDay(); try{renderSidebarMatches();}catch(e){} })
+      .then(m => {
+        LIVE_MATCHES = m;
+        renderMatchDay();
+        try{ renderSidebarMatches(); }catch(e){}
+        try{ renderSidebarYourClub(); }catch(e){}
+      })
       .catch(e => { console.warn('fixtures: using static fallback —', e.message); });
   }
 
-  // Clubs come from the account (cached in localStorage), keyed on teams.id.
-  const myClubs = new Set(myClubIds());
-
-  // The static ALL_MATCHES fallback has no team ids, so it can never match a
-  // followed club — that is correct: it is placeholder data, not this user's.
+  // The static ALL_MATCHES fallback has no dates and no team ids. It is
+  // placeholder data, so it is shown flat, without a strip that would pretend
+  // it belongs to a day.
   const SOURCE = (LIVE_MATCHES && LIVE_MATCHES.length) ? LIVE_MATCHES : ALL_MATCHES;
   const dated = SOURCE.filter(m => m.kickoff);
+  if (!dated.length) {
+    if (strip) strip.innerHTML = '';
+    let flat = '';
+    if (SOURCE.length) {
+      flat += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:18px 0 12px;">Sample fixtures</div>';
+      SOURCE.forEach(m => { flat += matchCard(m, false); });
+    }
+    el.innerHTML = flat || '<div style="text-align:center;padding:40px;color:var(--muted)">No fixtures in the next three weeks. International break?</div>';
+    return;
+  }
+
+  // ── the strip ──
+  const days = stripDays();
+  const count = new Map(days.map(k => [k, 0]));
+  for (const m of dated) if (count.has(m.dayKey)) count.set(m.dayKey, count.get(m.dayKey) + 1);
+  const today = localDayKey(new Date());
+  // Today, else the next day ahead with fixtures, else yesterday: an empty
+  // today should open on what is coming, not on last night's results.
+  if (!MATCH_DAY || days.indexOf(MATCH_DAY) < 0) {
+    MATCH_DAY = days.slice(1).find(k => count.get(k)) || (count.get(days[0]) ? days[0] : today);
+  }
+  if (strip) {
+    strip.innerHTML = days.map(k => {
+      const n = count.get(k);
+      return '<button class="date-chip' + (k === MATCH_DAY ? ' active' : '') + (n ? '' : ' empty') + '"'
+        + ' onclick="selectMatchDay(\'' + sanitize(k) + '\')">' + sanitize(stripLabel(k))
+        + '<span class="dc-n">' + (n ? n + (n === 1 ? ' match' : ' matches') : 'none') + '</span></button>';
+    }).join('');
+  }
+
+  // ── a week with nothing in it (an international break) ──
+  const weekTotal = [...count.values()].reduce((a, b) => a + b, 0);
+  if (!weekTotal) {
+    const last = days[days.length - 1];
+    const next = dated.filter(m => m.dayKey > last).sort((a, b) => a.kickoff - b.kickoff)[0];
+    el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.7;">'
+      + 'No matches this week'
+      + (next ? ' · next matchday <span style="color:var(--text);">' + sanitize(dayHeading(next.dayKey)) + '</span>' : '')
+      + '</div>';
+    return;
+  }
+
+  // ── the selected day ──
+  const list = dated.filter(m => m.dayKey === MATCH_DAY).sort((a, b) => a.kickoff - b.kickoff);
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
+      + 'No matches ' + sanitize(dayHeading(MATCH_DAY) === 'Today' ? 'today' : 'on ' + dayHeading(MATCH_DAY)) + '.</div>';
+    return;
+  }
+
+  // Your clubs' matches that day, pinned first. They are not repeated below.
+  const myClubs = new Set(myClubIds());
+  const isMine = m => m.teamIds && m.teamIds.some(id => myClubs.has(id));
+  const pinned = list.filter(isMine);
+  const rest = list.filter(m => !isMine(m));
   let html = '';
-
-  // ── Your clubs: last result and next match per club, each labelled ──
-  if (myClubs.size && dated.length) {
-    const now = Date.now();
-    let rows = '';
-    for (const id of myClubIds()) {
-      const mine = dated.filter(m => m.teamIds && m.teamIds.indexOf(id) > -1)
-                        .sort((a, b) => a.kickoff - b.kickoff);
-      if (!mine.length) continue;
-      const past = mine.filter(m => m.status === 'finished' || m.kickoff <= now);
-      const next = mine.find(m => m.status !== 'finished' && m.kickoff > now);
-      const last = past[past.length - 1];
-      const live = mine.find(m => m.status === 'live');
-      const club = CLUB_DATA.get(id);
-      rows += '<div style="margin-bottom:14px;">'
-        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
-        + clubCrestById(id, 22)
-        + '<div style="font-size:12px;font-weight:600;">' + sanitize(club ? club.label : '') + '</div></div>';
-      if (live) rows += matchCard(live, true, 'Live now');
-      if (last && !live) rows += matchCard(last, true, 'Last result');
-      if (next) rows += matchCard(next, true, 'Next match');
-      if (!live && !last && !next) {
-        rows += '<div style="font-size:11px;color:var(--muted);padding:4px 0 8px;">No fixture in the next three weeks.</div>';
-      }
-      rows += '</div>';
-    }
-    if (rows) {
-      html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;">'
-        + '<span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;"></span>Your clubs</div>'
-        + rows;
-    }
+  if (pinned.length) {
+    html += '<div class="md-section"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;"></span>Your clubs</div>';
+    pinned.forEach(m => { html += matchCard(m, true, null, true); });
   }
 
-  // ── Everything else, grouped by day ──
-  const byDay = new Map();
-  for (const m of dated) {
-    if (!byDay.has(m.dayKey)) byDay.set(m.dayKey, []);
-    byDay.get(m.dayKey).push(m);
+  // Everything else, one block per league, the leagues in their usual order.
+  const byLeague = new Map();
+  for (const m of rest) {
+    if (!byLeague.has(m.comp)) byLeague.set(m.comp, []);
+    byLeague.get(m.comp).push(m);
   }
-  const days = [...byDay.keys()].sort();
-  const statusOrder = {live: 0, upcoming: 1, finished: 2};
-  for (const key of days) {
-    const list = byDay.get(key).sort((a, b) => {
-      if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
-      if (a.compTier !== b.compTier) return a.compTier - b.compTier;
-      return a.kickoff - b.kickoff;
-    });
-    html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:22px 0 12px;">'
-      + sanitize(dayHeading(key)) + ' · ' + list.length + (list.length === 1 ? ' match' : ' matches') + '</div>';
-    let lastComp = '';
-    for (const m of list) {
-      if (m.comp !== lastComp) {
-        html += '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);margin:10px 0 8px;display:flex;align-items:center;gap:6px;">'
-          + m.flag + ' ' + sanitize(m.comp) + '</div>';
-        lastComp = m.comp;
-      }
-      html += matchCard(m, false);
-    }
+  const leagues = [...byLeague.keys()].sort((a, b) =>
+    (byLeague.get(a)[0].compTier - byLeague.get(b)[0].compTier) || a.localeCompare(b));
+  for (const comp of leagues) {
+    const ms = byLeague.get(comp);
+    html += '<div class="md-league">' + ms[0].flag + ' ' + sanitize(comp)
+      + '<span style="font-weight:500;letter-spacing:0;">· ' + ms.length + '</span></div>';
+    ms.forEach(m => { html += matchCard(m, false, null, true); });
   }
-
-  // The static fallback has no dates; render it flat rather than pretending.
-  if (!dated.length && SOURCE.length) {
-    html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:18px 0 12px;">Sample fixtures</div>';
-    SOURCE.forEach(m => { html += matchCard(m, false); });
-  }
-
-  el.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--muted)">No fixtures in the next three weeks. International break?</div>';
+  el.innerHTML = html;
 }
 
-function matchCard(m, featured, label) {
+/**
+ * `hideDay`: the Matches page already says which day it is, in the strip, so
+ * the card does not repeat it. Elsewhere a card must say its day.
+ */
+function matchCard(m, featured, label, hideDay) {
   const isLive = m.status === 'live';
   const isFinished = m.status === 'finished';
   const borderColor = featured ? 'rgba(0,229,160,0.25)' : isLive ? 'rgba(0,229,160,0.15)' : 'var(--border)';
@@ -3506,7 +3581,7 @@ function matchCard(m, featured, label) {
   // Every card says which day it is. A result from last Sunday next to a
   // fixture next Tuesday is meaningless without it. The status badge already
   // carries the kickoff time for upcoming games, so don't print it twice.
-  const when = m.dayKey
+  const when = (m.dayKey && !hideDay)
     ? dayHeading(m.dayKey) + ((isLive || isFinished) && m.time ? ' · ' + m.time : '')
     : '';
 
@@ -4254,8 +4329,7 @@ function renderFeedItem(item){
 function renderNewsCard(n){
   const cat=CATEGORY_LABEL[n.category]||CATEGORY_LABEL.general;
   const clubs=(n.teams||[]).slice(0,3).map(t=>
-    '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:2px 8px 2px 3px;background:rgba(0,184,255,0.08);border:1px solid rgba(0,184,255,0.18);border-radius:10px;color:var(--accent2);">'
-    +clubCrest(t,16)+sanitize(t.name)+'</span>'
+    '<span title="'+sanitize(t.name)+'" style="display:inline-flex;">'+clubCrest(t,16)+'</span>'
   ).join('');
   // An item can only reach a reader in a language they did not choose via the
   // opt-in club exception, so the hint is pointless unless that is on. When it
@@ -4269,23 +4343,28 @@ function renderNewsCard(n){
     : '';
   // lang on the card itself, so per-item browser translation targets the
   // right text instead of guessing from the page language.
-  let html='<div lang="'+sanitize(n.lang||'')+'" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .2s;">'
-    +'<div style="padding:16px 18px;">'
-    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">'
-    +'<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;" class="'+cat.cls+'">'+cat.label+'</span>'
-    +clubs
-    +'<span style="font-size:11px;color:var(--muted);">'+sanitize(n.source)+' · '+timeAgo(n.publishedAt)+'</span>'+hint+'</div>'
+  // ONE line of metadata: category, source and age, the clubs as crests (their
+  // names are the crest's title), then the translate hint. It used to wrap into
+  // up to three lines of pills on a phone before the headline.
+  let html='<div lang="'+sanitize(n.lang||'')+'" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;transition:all .2s;">'
+    +'<div style="padding:14px 16px 12px;">'
+    +'<div class="news-meta">'
+    +'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;flex:0 0 auto;" class="'+cat.cls+'">'+cat.label+'</span>'
+    +'<span class="nm-text">'+sanitize(n.source)+' · '+timeAgo(n.publishedAt)+'</span>'
+    +(clubs?'<span class="nm-crests">'+clubs+'</span>':'')
+    +hint+'</div>'
     +'<a href="'+sanitize(n.url)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;">'
-    +'<div style="font-size:14px;font-weight:600;line-height:1.4;margin-bottom:8px;">'+sanitize(n.title)+'</div></a>';
+    +'<div style="font-size:14px;font-weight:600;line-height:1.4;margin-bottom:6px;">'+sanitize(n.title)+'</div></a>';
   if(n.excerpt){
-    html+='<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">'+sanitize(n.excerpt)+'</div>';
+    html+='<div class="line-clamp-2" style="font-size:12px;color:var(--muted);line-height:1.55;">'+sanitize(n.excerpt)+'</div>';
   }
-  html+='<a href="'+sanitize(n.url)+'" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--accent);text-decoration:none;">Read on '+sanitize(n.source)+' &rarr;</a>'
-    +'</div>'
+  // ONE action row: react, comment, and read the story at its source.
+  html+='</div>'
     +'<div class="social-bar">'
     +'<div class="reaction-row" id="rx-'+n.id+'">'+reactionButtons(n.id)+'</div>'
     +'<button class="comment-toggle'+(commentState(n.id).expanded?' open':'')+'" id="ct-'+n.id+'" onclick="toggleComments('+n.id+')">'
     +commentToggleLabel(n.id)+'</button>'
+    +'<a class="read-link" href="'+sanitize(n.url)+'" target="_blank" rel="noopener noreferrer" title="Read on '+sanitize(n.source)+'">Read &#x2197;</a>'
     +'</div>'
     +'<div class="comments-body" id="cb-'+n.id+'"></div>'
     +'</div>';
@@ -4482,26 +4561,83 @@ function chatBlockHtml(clubId){
     +'</div></div>';
 }
 
-/** Home sidebar: your main club's room only. Guests see nothing. */
-function renderSidebarChat(){
-  const card=document.getElementById('sidebar-chat-card');
-  const el=document.getElementById('sidebar-chat');
+/**
+ * Home sidebar "Your club": position, next match, last result and the room.
+ * It absorbed the old chat-only card. Guests and readers without a main club
+ * see nothing: there is no honest thing to show them here.
+ *
+ * Every line renders only when its data is real and loaded: no position before
+ * standings, no matches before fixtures, no room before club_chat_overview.
+ */
+function renderSidebarYourClub(){
+  const card=document.getElementById('sidebar-club-card');
+  const el=document.getElementById('sidebar-club');
   if(!card||!el)return;
   const id=currentUser?mainClubId():null;
-  const o=id?chatOverview(id):null;
-  if(!o){ card.style.display='none'; return; }
+  if(!id||!CLUB_DATA.get(id)){ card.style.display='none'; return; }
   card.style.display='';
-  const last=o.last_message_preview
-    ? (o.last_message_is_system?'ScoutMind: ':'')+o.last_message_preview
-    : 'No messages yet — say something.';
-  el.innerHTML='<button class="chat-card" onclick="openChat('+id+')">'
-    +clubCrestById(id,28)
+
+  const s=clubStats(id)||{};
+  const standing=[s.rank!=null?ordinal(s.rank):null,s.points!=null?s.points+' pts':null]
+    .filter(Boolean).join(' · ');
+  let html='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+    +clubCrestById(id,30)
     +'<div style="flex:1;min-width:0;">'
     +'<div style="font-size:12px;font-weight:600;">'+sanitize(clubLabel(id))+'</div>'
-    +'<div class="chat-card-last">'+sanitize(last)+'</div>'
-    +'</div></button>'
-    +'<div style="font-size:10px;color:var(--muted);margin-top:7px;">'
-    +sanitize(memberLabel(o.member_count))+'</div>';
+    +(standing?'<div style="font-size:10px;color:var(--muted);">'+sanitize(standing)+'</div>':'')
+    +'</div></div>';
+
+  // Fixtures come from the same load as the Matches page (-7 / +21 days).
+  if(LIVE_MATCHES===null||!LIVE_MATCHES.length){
+    html+='<div class="yc-line"><span class="yc-k">Next</span><span class="yc-v" style="color:var(--muted);">'
+      +(LIVE_MATCHES===null?'Loading fixtures…':'—')+'</span></div>';
+  }else{
+    const mine=LIVE_MATCHES.filter(m=>m.kickoff&&m.teamIds&&m.teamIds.indexOf(id)>-1)
+      .sort((a,b)=>a.kickoff-b.kickoff);
+    const live=mine.find(m=>m.status==='live');
+    const next=mine.find(m=>m.status==='upcoming');
+    const last=mine.filter(m=>m.status==='finished').pop();
+    const opp=(m)=>{
+      const home=m.teamIds[0]===id;
+      return (home?'vs ':'at ')+(home?m.away:m.home);
+    };
+    if(live){
+      html+='<div class="yc-line"><span class="yc-k" style="color:var(--accent);">Live</span>'
+        +'<span class="yc-v">'+sanitize(opp(live))+' · '+sanitize(live.score||'')+'</span></div>';
+    }
+    if(next){
+      html+='<div class="yc-line"><span class="yc-k">Next</span>'
+        +'<span class="yc-v">'+sanitize(opp(next))+' · '+sanitize(dayHeading(next.dayKey))+' '+sanitize(next.time||'')+'</span></div>';
+    }
+    if(last&&last.homeGoals!=null&&last.awayGoals!=null){
+      const home=last.teamIds[0]===id;
+      const f=home?last.homeGoals:last.awayGoals, a=home?last.awayGoals:last.homeGoals;
+      const res=f>a?'W':f<a?'L':'D';
+      const col=f>a?'var(--accent)':f<a?'var(--red)':'var(--muted)';
+      html+='<div class="yc-line"><span class="yc-k">Last</span>'
+        +'<span class="yc-v"><span style="color:'+col+';font-weight:700;">'+res+'</span> '
+        +f+'–'+a+' '+sanitize(opp(last))+'</span></div>';
+    }
+    if(!live&&!next&&!last){
+      html+='<div class="yc-line"><span class="yc-k">Next</span><span class="yc-v" style="color:var(--muted);">No fixture in the next three weeks</span></div>';
+    }
+  }
+
+  // The room, as the old chat card showed it.
+  const o=chatOverview(id);
+  if(o){
+    const msg=o.last_message_preview
+      ? (o.last_message_is_system?'ScoutMind: ':'')+o.last_message_preview
+      : 'No messages yet — say something.';
+    html+='<button class="chat-card" style="margin-top:8px;" onclick="openChat('+id+')">'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div class="chat-card-last">'+sanitize(msg)+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-top:3px;">'+sanitize(memberLabel(o.member_count))+'</div>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--accent);flex-shrink:0;">Open the room →</div>'
+      +'</button>';
+  }
+  el.innerHTML=html;
 }
 
 async function openChat(clubId){
@@ -4541,7 +4677,7 @@ function closeChat(){
   chatRoom=null;
   // The preview on the cards behind the overlay is now stale.
   loadChatOverview().then(function(){
-    try{ renderSidebarChat(); renderMyClubCard(); }catch(e){}
+    try{ renderSidebarYourClub(); renderMyClubCard(); }catch(e){}
   });
 }
 
@@ -5470,7 +5606,7 @@ function filterWeekly(league, btn) {
   // Chat summaries before the club cards paint, so the "Community chat" block
   // is there on the first render rather than appearing a beat later.
   try{ await loadChatOverview(); }catch(e){}
-  try{ renderSidebarChat(); }catch(e){}
+  try{ renderSidebarYourClub(); }catch(e){}
   try{ renderMyClubCard(); renderClubsGrid(); }catch(e){}
   try{ await loadNews(false); }catch(e){ console.error('loadNews:',e); }
   try{ loadSocialForFeed(); }catch(e){}
