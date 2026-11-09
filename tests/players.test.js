@@ -6,11 +6,14 @@
 // success, 1 on any failure.
 //
 // Every case below is something the committed payloads actually contain. The
-// fixtures are 22 real matches: two from the R6 probe and twenty from the
-// 20-id batch, picked for high scores so they carry own goals, red cards, VAR
-// and the API's odd cases (a phantom goal, players with id 0).
+// fixtures are 26 real matches: two from the R6 probe, twenty from the 20-id
+// batch (picked for high scores, so they carry own goals, red cards, VAR and
+// the API's odd cases), two full-feed 0-0s, and the two fixtures that exposed
+// the null-goals bug on production: a reduced-feed 0-0 and a 0-1 own goal.
 
-import { parseFixture, parseRating, bioRow, POSITION_NAMES, CLEAN_SHEET_MINUTES } from '../api/_lib/players.js';
+import {
+  parseFixture, parseRating, bioRow, POSITION_NAMES, CLEAN_SHEET_MINUTES, REDUCED_FEED_FIELDS,
+} from '../api/_lib/players.js';
 import { cmToNumber } from '../api/_lib/apifootball.js';
 
 let passed = 0;
@@ -31,7 +34,9 @@ export async function run(read) {
   const load = async (n) => JSON.parse(await read(`tests/fixtures/api-football/${n}.json`));
   const pair = (await load('fixtures_ids_detail')).response;
   const batch = (await load('fixtures_ids_20')).response;
-  const all = [...pair, ...batch];
+  const goalless = (await load('fixtures_ids_goalless')).response;
+  const reducedBug = (await load('fixtures_ids_reduced')).response;
+  const all = [...pair, ...batch, ...goalless, ...reducedBug];
   const fx = (id) => all.find((f) => f.fixture.id === id);
   const parsed = new Map(all.map((f) => [f.fixture.id, parseFixture(f)]));
 
@@ -61,7 +66,7 @@ export async function run(read) {
     const side = fx(1492449).players.flatMap((s) => s.players);
     const p = side.find((x) => x.statistics[0].games.minutes > 0 && x.statistics[0].shots.total === null);
     const r = sa.rows.find((x) => x.api_player_id === p.player.id);
-    eq('SA: shots.total null -> 0 when the field exists in the fixture', r.shots_total, 0);
+    eq('SA: shots.total null -> 0', r.shots_total, 0);
   }
   eq('SA: GK conceded, derived = API', [row(1492449, 'Lucas Arcanjo').goals_conceded, raw(1492449, 'Lucas Arcanjo').goals.conceded], [3, 3]);
   eq('SA: away GK keeps a clean sheet', row(1492449, 'Fábio').clean_sheet, true);
@@ -90,6 +95,79 @@ export async function run(read) {
   check('PL: rating "0" belongs only to players who did not play',
     fx(1557466).players.every((s) => s.players.every((p) => p.statistics[0].games.rating !== '0' || p.statistics[0].games.minutes === 0)));
 
+  // ── the null-goals bug: zero for the whole match is still zero ─────────
+  {
+    // 1491834: a FULL-feed 0-0 (the goalkeepers' goals.conceded is [0,0]) in
+    // which the API still sends goals.total AND goals.assists null for every
+    // player: Argentina's null-for-zero. The first R6 parser read that as "not
+    // provided" and wrote null goals. This is the production regression.
+    const raw0 = fx(1491834).players.flatMap((s) => s.players).filter((p) => p.statistics[0].games.minutes > 0);
+    check('0-0: the API sends goals.total and assists null for everyone',
+      raw0.every((p) => p.statistics[0].goals.total === null && p.statistics[0].goals.assists === null));
+    const p = parsed.get(1491834);
+    eq('0-0: score and goal events agree', [fx(1491834).goals.home, fx(1491834).goals.away, p.goalCheck.ok], [0, 0, true]);
+    eq('0-0: a full feed by the goalkeeper anchor', p.reduced, false);
+    check('0-0: goals = 0 for every row', p.rows.length > 20 && p.rows.every((r) => r.goals === 0),
+      `${p.rows.filter((r) => r.goals !== 0).length} of ${p.rows.length} not 0`);
+    check('0-0: assists = 0 for every row', p.rows.every((r) => r.assists === 0));
+    check('0-0: cards, shots, key passes, saves = 0 or more, never null',
+      p.rows.every((r) => ['yellow', 'red', 'shots_on', 'passes_key', 'saves'].every((c) => Number.isInteger(r[c]))));
+    check('0-0: every 60+ minute player keeps a clean sheet',
+      p.rows.filter((r) => r.minutes >= CLEAN_SHEET_MINUTES).every((r) => r.clean_sheet === true));
+    check('0-0: penalty.won null for everyone in a full feed -> 0', p.rows.every((r) => r.pen_won === 0));
+  }
+  {
+    // 1491868: 0-1 by an own goal, so no player's goals.total is 1 and the
+    // whole column is null. The 31 production rows in 1-goal fixtures.
+    const p = parsed.get(1491868);
+    const og = fx(1491868).events.filter((e) => e.type === 'Goal');
+    eq('0-1 own goal: the only goal is an own goal', og.map((e) => e.detail), ['Own Goal']);
+    eq('0-1 own goal: score and goal events agree', p.goalCheck.ok, true);
+    check('0-1 own goal: goals = 0 for every row', p.rows.length > 20 && p.rows.every((r) => r.goals === 0));
+    const home = fx(1491868).teams.home.id;
+    check('0-1 own goal: the side that scored it conceded 1, the other none',
+      p.rows.filter((r) => r.started && r.minute_off === null).every((r) => r.goals_conceded === (r.api_team_id === home ? 1 : 0)));
+  }
+  {
+    // Full-feed 0-0s: the API sends goals: 0 itself, and pen_won is all-null
+    // there only because nobody won a penalty. Full feed means 0, not null.
+    for (const id of [1557446, 1492448]) {
+      const p = parsed.get(id);
+      eq(`0-0 full ${id}: not a reduced feed, goal check passes`, [p.reduced, p.goalCheck.ok], [false, true]);
+      check(`0-0 full ${id}: goals = 0 for every row`, p.rows.every((r) => r.goals === 0));
+    }
+    const fullNoPen = parsed.get(1492447);
+    check('full feed: penalty.won null for everyone -> 0, not null',
+      fx(1492447).players.flatMap((s) => s.players).every((x) => x.statistics[0].penalty.won === null)
+        && fullNoPen.rows.every((r) => r.pen_won === 0 && r.pen_committed === 0));
+  }
+  {
+    // The anchor decides, never the fields. Pinned to the fixtures it marks.
+    const reducedIds = [...parsed.values()].filter((p) => p.reduced).map((p) => p.apiFixtureId).sort();
+    eq('reduced feeds detected by the goalkeeper anchor', reducedIds,
+      [1493217, 1550174, 1550186, 1552783, 1552796, 1557419, 1557464, 1557466, 1575213]);
+    check('reduced feeds: all six fields are null for everyone in the RAW payload, every time',
+      all.filter((f) => reducedIds.includes(f.fixture.id)).every((f) => f.players.flatMap((s) => s.players)
+        .filter((p) => p.statistics[0].games.minutes > 0)
+        .every((p) => ['goals.conceded', 'dribbles.past', 'penalty.won', 'penalty.commited', 'penalty.missed', 'penalty.saved']
+          .every((path) => path.split('.').reduce((a, k) => a?.[k], p.statistics[0]) == null))));
+    const leaks = [];
+    for (const p of parsed.values()) {
+      for (const r of p.rows) {
+        for (const c of ['goals', 'assists', 'saves', 'shots_total', 'shots_on', 'passes_total', 'passes_key',
+          'passes_accurate', 'tackles', 'blocks', 'interceptions', 'duels_total', 'duels_won',
+          'dribbles_attempts', 'dribbles_success', 'dribbles_past', 'fouls_drawn', 'fouls_committed',
+          'offsides', 'yellow', 'red', 'pen_won', 'pen_committed', 'pen_scored', 'pen_missed', 'pen_saved',
+          'goals_conceded_api']) {
+          const allowedNull = p.reduced && REDUCED_FEED_FIELDS.has(c);
+          if (r[c] === null && !allowedNull) leaks.push(`${p.apiFixtureId}:${c}`);
+          if (r[c] !== null && allowedNull) leaks.push(`${p.apiFixtureId}:${c} should be null`);
+        }
+      }
+    }
+    eq('no counting stat is null except the reduced-feed fields of a reduced feed', [...new Set(leaks)], []);
+  }
+
   // ── own goals (1492402): the event's team is the team CREDITED ─────────
   {
     const og = fx(1492402).events.find((e) => e.type === 'Goal' && e.detail === 'Own Goal');
@@ -105,7 +183,7 @@ export async function run(read) {
     [parsed.get(1575193).goalCheck.ok, parsed.get(1575193).goalCheck.rule], [true, 'with_player']);
   eq('real goal with no player id: 1552796 matches with it counted',
     [parsed.get(1552796).goalCheck.ok, parsed.get(1552796).goalCheck.rule], [true, 'all']);
-  check('every one of the 22 fixtures adds up to its score', [...parsed.values()].every((p) => p.goalCheck.ok),
+  check('every one of the 26 fixtures adds up to its score', [...parsed.values()].every((p) => p.goalCheck.ok),
     [...parsed.values()].filter((p) => !p.goalCheck.ok).map((p) => p.apiFixtureId).join(', '));
   {
     // A copy whose score is wrong must null conceded and clean sheet, not guess.
@@ -124,7 +202,7 @@ export async function run(read) {
   // ── red card ends the window ───────────────────────────────────────────
   eq('red card: Kannemann off at 73', [row(1492416, 'Kannemann').minute_off, row(1492416, 'Kannemann').red], [73, 1]);
 
-  // ── invariants over all 22 fixtures ────────────────────────────────────
+  // ── invariants over all 26 fixtures ────────────────────────────────────
   {
     const rows = [...parsed.values()].flatMap((p) => p.rows);
     const keys = [...parsed.values()].flatMap((p) => p.rows.map((r) => `${p.apiFixtureId}:${r.api_player_id}`));

@@ -234,7 +234,8 @@ Written only by the cron jobs. All public-read.
 ### Player rows: what absence means (R6)
 - **Once a fixture has `players_fetched_at` set, no `player_fixture_stats` row for a player means they did not play.** Unused substitutes get no row. The Scout Game relies on this. The one exception is `fixtures.players_unidentified`: players the API sent with id 0, who played but could not be stored.
 - **Clean sheet:** 60+ minutes and no goals conceded while on the pitch, own goals included. `goals_conceded` and `clean_sheet` are null for a fixture whose goal events do not add up to its score.
-- **Rule 14 per fixture:** a counting field that is null for every player in a fixture is "not provided" (the Premier League sends no `goals.conceded`, `dribbles.past` or `penalty.won`) and stays null; otherwise null means 0.
+- **Rule 14, null means 0, even for a whole match.** `goals` in a 0-0 (or a 0-1 own goal) arrives null for every player; it is still 0. Never infer "not provided" from a field being null for everyone; that wrote null goals for every 0-0 until 9 Nov.
+- **The one "not provided" case is a reduced feed**, found in every league: when every goalkeeper's `goals.conceded` is null, six fields (`goals_conceded_api`, `dribbles_past`, `pen_won`, `pen_committed`, `pen_missed`, `pen_saved`) are absent and stay null. The goalkeeper anchor decides, not the fields: in a full feed `pen_won` can be null for everyone simply because nobody won a penalty.
 - **Starters come from `lineups.startXI`**, not the API's `substitute` flag, which is false for everyone in the Premier League.
 - `team_season_stats.player_sample` is the denominator for `tk_pg`, `int_pg` and `duels_won_pct`: fixtures with player rows that carried tackle data. It is `<= matches` and independent of `fixtures_sampled` and `xg_sample`.
 

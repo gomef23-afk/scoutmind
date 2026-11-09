@@ -25,8 +25,15 @@
 --   API's own figure, kept for cross-checking (null in some leagues).
 -- * clean_sheet: 60+ minutes and nothing conceded while on the pitch. Both are
 --   null for a fixture whose goal events do not add up to its score.
--- * Counting stats follow rule 14 per fixture: a field null for every player in
---   the fixture is "not provided" and stays null; otherwise null means zero.
+-- * Counting stats follow rule 14: null means zero, including a stat that is
+--   zero for the whole match (goals in a 0-0). The one exception is a REDUCED
+--   FEED, detected by every goalkeeper's goals.conceded being null: there a
+--   fixed set of six fields (goals_conceded_api, dribbles_past, pen_won,
+--   pen_committed, pen_missed, pen_saved) is not provided and stays null.
+--   See REDUCED_FEED_FIELDS in api/_lib/players.js. (Before the fix on
+--   9 Nov, "null for every player" was read as "not provided", which wrote
+--   null goals for every 0-0; supabase/repair_r6_first_batch.sql re-derives
+--   those rows.)
 --
 -- Rule 13 applies: nothing in api/ deletes from these tables.
 
@@ -426,6 +433,21 @@ commit;
 --          s.tackles - f.tackles as tackles_diff, s.shots_on - f.shots_on as shots_on_diff,
 --          s.passes_key - f.passes_key as key_passes_diff, s.clean_sheets - f.cs as clean_sheets_diff
 --     from public.player_season_stats s join p using (player_id, team_id, season), f;
+--
+-- Counting stats are never null for goals or assists. Expect 0:
+--   select count(*) from public.player_fixture_stats
+--    where goals is null or assists is null;
+--
+-- Top 10 scorers this season, as a readability guard. Expect real names and
+-- plausible totals; NULLS LAST keeps a null from posing as the leader:
+--   select p.name, t.name as club, l.slug, s.goals, s.assists, s.apps, s.minutes
+--     from public.player_season_stats s
+--     join public.players p on p.id = s.player_id
+--     join public.teams t on t.id = s.team_id
+--     join public.leagues l on l.id = s.league_id
+--    where s.season = l.current_season
+--    order by s.goals desc nulls last, s.assists desc nulls last, s.minutes asc
+--    limit 10;
 --
 -- Clean sheets are never given to a player under 60 minutes. Expect 0:
 --   select count(*) from public.player_fixture_stats

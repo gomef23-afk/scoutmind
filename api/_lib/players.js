@@ -7,11 +7,17 @@
 //
 //   * The `players` block is byte-identical to /fixtures/players, so the
 //     batched endpoint costs 1 request per 20 fixtures instead of 1 per fixture.
-//   * Leagues disagree about null. Série A sends null for zero (`shots.total`,
-//     `passes.key`); the Premier League sends null for "not provided" for a
-//     whole field (`goals.conceded`, `dribbles.past`, `penalty.won`...). So a
-//     field that is null for EVERY player in the fixture is unavailable and
-//     stays null; otherwise null means zero.
+//   * Counting stats use null for zero (rule 14), and that includes a stat that
+//     is zero for the WHOLE match: `goals` in a 0-0, or in a 0-1 decided by an
+//     own goal (1491868), is null for every player. So every counting stat
+//     coalesces null -> 0. An earlier version treated "null for everyone" as
+//     "not provided" and wrote null goals for every 0-0.
+//   * The one real "not provided" case is a REDUCED FEED: some fixtures, in
+//     every league, omit a fixed set of fields (REDUCED_FEED_FIELDS). It is
+//     detected by an anchor, not inferred from the fields themselves: in a full
+//     feed every goalkeeper's `goals.conceded` is a number, even 0; in a reduced
+//     feed it is null for every goalkeeper. Across 22 real fixtures the anchor
+//     matched the field pattern every time.
 //   * `games.substitute` is wrong in the Premier League (false for everyone),
 //     so `started` comes from `lineups.startXI`.
 //   * Unused substitutes: `minutes` is null in Série A and 0 in the Premier
@@ -41,8 +47,8 @@ export const POSITION_NAMES = { G: 'Goalkeeper', D: 'Defender', M: 'Midfielder',
 /** Clean sheet: this many minutes, and nothing conceded while on the pitch. */
 export const CLEAN_SHEET_MINUTES = 60;
 
-// Column <- path inside statistics[0]. Counting stats: null-for-zero unless the
-// field is unavailable for the whole fixture (see above).
+// Column <- path inside statistics[0]. All counting stats: null means 0, except
+// REDUCED_FEED_FIELDS in a reduced-feed fixture, which are not provided.
 const COUNTS = {
   goals: 'goals.total',
   assists: 'goals.assists',
@@ -72,6 +78,23 @@ const COUNTS = {
   pen_missed: 'penalty.missed',
   pen_saved: 'penalty.saved',
 };
+
+/**
+ * The fields a reduced feed omits. Fixed from the payloads, never inferred:
+ * in every reduced fixture all six are null for everyone; in every full one
+ * goals.conceded, dribbles.past and penalty.missed / saved are present.
+ * (penalty.won / commited can be null for everyone in a FULL feed too, when no
+ * penalty was won or given away. There they mean 0.)
+ */
+export const REDUCED_FEED_FIELDS = new Set([
+  'goals_conceded_api', 'dribbles_past', 'pen_won', 'pen_committed', 'pen_missed', 'pen_saved',
+]);
+
+/** True when every goalkeeper who played has goals.conceded null. */
+export function isReducedFeed(appeared) {
+  const gks = appeared.filter((e) => e.s.games?.position === 'G');
+  return gks.length > 0 && gks.every((e) => !present(e.s.goals?.conceded));
+}
 
 const get = (o, path) => path.split('.').reduce((a, k) => (a == null ? undefined : a[k]), o);
 const present = (v) => v !== null && v !== undefined && v !== '';
@@ -128,11 +151,8 @@ export function parseFixture(fx) {
   const appeared = played.filter((e) => Boolean(e.player?.id));
   const unidentified = played.length - appeared.length;
 
-  // ── availability: null for every appeared player = not provided ─────────
-  const available = {};
-  for (const [col, path] of Object.entries(COUNTS)) {
-    available[col] = appeared.some((e) => present(get(e.s, path)));
-  }
+  // ── reduced feed: decided by the goalkeepers, not by the fields ─────────
+  const reduced = isReducedFeed(appeared);
 
   // ── starters from the lineups, not the substitute flag ──────────────────
   const xi = new Set();
@@ -219,8 +239,7 @@ export function parseFixture(fx) {
       clean_sheet: cleanSheet,
     };
     for (const [col, path] of Object.entries(COUNTS)) {
-      const v = toInt(get(s, path));
-      row[col] = available[col] ? v ?? 0 : null;
+      row[col] = reduced && REDUCED_FEED_FIELDS.has(col) ? null : toInt(get(s, path)) ?? 0;
     }
     rows.push(row);
     players.push({
@@ -235,6 +254,7 @@ export function parseFixture(fx) {
     rows,
     players,
     goalCheck,
+    reduced,
     unidentified,
     events: events.map((e, seq) => ({
       seq,
