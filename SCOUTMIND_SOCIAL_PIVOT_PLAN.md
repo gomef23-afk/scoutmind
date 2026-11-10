@@ -41,6 +41,7 @@
 | **Scout Game, part 2 — the Scout tab** | Migration `019` — `game_config` carries the ladder (written by `player-stats` from `scout-game.js` on every run, so the page holds no copy), `game_pickable_players(round)`, `match_detail(fixture)` + `match_form()`, and `post_round_messages()`: one ScoutMind message per club room when a round is final, top 3 of that torcida, only for ≥ max(3, `torcida_min_members`) fans, once (`game_round_posts`). **Scout Mode is gone**: the Scout tab is the game — competition tabs (only leagues with an open or in-play round), round chips, pick screen with search / position / club filters, "Level n · ×1.20" labels, sticky save bar, in-play and final views with per-pick breakdowns, rankings (round, competition, overall, my torcida + torcida table), and a Scout Game section on Profile. `players_data.js` and jsPDF deleted. **Match panel:** every real fixture (Matches cards, Home sidebar rows, the Your club card, a Scout round's matches) opens a full-screen panel from `match_detail` — score, goals (OG / pen marked), who played with "Rating by API-Football", your Scout points in that match; before kickoff, each club's position and last five. No previews, no predictions | built — `019` applied by hand before the push |
 | **Lineup rule** | Migration `020` — `submit_picks()` refuses a sixth position over the cap: at most 1 GK and 2 of each outfield position, by the position a player has played most minutes in this competition this season (the one the board shows). The pick board mirrors it: + disabled with the reason, per-position counts in the status line. Competition tabs now need an open round, a round with a match still to play, or a locked round you entered — Argentina's Clausura 16 was "locked" with every match finished (a round turns final a day after its window, and with no next round the window is 6 days), so its tab showed with nothing to do | built — `020` applied by hand before the push |
 | **Scoring v2** | Cartola-style points from our own stats, no appearance points (table in roadmap item 3), ladder 1 / 1.05 / 1.1 / 1.2 / 1.4 (unranked 1.4×) derived from it by the same half-compensation method. Backtest rewritten and re-run: fan round median 37.3, GK 0.86 / DEF 0.83 of a forward. Migration `022` stores `game_pick_scores.base_points` to two decimals (foul drawn is 0.75). Scout tab breakdown labels for the new events | built — `022` applied by hand before the push |
+| **Fixed formation** | Migration `023` — `submit_picks()` requires exactly 1 GK, 2 DEF and 2 from MID/FWD in any mix ("Pick one goalkeeper.", "Pick two defenders.", "Pick two midfielders or forwards."), replacing 020's caps, and writes the slots in formation order (1 GK, 2–3 DEF, 4–5 MID/FWD) whatever order the picks arrive in. Backtest under the formation: top 43.4 > random 37.6 (+15%) > bottom 27.3, unknowns 17.2; fan round median 36.3 (p10 12.4, p90 73.7). The ladder is unchanged (it is derived from every pooled player, not from entries) | built — `023` applied by hand before the push |
 | **Round fixture on the board** | Migration `021` — `game_pickable_players()` returns each club's counting fixture in the round (opponent, home/away, kickoff, how many it has), from `game_round_fixtures`, in the same call. Every player row and slot reads "vs Palmeiras (H) · Sat" / "at Grêmio (A) · Sun"; a club whose fixture was moved out of the round now comes back as "No match this round" and cannot be picked (it used to vanish from the list) | built — `021` applied by hand before the push |
 
 ### Infrastructure
@@ -285,8 +286,8 @@ difficulty. Cartola-style scoring for Brazil, FPL-style for England.
 **Never uses Cartola's name, logo or data.** The wording is "works with
 Cartola-style scoring". Needs R6, since it is built on player data.
 
-**Built as the Scout Game (migrations `017`–`022`).** Five picks and a
-captain per competition per round, at most 1 GK and 2 per outfield position;
+**Built as the Scout Game (migrations `017`–`023`).** Five picks and a
+captain per competition per round in a fixed formation (1 GK, 2 DEF, 2 MID/FWD);
 base points times a multiplier from the player's tier (the quintile of his
 season within league and position).
 
@@ -301,9 +302,10 @@ season within league and position).
   all positive points, so positives went ×1.5 except the tackle.
 - **Ladder: half compensation from the v2 points, 1 / 1.05 / 1.1 / 1.2 / 1.4,
   unranked 1.4×, captain additive (+1 on the multiplier), any pick capped at
-  6×.** Backtest ([`docs/backtest-2026-11.md`](docs/backtest-2026-11.md)): top
-  47.6 > random 38.7 > bottom 26.8, unknowns 17.6; fan round median 37.3 (p10
-  13.5, p90 75.4); a tier-matched GK earns 0.86 and a DEF 0.83 of a forward.
+  6×.** Backtest ([`docs/backtest-2026-11.md`](docs/backtest-2026-11.md)), in
+  the fixed formation: top 43.4 > random 37.6 > bottom 27.3, unknowns 17.2;
+  fan round median 36.3 (p10 12.4, p90 73.7); a tier-matched GK earns 0.86
+  and a DEF 0.83 of a forward.
 - **The first ladder, 1× (tier 5) to 5× (tier 1), was rejected by the v1
   backtest.** It made picking the best players the worst strategy (top five
   19.7 a round against random 37.0 and bottom five 37.8): any tier-1

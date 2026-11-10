@@ -4715,8 +4715,14 @@ const SG={
 };
 const SG_POS_LABEL={G:'GK',D:'DEF',M:'MID',F:'FWD'};
 // The lineup rule, mirrored from submit_picks (020), which is the real rule.
-const SG_POS_MAX={G:1,D:2,M:2,F:2};
-const SG_POS_FULL={G:'One goalkeeper already',D:'Two defenders already',M:'Two midfielders already',F:'Two forwards already'};
+// The formation, mirrored from submit_picks (023), which is the real rule:
+// exactly 1 GK, 2 DEF and 2 MID/FWD in any mix. Midfielders and forwards
+// share one group ('X'). 1 + 2 + 2 = 5, so five picks inside these caps are
+// always a complete formation.
+const SG_POS_MAX={G:1,D:2,X:2};
+const SG_GROUP_LABEL={G:'GK',D:'DEF',X:'MID/FWD'};
+const SG_POS_FULL={G:'You have your goalkeeper',D:'You have your two defenders',X:'You have your two midfielders or forwards'};
+function sgGroup(pos){ return pos==='G'?'G':pos==='D'?'D':(pos==='M'||pos==='F')?'X':null; }
 const SG_LIST_MAX=120;
 // Breakdown keys written by basePoints() in api/_lib/scout-game.js (scoring v2).
 const SG_BREAKDOWN_LABEL={
@@ -4984,7 +4990,7 @@ function sgRenderSlots(){
       +'</div>');
   }
   el.innerHTML='<div class="sg-section">Your five</div><div class="sg-slots">'+slots.join('')+'</div>'
-    +'<div class="sg-note">At most one goalkeeper and two of each outfield position. Captain adds +1 to that player\'s multiplier. Negative scores are never multiplied.</div>';
+    +'<div class="sg-note">One goalkeeper, two defenders, and two midfielders or forwards in any mix. Captain adds +1 to that player\'s multiplier. Negative scores are never multiplied.</div>';
 }
 
 function sgRenderFilters(){
@@ -5061,10 +5067,10 @@ function sgRenderList(){
   +(list.length>shown.length?'<div class="sg-note sg-more">Showing '+shown.length+' of '+list.length+'. Search or filter to narrow the list.</div>':'');
 }
 
-/** Picks so far, by position. */
+/** Picks so far, by formation group. */
 function sgPosCounts(){
-  const c={G:0,D:0,M:0,F:0};
-  for(const x of SG.picks){ const pos=sgPlayer(x).position; if(c[pos]!=null) c[pos]++; }
+  const c={G:0,D:0,X:0};
+  for(const x of SG.picks){ const g=sgGroup(sgPlayer(x).position); if(g) c[g]++; }
   return c;
 }
 /**
@@ -5088,9 +5094,10 @@ function sgFixtureLine(p){
 /** Why this player cannot be added right now, or null. */
 function sgBlock(p){
   if(sgNoMatch(p)) return 'No match this round.';
+  const g=sgGroup(p.position);
+  if(!g) return 'His position is not known yet.';
   if(SG.picks.length>=5) return 'You have five. Remove one first.';
-  const c=sgPosCounts();
-  if(p.position&&c[p.position]>=SG_POS_MAX[p.position]) return SG_POS_FULL[p.position]+'.';
+  if(sgPosCounts()[g]>=SG_POS_MAX[g]) return SG_POS_FULL[g]+'.';
   return null;
 }
 
@@ -5128,14 +5135,14 @@ function sgSubmitBar(r){
   }
   const n=SG.picks.length, hasCap=SG.captain!=null&&SG.picks.indexOf(SG.captain)>=0;
   const c=sgPosCounts();
-  const full=['G','D','M','F'].filter(k=>c[k]>=SG_POS_MAX[k]);
+  const full=['G','D','X'].filter(k=>c[k]>=SG_POS_MAX[k]);
   const noMatch=SG.picks.some(x=>sgNoMatch(sgPlayer(x)));
   const why=noMatch?'Replace the pick with no match this round'
-    :n<5?(5-n)+' more to pick'+(full.length?' · '+full.map(k=>SG_POS_LABEL[k]).join(', ')+' full':'')
+    :n<5?(5-n)+' more to pick'+(full.length?' · '+full.map(k=>SG_GROUP_LABEL[k]).join(', ')+' full':'')
     :!hasCap?'Choose a captain':'Ready';
   bar.innerHTML='<div class="sg-bar-text"><b>'+n+'/5</b> · '+sanitize(why)
-    +'<div class="sg-bar-pos">'+['G','D','M','F'].map(k=>'<span'+(c[k]>=SG_POS_MAX[k]?' class="full"':'')+'>'
-      +SG_POS_LABEL[k]+' '+c[k]+'/'+SG_POS_MAX[k]+'</span>').join(' · ')+'</div></div>'
+    +'<div class="sg-bar-pos">'+['G','D','X'].map(k=>'<span'+(c[k]>=SG_POS_MAX[k]?' class="full"':'')+'>'
+      +SG_GROUP_LABEL[k]+' '+c[k]+'/'+SG_POS_MAX[k]+'</span>').join(' · ')+'</div></div>'
     +'<button class="sg-save" id="sg-save" onclick="sgSave()"'+(n===5&&hasCap&&!noMatch&&!SG.saving?'':' disabled')+'>'
     +(SG.saving?'Saving…':SG.entries.get(r.id)?'Update picks':'Save picks')+'</button>';
 }

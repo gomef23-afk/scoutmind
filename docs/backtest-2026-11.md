@@ -7,17 +7,17 @@ This replaces the first report, which tested the Day 3 points table. Its conclus
 ## Findings
 
 1. **Ladder from the v2 points: 1 · 1.05 · 1.1 · 1.2 · 1.4, unranked 1.4×** (half compensation, same method as v1, rounded to 0.05). This is the ladder in `api/_lib/scout-game.js`.
-2. **Strategies under it:** top 47.6 > random 38.7 (+23%) > bottom 26.8 (0.69 of random); unknowns alone 17.6.
-3. **A typical fan round** (five Série A regulars from one club) scores a median of **37.3** (p10 13.5, p90 75.4). Target was 30–50.
+2. **Strategies under it:** top 43.4 > random 37.6 (+15%) > bottom 27.3 (0.73 of random); unknowns alone 17.2.
+3. **A typical fan round** (five Série A regulars from one club) scores a median of **36.3** (p10 12.4, p90 73.7). Target was 30–50.
 4. **Positions, tier-matched, per pick (0 when he did not play), as a share of a forward:** GK 0.86 · DEF 0.83 · MID 0.87 · FWD 1.00. Target: GK and DEF at least ~0.70.
-5. **Argentina:** top 29.1 vs random 34.8.
+5. **Argentina:** top 25.3 vs random 35.2.
 6. **Captain:** additive; the 6× cap stays in the rules and cannot bind under this ladder.
 
 ## Rules under test
 
 - **Base points (v2)**: the table in `api/_lib/scout-game.js`, imported, not copied. goal +12 · assist +7.5 · clean sheet (GK/DEF, 60+ min) +7.5 · conceded each (GK) −0.5 · save +1.5 · pen saved +10.5 · tackle +1.2 · interception +1.2 · shot on target +1.8 · shot off target +1.2 · key pass +1.2 · foul drawn +0.75 · foul committed −0.3 · own goal −3 · pen missed −4 · pen committed −1 · yellow −1 · red (replaces the yellow) −3 · offside −0.1. No appearance points. Reduced-feed fixtures: penalty fields score 0.
 - **Tier**: from `player_tiers_at(league, season, deadline)`: each round is tiered only on fixtures that kicked off before its deadline.
-- **Lineup**: at most one goalkeeper and two of each outfield position (migration 020).
+- **Formation**: exactly one goalkeeper, two defenders, and two from midfield or attack in any mix (migration 023).
 - **Captain (additive)**: +1 on the pick's multiplier. **Negative base**: counted once, unscaled. **Contrarian**: not simulated (no real ownership yet).
 
 ## Method
@@ -25,7 +25,7 @@ This replaces the first report, which tested the Day 3 points table. Its conclus
 - **Pool** for a round: players with at least one appearance in that competition before the deadline whose latest club plays in the round. "Tiered" means at or above the minutes threshold (max(270, 30% of club minutes)).
 - **A pick who does not play scores 0.**
 - **Captain** = the pick with the highest expected value: mean base per appearance before the deadline × tier multiplier.
-- **(a)** the five highest tiers (composite breaks ties); **(b)** five random tiered players, 200 draws per round; **(c)** the five lowest tiers; **(d)** five random *unranked* players, 200 draws per round. All within the lineup rule.
+- **(a)** the five highest tiers (composite breaks ties); **(b)** five random tiered players, 200 draws per round; **(c)** the five lowest tiers; **(d)** five random *unranked* players, 200 draws per round. All in the formation.
 - Random draws use a fixed seed (20261109). Early rounds (fewer than 50 tiered players: 21 of 115) are left out of every table below.
 
 ## 1. What one pick of each tier earns, and the ladder it gives
@@ -47,23 +47,23 @@ Mean round points ± SD; each (a)/(c) cell is one entry per round, (b)/(d) pool 
 
 | League | rounds | (a) top 5 tiers | (b) random 5 tiered | (c) bottom 5 tiers | (d) unranked only |
 |---|---|---|---|---|---|
-| Série A | 30 | 45.2 ± 26.2 | 33.5 ± 20.5 | 24.2 ± 18.8 | 13.6 ± 16.5 |
-| Premier League | 7 | 61.7 ± 35.7 | 48.0 ± 23.0 | 43.4 ± 43.9 | 20.9 ± 18.6 |
-| La Liga | 8 | 74.1 ± 25.8 | 42.8 ± 24.1 | 18.7 ± 21.7 | 21.1 ± 20.6 |
-| Bundesliga | 6 | 85.5 ± 19.9 | 51.2 ± 25.1 | 36.9 ± 26.4 | 27.1 ± 24.7 |
-| Serie A | 8 | 49.5 ± 22.8 | 43.3 ± 22.8 | 22.4 ± 12.6 | 24.1 ± 23.3 |
-| Ligue 1 | 7 | 52.5 ± 26.3 | 47.7 ± 23.8 | 39.7 ± 20.0 | 21.8 ± 19.7 |
-| Liga Profesional | 28 | 29.1 ± 14.4 | 34.8 ± 19.8 | 23.6 ± 19.5 | 15.2 ± 16.8 |
-| **All leagues** | 94 | 47.6 ± 28.0 | 38.7 ± 22.5 | 26.8 ± 22.6 | 17.6 ± 19.1 |
+| Série A | 30 | 44.9 ± 25.3 | 32.4 ± 20.1 | 26.2 ± 18.3 | 14.5 ± 16.8 |
+| Premier League | 7 | 51.9 ± 30.5 | 46.5 ± 22.0 | 42.3 ± 44.4 | 18.7 ± 16.6 |
+| La Liga | 8 | 55.8 ± 19.8 | 40.7 ± 21.5 | 18.7 ± 21.7 | 18.6 ± 19.6 |
+| Bundesliga | 6 | 80.4 ± 17.2 | 47.7 ± 21.3 | 38.2 ± 28.0 | 24.2 ± 23.1 |
+| Serie A | 8 | 45.0 ± 22.1 | 40.6 ± 21.2 | 22.4 ± 12.6 | 21.4 ± 19.9 |
+| Ligue 1 | 7 | 52.9 ± 23.9 | 45.7 ± 22.8 | 39.7 ± 19.1 | 18.9 ± 17.9 |
+| Liga Profesional | 28 | 25.3 ± 17.5 | 35.2 ± 19.5 | 23.3 ± 19.4 | 15.9 ± 17.5 |
+| **All leagues** | 94 | 43.4 ± 26.1 | 37.6 ± 21.3 | 27.3 ± 22.5 | 17.2 ± 18.3 |
 
 ## 3. Variants, all leagues
 
 | Variant | (a) top | (b) random | (c) bottom | (d) unranked | a − b | c ÷ b | (d) beats (a)? |
 |---|---|---|---|---|---|---|---|
-| **derived half compensation (1 · 1.05 · 1.1 · 1.2 · 1.4, unranked 1.4×)** | 47.6 ± 28.0 | 38.7 ± 22.5 | 26.8 ± 22.6 | 17.6 ± 19.1 | 8.8 | 0.69 | no |
-| derived, multiplicative captain | 47.6 ± 28.0 | 39.2 ± 22.8 | 28.3 ± 23.9 | 18.9 ± 20.9 | 8.4 | 0.72 | no |
-| v1 ladder kept (1 · 1.05 · 1.1 · 1.2 · 1.35) | 47.6 ± 28.0 | 38.6 ± 22.4 | 26.0 ± 21.9 | 17.1 ± 18.6 | 9.0 | 0.67 | no |
-| flat (all 1×) | 47.6 ± 28.0 | 35.2 ± 21.0 | 20.2 ± 17.0 | 13.5 ± 14.9 | 12.4 | 0.57 | no |
+| **derived half compensation (1 · 1.05 · 1.1 · 1.2 · 1.4, unranked 1.4×)** | 43.4 ± 26.1 | 37.6 ± 21.3 | 27.3 ± 22.5 | 17.2 ± 18.3 | 5.7 | 0.73 | no |
+| derived, multiplicative captain | 43.4 ± 26.1 | 38.1 ± 21.6 | 28.8 ± 23.8 | 18.3 ± 20.0 | 5.2 | 0.75 | no |
+| v1 ladder kept (1 · 1.05 · 1.1 · 1.2 · 1.35) | 43.4 ± 26.1 | 37.5 ± 21.2 | 26.5 ± 21.8 | 16.7 ± 17.8 | 5.9 | 0.71 | no |
+| flat (all 1×) | 43.4 ± 26.1 | 34.2 ± 19.8 | 20.5 ± 17.0 | 13.1 ± 14.3 | 9.2 | 0.60 | no |
 
 ## 4. Positions, tier-matched
 
@@ -114,38 +114,38 @@ Every player-fixture row we hold, all rounds. Points per appearance by event and
 
 ## 6. A typical fan round: five regulars from one Série A club
 
-Five of the club's players with the most minutes before the deadline, within the lineup rule, captain by expected value, derived ladder.
+Five of the club's players with the most minutes before the deadline, in the formation, captain by expected value, derived ladder.
 
 | club-rounds | p10 | median | p90 | mean ± SD |
 |---|---|---|---|---|
-| 612 | 13.5 | 37.3 | 75.4 | 41.8 ± 24.3 |
+| 612 | 12.4 | 36.3 | 73.7 | 40.6 ± 24.2 |
 
-Positions picked across those entries: GK 502 · DEF 1139 · MID 1030 · FWD 389.
+Positions picked across those entries: GK 612 · DEF 1224 · MID 931 · FWD 293.
 
 Per club:
 
 | Club | rounds | p10 | median | p90 | mean |
 |---|---|---|---|---|---|
-| Cruzeiro | 31 | 25.6 | 61.7 | 85.5 | 54.9 |
 | Flamengo | 30 | 29.7 | 54.6 | 102.8 | 59.6 |
-| Atletico Paranaense | 29 | 17.6 | 48.7 | 86.4 | 50.7 |
-| Palmeiras | 31 | 28.0 | 44.9 | 65.0 | 48.2 |
-| Bahia | 31 | 19.5 | 44.3 | 80.9 | 49.0 |
-| Coritiba | 31 | 22.0 | 44.2 | 64.0 | 41.9 |
-| Botafogo | 29 | 16.2 | 41.7 | 67.5 | 41.5 |
+| Cruzeiro | 31 | 24.4 | 52.0 | 85.5 | 51.5 |
+| Atletico Paranaense | 29 | 19.2 | 48.7 | 83.8 | 49.8 |
+| Bahia | 31 | 19.5 | 44.3 | 80.9 | 48.5 |
 | Vasco DA Gama | 31 | 15.8 | 41.1 | 66.3 | 41.7 |
-| Internacional | 31 | 21.6 | 40.8 | 69.8 | 46.9 |
-| RB Bragantino | 31 | 12.1 | 39.8 | 79.2 | 43.9 |
+| RB Bragantino | 31 | 12.1 | 39.8 | 79.2 | 44.7 |
+| Palmeiras | 31 | 22.5 | 39.5 | 60.7 | 44.6 |
+| Internacional | 31 | 16.6 | 38.4 | 63.0 | 42.3 |
 | Corinthians | 30 | 13.9 | 37.9 | 71.1 | 44.1 |
-| Santos | 31 | 10.5 | 35.8 | 61.0 | 37.4 |
+| Botafogo | 29 | 17.2 | 35.8 | 65.4 | 39.1 |
+| Santos | 31 | 10.5 | 35.8 | 61.0 | 37.5 |
 | Remo | 31 | 16.2 | 35.2 | 60.6 | 37.6 |
-| Gremio | 31 | 13.4 | 32.7 | 77.1 | 38.6 |
-| Sao Paulo | 30 | 9.0 | 31.9 | 63.3 | 37.7 |
-| Vitoria | 31 | 14.2 | 31.2 | 59.4 | 34.5 |
-| Fluminense | 32 | 8.6 | 28.6 | 73.2 | 36.2 |
-| Chapecoense-sc | 29 | 11.5 | 28.4 | 51.8 | 30.0 |
+| Coritiba | 31 | 14.8 | 32.9 | 60.8 | 35.9 |
+| Gremio | 31 | 13.1 | 32.7 | 77.1 | 39.8 |
+| Vitoria | 31 | 14.2 | 31.2 | 60.7 | 34.9 |
+| Chapecoense-sc | 29 | 11.8 | 30.2 | 50.4 | 30.4 |
+| Sao Paulo | 30 | 11.8 | 28.0 | 61.6 | 35.4 |
 | Mirassol | 31 | 13.5 | 25.7 | 58.9 | 33.0 |
 | Atletico-MG | 31 | 2.8 | 23.2 | 62.0 | 29.7 |
+| Fluminense | 32 | 8.6 | 22.5 | 64.6 | 33.0 |
 
 ## History: the v1 report (Day 3 points table)
 
@@ -165,8 +165,12 @@ The v2 table as first proposed had every positive event at two-thirds of today's
 
 Adopted instead: every positive event ×1.5 except the tackle (kept at 1.2), and goals conceded −0.5. Intermediate steps tested on the way: tackle 0.8 and conceded −0.5 alone (median 24.3, GK 0.85, tackles 19%); then positives ×1.25 (median 31.0).
 
+## History: the cap rule (020) before the fixed formation (023)
+
+Under "at most 1 GK and 2 of each outfield position" with today's table and ladder: top 47.6 > random 38.7 > bottom 26.8, unknowns 17.6; fan round median 37.3 (p10 13.5, p90 75.4). The fan entries then picked GK 502 · DEF 1,139 · MID 1,030 · FWD 389 times. The ladder is derived from what every pooled player earns, not from entries, so a lineup rule cannot move it.
+
 ## Data notes
 
 - Rounds excluded because a counting fixture has no player rows from the API: argentina Apertura - 1, argentina Clausura - 5, serie_a Regular Season - 23.
 - Argentina's Apertura knockouts are not rounds (follow-up), so they are not here.
-- Run time 32s.
+- Run time 21s.

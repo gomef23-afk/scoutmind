@@ -31,8 +31,12 @@ const H = { apikey: ANON, Authorization: `Bearer ${ANON}` };
 const DRAWS = 200;          // random entries per round for (b) and (d)
 const SEED = 20261109;
 
-/** The lineup rule (migration 020): at most 1 GK and 2 of each outfield position. */
-const MAX_PER_POS = { G: 1, D: 2, M: 2, F: 2 };
+/**
+ * The formation (migration 023): exactly 1 GK, 2 DEF, and 2 from MID or FWD.
+ * Slot groups and how many each takes; a player fits the group listing his
+ * position. A player with no known position fits nowhere, as in the game.
+ */
+const FORMATION = [{ pos: ['G'], n: 1 }, { pos: ['D'], n: 2 }, { pos: ['M', 'F'], n: 2 }];
 
 // ── data ─────────────────────────────────────────────────────────────────────
 async function get(path) {
@@ -234,14 +238,14 @@ const push = (variant, strat, slug, v) => {
 const fan = new Map();          // Série A club -> [round totals], main variant
 const fanPos = { G: 0, D: 0, M: 0, F: 0 };
 
-/** Five picks from an ordered list, within the lineup rule. */
+/** Five picks from an ordered list, filling the formation in list order. */
 function takeFive(list) {
   const out = [];
-  const used = { G: 0, D: 0, M: 0, F: 0 };
+  const used = FORMATION.map(() => 0);
   for (const p of list) {
-    const pos = p.position || 'M';
-    if (used[pos] >= MAX_PER_POS[pos]) continue;
-    used[pos]++;
+    const g = FORMATION.findIndex((s) => s.pos.includes(p.position));
+    if (g < 0 || used[g] >= FORMATION[g].n) continue;
+    used[g]++;
     out.push(p);
     if (out.length === 5) break;
   }
@@ -383,7 +387,7 @@ out('');
   out(`- **Base points (v2)**: the table in \`api/_lib/scout-game.js\`, imported, not copied. ${table}. No appearance points. Reduced-feed fixtures: penalty fields score 0.`);
 }
 out('- **Tier**: from `player_tiers_at(league, season, deadline)`: each round is tiered only on fixtures that kicked off before its deadline.');
-out('- **Lineup**: at most one goalkeeper and two of each outfield position (migration 020).');
+out('- **Formation**: exactly one goalkeeper, two defenders, and two from midfield or attack in any mix (migration 023).');
 out('- **Captain (additive)**: +1 on the pick\'s multiplier. **Negative base**: counted once, unscaled. **Contrarian**: not simulated (no real ownership yet).');
 out('');
 out('## Method');
@@ -391,7 +395,7 @@ out('');
 out('- **Pool** for a round: players with at least one appearance in that competition before the deadline whose latest club plays in the round. "Tiered" means at or above the minutes threshold (max(270, 30% of club minutes)).');
 out('- **A pick who does not play scores 0.**');
 out('- **Captain** = the pick with the highest expected value: mean base per appearance before the deadline × tier multiplier.');
-out(`- **(a)** the five highest tiers (composite breaks ties); **(b)** five random tiered players, ${DRAWS} draws per round; **(c)** the five lowest tiers; **(d)** five random *unranked* players, ${DRAWS} draws per round. All within the lineup rule.`);
+out(`- **(a)** the five highest tiers (composite breaks ties); **(b)** five random tiered players, ${DRAWS} draws per round; **(c)** the five lowest tiers; **(d)** five random *unranked* players, ${DRAWS} draws per round. All in the formation.`);
 out(`- Random draws use a fixed seed (${SEED}). Early rounds (fewer than 50 tiered players: ${pools.filter((p) => p.early).length} of ${pools.length}) are left out of every table below.`);
 out('');
 
@@ -482,7 +486,7 @@ out('');
 
 out('## 6. A typical fan round: five regulars from one Série A club');
 out('');
-out('Five of the club\'s players with the most minutes before the deadline, within the lineup rule, captain by expected value, derived ladder.');
+out('Five of the club\'s players with the most minutes before the deadline, in the formation, captain by expected value, derived ladder.');
 out('');
 out('| club-rounds | p10 | median | p90 | mean ± SD |');
 out('|---|---|---|---|---|');
@@ -516,6 +520,10 @@ out('- **Tackles were 26% of all positive points**, twice goals (13%): a defende
 out('- A tier-matched goalkeeper earned 0.68 of a forward, just under the ~0.70 target.');
 out('');
 out('Adopted instead: every positive event ×1.5 except the tackle (kept at 1.2), and goals conceded −0.5. Intermediate steps tested on the way: tackle 0.8 and conceded −0.5 alone (median 24.3, GK 0.85, tackles 19%); then positives ×1.25 (median 31.0).');
+out('');
+out('## History: the cap rule (020) before the fixed formation (023)');
+out('');
+out('Under "at most 1 GK and 2 of each outfield position" with today\'s table and ladder: top 47.6 > random 38.7 > bottom 26.8, unknowns 17.6; fan round median 37.3 (p10 13.5, p90 75.4). The fan entries then picked GK 502 · DEF 1,139 · MID 1,030 · FWD 389 times. The ladder is derived from what every pooled player earns, not from entries, so a lineup rule cannot move it.');
 out('');
 out('## Data notes');
 out('');
