@@ -964,10 +964,8 @@ body{padding-bottom:64px;}
 <footer>
   <div class="footer-logo">Scout<span>Mind</span></div>
   <div class="footer-links">
-    <!-- No href: these open the showLegal() modals. href="#" jumped the page
-         to the top before the modal appeared. -->
-    <a role="button" tabindex="0" style="cursor:pointer" onclick="showLegal('privacy')" onkeydown="if(event.key==='Enter')showLegal('privacy')">Privacy</a>
-    <a role="button" tabindex="0" style="cursor:pointer" onclick="showLegal('terms')" onkeydown="if(event.key==='Enter')showLegal('terms')">Terms</a>
+    <a href="/privacy.html">Privacy</a>
+    <a href="/terms.html">Terms</a>
     <a href="mailto:hello@scoutmind.app">Contact</a>
   </div>
   <div class="footer-copy">© 2026 ScoutMind. All rights reserved.</div>
@@ -995,46 +993,11 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-
-// Legal Modal
-function showLegal(type) {
-  const modal = document.getElementById('legal-modal');
-  const content = document.getElementById('legal-content');
-  if (type === 'privacy') {
-    content.innerHTML = `
-      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-bottom:16px;color:#edf2f7">Privacy Policy</h2>
-      <p style="font-size:13px;color:#5a6a85;margin-bottom:12px">Last updated: May 2026</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Data we collect:</strong> Email address and name when you create an account. Usage data to improve the product.</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">How we use it:</strong> To provide the ScoutMind service, send product updates, and improve recommendations. We never sell your data to third parties.</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Data storage:</strong> Account data is stored securely. Community posts and poll votes are stored locally in your browser.</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Your rights:</strong> You can delete your account and all associated data at any time by contacting hello@scoutmind.app.</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7"><strong style="color:#edf2f7">Contact:</strong> hello@scoutmind.app</p>`;
-  } else {
-    content.innerHTML = `
-      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;margin-bottom:16px;color:#edf2f7">Terms of Service</h2>
-      <p style="font-size:13px;color:#5a6a85;margin-bottom:12px">Last updated: May 2026</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Service:</strong> ScoutMind provides AI-powered football scouting analysis. All player statistics and recommendations are for informational purposes only.</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Accounts:</strong> You are responsible for maintaining the security of your account. One account per user.</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Cost:</strong> ScoutMind is free to use. There are no subscriptions and no charges for any feature.</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Data accuracy:</strong> ScoutMind uses real statistical data but cannot guarantee 100% accuracy at all times. Data is updated regularly.</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7;margin-bottom:12px"><strong style="color:#edf2f7">Acceptable use:</strong> ScoutMind is for scouting and analysis purposes. Reselling or redistributing our data is not permitted.</p>
-      <p style="font-size:14px;color:#a0aec0;line-height:1.7"><strong style="color:#edf2f7">Contact:</strong> hello@scoutmind.app</p>`;
-  }
-  modal.style.display = 'flex';
-}
-// Close on backdrop click
-document.getElementById('legal-modal')?.addEventListener('click', function(e) {
-  if (e.target === this) this.style.display = 'none';
-});
+// The showLegal() Privacy/Terms modals lived here. They claimed things that
+// were no longer true ("community posts are stored locally in your browser",
+// "AI-powered scouting analysis"); the real pages are /privacy.html and
+// /terms.html.
 </script>
-
-<!-- Legal Modal HTML -->
-<div id="legal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#0d1117;border:1px solid #1a2540;border-radius:16px;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;padding:32px;position:relative">
-    <button onclick="document.getElementById('legal-modal').style.display='none'" style="position:absolute;top:16px;right:16px;background:transparent;border:none;color:#5a6a85;font-size:20px;cursor:pointer">✕</button>
-    <div id="legal-content"></div>
-  </div>
-</div>
 
 </body>
 </html>

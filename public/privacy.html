@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — ScoutMind</title>
+<meta name="description" content="What ScoutMind stores, where, who processes it, and how to exercise your rights under the LGPD.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  ============================================================================
+  DRAFT — A LAWYER MUST REVIEW THIS PAGE BEFORE PUBLIC LAUNCH.
+  ============================================================================
+  Written to be edited clause by clause, not rewritten. Every statement of
+  fact was checked against the code and database on 10 Nov 2026; if the
+  product changes (a new table, a new provider, analytics, ads, payments),
+  this page must change in the same commit.
+
+  Clauses most in need of review, in order:
+    1. Section 11 (minimum age 13, parental permission under 18). The clause
+       most likely to change: LGPD art. 14 and ANPD guidance on adolescents,
+       and the open club chat rooms, may argue for 16 or 18.
+    2. Section 7 (international transfer, LGPD art. 33): which art. 33 basis
+       applies to Supabase (us-east-2), Vercel (iad1) and Resend.
+    3. Section 4 (legal bases, art. 7): confirm each basis per purpose.
+    4. Section 8 (retention): comment and chat text is KEPT after account
+       deletion, attributed to "[deleted user]" — confirm this is
+       anonymisation under art. 5 XI / art. 16 and not retained personal data.
+    5. Controller identity (section 1): an individual until the MEI exists.
+
+  English and Portuguese say the same thing; keep them in step. The
+  Portuguese text is the one a Brazilian authority will read.
+-->
+<style>
+:root{--bg:#07090f;--bg2:#0d1117;--bg3:#141b27;--accent:#00e5a0;--accent2:#00b8ff;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;--yellow:#f5c842;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;padding-bottom:64px;}
+/* ── B2 NAV — kept in sync with index.html, about.html, community.html, news.html (rule 5) ── */
+.sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+.sm-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent);text-decoration:none;flex-shrink:0;}
+.sm-logo span{color:var(--text);}
+.sm-nav-right{display:flex;align-items:center;gap:4px;margin-left:auto;}
+.sm-about{font-size:12px;color:var(--muted);text-decoration:none;padding:0 8px;min-height:44px;display:flex;align-items:center;}
+.sm-about:hover{color:var(--text);}
+.sm-tabs{display:flex;}
+.sm-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;line-height:1.2;cursor:pointer;text-decoration:none;}
+.sm-tab-icon{font-size:17px;line-height:1;}
+.sm-tab:hover{color:var(--text);}
+.sm-tabs-top{display:none;}
+.sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(7,9,15,0.98);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
+/* ── LEGAL PAGE ── */
+.legal{max-width:760px;margin:0 auto;padding:24px 16px 40px;}
+.legal-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1.5px;line-height:1.1;}
+.legal-meta{font-size:12px;color:var(--muted);margin-top:6px;}
+.legal-draft{margin:14px 0 18px;padding:10px 12px;border:1px solid rgba(245,200,66,0.35);background:rgba(245,200,66,0.06);border-radius:8px;font-size:12px;color:var(--yellow);line-height:1.6;}
+.lang-toggle{display:flex;gap:6px;margin-bottom:22px;}
+.lang-btn{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.lang-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+.legal h2{font-size:16px;font-weight:700;margin:26px 0 8px;}
+.legal p,.legal li{font-size:14px;line-height:1.7;color:#c7d3e4;}
+.legal p{margin-bottom:10px;}
+.legal ul{margin:0 0 10px 20px;}
+.legal li{margin-bottom:4px;}
+.legal a{color:var(--accent);}
+.legal strong{color:var(--text);}
+.legal-table{width:100%;border-collapse:collapse;margin:6px 0 12px;font-size:13px;}
+.legal-table th,.legal-table td{text-align:left;vertical-align:top;padding:8px 6px;border-bottom:1px solid var(--border);color:#c7d3e4;line-height:1.5;}
+.legal-table th{color:var(--text);font-weight:600;}
+/* One language at a time; the toggle sets data-lang on <html>. */
+html[data-lang="en"] [lang="pt-BR"].legal-body{display:none;}
+html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
+.sm-foot{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 26px;border-top:1px solid var(--border);}
+.sm-foot a{color:var(--muted);text-decoration:none;padding:6px 6px;}
+.sm-foot a:hover{color:var(--text);}
+@media(min-width:900px){
+  body{padding-bottom:0;}
+  .sm-nav{padding:10px 28px;gap:18px;}
+  .sm-tabs-bottom{display:none;}
+  .sm-tabs-top{display:flex;gap:2px;margin-left:18px;}
+  .sm-tabs-top .sm-tab{flex:0 0 auto;flex-direction:row;gap:7px;min-height:38px;font-size:12px;font-weight:500;padding:0 14px;border-bottom:2px solid transparent;}
+  .sm-tabs-top .sm-tab-icon{font-size:14px;}
+  .legal{padding:36px 24px 56px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="sm-nav">
+  <a class="sm-logo" href="/">Scout<span>Mind</span></a>
+  <div class="sm-tabs sm-tabs-top">
+    <a class="sm-tab" href="/?page=feed"><span class="sm-tab-icon">🏠</span>Home</a>
+    <a class="sm-tab" href="/community.html"><span class="sm-tab-icon">⚽</span>Clubs</a>
+    <a class="sm-tab" href="/?page=scout"><span class="sm-tab-icon">🔍</span>Scout</a>
+    <a class="sm-tab" href="/?page=matches"><span class="sm-tab-icon">📅</span>Matches</a>
+    <a class="sm-tab" href="/?page=profile"><span class="sm-tab-icon">👤</span>Profile</a>
+  </div>
+  <div class="sm-nav-right">
+    <a href="/about.html" class="sm-about">About</a>
+  </div>
+</nav>
+<div class="sm-tabs sm-tabs-bottom">
+  <a class="sm-tab" href="/?page=feed"><span class="sm-tab-icon">🏠</span>Home</a>
+  <a class="sm-tab" href="/community.html"><span class="sm-tab-icon">⚽</span>Clubs</a>
+  <a class="sm-tab" href="/?page=scout"><span class="sm-tab-icon">🔍</span>Scout</a>
+  <a class="sm-tab" href="/?page=matches"><span class="sm-tab-icon">📅</span>Matches</a>
+  <a class="sm-tab" href="/?page=profile"><span class="sm-tab-icon">👤</span>Profile</a>
+</div>
+
+<main class="legal">
+  <div class="lang-toggle" role="group" aria-label="Language">
+    <button class="lang-btn" data-set-lang="en" onclick="setLang('en')">English</button>
+    <button class="lang-btn" data-set-lang="pt-BR" onclick="setLang('pt-BR')">Português</button>
+  </div>
+
+  <!-- ═══════════════════════════════ ENGLISH ═══════════════════════════════ -->
+  <article class="legal-body" lang="en">
+    <h1 class="legal-title">Privacy Policy</h1>
+    <div class="legal-meta">Last updated: 10 November 2026</div>
+    <div class="legal-draft">Draft under legal review. It describes what ScoutMind does today, accurately; the wording may change before public launch.</div>
+
+    <h2>1. Who we are</h2>
+    <p>ScoutMind (scoutmind.app) is a free football social network. It is operated by <strong>Felipe Valois</strong>, an individual resident in Brazil, who is the <strong>controller</strong> of your personal data and also acts as the <strong>data protection officer</strong> (<em>encarregado</em>) under Brazil's General Data Protection Law (LGPD, Law 13.709/2018). Contact: <a href="mailto:hello@scoutmind.app">hello@scoutmind.app</a>.</p>
+
+    <h2>2. What this policy covers</h2>
+    <p>The website and app at scoutmind.app, including the feed, club pages and rooms, the Matches page and the Scout Game. You can read most of ScoutMind without an account; this policy explains what we store when you have one, and what your browser shares with other services when you visit.</p>
+
+    <h2>3. The data we hold</h2>
+    <table class="legal-table">
+      <tr><th>What</th><th>Details</th></tr>
+      <tr><td>Account</td><td>Email address; a password, which our authentication provider stores only as a one-way hash (we never see it); display name; sign-up date.</td></tr>
+      <tr><td>Preferences</td><td>Your main club and the clubs you follow; the languages your feed shows; whether you finished onboarding.</td></tr>
+      <tr><td>What you post</td><td>Comments on news items; messages in club rooms; reactions and likes; reports you file (the reason and the item reported).</td></tr>
+      <tr><td>Scout Game</td><td>Your picks and captain for each round, your points, ranks, streaks and badges.</td></tr>
+      <tr><td>Activity events</td><td>When you are signed in, a short record of some actions — the type (for example: comment, like, follow, report, choosing your club, one "session" per day), the item concerned and the time. These records contain <strong>no IP address, no device information and no location</strong>. Nothing is recorded for visitors who are not signed in.</td></tr>
+      <tr><td>Technical logs</td><td>Our hosting and database providers process IP addresses and request logs to deliver the service and keep it secure (section 6).</td></tr>
+      <tr><td>On your device</td><td>Your browser's local storage keeps your sign-in session, interface preferences and cached copies of what you have already loaded. We use <strong>no advertising or tracking cookies and no third-party analytics</strong>.</td></tr>
+    </table>
+    <p>We do <strong>not</strong> collect payment data, precise location, contacts or advertising identifiers. ScoutMind has no payments and no ads.</p>
+
+    <h2>4. Why we use it, and the legal basis</h2>
+    <ul>
+      <li><strong>To provide ScoutMind</strong> — your account, your feed, your posts, the Scout Game: performance of our terms with you (LGPD art. 7, V).</li>
+      <li><strong>To keep it safe</strong> — moderation, reports, blocking abuse, security logs: our legitimate interest (art. 7, IX), balanced against your rights.</li>
+      <li><strong>Activity events</strong> — to understand which features are used and improve them: legitimate interest (art. 7, IX). They identify no device or location.</li>
+      <li><strong>Account emails</strong> — confirming your address, resetting your password: performance of our terms (art. 7, V). We send no marketing email.</li>
+      <li><strong>Legal obligations</strong> — when a law or authority requires it (art. 7, II).</li>
+    </ul>
+    <p>We do not sell your data, show ads, or build profiles for advertising.</p>
+
+    <h2>5. What other people can see</h2>
+    <p><strong>Public:</strong> your display name, your main club's crest, your comments and room messages, and — once a round has locked — your Scout Game picks, points, ranks and badges. <strong>Never public:</strong> your email address, the clubs you follow, your language settings and your activity events.</p>
+
+    <h2>6. Who processes data for us, and who your browser talks to</h2>
+    <p>These providers process data on our behalf (<em>operadores</em>), only to run ScoutMind:</p>
+    <ul>
+      <li><strong>Supabase</strong> — database and sign-in. Our project is hosted in AWS region <strong>us-east-2 (Ohio, USA)</strong>. It holds everything in section 3.</li>
+      <li><strong>Vercel</strong> — hosts the website and runs our server functions in region <strong>iad1 (US East)</strong>. It sees IP addresses and request logs.</li>
+      <li><strong>Resend</strong> — sends account emails (confirmation, password reset). It receives your email address and the message.</li>
+    </ul>
+    <p>When you open ScoutMind, <strong>your browser also fetches files directly from</strong> these services, which therefore receive your IP address and standard browser information:</p>
+    <ul>
+      <li><strong>Google Fonts</strong> (fonts.googleapis.com, fonts.gstatic.com) — the typefaces.</li>
+      <li><strong>jsDelivr</strong> (cdn.jsdelivr.net) — the Supabase software library.</li>
+      <li><strong>API-Football's media server</strong> (media.api-sports.io) — club crests and player photos.</li>
+    </ul>
+    <p>We plan to serve fonts and the library from our own domain. <strong>Football data</strong> (fixtures, scores, player statistics) comes from API-Football; we send them no personal data. <strong>News</strong>: we read publishers' public RSS feeds and store only a headline, a snippet of at most 300 characters and a link. We send publishers nothing about you; if you open an article you are on their site, under their policy.</p>
+
+    <h2>7. International transfer</h2>
+    <p>Your data is stored and processed in the <strong>United States</strong> (section 6). This is an international transfer under LGPD art. 33. We rely on our providers' contractual data-protection commitments, and on the transfer being necessary to perform our terms with you (art. 33, IX in combination with art. 7, V). <!-- LAWYER: confirm the art. 33 basis; consider ANPD standard contractual clauses (Resolução CD/ANPD nº 19/2024). --> The protections in this policy apply wherever the data is processed.</p>
+
+    <h2>8. How long we keep it</h2>
+    <p>While your account exists, we keep your data so the service works. When you <strong>delete your account</strong> (Profile → Account actions → Delete my account), immediately:</p>
+    <ul>
+      <li><strong>Erased:</strong> your login, email address, display name, profile, club and language preferences, follows, reactions, likes and badges.</li>
+      <li><strong>Kept without your identity:</strong> your comments and room messages stay in their threads, shown as "[deleted user]", so conversations still make sense; your Scout Game entries and scores move to an anonymous identifier, so other players' rankings do not change; reports you filed are kept without your name, as a moderation record; activity events are kept without any link to you.</li>
+    </ul>
+    <p>Copies can remain in our providers' backups and logs for a limited period, under their retention schedules, before they are overwritten.</p>
+
+    <h2>9. Your rights</h2>
+    <p>Under LGPD art. 18 you may ask us to: confirm whether we process your data; give you access to it; correct it; anonymise, block or delete data that is unnecessary or processed unlawfully; give you a copy in a portable format; tell you who we share it with; delete it; and withdraw any consent. You can also object to processing based on legitimate interest.</p>
+    <ul>
+      <li><strong>Correct</strong> your name and clubs in your Profile.</li>
+      <li><strong>Get a copy</strong> of your data: Profile → Account actions → Download my data (a JSON file).</li>
+      <li><strong>Delete</strong> your account: Profile → Account actions → Delete my account.</li>
+      <li><strong>Anything else</strong>: email <a href="mailto:hello@scoutmind.app">hello@scoutmind.app</a>. We reply within 15 days.</li>
+    </ul>
+    <p>You can also complain to Brazil's data protection authority, the ANPD (<a href="https://www.gov.br/anpd" rel="noopener">gov.br/anpd</a>).</p>
+
+    <h2>10. Security</h2>
+    <p>Connections are encrypted (HTTPS). Passwords are stored only as hashes by our authentication provider. Database rules restrict each row to the people allowed to see it, and our server keys never reach your browser. No system is perfectly secure; if an incident puts you at risk, we will tell you and the ANPD as LGPD art. 48 requires.</p>
+
+    <h2>11. Minimum age</h2>
+    <p>You must be at least <strong>13</strong> to create an account. If you are under 18, you need the permission of a parent or legal guardian, who should read this policy and our Terms with you. ScoutMind is not directed at children under 13; if we learn an account belongs to one, we delete it. Parents or guardians can write to <a href="mailto:hello@scoutmind.app">hello@scoutmind.app</a>.</p>
+
+    <h2>12. Changes</h2>
+    <p>We will publish any change on this page with a new date. If a change affects how your data is used in a material way, we will tell you in the app before it applies.</p>
+
+    <h2>13. Contact</h2>
+    <p>Felipe Valois — controller and data protection officer · <a href="mailto:hello@scoutmind.app">hello@scoutmind.app</a></p>
+  </article>
+
+  <!-- ═══════════════════════════════ PORTUGUÊS ══════════════════════════════ -->
+  <article class="legal-body" lang="pt-BR">
+    <h1 class="legal-title">Política de Privacidade</h1>
+    <div class="legal-meta">Última atualização: 10 de novembro de 2026</div>
+    <div class="legal-draft">Rascunho em revisão jurídica. Descreve com precisão o que o ScoutMind faz hoje; o texto pode mudar antes do lançamento público.</div>
+
+    <h2>1. Quem somos</h2>
+    <p>O ScoutMind (scoutmind.app) é uma rede social de futebol gratuita. É operado por <strong>Felipe Valois</strong>, pessoa física residente no Brasil, que é o <strong>controlador</strong> dos seus dados pessoais e também atua como <strong>encarregado</strong> pelo tratamento de dados, nos termos da Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018). Contato: <a href="mailto:hello@scoutmind.app">hello@scoutmind.app</a>.</p>
+
+    <h2>2. O que esta política abrange</h2>
+    <p>O site e o app em scoutmind.app, incluindo o feed, as páginas e salas dos clubes, a página de Jogos e o Scout Game. Você pode ler a maior parte do ScoutMind sem conta; esta política explica o que guardamos quando você tem uma, e o que o seu navegador compartilha com outros serviços quando você nos visita.</p>
+
+    <h2>3. Os dados que guardamos</h2>
+    <table class="legal-table">
+      <tr><th>O quê</th><th>Detalhes</th></tr>
+      <tr><td>Conta</td><td>Endereço de e-mail; uma senha, que nosso provedor de autenticação guarda apenas como hash irreversível (nós nunca a vemos); nome de exibição; data de cadastro.</td></tr>
+      <tr><td>Preferências</td><td>Seu clube principal e os clubes que você segue; os idiomas do seu feed; se você concluiu a configuração inicial.</td></tr>
+      <tr><td>O que você publica</td><td>Comentários em notícias; mensagens nas salas dos clubes; reações e curtidas; denúncias que você faz (o motivo e o item denunciado).</td></tr>
+      <tr><td>Scout Game</td><td>Suas escolhas e seu capitão em cada rodada, seus pontos, posições, sequências e conquistas.</td></tr>
+      <tr><td>Eventos de uso</td><td>Quando você está conectado, um registro curto de algumas ações — o tipo (por exemplo: comentário, curtida, seguir, denúncia, escolha do clube, uma "sessão" por dia), o item envolvido e o horário. Esses registros <strong>não contêm endereço IP, informações do aparelho nem localização</strong>. Nada é registrado para visitantes não conectados.</td></tr>
+      <tr><td>Registros técnicos</td><td>Nossos provedores de hospedagem e de banco de dados tratam endereços IP e registros de acesso para prestar o serviço e mantê-lo seguro (seção 6).</td></tr>
+      <tr><td>No seu aparelho</td><td>O armazenamento local do navegador guarda sua sessão, suas preferências de interface e cópias do que você já carregou. <strong>Não usamos cookies de publicidade ou rastreamento nem ferramentas de análise de terceiros</strong>.</td></tr>
+    </table>
+    <p><strong>Não</strong> coletamos dados de pagamento, localização precisa, contatos ou identificadores de publicidade. O ScoutMind não tem pagamentos nem anúncios.</p>
+
+    <h2>4. Para que usamos e com que base legal</h2>
+    <ul>
+      <li><strong>Para oferecer o ScoutMind</strong> — sua conta, seu feed, suas publicações, o Scout Game: execução dos nossos termos com você (LGPD art. 7º, V).</li>
+      <li><strong>Para manter o serviço seguro</strong> — moderação, denúncias, bloqueio de abusos, registros de segurança: nosso legítimo interesse (art. 7º, IX), ponderado com os seus direitos.</li>
+      <li><strong>Eventos de uso</strong> — para entender quais recursos são usados e melhorá-los: legítimo interesse (art. 7º, IX). Eles não identificam aparelho nem localização.</li>
+      <li><strong>E-mails da conta</strong> — confirmação do endereço, redefinição de senha: execução dos nossos termos (art. 7º, V). Não enviamos e-mail de marketing.</li>
+      <li><strong>Obrigações legais</strong> — quando a lei ou uma autoridade exigir (art. 7º, II).</li>
+    </ul>
+    <p>Não vendemos seus dados, não exibimos anúncios e não criamos perfis para publicidade.</p>
+
+    <h2>5. O que outras pessoas podem ver</h2>
+    <p><strong>Público:</strong> seu nome de exibição, o escudo do seu clube principal, seus comentários e mensagens nas salas e — depois que a rodada fecha — suas escolhas no Scout Game, pontos, posições e conquistas. <strong>Nunca público:</strong> seu e-mail, os clubes que você segue, suas configurações de idioma e seus eventos de uso.</p>
+
+    <h2>6. Quem trata dados para nós, e com quem o seu navegador se comunica</h2>
+    <p>Estes provedores tratam dados em nosso nome (operadores), apenas para fazer o ScoutMind funcionar:</p>
+    <ul>
+      <li><strong>Supabase</strong> — banco de dados e login. Nosso projeto fica na região AWS <strong>us-east-2 (Ohio, EUA)</strong>. Guarda tudo o que está na seção 3.</li>
+      <li><strong>Vercel</strong> — hospeda o site e executa nossas funções de servidor na região <strong>iad1 (leste dos EUA)</strong>. Vê endereços IP e registros de acesso.</li>
+      <li><strong>Resend</strong> — envia os e-mails da conta (confirmação, redefinição de senha). Recebe seu e-mail e a mensagem.</li>
+    </ul>
+    <p>Quando você abre o ScoutMind, <strong>o seu navegador também baixa arquivos diretamente destes serviços</strong>, que por isso recebem seu endereço IP e as informações padrão do navegador:</p>
+    <ul>
+      <li><strong>Google Fonts</strong> (fonts.googleapis.com, fonts.gstatic.com) — as fontes tipográficas.</li>
+      <li><strong>jsDelivr</strong> (cdn.jsdelivr.net) — a biblioteca de software do Supabase.</li>
+      <li><strong>Servidor de imagens da API-Football</strong> (media.api-sports.io) — escudos dos clubes e fotos dos jogadores.</li>
+    </ul>
+    <p>Planejamos servir as fontes e a biblioteca a partir do nosso próprio domínio. Os <strong>dados de futebol</strong> (jogos, placares, estatísticas de jogadores) vêm da API-Football; não enviamos a ela nenhum dado pessoal. <strong>Notícias</strong>: lemos os feeds RSS públicos das publicações e guardamos apenas o título, um trecho de no máximo 300 caracteres e o link. Não enviamos nada sobre você às publicações; ao abrir uma matéria, você está no site delas, sob a política delas.</p>
+
+    <h2>7. Transferência internacional</h2>
+    <p>Seus dados são armazenados e tratados nos <strong>Estados Unidos</strong> (seção 6). Isso é uma transferência internacional nos termos do art. 33 da LGPD. Ela se apoia nos compromissos contratuais de proteção de dados dos nossos provedores e no fato de ser necessária para a execução dos nossos termos com você (art. 33, IX, combinado com o art. 7º, V). <!-- ADVOGADO: confirmar a hipótese do art. 33; avaliar as cláusulas-padrão contratuais da ANPD (Resolução CD/ANPD nº 19/2024). --> As proteções desta política valem onde quer que os dados sejam tratados.</p>
+
+    <h2>8. Por quanto tempo guardamos</h2>
+    <p>Enquanto sua conta existir, guardamos seus dados para que o serviço funcione. Quando você <strong>exclui sua conta</strong> (Perfil → Ações da conta → Excluir minha conta), imediatamente:</p>
+    <ul>
+      <li><strong>Apagados:</strong> seu login, e-mail, nome de exibição, perfil, preferências de clube e de idioma, clubes seguidos, reações, curtidas e conquistas.</li>
+      <li><strong>Mantidos sem a sua identidade:</strong> seus comentários e mensagens nas salas permanecem nas conversas, exibidos como "[deleted user]", para que as discussões continuem fazendo sentido; suas participações e pontos no Scout Game passam para um identificador anônimo, para que a classificação dos outros jogadores não mude; as denúncias que você fez são mantidas sem o seu nome, como registro de moderação; os eventos de uso são mantidos sem qualquer vínculo com você.</li>
+    </ul>
+    <p>Cópias podem permanecer por um período limitado nos backups e registros dos nossos provedores, conforme os prazos deles, até serem sobrescritas.</p>
+
+    <h2>9. Seus direitos</h2>
+    <p>Pelo art. 18 da LGPD, você pode nos pedir para: confirmar se tratamos seus dados; dar acesso a eles; corrigi-los; anonimizar, bloquear ou eliminar dados desnecessários ou tratados ilegalmente; entregar uma cópia em formato portável; informar com quem os compartilhamos; eliminá-los; e revogar qualquer consentimento. Você também pode se opor a tratamentos baseados em legítimo interesse.</p>
+    <ul>
+      <li><strong>Corrigir</strong> seu nome e seus clubes no seu Perfil.</li>
+      <li><strong>Obter uma cópia</strong> dos seus dados: Perfil → Ações da conta → Baixar meus dados (um arquivo JSON).</li>
+      <li><strong>Excluir</strong> sua conta: Perfil → Ações da conta → Excluir minha conta.</li>
+      <li><strong>Qualquer outro pedido</strong>: escreva para <a href="mailto:hello@scoutmind.app">hello@scoutmind.app</a>. Respondemos em até 15 dias.</li>
+    </ul>
+    <p>Você também pode reclamar à Autoridade Nacional de Proteção de Dados, a ANPD (<a href="https://www.gov.br/anpd" rel="noopener">gov.br/anpd</a>).</p>
+
+    <h2>10. Segurança</h2>
+    <p>As conexões são criptografadas (HTTPS). As senhas são guardadas apenas como hash pelo nosso provedor de autenticação. Regras no banco de dados limitam cada registro às pessoas autorizadas a vê-lo, e nossas chaves de servidor nunca chegam ao seu navegador. Nenhum sistema é perfeitamente seguro; se um incidente colocar você em risco, avisaremos você e a ANPD, como exige o art. 48 da LGPD.</p>
+
+    <h2>11. Idade mínima</h2>
+    <p>Você precisa ter pelo menos <strong>13 anos</strong> para criar uma conta. Se tiver menos de 18, precisa da autorização de um dos pais ou responsável legal, que deve ler esta política e nossos Termos com você. O ScoutMind não se destina a menores de 13 anos; se soubermos que uma conta pertence a um, nós a excluímos. Pais e responsáveis podem escrever para <a href="mailto:hello@scoutmind.app">hello@scoutmind.app</a>.</p>
+
+    <h2>12. Alterações</h2>
+    <p>Publicaremos qualquer alteração nesta página, com nova data. Se uma mudança afetar de forma relevante o uso dos seus dados, avisaremos você no app antes que ela valha.</p>
+
+    <h2>13. Contato</h2>
+    <p>Felipe Valois — controlador e encarregado · <a href="mailto:hello@scoutmind.app">hello@scoutmind.app</a></p>
+  </article>
+</main>
+
+<footer class="sm-foot">
+  <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:hello@scoutmind.app">Contact</a>
+</footer>
+
+<script>
+// One language at a time. ?lang= wins, then a choice made here before (a UI
+// preference, so localStorage is fine under rule 10), then the browser.
+function setLang(l){
+  document.documentElement.setAttribute('data-lang',l);
+  document.documentElement.setAttribute('lang',l==='pt-BR'?'pt-BR':'en');
+  document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-set-lang')===l); });
+  try{ localStorage.setItem('sm_legal_lang',l); }catch(e){}
+}
+(function(){
+  var q=new URLSearchParams(location.search).get('lang');
+  var saved=null; try{ saved=localStorage.getItem('sm_legal_lang'); }catch(e){}
+  var l=q?(/^pt/i.test(q)?'pt-BR':'en'):saved||(/^pt/i.test(navigator.language||'')?'pt-BR':'en');
+  setLang(l);
+})();
+</script>
+</body>
+</html>

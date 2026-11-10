@@ -382,9 +382,15 @@ body{padding-bottom:64px;}
   .user-badge{display:none;}
   .logout-btn{display:none;}
 }
+/* Footer: Privacy · Terms · Contact, on every page. */
+.sm-foot{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 26px;border-top:1px solid var(--border);}
+.sm-foot a{color:var(--muted);text-decoration:none;padding:6px;}
+.sm-foot a:hover{color:var(--text);}
 /* ── SCOUT GAME (Day 4) ── mobile-first; every touch target is 44px or more. */
 .sg-page{padding:18px 16px 24px;max-width:760px;margin:0 auto;}
-.sg-page.has-bar{padding-bottom:96px;}
+/* Room for the save bar under everything, the footer included: the bar sits
+   on the mobile tab bar, so 64 + ~68. */
+body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;}
 .sg-sub{font-size:12px;color:var(--muted);line-height:1.6;margin:2px 0 14px;}
 .sg-tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--border);margin:0 -16px 14px;padding:0 16px;scrollbar-width:none;}
@@ -533,6 +539,7 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
   .sg-club{width:220px;flex:0 0 220px;}
   .sg-submit{bottom:0;padding:12px calc(50vw - 364px);}
   body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:92px;}
+  body:has(#page-scout.active .sg-page.has-bar){padding-bottom:72px;}
 }
 </style>
 </head>
@@ -959,6 +966,11 @@ async function logout(){
   window.location.href='/';
 }
 </script>
+
+<!-- Footer: Privacy · Terms · Contact under every tab, as on every other page. -->
+<footer class="sm-foot">
+  <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:hello@scoutmind.app">Contact</a>
+</footer>
 
 <!-- ── SIGN-IN SHEET (guest write gate) ── -->
 <div id="signin-sheet" class="signin-sheet">

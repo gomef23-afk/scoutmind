@@ -18,6 +18,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 - `public/app.html` — a redirect to `/`, kept so old links work. Not the app.
 - `public/community.html` — team communities (polls, analyst insights, groups, wishlist)
 - `public/auth.html` — login/signup
+- `public/terms.html`, `public/privacy.html` — Terms and Privacy, EN + PT-BR on one page. Drafts pending legal review; they must stay true to the code (update them in the same commit as any change to what we store or who processes it)
 - `public/news.html` — the old standalone transfer-news page. Superseded by the Home feed; still present, queued for deletion in B3.
 - `public/leagues_data.js` — static team list and averages, now used only by `community.html` (deleted in R10). Scout Mode and `players_data.js` were removed on Day 4: the Scout tab in `index.html` is the Scout Game, on Supabase data only
 - `api/_lib/`, `api/cron/` — serverless ingest (see Stack)
@@ -28,7 +29,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 2. After any HTML change, verify div balance: strip `<script>` blocks, count `<div` vs `</div>` — must be equal. Report the numbers.
 3. No duplicate `function` / `const` / `let` declarations across script blocks in the same file.
 4. `community.html` team selection uses the `_ft` array + `pickTeam(idx)` — never inline strings in onclick.
-5. Nav is duplicated across `index.html`, `about.html`, `community.html`, `news.html` — any nav change must be applied to all four. (`app.html` is only a redirect.)
+5. Nav is duplicated across `index.html`, `about.html`, `community.html`, `news.html`, `terms.html`, `privacy.html` — any nav change must be applied to all six. The footer (Privacy · Terms · Contact) is on those six and `auth.html`. (`app.html` is only a redirect.)
 6. Modals: `display:none` in HTML, `display:flex` set only in JS.
 7. `badge_applications` — do not send `user_id` (FK fails for localStorage users).
 8. In `community.html`, `leagues_data.js` must load before `init()` — keep the `typeof TEAMS !== 'undefined'` pattern. `index.html` no longer loads it.

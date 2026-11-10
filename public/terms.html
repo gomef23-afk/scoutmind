@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service — ScoutMind</title>
+<meta name="description" content="The rules for using ScoutMind, a free football social network: accounts, content, moderation, football data and the Scout Game.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  ============================================================================
+  DRAFT — A LAWYER MUST REVIEW THIS PAGE BEFORE PUBLIC LAUNCH.
+  ============================================================================
+  Written to be edited clause by clause, not rewritten. Checked against what
+  the product does on 10 Nov 2026.
+
+  Clauses most in need of review, in order:
+    1. Section 3 (minimum age 13, parental permission under 18). The clause
+       most likely to change, together with Privacy section 11.
+    2. Section 7 (Scout Game): that a free game with no entry fee, no prize
+       and nothing exchangeable is outside Brazilian gaming / promotion rules
+       (Lei 14.790/2023, Lei 5.768/1971) and needs no authorisation.
+    3. Sections 9 and 11 (liability, law and forum) against the Consumer
+       Defence Code (CDC), which applies to users in Brazil.
+    4. Section 4 (licence to user content, and content kept after account
+       deletion as "[deleted user]").
+    5. Operator identity: an individual until the MEI exists.
+
+  English and Portuguese say the same thing; keep them in step.
+-->
+<style>
+:root{--bg:#07090f;--bg2:#0d1117;--bg3:#141b27;--accent:#00e5a0;--accent2:#00b8ff;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;--yellow:#f5c842;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;padding-bottom:64px;}
+/* ── B2 NAV — kept in sync with index.html, about.html, community.html, news.html (rule 5) ── */
+.sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+.sm-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent);text-decoration:none;flex-shrink:0;}
+.sm-logo span{color:var(--text);}
+.sm-nav-right{display:flex;align-items:center;gap:4px;margin-left:auto;}
+.sm-about{font-size:12px;color:var(--muted);text-decoration:none;padding:0 8px;min-height:44px;display:flex;align-items:center;}
+.sm-about:hover{color:var(--text);}
+.sm-tabs{display:flex;}
+.sm-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;line-height:1.2;cursor:pointer;text-decoration:none;}
+.sm-tab-icon{font-size:17px;line-height:1;}
+.sm-tab:hover{color:var(--text);}
+.sm-tabs-top{display:none;}
+.sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(7,9,15,0.98);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
+/* ── LEGAL PAGE ── */
+.legal{max-width:760px;margin:0 auto;padding:24px 16px 40px;}
+.legal-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1.5px;line-height:1.1;}
+.legal-meta{font-size:12px;color:var(--muted);margin-top:6px;}
+.legal-draft{margin:14px 0 18px;padding:10px 12px;border:1px solid rgba(245,200,66,0.35);background:rgba(245,200,66,0.06);border-radius:8px;font-size:12px;color:var(--yellow);line-height:1.6;}
+.lang-toggle{display:flex;gap:6px;margin-bottom:22px;}
+.lang-btn{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.lang-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+.legal h2{font-size:16px;font-weight:700;margin:26px 0 8px;}
+.legal p,.legal li{font-size:14px;line-height:1.7;color:#c7d3e4;}
+.legal p{margin-bottom:10px;}
+.legal ul{margin:0 0 10px 20px;}
+.legal li{margin-bottom:4px;}
+.legal a{color:var(--accent);}
+.legal strong{color:var(--text);}
+/* One language at a time; the toggle sets data-lang on <html>. */
+html[data-lang="en"] [lang="pt-BR"].legal-body{display:none;}
+html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
+.sm-foot{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 26px;border-top:1px solid var(--border);}
+.sm-foot a{color:var(--muted);text-decoration:none;padding:6px 6px;}
+.sm-foot a:hover{color:var(--text);}
+@media(min-width:900px){
+  body{padding-bottom:0;}
+  .sm-nav{padding:10px 28px;gap:18px;}
+  .sm-tabs-bottom{display:none;}
+  .sm-tabs-top{display:flex;gap:2px;margin-left:18px;}
+  .sm-tabs-top .sm-tab{flex:0 0 auto;flex-direction:row;gap:7px;min-height:38px;font-size:12px;font-weight:500;padding:0 14px;border-bottom:2px solid transparent;}
+  .sm-tabs-top .sm-tab-icon{font-size:14px;}
+  .legal{padding:36px 24px 56px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="sm-nav">
+  <a class="sm-logo" href="/">Scout<span>Mind</span></a>
+  <div class="sm-tabs sm-tabs-top">
+    <a class="sm-tab" href="/?page=feed"><span class="sm-tab-icon">🏠</span>Home</a>
+    <a class="sm-tab" href="/community.html"><span class="sm-tab-icon">⚽</span>Clubs</a>
+    <a class="sm-tab" href="/?page=scout"><span class="sm-tab-icon">🔍</span>Scout</a>
+    <a class="sm-tab" href="/?page=matches"><span class="sm-tab-icon">📅</span>Matches</a>
+    <a class="sm-tab" href="/?page=profile"><span class="sm-tab-icon">👤</span>Profile</a>
+  </div>
+  <div class="sm-nav-right">
+    <a href="/about.html" class="sm-about">About</a>
+  </div>
+</nav>
+<div class="sm-tabs sm-tabs-bottom">
+  <a class="sm-tab" href="/?page=feed"><span class="sm-tab-icon">🏠</span>Home</a>
+  <a class="sm-tab" href="/community.html"><span class="sm-tab-icon">⚽</span>Clubs</a>
+  <a class="sm-tab" href="/?page=scout"><span class="sm-tab-icon">🔍</span>Scout</a>
+  <a class="sm-tab" href="/?page=matches"><span class="sm-tab-icon">📅</span>Matches</a>
+  <a class="sm-tab" href="/?page=profile"><span class="sm-tab-icon">👤</span>Profile</a>
+</div>
+
+<main class="legal">
+  <div class="lang-toggle" role="group" aria-label="Language">
+    <button class="lang-btn" data-set-lang="en" onclick="setLang('en')">English</button>
+    <button class="lang-btn" data-set-lang="pt-BR" onclick="setLang('pt-BR')">Português</button>
+  </div>
+
+  <!-- ═══════════════════════════════ ENGLISH ═══════════════════════════════ -->
+  <article class="legal-body" lang="en">
+    <h1 class="legal-title">Terms of Service</h1>
+    <div class="legal-meta">Last updated: 10 November 2026</div>
+    <div class="legal-draft">Draft under legal review. It describes the service as it works today; the wording may change before public launch.</div>
+
+    <h2>1. Agreement</h2>
+    <p>These terms govern your use of ScoutMind (scoutmind.app), operated by <strong>Felipe Valois</strong>, an individual resident in Brazil ("we"). By creating an account you accept them, together with our <a href="/privacy.html">Privacy Policy</a>. If you only read ScoutMind without an account, sections 5, 6 and 8 to 12 still apply.</p>
+
+    <h2>2. The service</h2>
+    <p>ScoutMind is a free football social network: a feed of headlines that link to their publishers, club pages and rooms, comments and reactions, match data, and the Scout Game. <strong>It is free</strong>: there are no subscriptions, no payments and no ads. If that ever changes, we will tell you in advance and nothing you already use will become paid without your choice.</p>
+
+    <h2>3. Your account</h2>
+    <ul>
+      <li>You must be at least <strong>13 years old</strong>. If you are under 18, you need the permission of a parent or legal guardian, who accepts these terms with you.</li>
+      <li>One person per account. Use a real email address you control, and keep your password to yourself; you are responsible for what is done from your account.</li>
+      <li>You can delete your account at any time in your Profile (Privacy Policy, section 8, explains what happens to your data).</li>
+    </ul>
+
+    <h2>4. What you post</h2>
+    <p>Your comments and messages remain yours. You give us a free, non-exclusive, worldwide licence to store, display and share them inside ScoutMind for as long as they are on the service, so we can run it. If you delete your account, your posts stay in their conversations attributed to "[deleted user]"; you can delete individual posts before you leave.</p>
+
+    <h2>5. Rules</h2>
+    <p>Argue about football as hard as you like. Do not:</p>
+    <ul>
+      <li>post hate speech, slurs, threats or harassment, or target anyone for who they are;</li>
+      <li>post illegal content, sexual content, or anyone's personal data;</li>
+      <li>spam, impersonate people or organisations, or mislead others about who you are;</li>
+      <li>promote betting, gambling or paid tipping services;</li>
+      <li>scrape ScoutMind, access it by automated means, or try to break or bypass its security.</li>
+    </ul>
+    <p>Anyone can report a post. We may remove content, and suspend or close accounts, that break these rules — automatically (a blocklist of slurs, rate limits) or after review.</p>
+
+    <h2>6. Football data and news</h2>
+    <p>Fixtures, scores and statistics come from a third-party provider (API-Football) and can be late, incomplete or wrong; we do not guarantee them. News belongs to its publishers: we show a headline, a short snippet and a link to the original. Club names and crests belong to their owners. ScoutMind is not affiliated with any club, league or federation.</p>
+
+    <h2>7. The Scout Game</h2>
+    <ul>
+      <li>The Scout Game is a <strong>free game played for points only</strong>. There is no entry fee, <strong>no prize</strong>, and nothing of monetary value to win; points cannot be exchanged for anything.</li>
+      <li>It is not a betting or gambling product. Player levels and multipliers are rules of the game, not predictions or probabilities.</li>
+      <li>Picks lock at the first kickoff of a round. Points come from the match statistics we receive and can be corrected if those statistics change.</li>
+      <li>We may change the scoring rules between rounds, and will publish the change. If data errors make a round unfair, we may void or re-score it.</li>
+    </ul>
+
+    <h2>8. Availability</h2>
+    <p>We provide ScoutMind as it is and as available. We may change, add or remove features, and the service may be interrupted for maintenance or reasons outside our control.</p>
+
+    <h2>9. Liability</h2>
+    <p>To the extent the law allows, we are not liable for indirect losses, for decisions you make based on football data, or for content posted by other users. Nothing in these terms limits rights you have under the Brazilian Consumer Defence Code (CDC) or other law that cannot be waived.</p>
+
+    <h2>10. Ending</h2>
+    <p>You can stop using ScoutMind and delete your account whenever you want. We can suspend or close an account that breaks these terms; where reasonable we will tell you why.</p>
+
+    <h2>11. Law and disputes</h2>
+    <p>These terms are governed by Brazilian law. If you are a consumer in Brazil, you may bring any dispute in the courts of your own domicile.</p>
+
+    <h2>12. Changes</h2>
+    <p>We will publish changes on this page with a new date, and tell you in the app before a material change applies. If you do not accept a change, you can delete your account.</p>
+
+    <h2>13. Contact</h2>
+    <p>Felipe Valois · <a href="mailto:hello@scoutmind.app">hello@scoutmind.app</a></p>
+  </article>
+
+  <!-- ═══════════════════════════════ PORTUGUÊS ══════════════════════════════ -->
+  <article class="legal-body" lang="pt-BR">
+    <h1 class="legal-title">Termos de Uso</h1>
+    <div class="legal-meta">Última atualização: 10 de novembro de 2026</div>
+    <div class="legal-draft">Rascunho em revisão jurídica. Descreve o serviço como ele funciona hoje; o texto pode mudar antes do lançamento público.</div>
+
+    <h2>1. Acordo</h2>
+    <p>Estes termos regem o uso do ScoutMind (scoutmind.app), operado por <strong>Felipe Valois</strong>, pessoa física residente no Brasil ("nós"). Ao criar uma conta, você os aceita, junto com a nossa <a href="/privacy.html">Política de Privacidade</a>. Se você apenas lê o ScoutMind sem conta, as seções 5, 6 e 8 a 12 continuam valendo.</p>
+
+    <h2>2. O serviço</h2>
+    <p>O ScoutMind é uma rede social de futebol gratuita: um feed de manchetes com link para as publicações originais, páginas e salas dos clubes, comentários e reações, dados de partidas e o Scout Game. <strong>É gratuito</strong>: não há assinaturas, pagamentos nem anúncios. Se isso mudar, avisaremos com antecedência, e nada do que você já usa passará a ser pago sem a sua escolha.</p>
+
+    <h2>3. Sua conta</h2>
+    <ul>
+      <li>Você precisa ter pelo menos <strong>13 anos</strong>. Se tiver menos de 18, precisa da autorização de um dos pais ou responsável legal, que aceita estes termos junto com você.</li>
+      <li>Uma pessoa por conta. Use um e-mail real que seja seu e não compartilhe sua senha; você é responsável pelo que é feito a partir da sua conta.</li>
+      <li>Você pode excluir sua conta a qualquer momento no seu Perfil (a seção 8 da Política de Privacidade explica o que acontece com seus dados).</li>
+    </ul>
+
+    <h2>4. O que você publica</h2>
+    <p>Seus comentários e mensagens continuam sendo seus. Você nos concede uma licença gratuita, não exclusiva e mundial para armazená-los, exibi-los e compartilhá-los dentro do ScoutMind enquanto estiverem no serviço, para que possamos operá-lo. Se você excluir sua conta, suas publicações permanecem nas conversas, atribuídas a "[deleted user]"; você pode apagar publicações individuais antes de sair.</p>
+
+    <h2>5. Regras</h2>
+    <p>Discuta futebol com toda a paixão. Não:</p>
+    <ul>
+      <li>publique discurso de ódio, ofensas, ameaças ou assédio, nem ataque alguém pelo que essa pessoa é;</li>
+      <li>publique conteúdo ilegal, conteúdo sexual ou dados pessoais de qualquer pessoa;</li>
+      <li>envie spam, se passe por pessoas ou organizações, nem engane os outros sobre quem você é;</li>
+      <li>promova apostas, jogos de azar ou serviços pagos de palpites;</li>
+      <li>faça raspagem de dados do ScoutMind, acesse-o por meios automatizados ou tente quebrar ou contornar sua segurança.</li>
+    </ul>
+    <p>Qualquer pessoa pode denunciar uma publicação. Podemos remover conteúdos e suspender ou encerrar contas que violem estas regras — automaticamente (uma lista de termos ofensivos, limites de frequência) ou após análise.</p>
+
+    <h2>6. Dados de futebol e notícias</h2>
+    <p>Jogos, placares e estatísticas vêm de um fornecedor externo (API-Football) e podem estar atrasados, incompletos ou errados; não os garantimos. As notícias pertencem às suas publicações: mostramos o título, um trecho curto e o link para o original. Nomes e escudos de clubes pertencem aos seus titulares. O ScoutMind não tem vínculo com nenhum clube, liga ou federação.</p>
+
+    <h2>7. O Scout Game</h2>
+    <ul>
+      <li>O Scout Game é um <strong>jogo gratuito, disputado apenas por pontos</strong>. Não há taxa de inscrição, <strong>não há prêmio</strong> e nada de valor monetário a ganhar; os pontos não podem ser trocados por nada.</li>
+      <li>Não é um produto de apostas nem de jogos de azar. Os níveis e multiplicadores dos jogadores são regras do jogo, não previsões nem probabilidades.</li>
+      <li>As escolhas fecham no primeiro jogo da rodada. Os pontos vêm das estatísticas das partidas que recebemos e podem ser corrigidos se essas estatísticas mudarem.</li>
+      <li>Podemos mudar as regras de pontuação entre rodadas, e publicaremos a mudança. Se erros de dados tornarem uma rodada injusta, podemos anulá-la ou recalculá-la.</li>
+    </ul>
+
+    <h2>8. Disponibilidade</h2>
+    <p>Oferecemos o ScoutMind no estado em que se encontra e conforme disponível. Podemos alterar, incluir ou remover recursos, e o serviço pode ser interrompido para manutenção ou por motivos fora do nosso controle.</p>
+
+    <h2>9. Responsabilidade</h2>
+    <p>Na medida permitida pela lei, não respondemos por perdas indiretas, por decisões que você tome com base em dados de futebol ou por conteúdo publicado por outros usuários. Nada nestes termos limita direitos que você tem pelo Código de Defesa do Consumidor (CDC) ou por outras leis que não podem ser renunciadas.</p>
+
+    <h2>10. Encerramento</h2>
+    <p>Você pode deixar de usar o ScoutMind e excluir sua conta quando quiser. Podemos suspender ou encerrar uma conta que viole estes termos; quando for razoável, diremos o motivo.</p>
+
+    <h2>11. Lei e conflitos</h2>
+    <p>Estes termos são regidos pela lei brasileira. Se você é consumidor no Brasil, pode levar qualquer conflito ao foro do seu próprio domicílio.</p>
+
+    <h2>12. Alterações</h2>
+    <p>Publicaremos as alterações nesta página, com nova data, e avisaremos você no app antes que uma mudança relevante valha. Se não aceitar uma mudança, você pode excluir sua conta.</p>
+
+    <h2>13. Contato</h2>
+    <p>Felipe Valois · <a href="mailto:hello@scoutmind.app">hello@scoutmind.app</a></p>
+  </article>
+</main>
+
+<footer class="sm-foot">
+  <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:hello@scoutmind.app">Contact</a>
+</footer>
+
+<script>
+// One language at a time. ?lang= wins, then a choice made on either legal page
+// before (a UI preference, so localStorage is fine under rule 10), then the browser.
+function setLang(l){
+  document.documentElement.setAttribute('data-lang',l);
+  document.documentElement.setAttribute('lang',l==='pt-BR'?'pt-BR':'en');
+  document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-set-lang')===l); });
+  try{ localStorage.setItem('sm_legal_lang',l); }catch(e){}
+}
+(function(){
+  var q=new URLSearchParams(location.search).get('lang');
+  var saved=null; try{ saved=localStorage.getItem('sm_legal_lang'); }catch(e){}
+  var l=q?(/^pt/i.test(q)?'pt-BR':'en'):saved||(/^pt/i.test(navigator.language||'')?'pt-BR':'en');
+  setLang(l);
+})();
+</script>
+</body>
+</html>

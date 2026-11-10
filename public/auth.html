@@ -35,6 +35,11 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
 .msg.success{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:#00e5a0;}
 .back{text-align:center;margin-top:14px;font-size:12px;color:#5a6a85;cursor:pointer;}
 .back:hover{color:#edf2f7;}
+.legal-note{max-width:420px;margin:14px auto 0;font-size:11px;color:#5a6a85;line-height:1.6;text-align:center;}
+.legal-note a{color:#8fa3bf;}
+.sm-foot{text-align:center;font-size:12px;color:#5a6a85;padding:18px 16px 10px;}
+.sm-foot a{color:#5a6a85;text-decoration:none;padding:6px;}
+.sm-foot a:hover{color:#edf2f7;}
 </style>
 </head>
 <body>
@@ -97,6 +102,10 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
 
   <div class="back" onclick="window.location.href='/'">← Back to scoutmind.app</div>
 </div>
+<div class="legal-note">By creating an account you accept the <a href="/terms.html">Terms</a> and the <a href="/privacy.html">Privacy Policy</a>. You must be 13 or older; under 18, with a parent's or guardian's permission.</div>
+<footer class="sm-foot">
+  <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:hello@scoutmind.app">Contact</a>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/sm_auth.js"></script>

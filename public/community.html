@@ -118,6 +118,10 @@ body{padding-bottom:64px;}
   .sm-tabs-top .sm-tab-icon{font-size:14px;}
   .sm-tabs-top .sm-tab.active{border-bottom-color:var(--accent);}
 }
+/* Footer: Privacy · Terms · Contact, on every page. */
+.sm-foot{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 26px;border-top:1px solid var(--border);}
+.sm-foot a{color:var(--muted);text-decoration:none;padding:6px;}
+.sm-foot a:hover{color:var(--text);}
 </style>
 </head>
 <body>
@@ -763,5 +767,9 @@ async function submitBadgeApp(){
 }
 if(typeof TEAMS!=='undefined'){init();}else{window.addEventListener('load',init);}
 </script>
+<!-- Footer: the same three links on every page. -->
+<footer class="sm-foot">
+  <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:hello@scoutmind.app">Contact</a>
+</footer>
 </body>
 </html>

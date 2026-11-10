@@ -444,7 +444,7 @@ should be split per tournament. Splitting would need a `tournament` dimension on
 | **Real-time match data** | ✅ done — `/api/cron/live` |
 | **Official club logos** | ✅ done — `teams.logo_url` from the API, shown as crests in the UI |
 | **Historical tracking** | now possible on Pro; not scheduled |
-| **Terms + Privacy pages** | ⚠️ still `showLegal()` modals on `about.html`; real pages needed before public launch (Phase G) |
+| **Terms + Privacy pages** | ✅ built Day 5 — `terms.html` and `privacy.html`, EN + PT-BR, linked from a footer on every page; the `showLegal()` modals are gone. ⚠️ Drafts: a lawyer must review before public launch (each file's header comment lists the clauses to check, minimum age first) |
 | **Account deletion path** | ⚠️ not built. Required by LGPD |
 | **Profile name changes persist** | ⚠️ `saveName()` writes localStorage only — the change is lost on another device. Needs a `profiles` update (Phase C5) |
 | **Stripe live mode / webhook / Club tiers / middle tier** | ❌ dropped. Fans never pay for social features; Stripe stays dormant |
