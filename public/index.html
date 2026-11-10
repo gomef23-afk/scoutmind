@@ -442,6 +442,8 @@ body{padding-bottom:64px;}
 .sg-bar-pos{font-size:10px;margin-top:3px;font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sg-bar-pos .full{color:var(--yellow);}
 .sg-row.blocked{opacity:.55;}
+.sg-row-fx{font-size:11px;color:var(--text);margin-top:3px;}
+.sg-row-fx.none,.sg-fx-none{color:var(--yellow);}
 .sg-add:disabled{cursor:not-allowed;color:var(--muted);border-color:var(--border);}
 .sg-save{flex:0 0 auto;min-height:44px;padding:0 20px;border-radius:22px;border:none;background:var(--accent);color:#000;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
 .sg-save:disabled{opacity:.45;cursor:default;}
@@ -4972,7 +4974,8 @@ function sgRenderSlots(){
     slots.push('<div class="sg-slot'+(cap?' is-captain':'')+'">'
       +sgPhoto(p,30)
       +'<div class="sg-slot-main"><div class="sg-slot-name">'+sanitize(p.name)+'</div>'
-      +'<div class="sg-slot-meta">'+(p.missing?'No longer in this round':sanitize(sgLevel(p.tier)))+'</div></div>'
+      +'<div class="sg-slot-meta">'+(p.missing?'No longer in this round'
+        :sanitize(sgLevel(p.tier))+(sgFixtureLine(p)?' · <span class="'+(sgNoMatch(p)?'sg-fx-none':'')+'">'+sanitize(sgFixtureLine(p))+'</span>':''))+'</div></div>'
       +'<button class="sg-cap'+(cap?' on':'')+'" onclick="sgSetCaptain('+id+')" aria-label="Make captain">'+(cap?'Captain':'C')+'</button>'
       +'<button class="sg-x" onclick="sgToggle('+id+')" aria-label="Remove">✕</button>'
       +'</div>');
@@ -5044,6 +5047,7 @@ function sgRenderList(){
       +'<div class="sg-row-name">'+sanitize(p.name)+'</div>'
       +'<div class="sg-row-meta">'+clubCrestById(p.team_id,14)+'<span>'+sanitize(clubLabel(p.team_id))+'</span>'
       +'<span class="sg-pos">'+(SG_POS_LABEL[p.position]||'—')+'</span></div>'
+      +(sgFixtureLine(p)?'<div class="sg-row-fx'+(sgNoMatch(p)?' none':'')+'">'+sanitize(sgFixtureLine(p))+'</div>':'')
       +'<div class="sg-row-level">'+sanitize(sgLevel(p.tier))+'</div>'
       +'<div class="sg-row-stats">'+sanitize(sgStatLine(p))+' '+sgLastMatch(p)+'</div>'
       +'</div>'
@@ -5060,8 +5064,27 @@ function sgPosCounts(){
   for(const x of SG.picks){ const pos=sgPlayer(x).position; if(c[pos]!=null) c[pos]++; }
   return c;
 }
+/**
+ * True when 021's pick list says his club has no counting fixture this round.
+ * A row from before 021 has no fixture_id key at all: then we cannot tell, and
+ * submit_picks() is the check.
+ */
+function sgNoMatch(p){ return !!p&&'fixture_id' in p&&p.fixture_id==null; }
+
+/** "vs Palmeiras (H) · Sat", "at Grêmio (A) · Sun", or "No match this round". */
+function sgFixtureLine(p){
+  if(!p||!('fixture_id' in p)) return '';
+  if(p.fixture_id==null) return 'No match this round';
+  const opp=clubLabel(p.opponent_id)||p.opponent||'—';
+  let day='';
+  try{ day=p.kickoff_utc?new Date(p.kickoff_utc).toLocaleDateString([], {weekday:'short'}):''; }catch(e){}
+  return (p.is_home?'vs ':'at ')+opp+(p.is_home?' (H)':' (A)')+(day?' · '+day:'')
+    +(p.round_matches>1?' · +'+(p.round_matches-1)+' more':'');
+}
+
 /** Why this player cannot be added right now, or null. */
 function sgBlock(p){
+  if(sgNoMatch(p)) return 'No match this round.';
   if(SG.picks.length>=5) return 'You have five. Remove one first.';
   const c=sgPosCounts();
   if(p.position&&c[p.position]>=SG_POS_MAX[p.position]) return SG_POS_FULL[p.position]+'.';
@@ -5103,12 +5126,14 @@ function sgSubmitBar(r){
   const n=SG.picks.length, hasCap=SG.captain!=null&&SG.picks.indexOf(SG.captain)>=0;
   const c=sgPosCounts();
   const full=['G','D','M','F'].filter(k=>c[k]>=SG_POS_MAX[k]);
-  const why=n<5?(5-n)+' more to pick'+(full.length?' · '+full.map(k=>SG_POS_LABEL[k]).join(', ')+' full':'')
+  const noMatch=SG.picks.some(x=>sgNoMatch(sgPlayer(x)));
+  const why=noMatch?'Replace the pick with no match this round'
+    :n<5?(5-n)+' more to pick'+(full.length?' · '+full.map(k=>SG_POS_LABEL[k]).join(', ')+' full':'')
     :!hasCap?'Choose a captain':'Ready';
   bar.innerHTML='<div class="sg-bar-text"><b>'+n+'/5</b> · '+sanitize(why)
     +'<div class="sg-bar-pos">'+['G','D','M','F'].map(k=>'<span'+(c[k]>=SG_POS_MAX[k]?' class="full"':'')+'>'
       +SG_POS_LABEL[k]+' '+c[k]+'/'+SG_POS_MAX[k]+'</span>').join(' · ')+'</div></div>'
-    +'<button class="sg-save" id="sg-save" onclick="sgSave()"'+(n===5&&hasCap&&!SG.saving?'':' disabled')+'>'
+    +'<button class="sg-save" id="sg-save" onclick="sgSave()"'+(n===5&&hasCap&&!noMatch&&!SG.saving?'':' disabled')+'>'
     +(SG.saving?'Saving…':SG.entries.get(r.id)?'Update picks':'Save picks')+'</button>';
 }
 

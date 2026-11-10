@@ -162,7 +162,7 @@ eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
   const word = ['od', 'ds'].join('');   // spelt this way so this file passes its own check
   const files = ['api/_lib/scout-game.js', 'api/cron/player-stats.js', 'supabase/migrations/017_scout_game.sql',
     'supabase/migrations/018_scout_game_ladder.sql', 'supabase/migrations/019_scout_game_reads.sql',
-    'supabase/migrations/020_lineup_rule.sql',
+    'supabase/migrations/020_lineup_rule.sql', 'supabase/migrations/021_pickable_fixture.sql',
     'public/index.html'];   // the Scout tab's copy lives here since Day 4
   // Money words, spelt in pieces so this file passes its own check.
   const banned = [word, ['b', 'et'].join(''), ['win', ' money'].join('')];
