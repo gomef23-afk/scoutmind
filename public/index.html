@@ -405,6 +405,39 @@ body{padding-bottom:64px;}
 .del-label{display:block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:12px 0 5px;}
 .del-go{min-height:44px;font-size:13px;font-weight:700;}
 .del-go:disabled{opacity:.45;cursor:not-allowed;}
+/* ── TOUCH TARGETS AND PHONE FIXES (Day 6 audit, docs/audit-2026-11-day6.md) ──
+   Every control a thumb can reach gets a 44×44 hit area. Small controls keep
+   their look and gain an invisible 44px box from ::after, centred on them;
+   rows, inputs and full-width buttons get a real 44px min-height instead,
+   because stacked rows with overlapping boxes would steal each other's taps. */
+.reaction,.comment-toggle,.read-link,.csort-btn,.ftab,.like-btn,.comment-link,.report-reason,
+.comment-post-btn,.picker-change,.sm-foot a,.sm-logo,.profile-edit-btn,.danger-btn,.back-btn,
+.lang-pref,.lang-chip,.filter-btn,.league-filter-btn,.club-manage-btn,#nav-avatar,.sm-about{position:relative;}
+.reaction::after,.comment-toggle::after,.read-link::after,.csort-btn::after,.ftab::after,.like-btn::after,
+.comment-link::after,.report-reason::after,.comment-post-btn::after,.picker-change::after,.sm-foot a::after,
+.sm-logo::after,.profile-edit-btn::after,.danger-btn::after,.back-btn::after,.lang-pref::after,.lang-chip::after,
+.filter-btn::after,.league-filter-btn::after,.club-manage-btn::after,#nav-avatar::after,.sm-about::after{
+  content:'';position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%);}
+/* Adjacent text actions under a comment: room for their boxes not to overlap
+   (Report sits next to Delete). */
+.comment-meta{gap:18px;}
+/* 16px or iOS Safari zooms the page when the field takes focus; 44px tall. */
+select,input[type=text],input[type=number],input[type=password],input[type=email],input[type=search]{font-size:16px;min-height:44px;}
+.picker-row,.date-chip,.signin-sheet-primary,.signin-sheet-secondary,.signin-sheet-dismiss,.club-search{min-height:44px;}
+.chat-back{min-width:44px;min-height:44px;}
+.yc-line,.match-row-sm{min-height:44px;align-items:center;}
+.sg-fx-row{min-height:44px;}
+/* The keyboard shortcut means nothing on a phone (the ≥900px rule shows it). */
+.comment-hint{display:none;}
+.comment-compose-foot .comment-post-btn{margin-left:auto;}
+/* The delete sheet scrolls rather than hiding its fields behind the keyboard. */
+#delete-modal{align-items:flex-start;overflow-y:auto;}
+#delete-modal .signin-sheet-card{margin:auto 0;max-height:none;}
+@media (min-width: 900px){
+  select,input[type=text],input[type=number],input[type=password],input[type=email],input[type=search]{font-size:13px;min-height:0;}
+  .comment-meta{gap:12px;}
+  #delete-modal{align-items:center;}
+}
 /* Footer: Privacy · Terms · Contact, on every page. */
 .sm-foot{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 26px;border-top:1px solid var(--border);}
 .sm-foot a{color:var(--muted);text-decoration:none;padding:6px;}
@@ -504,7 +537,7 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-rank-row{display:flex;align-items:center;gap:8px;min-height:44px;border-bottom:1px solid var(--border);font-size:13px;}
 .sg-rank-row.me{color:var(--accent);}
 .sg-rank-row.pinned{background:rgba(0,229,160,0.05);}
-.sg-rank-n{width:30px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
+.sg-rank-n{min-width:30px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
 .sg-rank-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sg-rank-x{font-size:10px;color:var(--muted);white-space:nowrap;}
 .sg-rank-pts{font-family:'DM Mono',monospace;font-weight:600;min-width:52px;text-align:right;}
@@ -816,7 +849,7 @@ if(!_cu){
     <div id="profile-clubs-list">
       <div style="font-size:12px;color:var(--muted);padding:8px 0;">No club selected yet.</div>
     </div>
-    <button onclick="openTeamModal()" style="margin-top:10px;font-size:11px;font-weight:600;padding:7px 16px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ Change / manage clubs</button>
+    <button class="club-manage-btn" onclick="openTeamModal()" style="margin-top:10px;font-size:11px;font-weight:600;padding:7px 16px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ Change / manage clubs</button>
   </div>
 
   <!-- Preferences -->
@@ -1143,7 +1176,7 @@ async function confirmDeleteAccount(){
       <button id="onboard-next" class="signin-sheet-primary" style="flex:1;" onclick="onboardNext()">Continue</button>
     </div>
     <div style="text-align:center;margin-top:10px;">
-      <span onclick="skipOnboarding()" style="font-size:11px;color:var(--muted);cursor:pointer;">I'll do this later</span>
+      <button class="signin-sheet-dismiss" onclick="skipOnboarding()">I'll do this later</button>
     </div>
   </div>
 </div>
@@ -2686,6 +2719,11 @@ function renderMatchDay() {
         + ' onclick="selectMatchDay(\'' + sanitize(k) + '\')">' + sanitize(stripLabel(k))
         + '<span class="dc-n">' + (n ? n + (n === 1 ? ' match' : ' matches') : 'none') + '</span></button>';
     }).join('');
+    // Bring the selected day into view: at 375px it can be off the right edge,
+    // and the strip then never shows which day you are looking at. scrollLeft,
+    // not scrollIntoView, so the page itself never jumps.
+    const on = strip.querySelector('.date-chip.active');
+    if (on) strip.scrollLeft = Math.max(0, on.offsetLeft - strip.offsetLeft - (strip.clientWidth - on.offsetWidth) / 2);
   }
 
   // ── a week with nothing in it (an international break) ──
@@ -2902,12 +2940,15 @@ async function loadClubData(){
  */
 function statCell(label,value,colour,avg){
   if(value==null||value==='')return '';
-  return '<div style="padding:8px 0;text-align:center;flex:1;">'
+  // min-width:0 and side padding: five of these share 375px, and the "lg avg"
+  // lines used to run into each other with nowhere to wrap.
+  return '<div style="padding:8px 3px;text-align:center;flex:1;min-width:0;">'
     +'<div style="font-size:14px;font-weight:700;font-family:\'DM Mono\',monospace;'
     +(colour?'color:'+colour+';':'')+'">'+sanitize(String(value))+'</div>'
     +'<div style="font-size:8px;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:1px;">'
     +sanitize(label)+'</div>'
-    +(avg!=null?'<div style="font-size:9px;color:var(--muted);margin-top:2px;font-family:\'DM Mono\',monospace;">lg avg '+sanitize(String(avg))+'</div>':'')
+    +(avg!=null?'<div style="font-size:9px;color:var(--muted);margin-top:2px;font-family:\'DM Mono\',monospace;line-height:1.3;">'
+      +'<span style="white-space:nowrap;">lg avg</span> <span style="white-space:nowrap;">'+sanitize(String(avg))+'</span></div>':'')
     +'</div>';
 }
 
@@ -3052,7 +3093,7 @@ function renderSidebarClubs(){
   const ids=myClubIds();
   const main=mainClubId();
   const button='<div style="padding:8px 0;text-align:center;">'
-    +'<button onclick="openTeamModal()" style="font-size:10px;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'
+    +'<button class="club-manage-btn" onclick="openTeamModal()" style="font-size:10px;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'
     +(ids.length?'Change my clubs':'Choose your club')+'</button></div>';
 
   if(!ids.length){
@@ -3064,7 +3105,7 @@ function renderSidebarClubs(){
   el.innerHTML=ids.map(function(id){
     const c=CLUB_DATA.get(id);
     if(!c)return '';
-    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="window.location.href=\'/community.html\'">'
+    return '<div style="display:flex;align-items:center;gap:8px;min-height:44px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="window.location.href=\'/community.html\'">'
       +clubCrestById(id,24)
       +'<div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;color:var(--text);">'+sanitize(c.label)+'</div>'
       +'<div style="font-size:9px;color:var(--muted);">'+(id===main?'My club':'Following')+'</div></div>'
@@ -3213,7 +3254,7 @@ function renderLangPrefs(){
     const active=on.indexOf(l.code)>-1;
     // Never let the reader switch off the last one and empty their feed.
     const last=active&&on.length===1;
-    return '<button onclick="toggleLang(\''+l.code+'\')"'
+    return '<button class="lang-pref" onclick="toggleLang(\''+l.code+'\')"'
       +(last?' title="Keep at least one language"':'')
       +' style="font-size:11px;padding:5px 12px;border-radius:20px;cursor:'+(last?'not-allowed':'pointer')
       +';font-family:\'DM Sans\',sans-serif;border:1px solid '+(active?'var(--accent)':'var(--border)')
@@ -3233,7 +3274,7 @@ function renderClubLangToggle(){
     return;
   }
   const on=showClubNewsAllLangs();
-  el.innerHTML='<button onclick="toggleClubLangs()" style="display:flex;align-items:center;gap:9px;'
+  el.innerHTML='<button onclick="toggleClubLangs()" style="display:flex;align-items:center;gap:9px;min-height:44px;'
     +'background:transparent;border:none;padding:0;cursor:pointer;font-family:\'DM Sans\',sans-serif;text-align:left;">'
     +'<span style="width:34px;height:19px;border-radius:12px;flex-shrink:0;position:relative;transition:background .2s;'
     +'background:'+(on?'var(--accent)':'var(--bg3)')+';border:1px solid '+(on?'var(--accent)':'var(--border)')+';">'
@@ -3818,6 +3859,33 @@ function renderSidebarYourClub(){
   el.innerHTML=html;
 }
 
+// ── KEYBOARD (Day 6 audit) ──
+// On iOS the on-screen keyboard shrinks the *visual* viewport but not the
+// layout one, so a position:fixed inset:0 overlay keeps its full height and
+// the keyboard covers its composer. While the chat or match panel is open,
+// the overlay follows visualViewport instead. Chrome on Android resizes the
+// layout viewport itself, and there this changes nothing.
+function fitOverlayToViewport(){
+  const vv=window.visualViewport;
+  ['chat-overlay','match-overlay'].forEach(id=>{
+    const ov=document.getElementById(id);
+    if(!ov||ov.style.display==='none')return;
+    if(vv){ ov.style.height=vv.height+'px'; ov.style.top=vv.offsetTop+'px'; ov.style.bottom='auto'; }
+  });
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',fitOverlayToViewport);
+  window.visualViewport.addEventListener('scroll',fitOverlayToViewport);
+}
+// A tap anywhere in a compose box focuses its field: the box is the visible
+// target, the textarea inside it is one line tall.
+document.addEventListener('click',function(e){
+  const box=e.target.closest&&e.target.closest('.compose-box');
+  if(!box||e.target.closest('button,a,textarea'))return;
+  const ta=box.querySelector('textarea');
+  if(ta)ta.focus();
+});
+
 async function openChat(clubId){
   const o=chatOverview(clubId);
   if(!o){
@@ -3841,6 +3909,7 @@ async function openChat(clubId){
   document.body.style.overflow='hidden';
 
   paintChatFoot();
+  fitOverlayToViewport();
   document.getElementById('chat-body').innerHTML=
     '<div class="chat-empty">Loading…</div>';
   await loadChatMessages(true);
@@ -3850,7 +3919,7 @@ async function openChat(clubId){
 function closeChat(){
   stopChatPolling();
   const ov=document.getElementById('chat-overlay');
-  if(ov)ov.style.display='none';
+  if(ov){ ov.style.display='none'; ov.style.height=''; ov.style.top=''; ov.style.bottom=''; }
   document.body.style.overflow='';
   chatRoom=null;
   // The preview on the cards behind the overlay is now stale.
@@ -5450,10 +5519,12 @@ function sgRenderMine(r,e,scores,rank){
     const g=SG_SLOT_GROUP[p.slot-1];
     return '<div class="sg-pick'+(p.is_captain?' is-captain':'')+'" onclick="this.classList.toggle(\'open\')">'
       +'<div class="sg-pick-top">'+(g?'<span class="sg-slot-pos">'+SG_GROUP_LABEL[g]+'</span>':'')+sgPhoto(pl,32)
-      +'<div class="sg-slot-main"><div class="sg-slot-name">'+sanitize(pl.name)
-      +(p.is_captain?' <span class="sg-tag">Captain</span>':'')
-      +(p.locked_contrarian?' <span class="sg-tag b">Picked by under 5%</span>':'')+'</div>'
-      +'<div class="sg-slot-meta">'+sanitize(sgLockedLevel(p))+'</div></div>'
+      // Tags sit on the second line: on the name line a long name cut them to "Picked …".
+      +'<div class="sg-slot-main"><div class="sg-slot-name">'+sanitize(pl.name)+'</div>'
+      +'<div class="sg-slot-meta">'
+      +(p.is_captain?'<span class="sg-tag">Captain</span> ':'')
+      +(p.locked_contrarian?'<span class="sg-tag b">Picked by under 5%</span> ':'')
+      +sanitize(sgLockedLevel(p))+'</div></div>'
       +'<div class="sg-pick-pts">'+(list.length?sgPts(tot):'—')+'</div></div>'
       +(brk?'<div class="sg-brk">'+brk+'</div>':'')
       +'</div>';

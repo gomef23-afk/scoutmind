@@ -107,7 +107,33 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .empty{text-align:center;padding:40px 20px;color:var(--muted);}
 .sp{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:24px auto;}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:768px){.two-col{grid-template-columns:1fr;}.team-selector{position:static;}.ts-scroll{max-height:200px;}.stats4{grid-template-columns:repeat(2,1fr);}nav{padding:12px 16px;}.page{padding:14px;}}
+/* Day 6 audit. A grid item's min-width defaults to auto, so the club view's
+   tab row (four buttons, 479px) forced the whole column — and the page — to
+   479px at 375: sideways scroll and a stat card cut off. minmax(0,1fr) and
+   min-width:0 let the tabs scroll inside their own row instead. */
+.two-col>*{min-width:0;}
+/* 16px or iOS zooms on focus; 44px targets. */
+.league-select,.ts-search{font-size:16px;min-height:44px;}
+.ctab{min-height:44px;}
+.ctabs{scrollbar-width:none;}
+.ctabs::-webkit-scrollbar{display:none;}
+@media(max-width:899px){
+  .page button,.pfbtn{min-height:44px;}
+  .pfbtn{display:inline-flex;align-items:center;justify-content:center;}
+  .pfinput{font-size:16px;min-height:44px;}
+}
+.sm-foot a{display:inline-flex;align-items:center;min-height:44px;padding:0 8px;}
+/* The name badge and Sign out crowded the nav onto two lines on a phone, as
+   index.html already avoids: the avatar opens Profile, which has Sign out. */
+#nav-user .user-badge,#nav-user .logout-btn{display:none;}
+#nav-av,.sm-logo{position:relative;}
+#nav-av::after,.sm-logo::after{content:'';position:absolute;left:50%;top:50%;width:max(100%,44px);height:44px;transform:translate(-50%,-50%);}
+@media(min-width:900px){
+  .league-select,.ts-search{font-size:13px;min-height:0;}
+  #nav-user .user-badge{display:flex;}
+  #nav-user .logout-btn{display:inline-block;}
+}
+@media(max-width:768px){.two-col{grid-template-columns:minmax(0,1fr);}.team-selector{position:static;}.ts-scroll{max-height:200px;}.stats4{grid-template-columns:repeat(2,1fr);}nav{padding:12px 16px;}.page{padding:14px;}}
 /* ── B2: FIVE-TAB NAV — mobile-first (base = 375px, desktop at 900px) ──
    Copied verbatim from index.html (rule #5 — keep all three in sync). */
 .sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
@@ -220,7 +246,7 @@ body{padding-bottom:64px;}
       <div class="empty">
         <div style="font-size:40px;margin-bottom:16px;opacity:0.3">👥</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;opacity:.35;margin-bottom:6px">Select Your Club</div>
-        <div style="font-size:13px">Pick a team from the left to see their community</div>
+        <div style="font-size:13px">Pick a team from the list to see their community</div>
       </div>
     </div>
   </div>
@@ -735,7 +761,7 @@ function init(){
     if(AT)renderTeamPage();
   }else{
     filterTeams();
-    document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div style="font-family:Bebas Neue,sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the left, or set your main club so it loads automatically every time.</div><button onclick="window.location.href=\'/\'" style="background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Set My Main Club</button></div>';
+    document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div style="font-family:Bebas Neue,sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the list, or set your main club so it loads automatically every time.</div><button onclick="window.location.href=\'/\'" style="background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Set My Main Club</button></div>';
   }
 }
 function openBadgeModal(){

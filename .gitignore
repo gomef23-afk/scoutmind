@@ -20,3 +20,6 @@ Thumbs.db
 .idea/
 
 node_modules/
+
+# Day 6 mobile audit screenshots (before/after). Kept local, listed in docs/audit-2026-11-day6.md.
+audit/
