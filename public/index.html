@@ -481,6 +481,14 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-rank-pts{font-family:'DM Mono',monospace;font-weight:600;min-width:52px;text-align:right;}
 .sg-rank-gap{text-align:center;color:var(--muted);font-size:12px;padding:2px 0;}
 .sg-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.sg-history-head{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;}
+.sg-history-head .sg-total-n{font-size:26px;}
+.sg-history-head .sg-total-l{text-transform:none;letter-spacing:0;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sg-history-row{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;}
+.sg-history-top{display:flex;align-items:center;gap:10px;min-height:36px;}
+.sg-history-best{font-size:11px;color:var(--text);margin-top:4px;}
+.sg-history-cta{min-height:44px;padding:0 20px;border-radius:22px;border:1px solid var(--accent);background:rgba(0,229,160,0.08);color:var(--accent);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+@media (min-width: 900px){ .sg-history-head{grid-template-columns:repeat(4,1fr);} }
 .sg-badge{font-size:11px;font-weight:600;padding:5px 10px;border-radius:14px;border:1px solid rgba(0,229,160,0.3);color:var(--accent);background:rgba(0,229,160,0.06);}
 /* ── MATCH PANEL (Day 4) ── */
 .match-tap{cursor:pointer;}
@@ -4881,6 +4889,7 @@ function sgTabs(){
       +sanitize(sgLeagueName(r))+'</button>';
   });
   tabs.push('<button class="sg-tab'+(SG.view==='rankings'?' active':'')+'" onclick="sgShowRankings()">Rankings</button>');
+  tabs.push('<button class="sg-tab'+(SG.view==='history'?' active':'')+'" onclick="sgShowHistory()">My history</button>');
   el.innerHTML=tabs.join('');
 }
 
@@ -4890,11 +4899,15 @@ function sgPickLeague(id){
 }
 function sgPickRound(id){ SG.roundId=id; sgRender(); }
 function sgShowRankings(){ SG.view='rankings'; sgTabs(); sgRender(); }
+function sgShowHistory(){ SG.view='history'; sgTabs(); sgRender(); }
+/** From the Profile: open the Scout tab on My history. */
+function sgOpenHistory(){ SG.view='history'; showPage('scout'); }
 
 function sgRender(){
   const body=document.getElementById('sg-body');
   if(!body) return;
   if(SG.view==='rankings'){ sgSubmitBar(null); sgRenderRankings(); return; }
+  if(SG.view==='history'){ sgSubmitBar(null); sgRenderHistory(); return; }
   if(SG.leagueId==null){
     sgSubmitBar(null);
     body.innerHTML='<div class="sg-empty">No round is open right now. The next one appears here once its fixtures are scheduled.</div>';
@@ -5385,6 +5398,74 @@ async function sgRenderRankings(){
 }
 function sgRankView(v){ SG.rankView=v; sgRenderRankings(); }
 
+// ── MY HISTORY ── every round I entered, from rpc my_game_history (023).
+/** The earliest open round, preferring my main club's competition. */
+function sgFirstOpenRound(){
+  const open=SG.rounds.filter(r=>r.status==='open');
+  if(!open.length) return null;
+  const main=CLUB_DATA.get(mainClubId());
+  return open.find(r=>main&&r.leagues&&r.leagues.slug===main.league)||open[0];
+}
+function sgGoPick(roundId){
+  const r=sgRound(roundId);
+  if(!r) return;
+  SG.view='league'; SG.leagueId=r.league_id; SG.roundId=r.id;
+  sgTabs(); sgRender(); window.scrollTo(0,0);
+}
+
+async function sgRenderHistory(){
+  const body=document.getElementById('sg-body');
+  if(!body) return;
+  if(isGuestNow()){
+    body.innerHTML='<div class="sg-empty">Sign in to keep a history of your rounds.<br><br>'
+      +'<button class="sg-save" onclick="requireAuth(\'Create a free account to play the Scout Game.\')">Sign in to play</button></div>';
+    return;
+  }
+  body.innerHTML='<div class="sg-empty">Loading your history…</div>';
+  let d;
+  try{ d=await sgRpc('my_game_history',{}); }
+  catch(e){
+    console.error('my_game_history:',e);
+    // Rule 21: before 023 runs there is no my_game_history to call.
+    if(SG.view==='history') body.innerHTML='<div class="sg-empty">Your history is not available yet. Check back soon.</div>';
+    return;
+  }
+  if(SG.view!=='history') return;
+  const s=(d&&d.summary)||{}, rounds=(d&&d.rounds)||[];
+  if(!rounds.length){
+    const open=sgFirstOpenRound();
+    body.innerHTML=open
+      ?'<div class="sg-empty"><button class="sg-history-cta" onclick="sgGoPick('+open.id+')">Your first round is open — pick now →</button></div>'
+      :'<div class="sg-empty">You have not played a round yet. The next one appears here once its fixtures are scheduled.</div>';
+    return;
+  }
+  const best=s.best_round;
+  const cell=(n,l)=>'<div><div class="sg-total-n">'+n+'</div><div class="sg-total-l">'+l+'</div></div>';
+  let html='<div class="sg-total sg-history-head">'
+    +cell(sgPts(s.season_total),'season points')
+    +cell(sanitize(String(s.rounds_played||0)),'rounds played')
+    +cell(best?sgPts(best.total):'—',best?sanitize((best.round_no?'Round '+best.round_no:best.round_label)+' · '+best.league):'best round')
+    +cell(sanitize(String(s.current_streak||0)),'round streak')
+    +'</div><div class="sg-section">Every round you entered</div>';
+  html+=rounds.map(x=>{
+    const name=(x.flag?x.flag+' ':'')+(x.league||'')+' · '+(x.round_no?'Round '+x.round_no:(x.round_label||'Round'));
+    const tag=x.status==='open'?'Open':x.status==='final'?'Final':(sgRound(x.round_id)&&!sgInPlay(sgRound(x.round_id))?'Full time':'In play');
+    const pts=x.status==='open'?'—':sgPts(x.total);
+    const rank=x.rank?sanitize(ordinal(x.rank))+' of '+Number(x.participants).toLocaleString():(x.status==='open'?'Picks saved':'Points arrive a few hours after full time');
+    const bp=x.best_pick?'Best pick: '+sanitize(x.best_pick.name)+' '+sgPts(x.best_pick.points):'';
+    const badges=(x.badges||[]).map(b=>'<span class="sg-badge">'+sanitize(b.name||b.id)+'</span>').join('');
+    const go=sgRound(x.round_id)?' onclick="sgGoPick('+Number(x.round_id)+')" role="button" tabindex="0"':'';
+    return '<div class="sg-history-row'+(go?' match-tap':'')+'"'+go+'>'
+      +'<div class="sg-history-top"><div class="sg-slot-main"><div class="sg-slot-name">'+sanitize(name)+'</div>'
+      +'<div class="sg-slot-meta"><span class="sg-chip-tag">'+tag+'</span> · '+rank+'</div></div>'
+      +'<div class="sg-pick-pts">'+pts+'</div></div>'
+      +(bp?'<div class="sg-history-best">'+bp+'</div>':'')
+      +(badges?'<div class="sg-badges" style="margin-top:6px;">'+badges+'</div>':'')
+      +'</div>';
+  }).join('');
+  body.innerHTML=html;
+}
+
 /** One timer: keeps the countdown fresh and re-reads when a deadline passes. */
 function sgStartTimer(){
   if(SG.timer) return;
@@ -5416,7 +5497,7 @@ async function renderProfileGame(){
     const o=(overall||[])[0];
     if(!o&&!(rounds||[]).length){
       el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px;">You have not played a round yet.</div>'
-        +'<button class="profile-edit-btn" onclick="showPage(\'scout\')">Open the Scout tab</button>';
+        +'<button class="profile-edit-btn" onclick="sgOpenHistory()">Open the Scout Game →</button>';
       return;
     }
     const roundRows=(rounds||[]).map(x=>{
@@ -5430,7 +5511,8 @@ async function renderProfileGame(){
         +'<div class="profile-row-value">'+sgPts(o.total)+' pts · '+sanitize(ordinal(o.rank))+' overall · '+o.rounds_played+' rounds</div></div>':'')
       +roundRows
       +(b.length?'<div class="sg-badges">'+b.map(x=>'<span class="sg-badge" title="'+sanitize((x.badges||{}).description||'')+'">'
-        +sanitize((x.badges||{}).name||x.badge_id)+'</span>').join('')+'</div>':'');
+        +sanitize((x.badges||{}).name||x.badge_id)+'</span>').join('')+'</div>':'')
+      +'<button class="profile-edit-btn" style="margin-top:12px;" onclick="sgOpenHistory()">See my history →</button>';
   }catch(e){
     console.error('renderProfileGame:',e);
     el.innerHTML='<div style="font-size:12px;color:var(--muted);">Your Scout Game record could not load just now.</div>';
@@ -5572,9 +5654,13 @@ function renderMatchDetail(d){
 
 // The Scout tab may be the landing page (?page=scout): showPage ran before
 // this block existed, so render now.
+// The same holds for Profile (?page=profile): its Scout Game section would
+// otherwise stay on "Loading…".
 (function(){
   const page=document.getElementById('page-scout');
   if(page&&page.classList.contains('active')) renderScout().catch(e=>console.error('renderScout:',e));
+  const prof=document.getElementById('page-profile');
+  if(prof&&prof.classList.contains('active')) renderProfileGame().catch(e=>console.error('renderProfileGame:',e));
 })();
 </script>
 </body>
