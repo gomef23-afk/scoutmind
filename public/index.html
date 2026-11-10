@@ -5579,6 +5579,33 @@ function sgGoPick(roundId){
   sgTabs(); sgRender(); window.scrollTo(0,0);
 }
 
+/** "Sat 16:30" in the reader's time zone, for a round's deadline. */
+function sgDayTime(iso){
+  try{ return new Date(iso).toLocaleString([], {weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}); }
+  catch(e){ return ''; }
+}
+/**
+ * Where a round I entered stands, from the moment the picks are saved:
+ *   open             picks in · closes Sat 16:30   ("locked at kickoff" once due,
+ *                    until the job flips the round to locked)
+ *   locked, playing  in play · points after full time
+ *   locked, scored   4th of 23
+ *   final            final · 4th of 23
+ * my_game_history() lists the round from game_entries, so it is here as soon
+ * as submit_picks() has saved it, not only once it is scored.
+ */
+function sgHistoryState(x){
+  if(x.status==='open'){
+    const due=x.deadline_utc&&new Date(x.deadline_utc).getTime()<=Date.now();
+    return due?'picks in · locked at kickoff':'picks in · closes '+sanitize(sgDayTime(x.deadline_utc));
+  }
+  const rank=x.rank?sanitize(ordinal(x.rank))+' of '+Number(x.participants).toLocaleString():null;
+  if(x.status==='final') return 'final'+(rank?' · '+rank:'');
+  if(rank) return rank;
+  const r=sgRound(x.round_id);
+  return r&&!sgInPlay(r)?'full time · points arriving':'in play · points after full time';
+}
+
 async function sgRenderHistory(){
   const body=document.getElementById('sg-body');
   if(!body) return;
@@ -5615,15 +5642,13 @@ async function sgRenderHistory(){
     +'</div><div class="sg-section">Every round you entered</div>';
   html+=rounds.map(x=>{
     const name=(x.flag?x.flag+' ':'')+(x.league||'')+' · '+(x.round_no?'Round '+x.round_no:(x.round_label||'Round'));
-    const tag=x.status==='open'?'Open':x.status==='final'?'Final':(sgRound(x.round_id)&&!sgInPlay(sgRound(x.round_id))?'Full time':'In play');
     const pts=x.status==='open'?'—':sgPts(x.total);
-    const rank=x.rank?sanitize(ordinal(x.rank))+' of '+Number(x.participants).toLocaleString():(x.status==='open'?'Picks saved':'Points arrive a few hours after full time');
     const bp=x.best_pick?'Best pick: '+sanitize(x.best_pick.name)+' '+sgPts(x.best_pick.points):'';
     const badges=(x.badges||[]).map(b=>'<span class="sg-badge">'+sanitize(b.name||b.id)+'</span>').join('');
     const go=sgRound(x.round_id)?' onclick="sgGoPick('+Number(x.round_id)+')" role="button" tabindex="0"':'';
     return '<div class="sg-history-row'+(go?' match-tap':'')+'"'+go+'>'
       +'<div class="sg-history-top"><div class="sg-slot-main"><div class="sg-slot-name">'+sanitize(name)+'</div>'
-      +'<div class="sg-slot-meta"><span class="sg-chip-tag">'+tag+'</span> · '+rank+'</div></div>'
+      +'<div class="sg-slot-meta">'+sgHistoryState(x)+'</div></div>'
       +'<div class="sg-pick-pts">'+pts+'</div></div>'
       +(bp?'<div class="sg-history-best">'+bp+'</div>':'')
       +(badges?'<div class="sg-badges" style="margin-top:6px;">'+badges+'</div>':'')
@@ -5655,26 +5680,29 @@ async function renderProfileGame(){
   const me=myUserId();
   if(!el||!me||isGuestNow()) return;
   try{
-    const [overall,rounds,badges]=await Promise.all([
-      apiGet('game_overall_standings?select=rank,total,rounds_played,competitions&user_id=eq.'+me),
-      apiGet('game_round_rankings?select=round_id,round_label,league_id,status,rank,participants,total&user_id=eq.'+me+'&order=round_id.desc&limit=5'),
+    // The same source as My history (023), so a round shows here as soon as
+    // its picks are saved, not only once it is scored; plus the overall rank,
+    // which only the standings view has.
+    const [hist,overall,badges]=await Promise.all([
+      sgRpc('my_game_history',{}),
+      apiGet('game_overall_standings?select=rank&user_id=eq.'+me).catch(()=>[]),
       apiGet('user_badges?select=badge_id,earned_at,badges(name,description,sort)&user_id=eq.'+me).catch(()=>[])
     ]);
-    const o=(overall||[])[0];
-    if(!o&&!(rounds||[]).length){
+    const s=(hist&&hist.summary)||{}, rounds=((hist&&hist.rounds)||[]).slice(0,5), o=(overall||[])[0];
+    if(!rounds.length){
       el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px;">You have not played a round yet.</div>'
         +'<button class="profile-edit-btn" onclick="sgOpenHistory()">Open the Scout Game →</button>';
       return;
     }
-    const roundRows=(rounds||[]).map(x=>{
-      const r=sgRound(x.round_id);
-      const name=r?sgLeagueName(r)+' · '+sgRoundName(r):String(x.round_label||'Round');
-      return '<div class="profile-row"><div class="profile-row-label">'+sanitize(name)+(x.status==='locked'?' · in play':'')+'</div>'
-        +'<div class="profile-row-value">'+sgPts(x.total)+' pts · '+sanitize(ordinal(x.rank))+' of '+Number(x.participants).toLocaleString()+'</div></div>';
+    const roundRows=rounds.map(x=>{
+      const name=(x.flag?x.flag+' ':'')+(x.league||'')+' · '+(x.round_no?'Round '+x.round_no:(x.round_label||'Round'));
+      return '<div class="profile-row"><div class="profile-row-label">'+sanitize(name)+'</div>'
+        +'<div class="profile-row-value">'+(x.status==='open'?'':sgPts(x.total)+' pts · ')+sgHistoryState(x)+'</div></div>';
     }).join('');
     const b=(badges||[]).slice().sort((x,y)=>((x.badges||{}).sort||0)-((y.badges||{}).sort||0));
-    el.innerHTML=(o?'<div class="profile-row"><div class="profile-row-label">This season</div>'
-        +'<div class="profile-row-value">'+sgPts(o.total)+' pts · '+sanitize(ordinal(o.rank))+' overall · '+o.rounds_played+' rounds</div></div>':'')
+    el.innerHTML=(s.rounds_played?'<div class="profile-row"><div class="profile-row-label">This season</div>'
+        +'<div class="profile-row-value">'+sgPts(s.season_total)+' pts'+(o?' · '+sanitize(ordinal(o.rank))+' overall':'')
+        +' · '+s.rounds_played+' round'+(s.rounds_played===1?'':'s')+'</div></div>':'')
       +roundRows
       +(b.length?'<div class="sg-badges">'+b.map(x=>'<span class="sg-badge" title="'+sanitize((x.badges||{}).description||'')+'">'
         +sanitize((x.badges||{}).name||x.badge_id)+'</span>').join('')+'</div>':'')
