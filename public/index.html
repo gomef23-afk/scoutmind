@@ -382,6 +382,13 @@ body{padding-bottom:64px;}
   .user-badge{display:none;}
   .logout-btn{display:none;}
 }
+/* Delete-account sheet. */
+.del-copy p{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:8px;}
+.del-copy strong{color:var(--text);}
+.del-copy a{color:var(--accent);cursor:pointer;}
+.del-label{display:block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:12px 0 5px;}
+.del-go{min-height:44px;font-size:13px;font-weight:700;}
+.del-go:disabled{opacity:.45;cursor:not-allowed;}
 /* Footer: Privacy · Terms · Contact, on every page. */
 .sm-foot{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 26px;border-top:1px solid var(--border);}
 .sm-foot a{color:var(--muted);text-decoration:none;padding:6px;}
@@ -824,6 +831,15 @@ if(!_cu){
       <div class="profile-row-label">Sign out of ScoutMind</div>
       <button class="danger-btn" onclick="logout()">Sign out</button>
     </div>
+    <!-- LGPD art. 18: a copy of your data, and erasing your account. -->
+    <div class="profile-row">
+      <div class="profile-row-label">Download my data (JSON)</div>
+      <button class="profile-edit-btn" id="export-btn" onclick="downloadMyData()">Download</button>
+    </div>
+    <div class="profile-row">
+      <div class="profile-row-label">Delete my account</div>
+      <button class="danger-btn" onclick="openDeleteAccount()">Delete account</button>
+    </div>
   </div>
   </div><!-- close profile-signedin -->
 </div>
@@ -965,7 +981,120 @@ async function logout(){
   try{ SMAuth.clearAccountCaches(); }catch(e){}
   window.location.href='/';
 }
+
+// ── YOUR DATA (LGPD art. 18) ── a copy of it, and deleting the account.
+
+/** Download everything we hold about you, from rpc export_my_data (024). */
+async function downloadMyData(){
+  if(!requireAuth('Sign in to download your data.'))return;
+  const btn=document.getElementById('export-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Preparing…'; }
+  try{
+    const res=await SMAuth.rest('rpc/export_my_data',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    if(!res.ok) throw new Error('rpc/export_my_data HTTP '+res.status+' — '+(await res.text()).slice(0,200));
+    const data=await res.json();
+    if(!data) throw new Error('Sign in again to download your data.');
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='scoutmind-my-data-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  }catch(e){
+    console.error('downloadMyData:',e);
+    // Before 024 runs there is no export_my_data to call.
+    toast(/HTTP 404/.test(e.message)?'Data download is not available yet. Write to hello@scoutmind.app.':friendlyDbError(e.message),'error');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Download'; }
+  }
+}
+
+function openDeleteAccount(){
+  if(!requireAuth('Sign in to manage your account.'))return;
+  const m=document.getElementById('delete-modal');
+  if(!m)return;
+  ['del-password','del-confirm'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
+  const err=document.getElementById('del-error'); if(err){ err.style.display='none'; err.textContent=''; }
+  deleteAccountReady();
+  m.style.display='flex';
+  document.body.style.overflow='hidden';
+  setTimeout(()=>{ const p=document.getElementById('del-password'); if(p)p.focus(); },50);
+}
+function closeDeleteAccount(){
+  const m=document.getElementById('delete-modal');
+  if(m)m.style.display='none';
+  document.body.style.overflow='';
+}
+/** The button wakes only for the typed word; the server checks it again. */
+function deleteAccountReady(){
+  const c=document.getElementById('del-confirm'), b=document.getElementById('del-go');
+  if(c&&b) b.disabled=!/^(delete|excluir)$/i.test(c.value.trim());
+}
+document.addEventListener('click',function(e){
+  const m=document.getElementById('delete-modal');
+  if(m&&e.target===m)closeDeleteAccount();
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape')closeDeleteAccount();
+});
+
+/**
+ * POST /api/account/delete with this session's token. The route checks the
+ * password, anonymises and erases (024), then removes the login. On success
+ * this browser forgets the account exactly as logout() does.
+ */
+async function confirmDeleteAccount(){
+  const btn=document.getElementById('del-go'), err=document.getElementById('del-error');
+  const password=(document.getElementById('del-password')||{}).value||'';
+  const confirm=((document.getElementById('del-confirm')||{}).value||'').trim();
+  const say=(t)=>{ if(err){ err.textContent=t; err.style.display='block'; } };
+  if(!password){ say('Enter your password.'); return; }
+  const tok=await SMAuth.token(false);
+  if(!tok){ say('Your session has expired. Sign in again, then delete your account.'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='Deleting…'; }
+  try{
+    const res=await fetch('/api/account/delete',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},
+      body:JSON.stringify({confirm:confirm,password:password})
+    });
+    const body=await res.json().catch(()=>({}));
+    if(!res.ok||!body.ok){ say(body.error||('Could not delete the account (HTTP '+res.status+'). Try again in a minute.')); return; }
+    try{ await _supa.auth.signOut({scope:'local'}); }catch(e){}
+    try{ SMAuth.clearAccountCaches(); }catch(e){}
+    try{ localStorage.removeItem('sm_current_user'); }catch(e){}
+    window.location.href='/?deleted=1';
+  }catch(e){
+    console.error('confirmDeleteAccount:',e);
+    say('Could not reach ScoutMind. Check your connection and try again.');
+  }finally{
+    if(btn){ btn.textContent='Delete my account'; deleteAccountReady(); }
+  }
+}
 </script>
+
+<!-- DELETE ACCOUNT — LGPD art. 18. display:none here, flex only in JS (rule 6).
+     It says exactly what is erased and what stays anonymised, and needs both
+     the typed word and the password before anything happens. -->
+<div id="delete-modal" class="signin-sheet" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="del-title">
+  <div class="signin-sheet-card" style="text-align:left;max-width:420px;">
+    <div class="signin-sheet-title" id="del-title" style="color:var(--red);">Delete my account</div>
+    <div class="del-copy">
+      <p><strong>Erased now:</strong> your login, email, name, profile, clubs and languages, follows, reactions, likes and badges.</p>
+      <p><strong>Kept without your name:</strong> your comments and room messages stay in their threads as "[deleted user]"; your Scout Game scores move to an anonymous id so other players' rankings do not change; reports you filed stay as a moderation record.</p>
+      <p>This cannot be undone. Want a copy first? <a role="button" tabindex="0" onclick="downloadMyData()">Download my data</a>. Details: <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy, section 8</a>.</p>
+    </div>
+    <label class="del-label" for="del-password">Your password</label>
+    <input type="password" id="del-password" class="club-search" autocomplete="current-password">
+    <label class="del-label" for="del-confirm">Type DELETE to confirm</label>
+    <input type="text" id="del-confirm" class="club-search" autocomplete="off" autocapitalize="characters" oninput="deleteAccountReady()">
+    <div class="comment-error" id="del-error" style="display:none;"></div>
+    <div class="signin-sheet-actions" style="margin-top:16px;">
+      <button class="danger-btn del-go" id="del-go" onclick="confirmDeleteAccount()" disabled>Delete my account</button>
+      <button class="signin-sheet-dismiss" onclick="closeDeleteAccount()">Keep my account</button>
+    </div>
+  </div>
+</div>
 
 <!-- Footer: Privacy · Terms · Contact under every tab, as on every other page. -->
 <footer class="sm-foot">
@@ -3453,7 +3582,8 @@ function paintComments(itemId){
 function commentRow(itemId,c){
   // Merged client-side from the AUTHORS cache, not from an embed.
   const p=AUTHORS.get(c.user_id)||{};
-  const name=p.name||'Someone';
+  // No author: the account was deleted (024) and the comment kept anonymised.
+  const name=c.user_id?(p.name||'Someone'):'[deleted user]';
   const mine=currentUser&&c.user_id===myUserId();
   const canDelete=mine||isAdmin();
   const crest=p.main_club_id?clubCrestById(p.main_club_id,18)
@@ -3741,7 +3871,8 @@ async function loadChatMessages(scroll){
 function chatMsgRow(m){
   const system=Boolean(m.is_system);
   const p=system?{}:(AUTHORS.get(m.user_id)||{});
-  const name=system?'ScoutMind':(p.name||'Someone');
+  // Not a system post and no author: the account was deleted (024).
+  const name=system?'ScoutMind':!m.user_id?'[deleted user]':(p.name||'Someone');
   const mine=Boolean(currentUser&&m.user_id&&m.user_id===myUserId());
   const canDelete=!system&&(mine||isAdmin());
   const av=system
@@ -4643,6 +4774,11 @@ try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
   const urlPage = new URLSearchParams(window.location.search).get('page');
   const page = VALID.includes(urlPage) ? urlPage : 'feed';
   try{showPage(page);}catch(e){console.error('showPage:',e);}
+  // Arriving from confirmDeleteAccount().
+  if(new URLSearchParams(window.location.search).get('deleted')==='1'){
+    try{ toast('Your account has been deleted.'); }catch(e){}
+    try{ history.replaceState(null,'','/'); }catch(e){}
+  }
 })();
 
 function initProfile(){
@@ -4686,7 +4822,7 @@ function renderProfileClubs(){
   }).join('');
 }
 
-function editName(){if(!requireAuth('Create a free account to set up your profile.'))return;var nameVal=document.getElementById("profile-name-val");var nameEdit=document.getElementById("profile-name-edit");var nameInput=document.getElementById("profile-name-input");var editBtn=document.getElementById("profile-edit-btn");if(nameVal)nameVal.style.display="none";if(nameEdit)nameEdit.style.display="flex";if(nameInput){nameInput.value=currentUser&&currentUser.name?currentUser.name:"";nameInput.focus();nameInput.select();}if(editBtn)editBtn.style.display="none";}function cancelEditName(){var nameVal=document.getElementById("profile-name-val");var nameEdit=document.getElementById("profile-name-edit");var editBtn=document.getElementById("profile-edit-btn");if(nameVal)nameVal.style.display="";if(nameEdit)nameEdit.style.display="none";if(editBtn)editBtn.style.display="";}function saveName(){if(!requireAuth('Create a free account to set up your profile.'))return;var input=document.getElementById("profile-name-input");var newName=input&&input.value.trim();if(!newName){alert("Please enter a name.");return;}if(currentUser){currentUser.name=newName;localStorage.setItem("sm_current_user",JSON.stringify(currentUser));}var initials=newName.split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);var ids={"profile-name-val":newName,"profile-name-big":newName.toUpperCase(),"nav-name":newName,"nav-avatar":initials,"profile-avatar-big":initials};Object.keys(ids).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=ids[id];});cancelEditName();}function highlightCurrPref(c){
+function editName(){if(!requireAuth('Create a free account to set up your profile.'))return;var nameVal=document.getElementById("profile-name-val");var nameEdit=document.getElementById("profile-name-edit");var nameInput=document.getElementById("profile-name-input");var editBtn=document.getElementById("profile-edit-btn");if(nameVal)nameVal.style.display="none";if(nameEdit)nameEdit.style.display="flex";if(nameInput){nameInput.value=currentUser&&currentUser.name?currentUser.name:"";nameInput.focus();nameInput.select();}if(editBtn)editBtn.style.display="none";}function cancelEditName(){var nameVal=document.getElementById("profile-name-val");var nameEdit=document.getElementById("profile-name-edit");var editBtn=document.getElementById("profile-edit-btn");if(nameVal)nameVal.style.display="";if(nameEdit)nameEdit.style.display="none";if(editBtn)editBtn.style.display="";}function saveName(){if(!requireAuth('Create a free account to set up your profile.'))return;var input=document.getElementById("profile-name-input");var newName=input&&input.value.trim().slice(0,60);if(!newName){alert("Please enter a name.");return;}/* The account is the truth (LGPD correction right): this used to write localStorage only, so a rename never left the device. profiles.name is UPDATE-granted to authenticated by 013. */apiSend('PATCH','profiles?id=eq.'+encodeURIComponent(myUserId()),{name:newName}).catch(function(e){console.error('saveName:',e);toast('Your new name could not be saved: '+friendlyDbError(e.message),'error');});if(currentUser){currentUser.name=newName;localStorage.setItem("sm_current_user",JSON.stringify(currentUser));}var initials=newName.split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);var ids={"profile-name-val":newName,"profile-name-big":newName.toUpperCase(),"nav-name":newName,"nav-avatar":initials,"profile-avatar-big":initials};Object.keys(ids).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=ids[id];});cancelEditName();}function highlightCurrPref(c){
   ['EUR','USD','BRL','GBP'].forEach(x=>{
     const btn=document.getElementById('pref-'+x);
     if(!btn) return;
@@ -4772,7 +4908,9 @@ function sgLockedLevel(p){
 }
 function sgRoundName(r){ return r? (r.round_no?'Round '+r.round_no:String(r.round_label||'Round')) : ''; }
 function sgLeagueName(r){ const l=r&&r.leagues; return l?((l.flag?l.flag+' ':'')+l.name):''; }
-function sgFan(name){ return name?sanitize(name):'A fan'; }
+// Every account has a name (handle_new_user sets one), so a missing name is a
+// deleted account whose scores were kept under an anonymous id (024).
+function sgFan(name){ return name?sanitize(name):'[deleted user]'; }
 
 function sgCountdown(iso){
   const ms=new Date(iso).getTime()-Date.now();

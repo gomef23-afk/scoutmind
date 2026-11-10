@@ -58,6 +58,15 @@ function headers(extra = {}) {
   };
 }
 
+/**
+ * The project URL and service-role headers, for the one route that talks to
+ * Supabase Auth rather than PostgREST (api/account/delete.js). This module
+ * still exports no delete: that route makes its single DELETE call itself,
+ * so rule 13's exception stays visible in one file.
+ */
+export function supabaseUrl() { return URL_(); }
+export function serviceHeaders(extra = {}) { return headers(extra); }
+
 /** SELECT. `query` is a PostgREST query string, e.g. 'select=*&active=eq.true' */
 export async function select(table, query = 'select=*') {
   const res = await fetch(`${URL_()}/rest/v1/${table}?${query}`, {

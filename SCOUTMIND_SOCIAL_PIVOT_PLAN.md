@@ -445,8 +445,8 @@ should be split per tournament. Splitting would need a `tournament` dimension on
 | **Official club logos** | ✅ done — `teams.logo_url` from the API, shown as crests in the UI |
 | **Historical tracking** | now possible on Pro; not scheduled |
 | **Terms + Privacy pages** | ✅ built Day 5 — `terms.html` and `privacy.html`, EN + PT-BR, linked from a footer on every page; the `showLegal()` modals are gone. ⚠️ Drafts: a lawyer must review before public launch (each file's header comment lists the clauses to check, minimum age first) |
-| **Account deletion path** | ⚠️ not built. Required by LGPD |
-| **Profile name changes persist** | ⚠️ `saveName()` writes localStorage only — the change is lost on another device. Needs a `profiles` update (Phase C5) |
+| **Account deletion path** | ✅ built Day 5 — Profile → Account actions → Delete my account (typed DELETE + password), `/api/account/delete` + migration `024`; immediate. Content kept as "[deleted user]", Scout Game scores under a ghost id, reports kept without the reporter. Plus Download my data (JSON, `export_my_data()`) |
+| **Profile name changes persist** | ✅ fixed Day 5 — `saveName()` now writes `profiles.name` (was localStorage only) |
 | **Stripe live mode / webhook / Club tiers / middle tier** | ❌ dropped. Fans never pay for social features; Stripe stays dormant |
 
 ---

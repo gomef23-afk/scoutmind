@@ -22,6 +22,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 - `public/news.html` — the old standalone transfer-news page. Superseded by the Home feed; still present, queued for deletion in B3.
 - `public/leagues_data.js` — static team list and averages, now used only by `community.html` (deleted in R10). Scout Mode and `players_data.js` were removed on Day 4: the Scout tab in `index.html` is the Scout Game, on Supabase data only
 - `api/_lib/`, `api/cron/` — serverless ingest (see Stack)
+- `api/account/delete.js` — self-service account deletion (migration 024); the rule 13 exception
 - `tests/` — `node tests/tagger.test.js`, no dependencies
 
 ## Hard rules
@@ -37,7 +38,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 10. No social data in localStorage. Only session/UI preferences. Anything other users should see goes in Supabase.
 11. Mobile-first CSS: base styles for ~375px, `@media (min-width: 900px)` for desktop.
 12. All feed items render through one `renderFeedItem(item)` with a `type` switch.
-13. **Ingest jobs are additive only.** Nothing in `api/` may DELETE — `_lib/supabase.js` exports no delete on purpose. A job that deleted outside its window would wipe backfilled data on the next scheduled run.
+13. **Ingest jobs are additive only.** Nothing in `api/` may DELETE — `_lib/supabase.js` exports no delete on purpose. A job that deleted outside its window would wipe backfilled data on the next scheduled run. **One exception: `api/account/delete.js`**, which runs only when a person erases their own account (LGPD art. 18) — not a job. It is the only file in `api/` that sends a DELETE, and `tests/account-delete.test.js` fails if any other file does.
 14. **Null is not zero.** In API-Football responses, counting stats (shots, fouls, cards, saves) use `null` for "none happened" → coalesce to 0. `expected_goals` and `goals_prevented` use `null` for "not available" → keep null and exclude from averages. Averaging a null in as zero is the most likely source of wrong-looking-but-plausible data.
 15. **Every average needs its denominator stored.** `team_season_stats` has three: `matches`, `fixtures_sampled`, `xg_sample`. Never divide by the wrong one, and never add an average without a sample column beside it.
 16. Cron endpoints must finish in **under ~25s** — cron-job.org stops waiting at 30s. Bound work by wall clock, not only by row count.

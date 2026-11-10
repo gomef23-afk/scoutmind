@@ -137,6 +137,8 @@ onboarded_at TIMESTAMPTZ  -- 007. set when onboarding completes OR is skipped;
 ⚠️ **`profiles` is NOT publicly readable** — it holds email addresses. A signed-in
 user can read and update only their own row. Public/social reads go through:
 
+**Account deletion (024).** `/api/account/delete` checks the session and password, calls `delete_account_data(user)` (service role), then deletes the auth user. Since 024 every reference to `auth.users` / `profiles` has a deliberate rule: authors and stamps → `set null` (content shows "[deleted user]"), `profiles` and `badge_applications` → `cascade`, `game_entries` / `game_round_results` have no FK (a deleted player's rows move to a ghost id). `export_my_data()` returns everything held about `auth.uid()`.
+
 ### `public_profiles` (VIEW, created by `002`)
 ```sql
 id, name, plan, credential, created_at   -- never email
