@@ -10,6 +10,13 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#07090f">
+<!-- Installable app (Day 6): manifest, iOS home-screen tags, service worker. -->
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="ScoutMind">
+<script src="/pwa.js" defer></script>
 <meta property="og:site_name" content="ScoutMind">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Privacy Policy — ScoutMind">
@@ -20,7 +27,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="ScoutMind — Your club. Everything around it.">
 <meta name="twitter:card" content="summary_large_image">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <!--
   ============================================================================
   DRAFT — A LAWYER MUST REVIEW THIS PAGE BEFORE PUBLIC LAUNCH.
@@ -150,7 +157,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
       <tr><td>Scout Game</td><td>Your picks and captain for each round, your points, ranks, streaks and badges.</td></tr>
       <tr><td>Activity events</td><td>When you are signed in, a short record of some actions — the type (for example: comment, like, follow, report, choosing your club, one "session" per day), the item concerned and the time. These records contain <strong>no IP address, no device information and no location</strong>. Nothing is recorded for visitors who are not signed in.</td></tr>
       <tr><td>Technical logs</td><td>Our hosting and database providers process IP addresses and request logs to deliver the service and keep it secure (section 6).</td></tr>
-      <tr><td>On your device</td><td>Your browser's local storage keeps your sign-in session, interface preferences and cached copies of what you have already loaded. We use <strong>no advertising or tracking cookies and no third-party analytics</strong>.</td></tr>
+      <tr><td>On your device</td><td>Your browser's local storage keeps your sign-in session, interface preferences and cached copies of what you have already loaded. ScoutMind's offline cache (a "service worker") keeps the app's own files and club crests on your device so it opens quickly and works offline; it never stores your account data, posts or anything from our database. We use <strong>no advertising or tracking cookies and no third-party analytics</strong>.</td></tr>
     </table>
     <p>We do <strong>not</strong> collect payment data, precise location, contacts or advertising identifiers. ScoutMind has no payments and no ads.</p>
 
@@ -174,13 +181,11 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
       <li><strong>Vercel</strong> — hosts the website and runs our server functions in region <strong>iad1 (US East)</strong>. It sees IP addresses and request logs.</li>
       <li><strong>Resend</strong> — sends account emails (confirmation, password reset). It receives your email address and the message.</li>
     </ul>
-    <p>When you open ScoutMind, <strong>your browser also fetches files directly from</strong> these services, which therefore receive your IP address and standard browser information:</p>
+    <p>When you open ScoutMind, <strong>your browser also fetches images directly from one other service</strong>, which therefore receives your IP address and standard browser information:</p>
     <ul>
-      <li><strong>Google Fonts</strong> (fonts.googleapis.com, fonts.gstatic.com) — the typefaces.</li>
-      <li><strong>jsDelivr</strong> (cdn.jsdelivr.net) — the Supabase software library.</li>
       <li><strong>API-Football's media server</strong> (media.api-sports.io) — club crests and player photos.</li>
     </ul>
-    <p>We plan to serve fonts and the library from our own domain. <strong>Football data</strong> (fixtures, scores, player statistics) comes from API-Football; we send them no personal data. <strong>News</strong>: we read publishers' public RSS feeds and store only a headline, a snippet of at most 300 characters and a link. We send publishers nothing about you; if you open an article you are on their site, under their policy.</p>
+    <p>The typefaces and our software libraries are served from scoutmind.app itself. <strong>Football data</strong> (fixtures, scores, player statistics) comes from API-Football; we send them no personal data. <strong>News</strong>: we read publishers' public RSS feeds and store only a headline, a snippet of at most 300 characters and a link. We send publishers nothing about you; if you open an article you are on their site, under their policy.</p>
 
     <h2>7. International transfer</h2>
     <p>Your data is stored and processed in the <strong>United States</strong> (section 6). This is an international transfer under LGPD art. 33. We rely on our providers' contractual data-protection commitments, and on the transfer being necessary to perform our terms with you (art. 33, IX in combination with art. 7, V). <!-- LAWYER: confirm the art. 33 basis; consider ANPD standard contractual clauses (Resolução CD/ANPD nº 19/2024). --> The protections in this policy apply wherever the data is processed.</p>
@@ -237,7 +242,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
       <tr><td>Scout Game</td><td>Suas escolhas e seu capitão em cada rodada, seus pontos, posições, sequências e conquistas.</td></tr>
       <tr><td>Eventos de uso</td><td>Quando você está conectado, um registro curto de algumas ações — o tipo (por exemplo: comentário, curtida, seguir, denúncia, escolha do clube, uma "sessão" por dia), o item envolvido e o horário. Esses registros <strong>não contêm endereço IP, informações do aparelho nem localização</strong>. Nada é registrado para visitantes não conectados.</td></tr>
       <tr><td>Registros técnicos</td><td>Nossos provedores de hospedagem e de banco de dados tratam endereços IP e registros de acesso para prestar o serviço e mantê-lo seguro (seção 6).</td></tr>
-      <tr><td>No seu aparelho</td><td>O armazenamento local do navegador guarda sua sessão, suas preferências de interface e cópias do que você já carregou. <strong>Não usamos cookies de publicidade ou rastreamento nem ferramentas de análise de terceiros</strong>.</td></tr>
+      <tr><td>No seu aparelho</td><td>O armazenamento local do navegador guarda sua sessão, suas preferências de interface e cópias do que você já carregou. O cache offline do ScoutMind (um "service worker") guarda no seu aparelho os próprios arquivos do app e os escudos dos clubes, para que ele abra rápido e funcione sem conexão; ele nunca guarda dados da sua conta, publicações nem nada do nosso banco de dados. <strong>Não usamos cookies de publicidade ou rastreamento nem ferramentas de análise de terceiros</strong>.</td></tr>
     </table>
     <p><strong>Não</strong> coletamos dados de pagamento, localização precisa, contatos ou identificadores de publicidade. O ScoutMind não tem pagamentos nem anúncios.</p>
 
@@ -261,13 +266,11 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
       <li><strong>Vercel</strong> — hospeda o site e executa nossas funções de servidor na região <strong>iad1 (leste dos EUA)</strong>. Vê endereços IP e registros de acesso.</li>
       <li><strong>Resend</strong> — envia os e-mails da conta (confirmação, redefinição de senha). Recebe seu e-mail e a mensagem.</li>
     </ul>
-    <p>Quando você abre o ScoutMind, <strong>o seu navegador também baixa arquivos diretamente destes serviços</strong>, que por isso recebem seu endereço IP e as informações padrão do navegador:</p>
+    <p>Quando você abre o ScoutMind, <strong>o seu navegador também baixa imagens diretamente de um outro serviço</strong>, que por isso recebe seu endereço IP e as informações padrão do navegador:</p>
     <ul>
-      <li><strong>Google Fonts</strong> (fonts.googleapis.com, fonts.gstatic.com) — as fontes tipográficas.</li>
-      <li><strong>jsDelivr</strong> (cdn.jsdelivr.net) — a biblioteca de software do Supabase.</li>
       <li><strong>Servidor de imagens da API-Football</strong> (media.api-sports.io) — escudos dos clubes e fotos dos jogadores.</li>
     </ul>
-    <p>Planejamos servir as fontes e a biblioteca a partir do nosso próprio domínio. Os <strong>dados de futebol</strong> (jogos, placares, estatísticas de jogadores) vêm da API-Football; não enviamos a ela nenhum dado pessoal. <strong>Notícias</strong>: lemos os feeds RSS públicos das publicações e guardamos apenas o título, um trecho de no máximo 300 caracteres e o link. Não enviamos nada sobre você às publicações; ao abrir uma matéria, você está no site delas, sob a política delas.</p>
+    <p>As fontes tipográficas e nossas bibliotecas de software são servidas pelo próprio scoutmind.app. Os <strong>dados de futebol</strong> (jogos, placares, estatísticas de jogadores) vêm da API-Football; não enviamos a ela nenhum dado pessoal. <strong>Notícias</strong>: lemos os feeds RSS públicos das publicações e guardamos apenas o título, um trecho de no máximo 300 caracteres e o link. Não enviamos nada sobre você às publicações; ao abrir uma matéria, você está no site delas, sob a política delas.</p>
 
     <h2>7. Transferência internacional</h2>
     <p>Seus dados são armazenados e tratados nos <strong>Estados Unidos</strong> (seção 6). Isso é uma transferência internacional nos termos do art. 33 da LGPD. Ela se apoia nos compromissos contratuais de proteção de dados dos nossos provedores e no fato de ser necessária para a execução dos nossos termos com você (art. 33, IX, combinado com o art. 7º, V). <!-- ADVOGADO: confirmar a hipótese do art. 33; avaliar as cláusulas-padrão contratuais da ANPD (Resolução CD/ANPD nº 19/2024). --> As proteções desta política valem onde quer que os dados sejam tratados.</p>

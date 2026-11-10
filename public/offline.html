@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offline — ScoutMind</title>
+<meta name="theme-color" content="#07090f">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link href="/vendor/fonts/fonts.css" rel="stylesheet">
+<!-- Shown by sw.js when a page is requested offline and no copy of it is
+     cached yet. Everything it needs is in the precache. -->
+<style>
+:root{--bg:#07090f;--bg2:#0d1117;--accent:#00e5a0;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:4px;color:var(--accent);margin-bottom:22px;}
+.logo span{color:var(--text);}
+h1{font-size:18px;font-weight:600;margin-bottom:8px;}
+p{font-size:14px;color:var(--muted);line-height:1.6;max-width:320px;margin:0 auto 20px;}
+button{min-height:44px;padding:0 22px;border-radius:22px;border:none;background:var(--accent);color:#000;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
+</style>
+</head>
+<body>
+  <div class="logo">Scout<span>Mind</span></div>
+  <h1>You're offline</h1>
+  <p>ScoutMind needs a connection for news, scores and the Scout Game. It will be here when you're back.</p>
+  <button onclick="location.reload()">Try again</button>
+</body>
+</html>

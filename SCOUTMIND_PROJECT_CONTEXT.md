@@ -80,6 +80,8 @@ It serves both the backfill and steady state — no manual looping.
 | `public/community.html` | Team communities — polls, analyst insights, groups, wishlist | ✅ Live |
 | `public/auth.html` | Login / Signup | ✅ Live |
 | `public/favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `og.png` | "SM" monogram icons and the link-preview image; made by `scripts/make-icons.ps1` from `scripts/brand/*.html` | ✅ |
+| `public/sw.js`, `manifest.json`, `pwa.js`, `offline.html` | Installable app: service worker (offline shell; Supabase and `/api/` never cached), manifest, Add-to-Home-Screen hint, offline page. `VERSION` from `scripts/bump-sw.mjs` | ✅ Day 6 |
+| `public/vendor/` | Self-hosted supabase-js 2.119.0 and fonts (`fonts/fonts.css` + woff2) | ✅ Day 6 |
 | `public/terms.html`, `public/privacy.html` | Terms of Service and Privacy Policy, EN + PT-BR with a language toggle | ⚠️ Draft, pending legal review |
 | `public/news.html` | Transfer news | ⚠️ Deleted in B3 → `/?filter=transfers` |
 | `public/leagues_data.js` | Static team/league data — `community.html` only since Day 4 | ⚠️ Replaced in R9, deleted in R10 |

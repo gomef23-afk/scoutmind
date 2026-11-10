@@ -450,6 +450,9 @@ should be split per tournament. Splitting would need a `tournament` dimension on
 | **Favicon, app icons, link previews** | ✅ built Day 5 — "SM" monogram (`favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, `icon-192/512.png`, ready for the Day 6 manifest) and a 1200×630 `og.png`; icon, `og:*` and `twitter:card` tags on every page. Regenerate with `scripts/make-icons.ps1` (headless Edge, no npm) |
 | **Follows read as everyone's** | ✅ fixed Day 5 — `loadMyAccount()` and `saveMyClubsToAccount()` read `follows` with no user filter, and `follows` is public-read: a new account opened onboarding with every club anyone followed already ticked, and a club someone else followed could never be saved as yours (production had 31 rows, 31 clubs, one follower each). Both reads now filter on `user_id`; `tests/client-reads.test.js` pins it. Users whose follows were dropped will see only what was really saved and can tick the rest again |
 | **Profile name changes persist** | ✅ fixed Day 5 — `saveName()` now writes `profiles.name` (was localStorage only) |
+| **Mobile audit (375px)** | ✅ built Day 6 — 26 defects fixed (touch targets, iOS focus zoom, sideways scroll on `community.html`); [`docs/audit-2026-11-day6.md`](docs/audit-2026-11-day6.md) lists them and the phone-only checks |
+| **Installable app (PWA)** | ✅ built Day 6 — `manifest.json` (start_url `/`, standalone, `#07090f`), Apple meta tags, `sw.js` (offline shell, crest/photo cache, Supabase and `/api/` never cached), `offline.html`, an Add-to-Home-Screen hint from the 2nd visit (Android install prompt; iOS Share-sheet instructions), shown once. `VERSION` bumped by `scripts/bump-sw.mjs`, enforced by `tests/sw-version.test.js` (CLAUDE.md rule 24). ⚠️ Lighthouse + DevTools check on the deployed site still to run |
+| **Self-hosted fonts and supabase-js** | ✅ done Day 6 — `public/vendor/` (supabase-js 2.119.0, Bebas Neue / DM Sans / DM Mono woff2). No third-party script or font host on any page; Privacy section 6 and the auth CSP updated |
 | **Stripe live mode / webhook / Club tiers / middle tier** | ❌ dropped. Fans never pay for social features; Stripe stays dormant |
 
 ---
@@ -745,8 +748,8 @@ A social network with no posts is dead on arrival. ScoutMind has an unfair advan
 - Touch targets ≥ 44px; no hover-only interactions
 
 ### PWA (must-have — this is "the app" for launch)
-- `manifest.json`: name, short_name, icons (192, 512), theme_color `#07090f`, display `standalone`, start_url `/app.html`
-- Service worker: cache shell (HTML/CSS/JS/fonts), network-first for Supabase
+- `manifest.json`: name, short_name, icons (192, 512), theme_color `#07090f`, display `standalone`, start_url `/` (since B1 `index.html` is the app; `/app.html` is only a redirect)
+- Service worker: cache shell (HTML/CSS/JS/fonts); Supabase and `/api/` are never intercepted or cached (network only)
 - "Add to Home Screen" prompt banner after 2nd visit
 - Apple: `apple-touch-icon`, `apple-mobile-web-app-capable` meta tags
 - Result: installable on iOS/Android from the browser, full-screen, app icon — no App Store needed

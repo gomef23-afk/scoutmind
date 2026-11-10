@@ -24,7 +24,10 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 - `api/_lib/`, `api/cron/` — serverless ingest (see Stack)
 - `api/account/delete.js` — self-service account deletion (migration 024); the rule 13 exception
 - `scripts/make-icons.ps1` — regenerates the favicon, app icons and `og.png` from `scripts/brand/*.html` (headless Edge, no npm). Every page carries the same icon + `og:*` block in its `<head>`; a new page needs it too
-- `tests/` — `node tests/<name>.test.js` (tagger, players, team-stats, scout-game, account-delete, client-reads), no dependencies
+- `public/sw.js`, `public/manifest.json`, `public/pwa.js`, `public/offline.html` — the installable app (Day 6): service worker (offline shell, never touches Supabase or `/api/`), manifest, worker registration + the Add-to-Home-Screen hint, the offline fallback page. Every page carries the manifest + Apple meta + `pwa.js` block in its `<head>`; a new page needs it too
+- `public/vendor/` — self-hosted supabase-js (version pinned in the filename and its header comment) and the fonts (`vendor/fonts/fonts.css` + woff2). No page loads a script or font from a third-party host
+- `scripts/bump-sw.mjs` — rewrites `sw.js`'s `VERSION` from a hash of the precached files (rule 24)
+- `tests/` — `node tests/<name>.test.js` (tagger, players, team-stats, scout-game, account-delete, client-reads, sw-version), no dependencies
 - **Public-read tables are not "mine" by default.** `follows` (and any table whose read policy is `using (true)`) returns every user's rows: a read of the caller's own rows must filter on `user_id`. `tests/client-reads.test.js` checks `follows`
 
 ## Hard rules
@@ -51,6 +54,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 21. **The front end deploys before migrations run.** Vercel auto-deploys on push; Felipe runs SQL by hand afterwards. Any query using a brand-new column must degrade to a working query when that column is missing, not blank the page.
 22. **`about.html` may only claim what the database can show.** Every number on the marketing page must be checkable against Supabase. The plan doc lists what was removed and why — read it before adding a figure there.
 23. **`profiles.plan` and `profiles.credential` are never written from the client.** Migration `013` locks them with a column grant and the `profiles_role_guard` trigger; roles change only from the SQL editor or dashboard. `authenticated` holds UPDATE per column, so **a new `profiles` column the app writes needs its own `grant update (col)`**, or saves fail with `42501`.
+24. **Bump the service worker after changing any precached file.** `public/sw.js` precaches the pages, `sm_auth.js`, `club_names.js`, `leagues_data.js`, `pwa.js`, the icons and `public/vendor/` (the list between `BEGIN PRECACHE` / `END PRECACHE`). After changing any of them, run `node scripts/bump-sw.mjs` and commit the new `VERSION` with the change — a stale VERSION leaves installed readers on the old shell. `tests/sw-version.test.js` fails until you do. Never add Supabase, `/api/` or anything per-user to the precache or the fetch handler's cached paths.
 
 ## Workflow
 - Before editing, grep and list every hit you plan to change. Wait for approval on anything that removes or restructures more than one section.
