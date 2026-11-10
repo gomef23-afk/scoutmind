@@ -439,6 +439,10 @@ body{padding-bottom:64px;}
 .sg-submit{position:fixed;left:0;right:0;bottom:calc(52px + env(safe-area-inset-bottom));z-index:110;align-items:center;gap:12px;padding:10px 16px;background:rgba(13,17,23,0.98);border-top:1px solid var(--border);backdrop-filter:blur(16px);}
 .sg-bar-text{flex:1;min-width:0;font-size:12px;color:var(--muted);}
 .sg-bar-text b{color:var(--text);font-family:'DM Mono',monospace;}
+.sg-bar-pos{font-size:10px;margin-top:3px;font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sg-bar-pos .full{color:var(--yellow);}
+.sg-row.blocked{opacity:.55;}
+.sg-add:disabled{cursor:not-allowed;color:var(--muted);border-color:var(--border);}
 .sg-save{flex:0 0 auto;min-height:44px;padding:0 20px;border-radius:22px;border:none;background:var(--accent);color:#000;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
 .sg-save:disabled{opacity:.45;cursor:default;}
 /* Lift the toast above the save bar while the bar is on screen. */
@@ -4708,6 +4712,9 @@ const SG={
   timer:null
 };
 const SG_POS_LABEL={G:'GK',D:'DEF',M:'MID',F:'FWD'};
+// The lineup rule, mirrored from submit_picks (020), which is the real rule.
+const SG_POS_MAX={G:1,D:2,M:2,F:2};
+const SG_POS_FULL={G:'One goalkeeper already',D:'Two defenders already',M:'Two midfielders already',F:'Two forwards already'};
 const SG_LIST_MAX=120;
 const SG_BREAKDOWN_LABEL={
   minutes:'Minutes',goals:'Goals',assists:'Assists',clean_sheet:'Clean sheet',
@@ -4760,14 +4767,33 @@ async function sgLoadBase(force){
   ]);
   SG.rounds=rounds||[];
   SG.config=(cfg&&cfg[0])||null;
+  // A locked round stays "locked" until a day after its window closes, long
+  // after its last match. Which locked rounds still have a match to play:
+  SG.playing=null;
+  const locked=SG.rounds.filter(r=>r.status==='locked').map(r=>r.id);
+  if(locked.length){
+    try{
+      const fx=await apiGet('game_round_fixtures?select=round_id,fixtures(status_short)&counts=is.true&round_id=in.('+locked.join(',')+')');
+      const DONE=['FT','AET','PEN','CANC','ABD','AWD','WO','PST'];
+      SG.playing=new Set((fx||[]).filter(x=>x.fixtures&&DONE.indexOf(x.fixtures.status_short)<0).map(x=>x.round_id));
+    }catch(e){ console.error('round fixtures:',e); }   // null: treat every locked round as in play
+  }else SG.playing=new Set();
   SG.loadedAt=Date.now();
 }
 
-/** Competitions with an open or in-play round: my main club's first, then by next deadline. */
+/** A locked round with a match still to play (true when we could not tell). */
+function sgInPlay(r){ return r.status==='locked'&&(!SG.playing||SG.playing.has(r.id)); }
+
+/**
+ * Competitions worth a tab: an open round, a round with a match still to play,
+ * or a locked round I entered (its points are still arriving). A competition
+ * whose last round is over and has no next one (Argentina between the Clausura
+ * and its knockouts) has none of these and is hidden. My main club's first.
+ */
 function sgLeagues(){
   const seen=new Map();
   for(const r of SG.rounds){
-    if(r.status!=='open'&&r.status!=='locked') continue;
+    if(!(r.status==='open'||sgInPlay(r)||(r.status==='locked'&&SG.entries.get(r.id)))) continue;
     if(!seen.has(r.league_id)) seen.set(r.league_id,r);
   }
   const main=CLUB_DATA.get(mainClubId());
@@ -4863,7 +4889,7 @@ function sgRender(){
   }
   const r=sgRound(SG.roundId);
   const chips=sgRoundsFor(SG.leagueId).map(x=>{
-    const tag=x.status==='open'?'Open':x.status==='locked'?'In play':'Final';
+    const tag=x.status==='open'?'Open':sgInPlay(x)?'In play':x.status==='locked'?'Full time':'Final';
     return '<button class="sg-chip'+(x.id===SG.roundId?' active':'')+'" onclick="sgPickRound('+x.id+')">'
       +sanitize(sgRoundName(x))+'<span class="sg-chip-tag">'+tag+'</span></button>';
   }).join('');
@@ -4952,7 +4978,7 @@ function sgRenderSlots(){
       +'</div>');
   }
   el.innerHTML='<div class="sg-section">Your five</div><div class="sg-slots">'+slots.join('')+'</div>'
-    +'<div class="sg-note">Captain adds +1 to that player\'s multiplier. Negative scores are never multiplied.</div>';
+    +'<div class="sg-note">At most one goalkeeper and two of each outfield position. Captain adds +1 to that player\'s multiplier. Negative scores are never multiplied.</div>';
 }
 
 function sgRenderFilters(){
@@ -5011,7 +5037,8 @@ function sgRenderList(){
   const shown=list.slice(0,SG_LIST_MAX);
   el.innerHTML=shown.map(p=>{
     const on=SG.picks.indexOf(p.player_id)>=0;
-    return '<div class="sg-row'+(on?' on':'')+'">'
+    const block=on?null:sgBlock(p);
+    return '<div class="sg-row'+(on?' on':'')+(block?' blocked':'')+'">'
       +sgPhoto(p,36)
       +'<div class="sg-row-main">'
       +'<div class="sg-row-name">'+sanitize(p.name)+'</div>'
@@ -5020,10 +5047,25 @@ function sgRenderList(){
       +'<div class="sg-row-level">'+sanitize(sgLevel(p.tier))+'</div>'
       +'<div class="sg-row-stats">'+sanitize(sgStatLine(p))+' '+sgLastMatch(p)+'</div>'
       +'</div>'
-      +'<button class="sg-add'+(on?' on':'')+'" onclick="sgToggle('+p.player_id+')" aria-label="'+(on?'Remove':'Add')+'">'+(on?'✓':'+')+'</button>'
+      +'<button class="sg-add'+(on?' on':'')+'" onclick="sgToggle('+p.player_id+')"'
+      +(block?' disabled title="'+sanitize(block)+'" aria-label="'+sanitize(block)+'"':' aria-label="'+(on?'Remove':'Add')+'"')+'>'+(on?'✓':'+')+'</button>'
       +'</div>';
   }).join('')
   +(list.length>shown.length?'<div class="sg-note sg-more">Showing '+shown.length+' of '+list.length+'. Search or filter to narrow the list.</div>':'');
+}
+
+/** Picks so far, by position. */
+function sgPosCounts(){
+  const c={G:0,D:0,M:0,F:0};
+  for(const x of SG.picks){ const pos=sgPlayer(x).position; if(c[pos]!=null) c[pos]++; }
+  return c;
+}
+/** Why this player cannot be added right now, or null. */
+function sgBlock(p){
+  if(SG.picks.length>=5) return 'You have five. Remove one first.';
+  const c=sgPosCounts();
+  if(p.position&&c[p.position]>=SG_POS_MAX[p.position]) return SG_POS_FULL[p.position]+'.';
+  return null;
 }
 
 function sgToggle(id){
@@ -5033,9 +5075,8 @@ function sgToggle(id){
     SG.picks.splice(i,1);
     if(SG.captain===id) SG.captain=null;
   }else{
-    if(SG.picks.length>=5){ toast('You already have five. Remove one first.','error'); return; }
-    const p=sgPlayer(id);
-    if(p.position==='G'&&SG.picks.some(x=>sgPlayer(x).position==='G')){ toast('At most one goalkeeper.','error'); return; }
+    const block=sgBlock(sgPlayer(id));
+    if(block){ toast(block,'error'); return; }
     SG.picks.push(id);
   }
   sgRenderSlots(); sgRenderList(); sgSubmitBar(sgRound(SG.roundId));
@@ -5060,8 +5101,13 @@ function sgSubmitBar(r){
     return;
   }
   const n=SG.picks.length, hasCap=SG.captain!=null&&SG.picks.indexOf(SG.captain)>=0;
-  const why=n<5?(5-n)+' more to pick':!hasCap?'Choose a captain':'Ready';
-  bar.innerHTML='<div class="sg-bar-text"><b>'+n+'/5</b> · '+why+'</div>'
+  const c=sgPosCounts();
+  const full=['G','D','M','F'].filter(k=>c[k]>=SG_POS_MAX[k]);
+  const why=n<5?(5-n)+' more to pick'+(full.length?' · '+full.map(k=>SG_POS_LABEL[k]).join(', ')+' full':'')
+    :!hasCap?'Choose a captain':'Ready';
+  bar.innerHTML='<div class="sg-bar-text"><b>'+n+'/5</b> · '+sanitize(why)
+    +'<div class="sg-bar-pos">'+['G','D','M','F'].map(k=>'<span'+(c[k]>=SG_POS_MAX[k]?' class="full"':'')+'>'
+      +SG_POS_LABEL[k]+' '+c[k]+'/'+SG_POS_MAX[k]+'</span>').join(' · ')+'</div></div>'
     +'<button class="sg-save" id="sg-save" onclick="sgSave()"'+(n===5&&hasCap&&!SG.saving?'':' disabled')+'>'
     +(SG.saving?'Saving…':SG.entries.get(r.id)?'Update picks':'Save picks')+'</button>';
 }
@@ -5095,7 +5141,7 @@ async function sgRenderPlayed(r){
   const e=SG.entries.get(r.id);
   const head='<div class="sg-round-head">'
     +'<div class="sg-round-title">'+sanitize(sgLeagueName(r))+' · '+sanitize(sgRoundName(r))+'</div>'
-    +'<div class="sg-round-sub">'+(r.status==='final'?'Final':'In play')
+    +'<div class="sg-round-sub">'+(r.status==='final'?'Final':sgInPlay(r)?'In play':'Full time')
     +(r.participants?' · '+Number(r.participants).toLocaleString()+' playing':'')+'</div>'
     +(r.status==='locked'?'<div class="sg-note">Points arrive a few hours after full time.</div>':'')
     +'</div>';
