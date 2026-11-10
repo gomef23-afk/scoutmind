@@ -408,7 +408,9 @@ body{padding-bottom:64px;}
 .sg-slots{display:flex;flex-direction:column;gap:6px;}
 .sg-slot{display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 8px 6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;}
 .sg-slot.is-captain{border-color:var(--accent);}
-.sg-slot-empty{justify-content:center;color:var(--muted);font-size:12px;border-style:dashed;}
+.sg-slot-empty{width:100%;justify-content:flex-start;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;border-style:dashed;cursor:pointer;text-align:left;}
+.sg-slot-empty:hover{border-color:var(--accent);color:var(--text);}
+.sg-slot-pos{flex:0 0 52px;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--accent2);font-family:'DM Mono',monospace;}
 .sg-slot-main{flex:1;min-width:0;}
 .sg-slot-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sg-slot-meta{font-size:11px;color:var(--muted);margin-top:1px;}
@@ -4705,7 +4707,7 @@ const SG={
   pickable:new Map(),   // round_id -> [rows] from game_pickable_players
   pickErr:new Map(),    // round_id -> message when the list could not load
   entries:new Map(),    // round_id -> my entry (with game_picks), signed in only
-  picks:[],             // player ids being picked for the open round
+  picks:[null,null,null,null,null],   // by slot: GK · DEF · DEF · MID/FWD · MID/FWD
   captain:null,
   draftRound:null,      // the round `picks` belongs to
   filter:{q:'',pos:'',club:''},
@@ -4919,7 +4921,10 @@ async function sgRenderPick(r){
   if(SG.draftRound!==r.id){
     const e=SG.entries.get(r.id);
     const picks=e&&e.game_picks?e.game_picks.slice().sort((a,b)=>a.slot-b.slot):[];
-    SG.picks=picks.map(p=>p.player_id);
+    // 023 stores slots in formation order, so slot n goes to board slot n.
+    // sgSeatAll() re-seats by position once the list (with positions) loads.
+    SG.picks=[null,null,null,null,null];
+    for(const p of picks) if(p.slot>=1&&p.slot<=5) SG.picks[p.slot-1]=p.player_id;
     const cap=picks.find(p=>p.is_captain);
     SG.captain=cap?cap.player_id:null;
     SG.draftRound=r.id;
@@ -4944,6 +4949,7 @@ async function sgRenderPick(r){
     }
   }
   if(SG.roundId!==r.id||!document.getElementById('sg-list')) return;   // moved on while loading
+  sgSeatAll();
   sgRenderSlots(); sgRenderFilters(); sgRenderList(); sgSubmitBar(r);
 }
 
@@ -4972,15 +4978,48 @@ function sgPhoto(p,size){
   return '<span class="sg-photo sg-photo-init" style="'+box+'">'+sanitize(init)+'</span>';
 }
 
+// ── SLOTS ── five, in formation order: GK · DEF · DEF · MID/FWD · MID/FWD.
+// SG.picks is always five entries, a player id or null, indexed by slot.
+const SG_SLOT_GROUP=['G','D','D','X','X'];
+/** The picked player ids, in slot order. */
+function sgPicked(){ return SG.picks.filter(x=>x!=null); }
+/** The first empty slot for a formation group, or -1. */
+function sgFreeSlot(g){ return SG_SLOT_GROUP.findIndex((s,i)=>s===g&&SG.picks[i]==null); }
+/**
+ * Seat every pick by its position, keeping the order within each group. A
+ * pick whose position is unknown (the list no longer offers him) keeps its
+ * slot if that slot is free, else the first free one: it is never dropped.
+ */
+function sgSeatAll(){
+  const ids=SG.picks.map((id,i)=>({id,i})).filter(x=>x.id!=null);
+  SG.picks=[null,null,null,null,null];
+  const later=[];
+  for(const x of ids){
+    const g=sgGroup(sgPlayer(x.id).position), at=g?sgFreeSlot(g):-1;
+    if(at>=0) SG.picks[at]=x.id; else later.push(x);
+  }
+  for(const x of later){
+    const at=SG.picks[x.i]==null?x.i:SG.picks.indexOf(null);
+    if(at>=0) SG.picks[at]=x.id;
+  }
+}
+
 function sgRenderSlots(){
   const el=document.getElementById('sg-slots');
   if(!el) return;
   const slots=[];
   for(let i=0;i<5;i++){
-    const id=SG.picks[i];
-    if(id==null){ slots.push('<div class="sg-slot sg-slot-empty">Pick '+(i+1)+'</div>'); continue; }
+    const id=SG.picks[i], g=SG_SLOT_GROUP[i];
+    const tag='<span class="sg-slot-pos">'+SG_GROUP_LABEL[g]+'</span>';
+    if(id==null){
+      // Tapping an empty slot narrows the list to who can fill it.
+      const f=g==='X'?'':g;
+      slots.push('<button class="sg-slot sg-slot-empty" onclick="sgFilterPos(\''+f+'\')">'+tag
+        +'<span>'+(g==='G'?'Pick a goalkeeper':g==='D'?'Pick a defender':'Pick a midfielder or forward')+'</span></button>');
+      continue;
+    }
     const p=sgPlayer(id), cap=SG.captain===id;
-    slots.push('<div class="sg-slot'+(cap?' is-captain':'')+'">'
+    slots.push('<div class="sg-slot'+(cap?' is-captain':'')+'">'+tag
       +sgPhoto(p,30)
       +'<div class="sg-slot-main"><div class="sg-slot-name">'+sanitize(p.name)+'</div>'
       +'<div class="sg-slot-meta">'+(p.missing?'No longer in this round'
@@ -5067,10 +5106,10 @@ function sgRenderList(){
   +(list.length>shown.length?'<div class="sg-note sg-more">Showing '+shown.length+' of '+list.length+'. Search or filter to narrow the list.</div>':'');
 }
 
-/** Picks so far, by formation group. */
+/** Filled slots, by formation group. */
 function sgPosCounts(){
   const c={G:0,D:0,X:0};
-  for(const x of SG.picks){ const g=sgGroup(sgPlayer(x).position); if(g) c[g]++; }
+  SG.picks.forEach((id,i)=>{ if(id!=null) c[SG_SLOT_GROUP[i]]++; });
   return c;
 }
 /**
@@ -5096,8 +5135,7 @@ function sgBlock(p){
   if(sgNoMatch(p)) return 'No match this round.';
   const g=sgGroup(p.position);
   if(!g) return 'His position is not known yet.';
-  if(SG.picks.length>=5) return 'You have five. Remove one first.';
-  if(sgPosCounts()[g]>=SG_POS_MAX[g]) return SG_POS_FULL[g]+'.';
+  if(sgFreeSlot(g)<0) return SG_POS_FULL[g]+'. Remove one to swap.';
   return null;
 }
 
@@ -5105,12 +5143,12 @@ function sgToggle(id){
   if(!requireAuth('Create a free account to play the Scout Game.')) return;
   const i=SG.picks.indexOf(id);
   if(i>=0){
-    SG.picks.splice(i,1);
+    SG.picks[i]=null;
     if(SG.captain===id) SG.captain=null;
   }else{
-    const block=sgBlock(sgPlayer(id));
+    const p=sgPlayer(id), block=sgBlock(p);
     if(block){ toast(block,'error'); return; }
-    SG.picks.push(id);
+    SG.picks[sgFreeSlot(sgGroup(p.position))]=id;   // the first empty slot of his position
   }
   sgRenderSlots(); sgRenderList(); sgSubmitBar(sgRound(SG.roundId));
 }
@@ -5133,10 +5171,10 @@ function sgSubmitBar(r){
       +'<button class="sg-save" onclick="requireAuth(\'Create a free account to play the Scout Game.\')">Sign in to play</button>';
     return;
   }
-  const n=SG.picks.length, hasCap=SG.captain!=null&&SG.picks.indexOf(SG.captain)>=0;
+  const n=sgPicked().length, hasCap=SG.captain!=null&&SG.picks.indexOf(SG.captain)>=0;
   const c=sgPosCounts();
   const full=['G','D','X'].filter(k=>c[k]>=SG_POS_MAX[k]);
-  const noMatch=SG.picks.some(x=>sgNoMatch(sgPlayer(x)));
+  const noMatch=sgPicked().some(x=>sgNoMatch(sgPlayer(x)));
   const why=noMatch?'Replace the pick with no match this round'
     :n<5?(5-n)+' more to pick'+(full.length?' · '+full.map(k=>SG_GROUP_LABEL[k]).join(', ')+' full':'')
     :!hasCap?'Choose a captain':'Ready';
@@ -5153,7 +5191,7 @@ async function sgSave(){
   if(!r||SG.saving) return;
   SG.saving=true; sgSubmitBar(r);
   try{
-    await apiSend('POST','rpc/submit_picks',{p_round_id:r.id,p_player_ids:SG.picks.slice(),p_captain_id:SG.captain},'return=representation');
+    await apiSend('POST','rpc/submit_picks',{p_round_id:r.id,p_player_ids:sgPicked(),p_captain_id:SG.captain},'return=representation');
     toast('Picks saved. You can change them until the first kickoff.');
     await sgLoadEntries().catch(()=>{});
     // Re-seed from the saved entry; if it could not be read back, keep the draft.
@@ -5214,8 +5252,10 @@ function sgRenderMine(r,e,scores,rank){
     if(list.length){ any=true; sum+=tot; }
     const brk=sgBreakdown(list);
     const pl=p.players||{name:'Player'};
+    // Slots are stored in formation order (023): the slot number is the position.
+    const g=SG_SLOT_GROUP[p.slot-1];
     return '<div class="sg-pick'+(p.is_captain?' is-captain':'')+'" onclick="this.classList.toggle(\'open\')">'
-      +'<div class="sg-pick-top">'+sgPhoto(pl,32)
+      +'<div class="sg-pick-top">'+(g?'<span class="sg-slot-pos">'+SG_GROUP_LABEL[g]+'</span>':'')+sgPhoto(pl,32)
       +'<div class="sg-slot-main"><div class="sg-slot-name">'+sanitize(pl.name)
       +(p.is_captain?' <span class="sg-tag">Captain</span>':'')
       +(p.locked_contrarian?' <span class="sg-tag b">Picked by under 5%</span>':'')+'</div>'
