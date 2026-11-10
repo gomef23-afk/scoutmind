@@ -35,6 +35,14 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
 .msg.success{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:#00e5a0;}
 .back{text-align:center;margin-top:14px;font-size:12px;color:#5a6a85;cursor:pointer;}
 .back:hover{color:#edf2f7;}
+.link-row{text-align:center;margin-top:12px;font-size:12px;color:#5a6a85;}
+.link-row a{color:#8fa3bf;cursor:pointer;text-decoration:none;padding:6px 2px;}
+.link-row a:hover{color:#00e5a0;}
+.panel-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:10px;}
+.panel-text{font-size:13px;line-height:1.6;color:#c7d3e4;margin-bottom:12px;}
+.panel-text.muted{color:#5a6a85;font-size:12px;}
+.btn-link{display:block;text-align:center;text-decoration:none;}
+.btn-primary:disabled{opacity:.55;cursor:default;}
 .legal-note{max-width:420px;margin:14px auto 0;font-size:11px;color:#5a6a85;line-height:1.6;text-align:center;}
 .legal-note a{color:#8fa3bf;}
 .sm-foot{text-align:center;font-size:12px;color:#5a6a85;padding:18px 16px 10px;}
@@ -45,7 +53,7 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
 <body>
 
 <div class="logo">Scout<span>Mind</span></div>
-<div class="tagline">AI-powered football scouting platform</div>
+<div class="tagline">Your club. Everything around it.</div>
 
 <div class="card">
   <div class="tabs">
@@ -77,6 +85,7 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
       <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="btn-primary" onclick="doLogin()" id="l-btn">Sign In</button>
+    <div class="link-row"><a role="button" tabindex="0" onclick="showPanel('forgot')">Forgot password?</a></div>
     <div class="divider">or</div>
     <button class="btn-demo" onclick="doDemo()">👁 Preview as Demo User (no account needed)</button>
   </div>
@@ -98,6 +107,49 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
     <button class="btn-primary" onclick="doRegister()" id="r-btn">Create Account</button>
     <div class="divider">or</div>
     <button class="btn-demo" onclick="doDemo()">👁 Preview as Demo User</button>
+  </div>
+
+  <!-- CHECK YOUR INBOX — after sign-up, or a sign-in before confirming.
+       No session exists yet, so nothing is saved as signed in. -->
+  <div class="form-section" id="sec-inbox">
+    <div class="panel-title">Check your inbox</div>
+    <p class="panel-text">We sent a link to <strong id="inbox-email"></strong>. Open it to confirm your address, and you are in.</p>
+    <p class="panel-text muted">Nothing after a few minutes? Check spam, or send it again.</p>
+    <button class="btn-primary" id="resend-btn" onclick="resendConfirmation()">Resend email</button>
+    <div class="link-row"><a role="button" tabindex="0" onclick="showPanel('register')">Use a different email</a> · <a role="button" tabindex="0" onclick="showPanel('login')">Back to sign in</a></div>
+  </div>
+
+  <!-- EMAIL CONFIRMED — arriving from the link in the confirmation email. -->
+  <div class="form-section" id="sec-confirmed">
+    <div class="panel-title">Email confirmed</div>
+    <p class="panel-text">You're signed in as <strong id="confirmed-email"></strong>. Welcome to ScoutMind.</p>
+    <a class="btn-primary btn-link" href="/">Continue</a>
+  </div>
+
+  <!-- FORGOT PASSWORD -->
+  <div class="form-section" id="sec-forgot">
+    <div class="panel-title">Reset your password</div>
+    <p class="panel-text">Enter your account's email and we'll send a link to choose a new password.</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="f-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendReset()">
+    </div>
+    <button class="btn-primary" id="f-btn" onclick="sendReset()">Send reset link</button>
+    <div class="link-row"><a role="button" tabindex="0" onclick="showPanel('login')">Back to sign in</a></div>
+  </div>
+
+  <!-- SET A NEW PASSWORD — arriving from the reset email. -->
+  <div class="form-section" id="sec-reset">
+    <div class="panel-title">Choose a new password</div>
+    <div class="field">
+      <label>New password</label>
+      <input type="password" id="n-pass" placeholder="Min. 8 characters" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label>Repeat it</label>
+      <input type="password" id="n-pass2" placeholder="Same again" autocomplete="new-password" onkeydown="if(event.key==='Enter')saveNewPassword()">
+    </div>
+    <button class="btn-primary" id="n-btn" onclick="saveNewPassword()">Save new password</button>
   </div>
 
   <div class="back" onclick="window.location.href='/'">← Back to scoutmind.app</div>
@@ -124,9 +176,21 @@ var sb = supabase.createClient(SURL, SKEY);
 //   user while the nav shows the new one's name.
 //
 // So: no redirect. Say who is signed in and make switching explicit.
+// Arriving from an email link: ?confirmed=1 (sign-up confirmation) or
+// ?reset=1 (password reset). supabase-js reads the session from the URL hash
+// on its own; onAuthStateChange below decides what to show.
+var params = new URLSearchParams(window.location.search);
+var ARRIVAL = params.get('confirmed') === '1' ? 'confirmed' : params.get('reset') === '1' ? 'reset' : null;
+var LINK_ERROR = new URLSearchParams(window.location.hash.slice(1)).get('error_description');
+var REDIRECT = window.location.origin + '/auth.html';
+var PENDING_EMAIL = '';
+// The language the confirmation / reset emails are written in (their
+// templates branch on user_metadata.lang). UI preference only.
+var LANG = /^pt/i.test(navigator.language || '') ? 'pt-BR' : 'en';
+
 sb.auth.getSession().then(function (res) {
   var session = res && res.data && res.data.session;
-  if (!session) return;
+  if (!session || ARRIVAL) return;
   var box = document.getElementById('already-signed-in');
   var who = document.getElementById('already-email');
   if (who) who.textContent = (session.user && session.user.email) || 'another account';
@@ -150,16 +214,112 @@ function signOutAndStay() {
   clearExistingSession().then(function () { window.location.reload(); });
 }
 
-// Check URL params
-var params = new URLSearchParams(window.location.search);
+/** One panel at a time. The tabs only belong to sign-in and sign-up. */
+var PANELS = ['login', 'register', 'inbox', 'confirmed', 'forgot', 'reset'];
+function showPanel(name) {
+  PANELS.forEach(function (p) {
+    var el = document.getElementById('sec-' + p);
+    if (el) el.className = 'form-section' + (p === name ? ' active' : '');
+  });
+  var tabs = document.querySelector('.tabs');
+  if (tabs) tabs.style.display = (name === 'login' || name === 'register') ? 'flex' : 'none';
+  document.getElementById('btn-login').className = 'tab-btn' + (name === 'login' ? ' active' : '');
+  document.getElementById('btn-register').className = 'tab-btn' + (name === 'register' ? ' active' : '');
+  clearMsgs();
+}
+function switchTab(tab) { showPanel(tab); }
+// After PANELS exists: called any earlier, it stopped the whole script.
 if (params.get('tab') === 'signup') switchTab('register');
 
-function switchTab(tab) {
-  document.getElementById('sec-login').className = 'form-section' + (tab==='login'?' active':'');
-  document.getElementById('sec-register').className = 'form-section' + (tab==='register'?' active':'');
-  document.getElementById('btn-login').className = 'tab-btn' + (tab==='login'?' active':'');
-  document.getElementById('btn-register').className = 'tab-btn' + (tab==='register'?' active':'');
-  clearMsgs();
+// What the email links land on.
+sb.auth.onAuthStateChange(function (event, session) {
+  if (event === 'PASSWORD_RECOVERY' || (ARRIVAL === 'reset' && session && event !== 'SIGNED_OUT')) {
+    showPanel('reset');
+    return;
+  }
+  if (ARRIVAL === 'confirmed' && session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+    onConfirmed(session);
+  }
+});
+if (ARRIVAL && LINK_ERROR) {
+  showError('That link has expired or was already used. ' +
+    (ARRIVAL === 'reset' ? 'Ask for a new one below.' : 'Sign in, or send a new confirmation email.'));
+  if (ARRIVAL === 'reset') showPanel('forgot');
+}
+
+async function onConfirmed(session) {
+  if (onConfirmed.done) return;
+  onConfirmed.done = true;
+  var u = session.user;
+  var prof = (await sb.from('profiles').select('name,plan').eq('id', u.id).maybeSingle()).data;
+  saveUser(u.id, u.email, prof && prof.name ? prof.name : (u.email || '').split('@')[0], prof ? prof.plan : 'fan');
+  var who = document.getElementById('confirmed-email');
+  if (who) who.textContent = u.email || '';
+  showPanel('confirmed');
+  try { history.replaceState(null, '', '/auth.html'); } catch (e) {}
+}
+
+/** The "Check your inbox" panel for this address. */
+function showInbox(email) {
+  PENDING_EMAIL = email;
+  var el = document.getElementById('inbox-email');
+  if (el) el.textContent = email;
+  showPanel('inbox');
+}
+
+async function resendConfirmation() {
+  if (!PENDING_EMAIL) return showPanel('register');
+  var btn = document.getElementById('resend-btn');
+  btn.disabled = true;
+  var res = await sb.auth.resend({ type: 'signup', email: PENDING_EMAIL, options: { emailRedirectTo: REDIRECT + '?confirmed=1' } });
+  if (res.error) {
+    showError(res.error.message);
+    btn.disabled = false;
+    return;
+  }
+  showSuccess('Sent again. It can take a minute to arrive.');
+  // One resend a minute: Supabase limits them too, and says so less kindly.
+  var left = 60;
+  btn.textContent = 'Resend email (' + left + 's)';
+  var t = setInterval(function () {
+    left--;
+    if (left <= 0) { clearInterval(t); btn.disabled = false; btn.textContent = 'Resend email'; }
+    else btn.textContent = 'Resend email (' + left + 's)';
+  }, 1000);
+}
+
+async function sendReset() {
+  var email = document.getElementById('f-email').value.trim().slice(0, 254);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Please enter a valid email address.');
+  var btn = document.getElementById('f-btn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: REDIRECT + '?reset=1' });
+  btn.disabled = false; btn.textContent = 'Send reset link';
+  // The same answer whether or not the address has an account, so this form
+  // cannot be used to find out who is registered.
+  if (res.error && !/not found|no user/i.test(res.error.message)) return showError(res.error.message);
+  showSuccess('If an account exists for ' + email + ', a reset link is on its way.');
+}
+
+async function saveNewPassword() {
+  var p1 = document.getElementById('n-pass').value.slice(0, 128);
+  var p2 = document.getElementById('n-pass2').value.slice(0, 128);
+  if (p1.length < 8) return showError('Password must be at least 8 characters.');
+  if (!/[\d!@#$%^&*]/.test(p1)) return showError('Password must include at least one number or special character (!@#$%^&*).');
+  if (p1 !== p2) return showError('The two passwords do not match.');
+  var btn = document.getElementById('n-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  var res = await sb.auth.updateUser({ password: p1 });
+  if (res.error) {
+    showError(res.error.message);
+    btn.disabled = false; btn.textContent = 'Save new password';
+    return;
+  }
+  var u = res.data.user;
+  var prof = (await sb.from('profiles').select('name,plan').eq('id', u.id).maybeSingle()).data;
+  saveUser(u.id, u.email, prof && prof.name ? prof.name : (u.email || '').split('@')[0], prof ? prof.plan : 'fan');
+  showSuccess('Password changed. Taking you in...');
+  setTimeout(function () { window.location.href = '/'; }, 900);
 }
 
 function showError(msg) {
@@ -204,8 +364,14 @@ async function doLogin() {
   await clearExistingSession();
   var res = await sb.auth.signInWithPassword({email: email, password: pass});
   if (res.error) {
-    showError(res.error.message === 'Invalid login credentials' ? 'Wrong email or password.' : res.error.message);
     btn.textContent = 'Sign In'; btn.disabled = false;
+    // Signed up but never clicked the link: offer the email again, not an error.
+    if (/not confirmed/i.test(res.error.message)) {
+      showInbox(email);
+      showError('Confirm your email first. We can send the link again.');
+      return;
+    }
+    showError(res.error.message === 'Invalid login credentials' ? 'Wrong email or password.' : res.error.message);
     return;
   }
   // Prove the session in storage is the one we just created before handing over
@@ -241,29 +407,27 @@ async function doRegister() {
   var btn = document.getElementById('r-btn');
   btn.textContent = 'Creating account...'; btn.disabled = true;
   await clearExistingSession();
-  var res = await sb.auth.signUp({email: email, password: pass, options: {data: {name: name, plan: 'fan'}}});
-  if (res.error) {
-    showError(res.error.message);
-    btn.textContent = 'Create Account'; btn.disabled = false;
+  // `lang` picks the language of the confirmation email (see
+  // docs/auth-email-templates.md). No `plan`: 013 locks it, and the trigger
+  // makes every new profile a fan.
+  var res = await sb.auth.signUp({email: email, password: pass, options: {
+    data: {name: name, lang: LANG},
+    emailRedirectTo: REDIRECT + '?confirmed=1'
+  }});
+  btn.textContent = 'Create Account'; btn.disabled = false;
+  if (res.error) return showError(res.error.message);
+  // The profiles row is created server-side by the on_auth_user_created
+  // trigger (002) at sign-up, before confirmation.
+  if (res.data.session) {
+    // Confirmation switched off: signed in straight away, as before.
+    saveUser(res.data.user.id, email, name, 'fan');
+    window.location.href = '/';
     return;
   }
-  if (res.data.user) {
-    // The profiles row is created server-side by the on_auth_user_created
-    // trigger (see 002_public_read.sql) — required because email confirmation
-    // means there is no session here, so this client write runs as `anon`.
-    // Kept as a harmless fallback for the session-exists case.
-    try {
-      // No `plan`: 013 locks it, and the column default already makes this a fan.
-      await sb.from('profiles').upsert({id: res.data.user.id, name: name, email: email, created_at: new Date().toISOString()});
-    } catch (e) { /* trigger already handled it */ }
-    saveUser(res.data.user.id, email, name, 'fan');
-  }
-  if (res.data.session) {
-    window.location.href = '/';
-  } else {
-    showSuccess('Account created! Check your email to verify, then sign in.');
-    btn.textContent = 'Create Account'; btn.disabled = false;
-  }
+  // Confirmation on: no session until the link is clicked, so nothing is saved
+  // as signed in here. (It used to be, and the app then showed a "signed-in"
+  // user whose every write was refused.)
+  showInbox(email);
 }
 
 function doDemo() {

@@ -149,7 +149,11 @@ user's own row → `profiles`.
 ### `on_auth_user_created` (TRIGGER, created by `002`)
 Creates the `profiles` row server-side on signup. Required: email confirmation
 means `auth.signUp()` returns no session, so a client-side insert would run as
-`anon` and be rejected by RLS.
+`anon` and be rejected by RLS. It fires at sign-up, before confirmation, and
+passes 013's `profiles_role_guard` because `handle_new_user` is SECURITY
+DEFINER (the guard sees `current_user = postgres`). Email confirmation is on
+since Day 5: Resend SMTP, templates in `docs/auth-email-templates.md`, setup in
+`docs/email-setup.md`.
 
 ### `groups` (created May 2026)
 ```sql
