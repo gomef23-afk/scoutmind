@@ -79,6 +79,7 @@ It serves both the backfill and steady state — no manual looping.
 | `public/about.html` | Marketing page — hero, how it works, for who, FAQ, for clubs | ✅ Live |
 | `public/community.html` | Team communities — polls, analyst insights, groups, wishlist | ✅ Live |
 | `public/auth.html` | Login / Signup | ✅ Live |
+| `public/favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `og.png` | "SM" monogram icons and the link-preview image; made by `scripts/make-icons.ps1` from `scripts/brand/*.html` | ✅ |
 | `public/terms.html`, `public/privacy.html` | Terms of Service and Privacy Policy, EN + PT-BR with a language toggle | ⚠️ Draft, pending legal review |
 | `public/news.html` | Transfer news | ⚠️ Deleted in B3 → `/?filter=transfers` |
 | `public/leagues_data.js` | Static team/league data — `community.html` only since Day 4 | ⚠️ Replaced in R9, deleted in R10 |

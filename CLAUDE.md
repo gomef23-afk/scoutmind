@@ -23,6 +23,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 - `public/leagues_data.js` — static team list and averages, now used only by `community.html` (deleted in R10). Scout Mode and `players_data.js` were removed on Day 4: the Scout tab in `index.html` is the Scout Game, on Supabase data only
 - `api/_lib/`, `api/cron/` — serverless ingest (see Stack)
 - `api/account/delete.js` — self-service account deletion (migration 024); the rule 13 exception
+- `scripts/make-icons.ps1` — regenerates the favicon, app icons and `og.png` from `scripts/brand/*.html` (headless Edge, no npm). Every page carries the same icon + `og:*` block in its `<head>`; a new page needs it too
 - `tests/` — `node tests/tagger.test.js`, no dependencies
 
 ## Hard rules

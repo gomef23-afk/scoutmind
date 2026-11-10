@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- ScoutMind "SM" monogram: green S, white M, as in the wordmark. Drawn as
+       strokes, not text: an SVG favicon cannot load the Bebas Neue web font.
+       Source of every PNG icon (scripts/make-icons.ps1). -->
+  <rect width="64" height="64" rx="14" fill="#07090f"/>
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#1a2540" stroke-width="2"/>
+  <path d="M27 25V19H13V32H27V45H13V39" fill="none" stroke="#00e5a0" stroke-width="6" stroke-linejoin="miter"/>
+  <path d="M37 48V19L45 31L53 19V48" fill="none" stroke="#edf2f7" stroke-width="6" stroke-linejoin="miter"/>
+</svg>
