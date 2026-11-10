@@ -312,17 +312,19 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
 </footer>
 
 <script>
-// One language at a time. ?lang= wins, then a choice made here before (a UI
-// preference, so localStorage is fine under rule 10), then the browser.
+// One language at a time. ?lang= wins, then the reader's saved choice (a UI
+// preference, so localStorage is fine under rule 10), then the browser. Since
+// Day 6 the key is sm_lang, shared with the app and auth.html (i18n.js);
+// sm_legal_lang, the older key, is still read.
 function setLang(l){
   document.documentElement.setAttribute('data-lang',l);
   document.documentElement.setAttribute('lang',l==='pt-BR'?'pt-BR':'en');
   document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-set-lang')===l); });
-  try{ localStorage.setItem('sm_legal_lang',l); }catch(e){}
+  try{ localStorage.setItem('sm_lang',l); }catch(e){}
 }
 (function(){
   var q=new URLSearchParams(location.search).get('lang');
-  var saved=null; try{ saved=localStorage.getItem('sm_legal_lang'); }catch(e){}
+  var saved=null; try{ saved=localStorage.getItem('sm_lang')||localStorage.getItem('sm_legal_lang'); }catch(e){}
   var l=q?(/^pt/i.test(q)?'pt-BR':'en'):saved||(/^pt/i.test(navigator.language||'')?'pt-BR':'en');
   setLang(l);
 })();

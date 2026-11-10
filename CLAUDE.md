@@ -27,7 +27,8 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 - `public/sw.js`, `public/manifest.json`, `public/pwa.js`, `public/offline.html` — the installable app (Day 6): service worker (offline shell, never touches Supabase or `/api/`), manifest, worker registration + the Add-to-Home-Screen hint, the offline fallback page. Every page carries the manifest + Apple meta + `pwa.js` block in its `<head>`; a new page needs it too
 - `public/vendor/` — self-hosted supabase-js (version pinned in the filename and its header comment) and the fonts (`vendor/fonts/fonts.css` + woff2). No page loads a script or font from a third-party host
 - `scripts/bump-sw.mjs` — rewrites `sw.js`'s `VERSION` from a hash of the precached files (rule 24)
-- `tests/` — `node tests/<name>.test.js` (tagger, players, team-stats, scout-game, account-delete, client-reads, sw-version), no dependencies
+- `public/i18n.js` — UI strings, `en` + `pt-BR` (Day 6, beta): `t(key, vars)`, `tn()` plurals, `tOrd()`, `tServer()` (database messages by exact English text), `applyI18n()` for `data-i18n*` attributes. Language = `localStorage.sm_lang` (shared with the legal pages), else the browser. Translated so far: `auth.html`, onboarding + club picker, the Scout tab, the Profile's Scout Game section, the match panel. **A new string in those areas goes in both dictionaries**; `tests/i18n.test.js` fails on a missing key, a key only one language has, or a money word. Never name a local variable `t` in code that calls `t()`
+- `tests/` — `node tests/<name>.test.js` (tagger, players, team-stats, scout-game, account-delete, client-reads, sw-version, i18n), no dependencies
 - **Public-read tables are not "mine" by default.** `follows` (and any table whose read policy is `using (true)`) returns every user's rows: a read of the caller's own rows must filter on `user_id`. `tests/client-reads.test.js` checks `follows`
 
 ## Hard rules

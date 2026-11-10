@@ -35,6 +35,8 @@
 <script src="/vendor/supabase-js-2.119.0.js"></script>
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js"></script>
+<!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
+<script src="/i18n.js"></script>
 <style>
 :root{--bg:#07090f;--bg2:#0d1117;--bg3:#141b27;--accent:#00e5a0;--accent2:#00b8ff;--warn:#ff6b35;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;--red:#ff4560;--yellow:#f5c842;--green:#00e5a0;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -513,7 +515,10 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-submit{position:fixed;left:0;right:0;bottom:calc(52px + env(safe-area-inset-bottom));z-index:110;align-items:center;gap:12px;padding:10px 16px;background:rgba(13,17,23,0.98);border-top:1px solid var(--border);backdrop-filter:blur(16px);}
 .sg-bar-text{flex:1;min-width:0;font-size:12px;color:var(--muted);}
 .sg-bar-text b{color:var(--text);font-family:'DM Mono',monospace;}
-.sg-bar-pos{font-size:10px;margin-top:3px;font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Wraps between groups, never inside one: "Salvar escalação" is wider than
+   "Save picks", and at 375px the last group used to be cut to "MEI/ATA 0…". */
+.sg-bar-pos{font-size:10px;margin-top:3px;font-family:'DM Mono',monospace;line-height:1.5;}
+.sg-bar-pos span{white-space:nowrap;}
 .sg-bar-pos .full{color:var(--yellow);}
 .sg-row.blocked{opacity:.55;}
 .sg-row-fx{font-size:11px;color:var(--text);margin-top:3px;}
@@ -870,6 +875,13 @@ if(!_cu){
     </div>
     <div id="profile-lang-prefs" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
     <div id="profile-club-lang" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"></div>
+    <!-- App language (Day 6, beta): what the interface is written in, not the
+         feed. Labelled with its scope so nobody expects the whole app in PT. -->
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="font-size:12px;font-weight:600;margin-bottom:4px;" data-i18n="pref.lang.title">App language</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 10px;" data-i18n="pref.lang.note">Beta: so far only sign-in, choosing your clubs and the Scout Game are translated.</div>
+      <div id="profile-app-lang" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
   </div>
   <!-- Admins only. RLS is the real guard: a non-admin who unhid this reads nothing. -->
   <div class="profile-section" id="profile-reports" style="display:none;">
@@ -879,8 +891,8 @@ if(!_cu){
 
   <!-- Scout Game record: rendered by renderProfileGame() from the game views. -->
   <div class="profile-section" id="profile-game">
-    <div class="profile-section-title">Scout Game</div>
-    <div id="profile-game-body"><div style="font-size:12px;color:var(--muted);">Loading…</div></div>
+    <div class="profile-section-title" data-i18n="sg.title">Scout Game</div>
+    <div id="profile-game-body"><div style="font-size:12px;color:var(--muted);" data-i18n="sg.loading">Loading…</div></div>
   </div>
 
   <!-- Danger Zone -->
@@ -910,8 +922,8 @@ if(!_cu){
 <div class="page" id="page-scout">
 <div class="sg-page">
   <div class="sg-head">
-    <div class="sg-title">Scout Game</div>
-    <div class="sg-sub">Five players and a captain each round. Less-fancied players score more when they deliver. Free, points only.</div>
+    <div class="sg-title" data-i18n="sg.title">Scout Game</div>
+    <div class="sg-sub" data-i18n="sg.sub">Five players and a captain each round. Less-fancied players score more when they deliver. Free, points only.</div>
   </div>
   <div id="sg-tabs" class="sg-tabs"></div>
   <div id="sg-body"></div>
@@ -1179,14 +1191,14 @@ async function confirmDeleteAccount(){
      set only in JS (rule 6). Both steps are skippable. -->
 <div id="onboard-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:26px;width:min(560px,92vw);max-height:88vh;overflow-y:auto;">
-    <div id="onboard-title" style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:4px;">Pick your club</div>
+    <div id="onboard-title" style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:4px;" data-i18n="onb.title">Pick your clubs</div>
     <div id="onboard-sub" style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;"></div>
     <div id="onboard-body"></div>
     <div style="display:flex;gap:10px;align-items:center;margin-top:18px;">
-      <button id="onboard-next" class="signin-sheet-primary" style="flex:1;" onclick="onboardNext()">Continue</button>
+      <button id="onboard-next" class="signin-sheet-primary" style="flex:1;" onclick="onboardNext()" data-i18n="onb.continue">Continue</button>
     </div>
     <div style="text-align:center;margin-top:10px;">
-      <button class="signin-sheet-dismiss" onclick="skipOnboarding()">I'll do this later</button>
+      <button class="signin-sheet-dismiss" onclick="skipOnboarding()" data-i18n="onb.later">I'll do this later</button>
     </div>
   </div>
 </div>
@@ -1194,26 +1206,26 @@ async function confirmDeleteAccount(){
 <div id="team-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:min(520px,92vw);max-height:85vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">Your Club</div>
-      <button id="modal-close-btn" onclick="skipTeamModal()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:4px;">✕</button>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;" data-i18n="team.title">Your Club</div>
+      <button id="modal-close-btn" onclick="skipTeamModal()" aria-label="Close" data-i18n-aria="team.close" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:4px;">✕</button>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Pick your main club and follow others to personalise your feed.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;" data-i18n="team.sub">Pick your main club and follow others to personalise your feed.</div>
 
     <!-- No "Main club" heading here: combinedPickerHtml() renders its own, and
          two of them stacked read as a bug. Nor `class="picker-grid"` on the
          list — it supplies a grid per section, and a grid inside a grid put
          every row in one 2-column cell and overflowed the modal sideways. -->
     <div class="picker-search-wrap">
-      <input type="text" id="club-search" class="club-search" placeholder="Search clubs..." oninput="filterModalClubs()">
+      <input type="text" id="club-search" class="club-search" placeholder="Search clubs…" data-i18n-ph="pick.search" oninput="filterModalClubs()">
     </div>
 
     <div id="modal-club-list" style="max-height:46vh;overflow-y:auto;margin-bottom:18px;"></div>
 
-    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Also following</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;" data-i18n="pick.also">Also following</div>
     <div id="modal-following-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;min-height:32px;"></div>
 
-    <button id="save-club-btn" onclick="saveTeamSelection()" style="width:100%;background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">SAVE MY CLUB</button>
-    <button onclick="skipTeamModal()" style="width:100%;background:transparent;border:none;color:var(--muted);padding:10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;">Skip for now — I'll set this later</button>
+    <button id="save-club-btn" onclick="saveTeamSelection()" style="width:100%;background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;" data-i18n="team.save">SAVE MY CLUB</button>
+    <button onclick="skipTeamModal()" style="width:100%;background:transparent;border:none;color:var(--muted);padding:10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;" data-i18n="team.skip">Skip for now — I'll set this later</button>
   </div>
 </div>
 
@@ -1238,7 +1250,7 @@ async function confirmDeleteAccount(){
      chat. display:none here, display:flex only in JS (rule 6). -->
 <div id="match-overlay" style="display:none;position:fixed;inset:0;z-index:530;background:var(--bg);flex-direction:column;">
   <div class="chat-head">
-    <button class="chat-back" onclick="closeMatch()" aria-label="Close match">←</button>
+    <button class="chat-back" onclick="closeMatch()" aria-label="Close match" data-i18n-aria="mo.close">←</button>
     <div class="chat-title" id="mo-title" style="flex:1;min-width:0;">Match</div>
   </div>
   <div class="mo-body" id="mo-body"></div>
@@ -1982,7 +1994,7 @@ function renderModalClubs(){
   const el = document.getElementById('modal-club-list');
   if(!el) return;
   if(CLUB_DATA.size === 0){
-    el.innerHTML = '<div class="picker-empty">Loading clubs…</div>';
+    el.innerHTML = '<div class="picker-empty">'+t('pick.loading')+'</div>';
     return;
   }
   // Same one-screen layout as onboarding: main club on top, follows below.
@@ -2241,9 +2253,9 @@ function combinedPickerHtml(o){
   const open=pickerMainOpen||!mainId;     // nothing chosen yet: start open
 
   let html='<div class="picker-section-head">'
-    +'<span>Main club</span>'
+    +'<span>'+t('pick.main')+'</span>'
     +(main?'<button class="picker-change" onclick="togglePickerMain()">'
-      +(open?'Done':'Change')+'</button>':'')
+      +(open?t('pick.done'):t('pick.change'))+'</button>':'')
     +'</div>';
 
   if(main&&!open){
@@ -2252,7 +2264,7 @@ function combinedPickerHtml(o){
       +'<div style="font-size:13px;font-weight:600;">'+sanitize(main.label)+'</div>'
       +'<div style="font-size:10px;color:var(--muted);">'
       +sanitize(LEAGUE_LABEL[main.league]||'')+'</div></div>'
-      +'<span class="picker-badge g">MAIN</span></div>';
+      +'<span class="picker-badge g">'+t('pick.badgeMain')+'</span></div>';
   }else{
     html+='<div class="picker-grid">'
       +clubPickerHtml({mode:'main',query:o.query,mainId:mainId,
@@ -2261,9 +2273,9 @@ function combinedPickerHtml(o){
   }
 
   html+='<div class="picker-section-head" style="margin-top:18px;">'
-    +'<span>Also following</span>'
+    +'<span>'+t('pick.also')+'</span>'
     +'<span style="font-size:10px;color:var(--muted);font-weight:400;">'
-    +(o.selected.length?o.selected.length+' selected':'optional')+'</span>'
+    +(o.selected.length?tn('pick.selected',o.selected.length):t('pick.optional'))+'</span>'
     +'</div>'
     +'<div class="picker-grid">'
     +clubPickerHtml({mode:'follow',query:o.query,mainId:mainId,
@@ -2295,14 +2307,14 @@ function clubPickerHtml(opts){
     const on=isMain||isFollowing;
     const cls='picker-row'+(isMain?' is-main':isFollowing?' is-following':'')
       +(locked?' is-locked':'');
-    const badge=isMain?'<span class="picker-badge g">MAIN</span>'
+    const badge=isMain?'<span class="picker-badge g">'+t('pick.badgeMain')+'</span>'
       :isFollowing?'<span class="picker-badge b">✓</span>':'';
     const click=locked?'':' onclick="'+handler+'('+c.id+')"';
-    const title=locked?'Your main club'
-      :isMain?'Main club — click to follow instead'
-      :isFollowing?'Following — click to remove'
-      :mode==='main'?'Click to make this your main club':'Click to follow';
-    return '<div class="'+cls+'"'+click+' title="'+title+'" aria-pressed="'+(on?'true':'false')+'">'
+    const title=t(locked?'pick.title.locked'
+      :isMain?'pick.title.mainFollow'
+      :isFollowing?'pick.title.following'
+      :mode==='main'?'pick.title.makeMain':'pick.title.follow');
+    return '<div class="'+cls+'"'+click+' title="'+sanitize(title)+'" aria-pressed="'+(on?'true':'false')+'">'
       +clubCrestById(c.id,22)
       +'<span class="picker-name">'+sanitize(c.label)+'</span>'
       +badge+'</div>';
@@ -2326,12 +2338,12 @@ function clubPickerHtml(opts){
   if(mode==='follow'&&mainId){
     const main=CLUB_DATA.get(mainId);
     if(main&&main.league){
-      html+=section('Same league as '+(main.label||'your club'),
+      html+=section(t('pick.sameLeague',{club:main.label||t('pick.yourClub')}),
         byLeague(main.league).filter(c=>c.id!==mainId));
     }
   }
 
-  html+=section('Popular',popularClubs());
+  html+=section(t('pick.popular'),popularClubs());
 
   // A fixed order, deliberately not reordered around the reader's own league:
   // picking a main club re-renders this list, and hoisting their league would
@@ -2341,7 +2353,7 @@ function clubPickerHtml(opts){
     html+=section(LEAGUE_LABEL[key]||key,byLeague(key));
   }
 
-  return html||'<div class="picker-empty">No club matches “'+sanitize(opts.query||'')+'”.</div>';
+  return html||'<div class="picker-empty">'+t('pick.none',{q:sanitize(opts.query||'')})+'</div>';
 }
 
 function maybeStartOnboarding(){
@@ -2374,15 +2386,16 @@ function renderOnboard(){
   const title=document.getElementById('onboard-title');
   const sub=document.getElementById('onboard-sub');
   if(!body)return;
-  title.textContent='Pick your clubs';
-  sub.textContent='Your main club shapes the feed. Follow as many others as you like.';
+  title.textContent=t('onb.title');
+  sub.textContent=t('onb.sub');
+  // Keep the search across a language switch (renderOnboard runs again then).
+  const prevQ=(document.getElementById('onboard-search')||{value:''}).value;
   body.innerHTML='<div class="picker-search-wrap">'
-    +'<input id="onboard-search" class="club-search" placeholder="Search clubs…" oninput="renderOnboardPicker()">'
+    +'<input id="onboard-search" class="club-search" placeholder="'+sanitize(t('pick.search'))+'" oninput="renderOnboardPicker()">'
     +'</div>'
     +'<div id="onboard-picker" style="max-height:52vh;overflow-y:auto;"></div>';
+  document.getElementById('onboard-search').value=prevQ;
   renderOnboardPicker();
-  const next=document.getElementById('onboard-next');
-  if(next)next.textContent=mainClubId()?'Done':'Skip for now';
 }
 
 function renderOnboardPicker(){
@@ -2396,7 +2409,7 @@ function renderOnboardPicker(){
     handlerFollow:'toggleOnboardFollow'
   });
   const next=document.getElementById('onboard-next');
-  if(next)next.textContent=mainClubId()?'Done':'Skip for now';
+  if(next)next.textContent=mainClubId()?t('pick.done'):t('onb.skipNow');
 }
 
 /** Repaint whichever combined picker is on screen, without losing the search. */
@@ -2446,8 +2459,7 @@ async function finishOnboarding(){
     if(!ok&&mainClubId()){
       // The local cache holds the choice, so nothing is lost — but say so,
       // rather than letting the next reload quietly revert it.
-      toast('Your club is set on this device but did not reach your account. '
-        +'It may reset on another device.','error');
+      toast(t('onb.err.notSaved'),'error');
     }
   }
 }
@@ -4983,55 +4995,55 @@ const SG={
   saving:false,
   timer:null
 };
-const SG_POS_LABEL={G:'GK',D:'DEF',M:'MID',F:'FWD'};
+// Position labels in the reader's language (i18n.js sg.pos.*): GK / GOL ...
+function sgPosLabel(pos){ return pos&&'GDMFX'.indexOf(pos)>=0?t('sg.pos.'+pos):''; }
 // The lineup rule, mirrored from submit_picks (020), which is the real rule.
 // The formation, mirrored from submit_picks (023), which is the real rule:
 // exactly 1 GK, 2 DEF and 2 MID/FWD in any mix. Midfielders and forwards
 // share one group ('X'). 1 + 2 + 2 = 5, so five picks inside these caps are
 // always a complete formation.
 const SG_POS_MAX={G:1,D:2,X:2};
-const SG_GROUP_LABEL={G:'GK',D:'DEF',X:'MID/FWD'};
-const SG_POS_FULL={G:'You have your goalkeeper',D:'You have your two defenders',X:'You have your two midfielders or forwards'};
 function sgGroup(pos){ return pos==='G'?'G':pos==='D'?'D':(pos==='M'||pos==='F')?'X':null; }
 const SG_LIST_MAX=120;
-// Breakdown keys written by basePoints() in api/_lib/scout-game.js (scoring v2).
-const SG_BREAKDOWN_LABEL={
-  goals:'Goals',assists:'Assists',clean_sheet:'Clean sheet',conceded:'Goals conceded',
-  saves:'Saves',pen_saved:'Penalty saved',tackles:'Tackles',interceptions:'Interceptions',
-  shots_on:'Shots on target',shots_off:'Shots off target',key_passes:'Key passes',
-  fouls_drawn:'Fouls drawn',fouls_committed:'Fouls committed',offsides:'Offsides',
-  pen_missed:'Penalty missed',pen_committed:'Penalty conceded',own_goals:'Own goals',
-  yellow:'Yellow card',red:'Red card'
-};
+// Breakdown keys written by basePoints() in api/_lib/scout-game.js (scoring
+// v2). Labels are i18n.js sg.brk.<key>; tests/i18n.test.js reads this list.
+const SG_BREAKDOWN_KEYS=['goals','assists','clean_sheet','conceded','saves','pen_saved','tackles',
+  'interceptions','shots_on','shots_off','key_passes','fouls_drawn','fouls_committed','offsides',
+  'pen_missed','pen_committed','own_goals','yellow','red'];
+function sgBreakdownLabel(k){ return SG_BREAKDOWN_KEYS.indexOf(k)>=0?t('sg.brk.'+k):k; }
 
 function sgNum(v,d){ return v==null||isNaN(Number(v))?null:Number(Number(v).toFixed(d==null?1:d)); }
-function sgPts(v){ const n=sgNum(v,2); return n==null?'—':(Math.round(n*100)/100).toString(); }
-function sgMult(m){ return m==null||isNaN(Number(m))?'×—':'×'+Number(m).toFixed(2); }
+function sgPts(v){ const n=sgNum(v,2); return n==null?'—':(Math.round(n*100)/100).toLocaleString(smLocale()); }
+function sgMult(m){ return m==null||isNaN(Number(m))?'×—':'×'+Number(m).toLocaleString(smLocale(),{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function sgCount(n){ return Number(n||0).toLocaleString(smLocale()); }
 
 /** "Level 3 · ×1.10", from the ladder the lock step will use. */
 function sgLevel(tier){
   const c=SG.config||{};
-  if(tier==null) return 'Not enough minutes · '+sgMult(c.unranked_multiplier);
+  if(tier==null) return t('sg.notEnough')+' · '+sgMult(c.unranked_multiplier);
   const lad=c.ladder||null;
-  return 'Level '+tier+' · '+sgMult(lad?lad[String(tier)]:null);
+  return t('sg.level',{n:tier})+' · '+sgMult(lad?lad[String(tier)]:null);
 }
 function sgLockedLevel(p){
-  return (p.locked_tier==null?'Not enough minutes':'Level '+p.locked_tier)+' · '+sgMult(p.locked_multiplier);
+  return (p.locked_tier==null?t('sg.notEnough'):t('sg.level',{n:p.locked_tier}))+' · '+sgMult(p.locked_multiplier);
 }
-function sgRoundName(r){ return r? (r.round_no?'Round '+r.round_no:String(r.round_label||'Round')) : ''; }
+function sgRoundName(r){ return r? (r.round_no?t('sg.round',{n:r.round_no}):String(r.round_label||t('sg.roundGeneric'))) : ''; }
 function sgLeagueName(r){ const l=r&&r.leagues; return l?((l.flag?l.flag+' ':'')+l.name):''; }
 // Every account has a name (handle_new_user sets one), so a missing name is a
 // deleted account whose scores were kept under an anonymous id (024).
-function sgFan(name){ return name?sanitize(name):'[deleted user]'; }
+function sgFan(name){ return name?sanitize(name):t('sg.deletedUser'); }
+/** A badge's name and description in the reader's language, by badge id. */
+function sgBadgeName(id,fallback){ const k='badge.'+id+'.name'; return I18N.en[k]?t(k):(fallback||id); }
+function sgBadgeDesc(id,fallback){ const k='badge.'+id+'.desc'; return I18N.en[k]?t(k):(fallback||''); }
 
 function sgCountdown(iso){
   const ms=new Date(iso).getTime()-Date.now();
-  if(!(ms>0)) return 'Picks are closed';
+  if(!(ms>0)) return t('sg.closed');
   const m=Math.floor(ms/60000), d=Math.floor(m/1440), h=Math.floor((m%1440)/60), mm=m%60;
-  return 'Picks close in '+(d?d+'d '+h+'h':h?h+'h '+mm+'m':mm+'m');
+  return t('sg.closesIn',{t:d?t('sg.dur.dh',{d:d,h:h}):h?t('sg.dur.hm',{h:h,m:mm}):t('sg.dur.m',{m:mm})});
 }
 function sgWhen(iso){
-  try{ return new Date(iso).toLocaleString([], {weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }
+  try{ return new Date(iso).toLocaleString(smLocale(), {weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }
   catch(e){ return ''; }
 }
 
@@ -5120,14 +5132,14 @@ async function sgLoadEntries(){
 async function renderScout(force){
   const body=document.getElementById('sg-body');
   if(!body) return;
-  if(!SG.loadedAt) body.innerHTML='<div class="sg-empty">Loading the Scout Game…</div>';
+  if(!SG.loadedAt) body.innerHTML='<div class="sg-empty">'+t('sg.loadingGame')+'</div>';
   try{
     await sgLoadBase(force);
     await sgLoadEntries().catch(e=>console.error('game_entries:',e));
   }catch(e){
     console.error('renderScout:',e);
     sgTabs();
-    body.innerHTML='<div class="sg-empty">The Scout Game could not load just now. Try again in a moment.</div>';
+    body.innerHTML='<div class="sg-empty">'+t('sg.loadFail')+'</div>';
     sgSubmitBar(null);
     return;
   }
@@ -5150,8 +5162,8 @@ function sgTabs(){
     return '<button class="sg-tab'+(on?' active':'')+'" onclick="sgPickLeague('+r.league_id+')">'
       +sanitize(sgLeagueName(r))+'</button>';
   });
-  tabs.push('<button class="sg-tab'+(SG.view==='rankings'?' active':'')+'" onclick="sgShowRankings()">Rankings</button>');
-  tabs.push('<button class="sg-tab'+(SG.view==='history'?' active':'')+'" onclick="sgShowHistory()">My history</button>');
+  tabs.push('<button class="sg-tab'+(SG.view==='rankings'?' active':'')+'" onclick="sgShowRankings()">'+t('sg.tab.rankings')+'</button>');
+  tabs.push('<button class="sg-tab'+(SG.view==='history'?' active':'')+'" onclick="sgShowHistory()">'+t('sg.tab.history')+'</button>');
   el.innerHTML=tabs.join('');
 }
 
@@ -5172,12 +5184,12 @@ function sgRender(){
   if(SG.view==='history'){ sgSubmitBar(null); sgRenderHistory(); return; }
   if(SG.leagueId==null){
     sgSubmitBar(null);
-    body.innerHTML='<div class="sg-empty">No round is open right now. The next one appears here once its fixtures are scheduled.</div>';
+    body.innerHTML='<div class="sg-empty">'+t('sg.noRound')+'</div>';
     return;
   }
   const r=sgRound(SG.roundId);
   const chips=sgRoundsFor(SG.leagueId).map(x=>{
-    const tag=x.status==='open'?'Open':sgInPlay(x)?'In play':x.status==='locked'?'Full time':'Final';
+    const tag=t(x.status==='open'?'sg.st.open':sgInPlay(x)?'sg.st.inPlay':x.status==='locked'?'sg.st.ft':'sg.st.final');
     return '<button class="sg-chip'+(x.id===SG.roundId?' active':'')+'" onclick="sgPickRound('+x.id+')">'
       +sanitize(sgRoundName(x))+'<span class="sg-chip-tag">'+tag+'</span></button>';
   }).join('');
@@ -5208,10 +5220,10 @@ async function sgRenderPick(r){
   const head='<div class="sg-round-head">'
     +'<div class="sg-round-title">'+sanitize(sgLeagueName(r))+' · '+sanitize(sgRoundName(r))+'</div>'
     +'<div class="sg-round-sub"><span id="sg-countdown" data-deadline="'+sanitize(r.deadline_utc)+'">'+sgCountdown(r.deadline_utc)+'</span>'
-    +' · first kickoff '+sanitize(sgWhen(r.deadline_utc))+'</div>'
-    +(SG.entries.get(r.id)?'<div class="sg-saved">Your picks are saved. You can change them until the first kickoff.</div>':'')
+    +' · '+t('sg.firstKickoff',{when:sanitize(sgWhen(r.deadline_utc))})+'</div>'
+    +(SG.entries.get(r.id)?'<div class="sg-saved">'+t('sg.saved')+'</div>':'')
     +'</div>';
-  el.innerHTML=head+'<div id="sg-slots"></div><div id="sg-filters"></div><div id="sg-list"><div class="sg-empty">Loading players…</div></div>';
+  el.innerHTML=head+'<div id="sg-slots"></div><div id="sg-filters"></div><div id="sg-list"><div class="sg-empty">'+t('sg.loadingPlayers')+'</div></div>';
   sgSubmitBar(r);
   if(!SG.pickable.has(r.id)&&!SG.pickErr.has(r.id)){
     try{
@@ -5220,7 +5232,7 @@ async function sgRenderPick(r){
       SG.pickable.set(r.id,rows||[]);
     }catch(e){
       console.error('game_pickable_players:',e);
-      SG.pickErr.set(r.id,'The pick list is not available yet. The game is still being set up — check back soon.');
+      SG.pickErr.set(r.id,'sg.pickUnavailable');   // a key: shown with t(), so it follows a language switch
     }
   }
   if(SG.roundId!==r.id||!document.getElementById('sg-list')) return;   // moved on while loading
@@ -5242,7 +5254,7 @@ function sgPlayer(id){
   // A saved pick the list no longer offers: show what the entry holds.
   const e=SG.entries.get(SG.roundId);
   const gp=e&&e.game_picks&&e.game_picks.find(x=>x.player_id===id);
-  return gp?{player_id:id,name:gp.players?gp.players.name:'Player',photo_url:gp.players&&gp.players.photo_url,missing:true}:{player_id:id,name:'Player',missing:true};
+  return gp?{player_id:id,name:gp.players?gp.players.name:t('sg.player'),photo_url:gp.players&&gp.players.photo_url,missing:true}:{player_id:id,name:t('sg.player'),missing:true};
 }
 
 function sgPhoto(p,size){
@@ -5285,26 +5297,26 @@ function sgRenderSlots(){
   const slots=[];
   for(let i=0;i<5;i++){
     const id=SG.picks[i], g=SG_SLOT_GROUP[i];
-    const tag='<span class="sg-slot-pos">'+SG_GROUP_LABEL[g]+'</span>';
+    const tag='<span class="sg-slot-pos">'+sgPosLabel(g)+'</span>';
     if(id==null){
       // Tapping an empty slot narrows the list to who can fill it.
       const f=g==='X'?'':g;
       slots.push('<button class="sg-slot sg-slot-empty" onclick="sgFilterPos(\''+f+'\')">'+tag
-        +'<span>'+(g==='G'?'Pick a goalkeeper':g==='D'?'Pick a defender':'Pick a midfielder or forward')+'</span></button>');
+        +'<span>'+t('sg.pick.'+g)+'</span></button>');
       continue;
     }
     const p=sgPlayer(id), cap=SG.captain===id;
     slots.push('<div class="sg-slot'+(cap?' is-captain':'')+'">'+tag
       +sgPhoto(p,30)
       +'<div class="sg-slot-main"><div class="sg-slot-name">'+sanitize(p.name)+'</div>'
-      +'<div class="sg-slot-meta">'+(p.missing?'No longer in this round'
+      +'<div class="sg-slot-meta">'+(p.missing?t('sg.noLonger')
         :sanitize(sgLevel(p.tier))+(sgFixtureLine(p)?' · <span class="'+(sgNoMatch(p)?'sg-fx-none':'')+'">'+sanitize(sgFixtureLine(p))+'</span>':''))+'</div></div>'
-      +'<button class="sg-cap'+(cap?' on':'')+'" onclick="sgSetCaptain('+id+')" aria-label="Make captain">'+(cap?'Captain':'C')+'</button>'
-      +'<button class="sg-x" onclick="sgToggle('+id+')" aria-label="Remove">✕</button>'
+      +'<button class="sg-cap'+(cap?' on':'')+'" onclick="sgSetCaptain('+id+')" aria-label="'+sanitize(t('sg.makeCaptain'))+'">'+(cap?t('sg.captain'):t('sg.capShort'))+'</button>'
+      +'<button class="sg-x" onclick="sgToggle('+id+')" aria-label="'+sanitize(t('sg.remove'))+'">✕</button>'
       +'</div>');
   }
-  el.innerHTML='<div class="sg-section">Your five</div><div class="sg-slots">'+slots.join('')+'</div>'
-    +'<div class="sg-note">One goalkeeper, two defenders, and two midfielders or forwards in any mix. Captain adds +1 to that player\'s multiplier. Negative scores are never multiplied.</div>';
+  el.innerHTML='<div class="sg-section">'+t('sg.yourFive')+'</div><div class="sg-slots">'+slots.join('')+'</div>'
+    +'<div class="sg-note">'+t('sg.rule')+'</div>';
 }
 
 function sgRenderFilters(){
@@ -5314,13 +5326,13 @@ function sgRenderFilters(){
   if(err){ el.innerHTML=''; return; }
   const rows=SG.pickable.get(SG.roundId)||[];
   const clubs=[...new Set(rows.map(p=>p.team_id))]
-    .map(id=>({id,label:clubLabel(id)||'Club '+id})).sort((a,b)=>a.label.localeCompare(b.label));
+    .map(id=>({id,label:clubLabel(id)||t('sg.club',{id:id})})).sort((a,b)=>a.label.localeCompare(b.label));
   const pos=['','G','D','M','F'].map(k=>'<button class="sg-chip'+(SG.filter.pos===k?' active':'')+'" onclick="sgFilterPos(\''+k+'\')">'
-    +(k?SG_POS_LABEL[k]:'All')+'</button>').join('');
-  el.innerHTML='<div class="sg-section">Players</div>'
-    +'<input type="search" class="sg-search" id="sg-q" placeholder="Search players" value="'+sanitize(SG.filter.q)+'" oninput="sgFilterQ(this.value)">'
+    +(k?sgPosLabel(k):t('sg.all'))+'</button>').join('');
+  el.innerHTML='<div class="sg-section">'+t('sg.players')+'</div>'
+    +'<input type="search" class="sg-search" id="sg-q" placeholder="'+sanitize(t('sg.searchPlayers'))+'" value="'+sanitize(SG.filter.q)+'" oninput="sgFilterQ(this.value)">'
     +'<div class="sg-filter-row"><div class="sg-chips sg-chips-tight">'+pos+'</div>'
-    +'<select class="sg-club" onchange="sgFilterClub(this.value)"><option value="">All clubs</option>'
+    +'<select class="sg-club" onchange="sgFilterClub(this.value)"><option value="">'+t('sg.allClubs')+'</option>'
     +clubs.map(c=>'<option value="'+c.id+'"'+(String(SG.filter.club)===String(c.id)?' selected':'')+'>'+sanitize(c.label)+'</option>').join('')
     +'</select></div>';
 }
@@ -5330,20 +5342,20 @@ function sgFilterClub(v){ SG.filter.club=v; sgRenderList(); }
 
 /** Two per-90 lines that matter for the position; "—" when we have none. */
 function sgStatLine(p){
-  const f=(v,d)=>v==null?'—':Number(v).toFixed(d==null?2:d);
+  const f=(v,d)=>v==null?'—':Number(v).toLocaleString(smLocale(),{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d});
   const cs=p.cs_rate==null?'—':Math.round(Number(p.cs_rate)*100)+'%';
   switch(p.position){
-    case 'G': return 'Saves/90 '+f(p.saves_p90)+' · Clean sheets '+cs;
-    case 'D': return 'Rating '+f(p.rating)+' · Clean sheets '+cs;
-    case 'M': return 'Assists/90 '+f(p.assists_p90)+' · Key passes/90 '+f(p.key_passes_p90);
-    case 'F': return 'Goals/90 '+f(p.goals_p90)+' · On target/90 '+f(p.shots_on_p90);
-    default:  return 'Rating '+f(p.rating);
+    case 'G': return t('sg.stat.G',{a:f(p.saves_p90),b:cs});
+    case 'D': return t('sg.stat.D',{a:f(p.rating),b:cs});
+    case 'M': return t('sg.stat.M',{a:f(p.assists_p90),b:f(p.key_passes_p90)});
+    case 'F': return t('sg.stat.F',{a:f(p.goals_p90),b:f(p.shots_on_p90)});
+    default:  return t('sg.stat.other',{a:f(p.rating)});
   }
 }
 function sgLastMatch(p){
-  if(p.last_match==='started') return '<span class="sg-lm ok">Started last match</span>';
-  if(p.last_match==='came_on') return '<span class="sg-lm">Came on last match</span>';
-  if(p.last_match==='did_not_play') return '<span class="sg-lm warn">Didn\'t play last match</span>';
+  if(p.last_match==='started') return '<span class="sg-lm ok">'+t('sg.lm.started')+'</span>';
+  if(p.last_match==='came_on') return '<span class="sg-lm">'+t('sg.lm.cameOn')+'</span>';
+  if(p.last_match==='did_not_play') return '<span class="sg-lm warn">'+t('sg.lm.dnp')+'</span>';
   return '';
 }
 
@@ -5351,15 +5363,15 @@ function sgRenderList(){
   const el=document.getElementById('sg-list');
   if(!el) return;
   const err=SG.pickErr.get(SG.roundId);
-  if(err){ el.innerHTML='<div class="sg-empty">'+sanitize(err)+'</div>'; return; }
+  if(err){ el.innerHTML='<div class="sg-empty">'+sanitize(t(err))+'</div>'; return; }
   const rows=SG.pickable.get(SG.roundId);
-  if(!rows){ el.innerHTML='<div class="sg-empty">Loading players…</div>'; return; }
+  if(!rows){ el.innerHTML='<div class="sg-empty">'+t('sg.loadingPlayers')+'</div>'; return; }
   const q=pickerNorm(SG.filter.q||'');
   const list=rows.filter(p=>(!SG.filter.pos||p.position===SG.filter.pos)
       &&(!SG.filter.club||String(p.team_id)===String(SG.filter.club))
       &&(!q||pickerNorm(p.name||'').indexOf(q)>=0||pickerNorm(clubLabel(p.team_id)||'').indexOf(q)>=0))
     .sort((a,b)=>(b.minutes||0)-(a.minutes||0));
-  if(!list.length){ el.innerHTML='<div class="sg-empty">No player matches that.</div>'; return; }
+  if(!list.length){ el.innerHTML='<div class="sg-empty">'+t('sg.noPlayerMatch')+'</div>'; return; }
   const shown=list.slice(0,SG_LIST_MAX);
   el.innerHTML=shown.map(p=>{
     const on=SG.picks.indexOf(p.player_id)>=0;
@@ -5369,16 +5381,16 @@ function sgRenderList(){
       +'<div class="sg-row-main">'
       +'<div class="sg-row-name">'+sanitize(p.name)+'</div>'
       +'<div class="sg-row-meta">'+clubCrestById(p.team_id,14)+'<span>'+sanitize(clubLabel(p.team_id))+'</span>'
-      +'<span class="sg-pos">'+(SG_POS_LABEL[p.position]||'—')+'</span></div>'
+      +'<span class="sg-pos">'+(sgPosLabel(p.position)||'—')+'</span></div>'
       +(sgFixtureLine(p)?'<div class="sg-row-fx'+(sgNoMatch(p)?' none':'')+'">'+sanitize(sgFixtureLine(p))+'</div>':'')
       +'<div class="sg-row-level">'+sanitize(sgLevel(p.tier))+'</div>'
       +'<div class="sg-row-stats">'+sanitize(sgStatLine(p))+' '+sgLastMatch(p)+'</div>'
       +'</div>'
       +'<button class="sg-add'+(on?' on':'')+'" onclick="sgToggle('+p.player_id+')"'
-      +(block?' disabled title="'+sanitize(block)+'" aria-label="'+sanitize(block)+'"':' aria-label="'+(on?'Remove':'Add')+'"')+'>'+(on?'✓':'+')+'</button>'
+      +(block?' disabled title="'+sanitize(block)+'" aria-label="'+sanitize(block)+'"':' aria-label="'+sanitize(t(on?'sg.remove':'sg.add'))+'"')+'>'+(on?'✓':'+')+'</button>'
       +'</div>';
   }).join('')
-  +(list.length>shown.length?'<div class="sg-note sg-more">Showing '+shown.length+' of '+list.length+'. Search or filter to narrow the list.</div>':'');
+  +(list.length>shown.length?'<div class="sg-note sg-more">'+t('sg.showing',{shown:sgCount(shown.length),total:sgCount(list.length)})+'</div>':'');
 }
 
 /** Filled slots, by formation group. */
@@ -5397,25 +5409,25 @@ function sgNoMatch(p){ return !!p&&'fixture_id' in p&&p.fixture_id==null; }
 /** "vs Palmeiras (H) · Sat", "at Grêmio (A) · Sun", or "No match this round". */
 function sgFixtureLine(p){
   if(!p||!('fixture_id' in p)) return '';
-  if(p.fixture_id==null) return 'No match this round';
+  if(p.fixture_id==null) return t('sg.fx.none');
   const opp=clubLabel(p.opponent_id)||p.opponent||'—';
   let day='';
-  try{ day=p.kickoff_utc?new Date(p.kickoff_utc).toLocaleDateString([], {weekday:'short'}):''; }catch(e){}
-  return (p.is_home?'vs ':'at ')+opp+(p.is_home?' (H)':' (A)')+(day?' · '+day:'')
-    +(p.round_matches>1?' · +'+(p.round_matches-1)+' more':'');
+  try{ day=p.kickoff_utc?new Date(p.kickoff_utc).toLocaleDateString(smLocale(), {weekday:'short'}):''; }catch(e){}
+  return t(p.is_home?'sg.fx.home':'sg.fx.away',{opp:opp})+(day?' · '+day:'')
+    +(p.round_matches>1?' · '+tn('sg.fx.more',p.round_matches-1):'');
 }
 
 /** Why this player cannot be added right now, or null. */
 function sgBlock(p){
-  if(sgNoMatch(p)) return 'No match this round.';
+  if(sgNoMatch(p)) return t('sg.block.noMatch');
   const g=sgGroup(p.position);
-  if(!g) return 'His position is not known yet.';
-  if(sgFreeSlot(g)<0) return SG_POS_FULL[g]+'. Remove one to swap.';
+  if(!g) return t('sg.block.noPos');
+  if(sgFreeSlot(g)<0) return t('sg.block.full',{full:t('sg.full.'+g)});
   return null;
 }
 
 function sgToggle(id){
-  if(!requireAuth('Create a free account to play the Scout Game.')) return;
+  if(!requireAuth(t('sg.signupToPlay'))) return;
   const i=SG.picks.indexOf(id);
   if(i>=0){
     SG.picks[i]=null;
@@ -5428,7 +5440,7 @@ function sgToggle(id){
   sgRenderSlots(); sgRenderList(); sgSubmitBar(sgRound(SG.roundId));
 }
 function sgSetCaptain(id){
-  if(!requireAuth('Create a free account to play the Scout Game.')) return;
+  if(!requireAuth(t('sg.signupToPlay'))) return;
   SG.captain=id; sgRenderSlots(); sgSubmitBar(sgRound(SG.roundId));
 }
 
@@ -5442,38 +5454,39 @@ function sgSubmitBar(r){
   }
   bar.style.display='flex'; if(page) page.classList.add('has-bar');
   if(isGuestNow()){
-    bar.innerHTML='<div class="sg-bar-text">Free to play. Points only.</div>'
-      +'<button class="sg-save" onclick="requireAuth(\'Create a free account to play the Scout Game.\')">Sign in to play</button>';
+    bar.innerHTML='<div class="sg-bar-text">'+t('sg.bar.free')+'</div>'
+      +'<button class="sg-save" onclick="requireAuth(t(\'sg.signupToPlay\'))">'+t('sg.bar.signin')+'</button>';
     return;
   }
   const n=sgPicked().length, hasCap=SG.captain!=null&&SG.picks.indexOf(SG.captain)>=0;
   const c=sgPosCounts();
   const full=['G','D','X'].filter(k=>c[k]>=SG_POS_MAX[k]);
   const noMatch=sgPicked().some(x=>sgNoMatch(sgPlayer(x)));
-  const why=noMatch?'Replace the pick with no match this round'
-    :n<5?(5-n)+' more to pick'+(full.length?' · '+full.map(k=>SG_GROUP_LABEL[k]).join(', ')+' full':'')
-    :!hasCap?'Choose a captain':'Ready';
+  const why=noMatch?t('sg.why.noMatch')
+    :n<5?tn('sg.why.more',5-n)+(full.length?' · '+t('sg.why.full',{groups:full.map(sgPosLabel).join(', ')}):'')
+    :!hasCap?t('sg.why.captain'):t('sg.why.ready');
   bar.innerHTML='<div class="sg-bar-text"><b>'+n+'/5</b> · '+sanitize(why)
     +'<div class="sg-bar-pos">'+['G','D','X'].map(k=>'<span'+(c[k]>=SG_POS_MAX[k]?' class="full"':'')+'>'
-      +SG_GROUP_LABEL[k]+' '+c[k]+'/'+SG_POS_MAX[k]+'</span>').join(' · ')+'</div></div>'
+      +sgPosLabel(k)+' '+c[k]+'/'+SG_POS_MAX[k]+'</span>').join(' · ')+'</div></div>'
     +'<button class="sg-save" id="sg-save" onclick="sgSave()"'+(n===5&&hasCap&&!noMatch&&!SG.saving?'':' disabled')+'>'
-    +(SG.saving?'Saving…':SG.entries.get(r.id)?'Update picks':'Save picks')+'</button>';
+    +t(SG.saving?'sg.saving':SG.entries.get(r.id)?'sg.update':'sg.save')+'</button>';
 }
 
 async function sgSave(){
-  if(!requireAuth('Create a free account to play the Scout Game.')) return;
+  if(!requireAuth(t('sg.signupToPlay'))) return;
   const r=sgRound(SG.roundId);
   if(!r||SG.saving) return;
   SG.saving=true; sgSubmitBar(r);
   try{
     await apiSend('POST','rpc/submit_picks',{p_round_id:r.id,p_player_ids:sgPicked(),p_captain_id:SG.captain},'return=representation');
-    toast('Picks saved. You can change them until the first kickoff.');
+    toast(t('sg.savedToast'));
     await sgLoadEntries().catch(()=>{});
     // Re-seed from the saved entry; if it could not be read back, keep the draft.
     if(SG.entries.get(r.id)) SG.draftRound=null;
   }catch(e){
-    // submit_picks words its refusals for people: show them as they are.
-    toast(friendlyDbError(e.message),'error');
+    // submit_picks words its refusals for people: shown as they are, in the
+    // reader's language when i18n.js knows the exact text (tServer).
+    toast(tServer(friendlyDbError(e.message)),'error');
   }finally{
     SG.saving=false;
   }
@@ -5489,11 +5502,11 @@ async function sgRenderPlayed(r){
   const e=SG.entries.get(r.id);
   const head='<div class="sg-round-head">'
     +'<div class="sg-round-title">'+sanitize(sgLeagueName(r))+' · '+sanitize(sgRoundName(r))+'</div>'
-    +'<div class="sg-round-sub">'+(r.status==='final'?'Final':sgInPlay(r)?'In play':'Full time')
-    +(r.participants?' · '+Number(r.participants).toLocaleString()+' playing':'')+'</div>'
-    +(r.status==='locked'?'<div class="sg-note">Points arrive a few hours after full time.</div>':'')
+    +'<div class="sg-round-sub">'+t(r.status==='final'?'sg.st.final':sgInPlay(r)?'sg.st.inPlay':'sg.st.ft')
+    +(r.participants?' · '+t('sg.playing',{n:sgCount(r.participants)}):'')+'</div>'
+    +(r.status==='locked'?'<div class="sg-note">'+t('sg.pointsLater')+'</div>':'')
     +'</div>';
-  el.innerHTML=head+'<div id="sg-mine"><div class="sg-empty">Loading…</div></div><div id="sg-fixtures"></div><div id="sg-round-rank"></div>';
+  el.innerHTML=head+'<div id="sg-mine"><div class="sg-empty">'+t('sg.loading')+'</div></div><div id="sg-fixtures"></div><div id="sg-round-rank"></div>';
   const me=myUserId();
   const [scores,rank,fixtures,top]=await Promise.all([
     e?apiGet('game_pick_scores?select=slot,fixture_id,base_points,breakdown,multiplier,is_captain,contrarian,total&entry_id=eq.'+e.id).catch(()=>[]):[],
@@ -5506,14 +5519,14 @@ async function sgRenderPlayed(r){
   sgRenderMine(r,e,scores||[],(rank||[])[0]);
   sgRenderFixtures(fixtures||[]);
   const rr=document.getElementById('sg-round-rank');
-  if(rr) rr.innerHTML='<div class="sg-section">Top of this round</div>'+sgTable(top||[],(rank||[])[0]&&me?Object.assign({user_id:me,name:'You'},rank[0]):null,'total');
+  if(rr) rr.innerHTML='<div class="sg-section">'+t('sg.topRound')+'</div>'+sgTable(top||[],(rank||[])[0]&&me?Object.assign({user_id:me,name:t('sg.you')},rank[0]):null,'total');
 }
 
 function sgRenderMine(r,e,scores,rank){
   const el=document.getElementById('sg-mine');
   if(!el) return;
   if(!e){
-    el.innerHTML='<div class="sg-empty">'+(isGuestNow()?'Sign in to play the next round.':'You did not pick for this round.')+'</div>';
+    el.innerHTML='<div class="sg-empty">'+t(isGuestNow()?'sg.signNext':'sg.didNotPick')+'</div>';
     return;
   }
   const bySlot=new Map();
@@ -5526,16 +5539,16 @@ function sgRenderMine(r,e,scores,rank){
     const tot=list.reduce((a,s)=>a+Number(s.total||0),0);
     if(list.length){ any=true; sum+=tot; }
     const brk=sgBreakdown(list);
-    const pl=p.players||{name:'Player'};
+    const pl=p.players||{name:t('sg.player')};
     // Slots are stored in formation order (023): the slot number is the position.
     const g=SG_SLOT_GROUP[p.slot-1];
     return '<div class="sg-pick'+(p.is_captain?' is-captain':'')+'" onclick="this.classList.toggle(\'open\')">'
-      +'<div class="sg-pick-top">'+(g?'<span class="sg-slot-pos">'+SG_GROUP_LABEL[g]+'</span>':'')+sgPhoto(pl,32)
+      +'<div class="sg-pick-top">'+(g?'<span class="sg-slot-pos">'+sgPosLabel(g)+'</span>':'')+sgPhoto(pl,32)
       // Tags sit on the second line: on the name line a long name cut them to "Picked …".
       +'<div class="sg-slot-main"><div class="sg-slot-name">'+sanitize(pl.name)+'</div>'
       +'<div class="sg-slot-meta">'
-      +(p.is_captain?'<span class="sg-tag">Captain</span> ':'')
-      +(p.locked_contrarian?'<span class="sg-tag b">Picked by under 5%</span> ':'')
+      +(p.is_captain?'<span class="sg-tag">'+t('sg.captain')+'</span> ':'')
+      +(p.locked_contrarian?'<span class="sg-tag b">'+t('sg.tag.contrarian')+'</span> ':'')
       +sanitize(sgLockedLevel(p))+'</div></div>'
       +'<div class="sg-pick-pts">'+(list.length?sgPts(tot):'—')+'</div></div>'
       +(brk?'<div class="sg-brk">'+brk+'</div>':'')
@@ -5543,10 +5556,10 @@ function sgRenderMine(r,e,scores,rank){
   }).join('');
   const total=rank&&rank.total!=null?rank.total:(any?sum:null);
   el.innerHTML='<div class="sg-total"><div><div class="sg-total-n">'+(total==null?'—':sgPts(total))+'</div>'
-    +'<div class="sg-total-l">points</div></div>'
-    +(rank?'<div><div class="sg-total-n">'+sanitize(ordinal(rank.rank))+'</div><div class="sg-total-l">of '+Number(rank.participants).toLocaleString()+'</div></div>':'')
-    +'</div><div class="sg-section">Your five</div>'+rows
-    +'<div class="sg-note">Tap a player for the breakdown.</div>';
+    +'<div class="sg-total-l">'+t('sg.points')+'</div></div>'
+    +(rank?'<div><div class="sg-total-n">'+sanitize(tOrd(rank.rank))+'</div><div class="sg-total-l">'+t('sg.ofN',{n:sgCount(rank.participants)})+'</div></div>':'')
+    +'</div><div class="sg-section">'+t('sg.yourFive')+'</div>'+rows
+    +'<div class="sg-note">'+t('sg.tapBreakdown')+'</div>';
 }
 
 /** Each scoring line, summed over the fixtures the pick played in. */
@@ -5564,8 +5577,8 @@ function sgBreakdown(list){
     }
   }
   const lines=Object.keys(agg).filter(k=>agg[k].points!==0).map(k=>
-    '<div class="sg-brk-row"><span>'+sanitize(SG_BREAKDOWN_LABEL[k]||k)+' ('+agg[k].count+')</span><span>'+(agg[k].points>0?'+':'')+sgPts(agg[k].points)+'</span></div>');
-  lines.push('<div class="sg-brk-row b"><span>Base '+sgPts(base)+(base>0?' '+sgMult(mult):' · not multiplied')+'</span><span></span></div>');
+    '<div class="sg-brk-row"><span>'+sanitize(sgBreakdownLabel(k))+' ('+agg[k].count+')</span><span>'+(agg[k].points>0?'+':'')+sgPts(agg[k].points)+'</span></div>');
+  lines.push('<div class="sg-brk-row b"><span>'+(base>0?t('sg.base',{pts:sgPts(base),mult:sgMult(mult)}):t('sg.baseNot',{pts:sgPts(base)}))+'</span><span></span></div>');
   return lines.join('');
 }
 
@@ -5574,7 +5587,7 @@ function sgRenderFixtures(rows){
   if(!el) return;
   const fx=rows.map(x=>x.fixtures).filter(Boolean).sort((a,b)=>String(a.kickoff_utc).localeCompare(String(b.kickoff_utc)));
   if(!fx.length){ el.innerHTML=''; return; }
-  el.innerHTML='<div class="sg-section">Matches in this round</div><div class="sg-fx">'+fx.map(f=>{
+  el.innerHTML='<div class="sg-section">'+t('sg.matchesRound')+'</div><div class="sg-fx">'+fx.map(f=>{
     const done=['FT','AET','PEN'].indexOf(f.status_short)>=0;
     const live=['1H','HT','2H','ET','BT','P','LIVE'].indexOf(f.status_short)>=0;
     const score=(done||live)&&f.home_goals!=null?f.home_goals+'–'+f.away_goals:sgWhen(f.kickoff_utc);
@@ -5591,11 +5604,11 @@ function sgRenderFixtures(rows){
 /** A ranking table; `mine` is pinned under it when it is not in the rows. */
 function sgTable(rows,mine,field,extra){
   const me=myUserId();
-  if(!rows.length) return '<div class="sg-empty">No one has been scored here yet.</div>';
+  if(!rows.length) return '<div class="sg-empty">'+t('sg.noScored')+'</div>';
   const line=(x,pinned)=>'<div class="sg-rank-row'+(x.user_id&&x.user_id===me?' me':'')+(pinned?' pinned':'')+'">'
     +'<span class="sg-rank-n">'+sanitize(String(x.rank))+'</span>'
     +(x.main_club_id?clubCrestById(x.main_club_id,16):'<span style="width:16px;display:inline-block;"></span>')
-    +'<span class="sg-rank-name">'+(x.user_id&&x.user_id===me?'You':sgFan(x.name))+'</span>'
+    +'<span class="sg-rank-name">'+(x.user_id&&x.user_id===me?t('sg.you'):sgFan(x.name))+'</span>'
     +(extra?'<span class="sg-rank-x">'+sanitize(extra(x))+'</span>':'')
     +'<span class="sg-rank-pts">'+sgPts(x[field])+'</span></div>';
   let html=rows.map(x=>line(x,false)).join('');
@@ -5606,9 +5619,9 @@ function sgTable(rows,mine,field,extra){
 async function sgRenderRankings(){
   const body=document.getElementById('sg-body');
   if(!body) return;
-  const views=[['round','This round'],['comp','Competition'],['overall','Overall'],['torcida','My torcida']];
-  body.innerHTML='<div class="sg-chips">'+views.map(v=>'<button class="sg-chip'+(SG.rankView===v[0]?' active':'')+'" onclick="sgRankView(\''+v[0]+'\')">'+v[1]+'</button>').join('')+'</div>'
-    +'<div id="sg-rank-body"><div class="sg-empty">Loading…</div></div>';
+  const views=['round','comp','overall','torcida'];
+  body.innerHTML='<div class="sg-chips">'+views.map(v=>'<button class="sg-chip'+(SG.rankView===v?' active':'')+'" onclick="sgRankView(\''+v+'\')">'+t('sg.rv.'+v)+'</button>').join('')+'</div>'
+    +'<div id="sg-rank-body"><div class="sg-empty">'+t('sg.loading')+'</div></div>';
   const out=document.getElementById('sg-rank-body');
   const me=isGuestNow()?null:myUserId();
   const league=SG.leagueId!=null?SG.leagueId:sgDefaultLeague();
@@ -5619,45 +5632,45 @@ async function sgRenderRankings(){
     let html='';
     if(v==='round'){
       const r=(SG.roundId&&sgRound(SG.roundId)&&sgRound(SG.roundId).status!=='open'&&sgRound(SG.roundId).league_id===league)?sgRound(SG.roundId):lr[lr.length-1];
-      if(!r){ out.innerHTML='<div class="sg-empty">No round of this competition has started yet.</div>'; return; }
+      if(!r){ out.innerHTML='<div class="sg-empty">'+t('sg.rk.noRound')+'</div>'; return; }
       const base='game_round_rankings?select=rank,name,main_club_id,total,user_id,participants&round_id=eq.'+r.id;
       const [rows,mine]=await Promise.all([apiGet(base+'&order=rank.asc&limit=50'),mineOf(base)]);
       html='<div class="sg-rank-title">'+sanitize(sgLeagueName(r))+' · '+sanitize(sgRoundName(r))+'</div>'+sgTable(rows,mine,'total');
     }else if(v==='comp'){
       const r=lr[lr.length-1]||sgRoundsFor(league)[0];
-      if(!r){ out.innerHTML='<div class="sg-empty">No competition is in play yet.</div>'; return; }
+      if(!r){ out.innerHTML='<div class="sg-empty">'+t('sg.rk.noComp')+'</div>'; return; }
       const base='game_competition_standings?select=rank,name,main_club_id,total,user_id,rounds_played&league_id=eq.'+r.league_id+'&season=eq.'+r.season;
       const [rows,mine]=await Promise.all([apiGet(base+'&order=rank.asc&limit=50'),mineOf(base)]);
-      html='<div class="sg-rank-title">'+sanitize(sgLeagueName(r))+' · this season</div>'+sgTable(rows,mine,'total',x=>x.rounds_played+' rd');
+      html='<div class="sg-rank-title">'+t('sg.rk.season',{league:sanitize(sgLeagueName(r))})+'</div>'+sgTable(rows,mine,'total',x=>t('sg.rk.rd',{n:x.rounds_played}));
     }else if(v==='overall'){
       const base='game_overall_standings?select=rank,name,main_club_id,total,user_id,rounds_played';
       const [rows,mine]=await Promise.all([apiGet(base+'&order=rank.asc&limit=50'),mineOf(base)]);
-      html='<div class="sg-rank-title">Every competition, this season</div>'+sgTable(rows,mine,'total',x=>x.rounds_played+' rd');
+      html='<div class="sg-rank-title">'+t('sg.rk.overall')+'</div>'+sgTable(rows,mine,'total',x=>t('sg.rk.rd',{n:x.rounds_played}));
     }else{
       const club=mainClubId();
       const min=Math.max(3,Number((SG.config||{}).torcida_min_members||3));
       let fans='';
       if(!club){
-        fans='<div class="sg-empty">Pick a main club to see where you stand among its fans.</div>';
+        fans='<div class="sg-empty">'+t('sg.rk.pickMain')+'</div>';
       }else{
         const base='game_torcida_standings?select=rank,name,main_club_id,total,user_id,members&main_club_id=eq.'+club;
         const [rows,mine]=await Promise.all([apiGet(base+'&order=rank.asc&limit=50'),mineOf(base)]);
-        fans='<div class="sg-rank-title">'+clubCrestById(club,16)+' '+sanitize(clubLabel(club))+' fans</div>'+sgTable(rows,mine,'total');
+        fans='<div class="sg-rank-title">'+clubCrestById(club,16)+' '+t('sg.rk.fans',{club:sanitize(clubLabel(club))})+'</div>'+sgTable(rows,mine,'total');
       }
       const table=await apiGet('game_torcida_table?select=rank,main_club_id,club,members,top10_mean&order=rank.asc&limit=50');
       const clubRows=(table||[]).map(x=>'<div class="sg-rank-row'+(x.main_club_id===club?' me':'')+'">'
         +'<span class="sg-rank-n">'+x.rank+'</span>'+clubCrestById(x.main_club_id,16)
         +'<span class="sg-rank-name">'+sanitize(clubLabel(x.main_club_id)||x.club)+'</span>'
-        +'<span class="sg-rank-x">'+sanitize(memberLabel(x.members))+'</span>'
+        +'<span class="sg-rank-x">'+sanitize(tn('sg.members',x.members||0))+'</span>'
         +'<span class="sg-rank-pts">'+sgPts(x.top10_mean)+'</span></div>').join('');
-      html=fans+'<div class="sg-rank-title" style="margin-top:22px;">Torcida table</div>'
-        +'<div class="sg-note">Each club\'s score is the average of its top 10 fans. Clubs need '+min+' fans playing to appear.</div>'
-        +(clubRows?'<div class="sg-rank">'+clubRows+'</div>':'<div class="sg-empty">No club has enough fans playing yet.</div>');
+      html=fans+'<div class="sg-rank-title" style="margin-top:22px;">'+t('sg.rk.torcidaTable')+'</div>'
+        +'<div class="sg-note">'+t('sg.rk.torcidaNote',{min:min})+'</div>'
+        +(clubRows?'<div class="sg-rank">'+clubRows+'</div>':'<div class="sg-empty">'+t('sg.rk.noClub')+'</div>');
     }
     if(SG.view==='rankings'&&SG.rankView===v) out.innerHTML=html;
   }catch(e){
     console.error('rankings:',e);
-    out.innerHTML='<div class="sg-empty">Rankings could not load just now.</div>';
+    out.innerHTML='<div class="sg-empty">'+t('sg.rk.fail')+'</div>';
   }
 }
 function sgRankView(v){ SG.rankView=v; sgRenderRankings(); }
@@ -5679,9 +5692,11 @@ function sgGoPick(roundId){
 
 /** "Sat 16:30" in the reader's time zone, for a round's deadline. */
 function sgDayTime(iso){
-  try{ return new Date(iso).toLocaleString([], {weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}); }
+  try{ return new Date(iso).toLocaleString(smLocale(), {weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}); }
   catch(e){ return ''; }
 }
+/** "Round 12", or the API's own label when a round has no number. */
+function sgHistRoundName(x){ return x.round_no?t('sg.round',{n:x.round_no}):(x.round_label||t('sg.roundGeneric')); }
 /**
  * Where a round I entered stands, from the moment the picks are saved:
  *   open             picks in · closes Sat 16:30   ("locked at kickoff" once due,
@@ -5695,30 +5710,30 @@ function sgDayTime(iso){
 function sgHistoryState(x){
   if(x.status==='open'){
     const due=x.deadline_utc&&new Date(x.deadline_utc).getTime()<=Date.now();
-    return due?'picks in · locked at kickoff':'picks in · closes '+sanitize(sgDayTime(x.deadline_utc));
+    return due?t('sg.h.lockedAtKick'):t('sg.h.closes',{when:sanitize(sgDayTime(x.deadline_utc))});
   }
-  const rank=x.rank?sanitize(ordinal(x.rank))+' of '+Number(x.participants).toLocaleString():null;
-  if(x.status==='final') return 'final'+(rank?' · '+rank:'');
+  const rank=x.rank?t('sg.h.rank',{ord:sanitize(tOrd(x.rank)),n:sgCount(x.participants)}):null;
+  if(x.status==='final') return t('sg.h.final')+(rank?' · '+rank:'');
   if(rank) return rank;
   const r=sgRound(x.round_id);
-  return r&&!sgInPlay(r)?'full time · points arriving':'in play · points after full time';
+  return r&&!sgInPlay(r)?t('sg.h.ftArriving'):t('sg.h.inPlay');
 }
 
 async function sgRenderHistory(){
   const body=document.getElementById('sg-body');
   if(!body) return;
   if(isGuestNow()){
-    body.innerHTML='<div class="sg-empty">Sign in to keep a history of your rounds.<br><br>'
-      +'<button class="sg-save" onclick="requireAuth(\'Create a free account to play the Scout Game.\')">Sign in to play</button></div>';
+    body.innerHTML='<div class="sg-empty">'+t('sg.h.signin')+'<br><br>'
+      +'<button class="sg-save" onclick="requireAuth(t(\'sg.signupToPlay\'))">'+t('sg.bar.signin')+'</button></div>';
     return;
   }
-  body.innerHTML='<div class="sg-empty">Loading your history…</div>';
+  body.innerHTML='<div class="sg-empty">'+t('sg.h.loading')+'</div>';
   let d;
   try{ d=await sgRpc('my_game_history',{}); }
   catch(e){
     console.error('my_game_history:',e);
     // Rule 21: before 023 runs there is no my_game_history to call.
-    if(SG.view==='history') body.innerHTML='<div class="sg-empty">Your history is not available yet. Check back soon.</div>';
+    if(SG.view==='history') body.innerHTML='<div class="sg-empty">'+t('sg.h.unavailable')+'</div>';
     return;
   }
   if(SG.view!=='history') return;
@@ -5726,23 +5741,23 @@ async function sgRenderHistory(){
   if(!rounds.length){
     const open=sgFirstOpenRound();
     body.innerHTML=open
-      ?'<div class="sg-empty"><button class="sg-history-cta" onclick="sgGoPick('+open.id+')">Your first round is open — pick now →</button></div>'
-      :'<div class="sg-empty">You have not played a round yet. The next one appears here once its fixtures are scheduled.</div>';
+      ?'<div class="sg-empty"><button class="sg-history-cta" onclick="sgGoPick('+open.id+')">'+t('sg.h.firstOpen')+'</button></div>'
+      :'<div class="sg-empty">'+t('sg.h.none')+'</div>';
     return;
   }
   const best=s.best_round;
   const cell=(n,l)=>'<div><div class="sg-total-n">'+n+'</div><div class="sg-total-l">'+l+'</div></div>';
   let html='<div class="sg-total sg-history-head">'
-    +cell(sgPts(s.season_total),'season points')
-    +cell(sanitize(String(s.rounds_played||0)),'rounds played')
-    +cell(best?sgPts(best.total):'—',best?sanitize((best.round_no?'Round '+best.round_no:best.round_label)+' · '+best.league):'best round')
-    +cell(sanitize(String(s.current_streak||0)),'round streak')
-    +'</div><div class="sg-section">Every round you entered</div>';
+    +cell(sgPts(s.season_total),t('sg.h.seasonPts'))
+    +cell(sanitize(sgCount(s.rounds_played)),t('sg.h.roundsPlayed'))
+    +cell(best?sgPts(best.total):'—',best?sanitize(sgHistRoundName(best)+' · '+best.league):t('sg.h.bestRound'))
+    +cell(sanitize(sgCount(s.current_streak)),t('sg.h.streak'))
+    +'</div><div class="sg-section">'+t('sg.h.every')+'</div>';
   html+=rounds.map(x=>{
-    const name=(x.flag?x.flag+' ':'')+(x.league||'')+' · '+(x.round_no?'Round '+x.round_no:(x.round_label||'Round'));
+    const name=(x.flag?x.flag+' ':'')+(x.league||'')+' · '+sgHistRoundName(x);
     const pts=x.status==='open'?'—':sgPts(x.total);
-    const bp=x.best_pick?'Best pick: '+sanitize(x.best_pick.name)+' '+sgPts(x.best_pick.points):'';
-    const badges=(x.badges||[]).map(b=>'<span class="sg-badge">'+sanitize(b.name||b.id)+'</span>').join('');
+    const bp=x.best_pick?t('sg.h.bestPick',{name:sanitize(x.best_pick.name),pts:sgPts(x.best_pick.points)}):'';
+    const badges=(x.badges||[]).map(b=>'<span class="sg-badge" title="'+sanitize(sgBadgeDesc(b.id,''))+'">'+sanitize(sgBadgeName(b.id,b.name))+'</span>').join('');
     const go=sgRound(x.round_id)?' onclick="sgGoPick('+Number(x.round_id)+')" role="button" tabindex="0"':'';
     return '<div class="sg-history-row'+(go?' match-tap':'')+'"'+go+'>'
       +'<div class="sg-history-top"><div class="sg-slot-main"><div class="sg-slot-name">'+sanitize(name)+'</div>'
@@ -5788,26 +5803,26 @@ async function renderProfileGame(){
     ]);
     const s=(hist&&hist.summary)||{}, rounds=((hist&&hist.rounds)||[]).slice(0,5), o=(overall||[])[0];
     if(!rounds.length){
-      el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px;">You have not played a round yet.</div>'
-        +'<button class="profile-edit-btn" onclick="sgOpenHistory()">Open the Scout Game →</button>';
+      el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px;">'+t('pg.none')+'</div>'
+        +'<button class="profile-edit-btn" onclick="sgOpenHistory()">'+t('pg.open')+'</button>';
       return;
     }
     const roundRows=rounds.map(x=>{
-      const name=(x.flag?x.flag+' ':'')+(x.league||'')+' · '+(x.round_no?'Round '+x.round_no:(x.round_label||'Round'));
+      const name=(x.flag?x.flag+' ':'')+(x.league||'')+' · '+sgHistRoundName(x);
       return '<div class="profile-row"><div class="profile-row-label">'+sanitize(name)+'</div>'
-        +'<div class="profile-row-value">'+(x.status==='open'?'':sgPts(x.total)+' pts · ')+sgHistoryState(x)+'</div></div>';
+        +'<div class="profile-row-value">'+(x.status==='open'?'':t('pg.pts',{pts:sgPts(x.total)})+' · ')+sgHistoryState(x)+'</div></div>';
     }).join('');
     const b=(badges||[]).slice().sort((x,y)=>((x.badges||{}).sort||0)-((y.badges||{}).sort||0));
-    el.innerHTML=(s.rounds_played?'<div class="profile-row"><div class="profile-row-label">This season</div>'
-        +'<div class="profile-row-value">'+sgPts(s.season_total)+' pts'+(o?' · '+sanitize(ordinal(o.rank))+' overall':'')
-        +' · '+s.rounds_played+' round'+(s.rounds_played===1?'':'s')+'</div></div>':'')
+    el.innerHTML=(s.rounds_played?'<div class="profile-row"><div class="profile-row-label">'+t('pg.season')+'</div>'
+        +'<div class="profile-row-value">'+t('pg.pts',{pts:sgPts(s.season_total)})+(o?' · '+t('pg.overall',{ord:sanitize(tOrd(o.rank))}):'')
+        +' · '+tn('pg.rounds',s.rounds_played)+'</div></div>':'')
       +roundRows
-      +(b.length?'<div class="sg-badges">'+b.map(x=>'<span class="sg-badge" title="'+sanitize((x.badges||{}).description||'')+'">'
-        +sanitize((x.badges||{}).name||x.badge_id)+'</span>').join('')+'</div>':'')
-      +'<button class="profile-edit-btn" style="margin-top:12px;" onclick="sgOpenHistory()">See my history →</button>';
+      +(b.length?'<div class="sg-badges">'+b.map(x=>'<span class="sg-badge" title="'+sanitize(sgBadgeDesc(x.badge_id,(x.badges||{}).description))+'">'
+        +sanitize(sgBadgeName(x.badge_id,(x.badges||{}).name))+'</span>').join('')+'</div>':'')
+      +'<button class="profile-edit-btn" style="margin-top:12px;" onclick="sgOpenHistory()">'+t('pg.seeHistory')+'</button>';
   }catch(e){
     console.error('renderProfileGame:',e);
-    el.innerHTML='<div style="font-size:12px;color:var(--muted);">Your Scout Game record could not load just now.</div>';
+    el.innerHTML='<div style="font-size:12px;color:var(--muted);">'+t('pg.fail')+'</div>';
   }
 }
 
@@ -5823,22 +5838,25 @@ async function openMatch(id){
   const body=document.getElementById('mo-body');
   if(!ov||!body) return;
   MO_OPEN=id;
-  document.getElementById('mo-title').textContent='Match';
-  body.innerHTML='<div class="sg-empty">Loading the match…</div>';
+  document.getElementById('mo-title').textContent=t('mo.title');
+  body.innerHTML='<div class="sg-empty">'+t('mo.loading')+'</div>';
   ov.style.display='flex';
   document.body.style.overflow='hidden';
   try{
     const d=await sgRpc('match_detail',{p_fixture_id:id});
     if(MO_OPEN!==id) return;
-    if(!d||!d.fixture){ body.innerHTML='<div class="sg-empty">That match could not be found.</div>'; return; }
+    if(!d||!d.fixture){ body.innerHTML='<div class="sg-empty">'+t('mo.notFound')+'</div>'; return; }
+    MO_DATA={id:id,d:d};
     renderMatchDetail(d);
   }catch(e){
     console.error('match_detail:',e);
     if(MO_OPEN!==id) return;
     // Rule 21: before 019 runs there is no match_detail to call.
-    body.innerHTML='<div class="sg-empty">Match details are not available yet. Check back soon.</div>';
+    body.innerHTML='<div class="sg-empty">'+t('mo.unavailable')+'</div>';
   }
 }
+// The last match_detail on screen, so a language switch redraws it without a re-read.
+let MO_DATA=null;
 function closeMatch(){
   MO_OPEN=null;
   const ov=document.getElementById('match-overlay');
@@ -5860,21 +5878,21 @@ function renderMatchDetail(d){
   const FIN=['FT','AET','PEN'], LIVE=['1H','HT','2H','ET','BT','P','LIVE'];
   const done=FIN.indexOf(f.status)>=0, live=LIVE.indexOf(f.status)>=0, started=done||live;
   const kick=f.kickoff_utc?new Date(f.kickoff_utc):null;
-  const when=kick?kick.toLocaleString([], {weekday:'long',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+  const when=kick?kick.toLocaleString(smLocale(), {weekday:'long',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
   const home=f.home||{}, away=f.away||{};
-  document.getElementById('mo-title').textContent=moTeamName(home)+' v '+moTeamName(away);
+  document.getElementById('mo-title').textContent=t('mo.v',{home:moTeamName(home),away:moTeamName(away)});
 
   const roundNo=/(\d+)\s*$/.exec(f.round||'');
   let html='<div class="mo-inner">'
     +'<div class="mo-meta">'+sanitize((f.league_flag?f.league_flag+' ':'')+(f.league||''))
-    +(roundNo?' · Round '+roundNo[1]:'')+'<br>'+sanitize(when)+(f.venue?' · '+sanitize(f.venue):'')+'</div>';
+    +(roundNo?' · '+t('sg.round',{n:roundNo[1]}):'')+'<br>'+sanitize(when)+(f.venue?' · '+sanitize(f.venue):'')+'</div>';
 
-  const status=done?(f.status==='FT'?'Full time':f.status==='AET'?'After extra time':'After penalties')
-    :live?(f.status==='HT'?'Half time':'Live'+(f.elapsed?' · '+f.elapsed+'\'':''))
-    :(['PST','CANC','ABD','SUSP','INT'].indexOf(f.status)>=0?({PST:'Postponed',CANC:'Cancelled',ABD:'Abandoned',SUSP:'Suspended',INT:'Interrupted'})[f.status]:'Kickoff '+(kick?kick.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):''));
+  const status=done?t(f.status==='FT'?'sg.st.ft':f.status==='AET'?'mo.aet':'mo.pens')
+    :live?(f.status==='HT'?t('mo.ht'):t('mo.live')+(f.elapsed?' · '+f.elapsed+'\'':''))
+    :(['PST','CANC','ABD','SUSP','INT'].indexOf(f.status)>=0?t('mo.st.'+f.status):t('mo.kickoff',{time:kick?kick.toLocaleTimeString(smLocale(), {hour:'2-digit',minute:'2-digit'}):''}));
   html+='<div class="mo-score">'
     +'<div class="mo-team">'+clubCrestById(home.id,44)+'<span>'+sanitize(moTeamName(home))+'</span></div>'
-    +'<div class="mo-goals-n">'+(started&&f.home_goals!=null?f.home_goals+' – '+f.away_goals:'vs')+'</div>'
+    +'<div class="mo-goals-n">'+(started&&f.home_goals!=null?f.home_goals+' – '+f.away_goals:t('mo.vs'))+'</div>'
     +'<div class="mo-team">'+clubCrestById(away.id,44)+'<span>'+sanitize(moTeamName(away))+'</span></div>'
     +'</div><div class="mo-status'+(live?' live':'')+'">'+sanitize(status)+'</div>';
 
@@ -5882,9 +5900,9 @@ function renderMatchDetail(d){
     // Goals, each on its scoring side. Own goals sit with the team credited.
     const goals=d.goals||[];
     if(goals.length){
-      html+='<div class="mo-section">Goals</div>'+goals.map(g=>{
+      html+='<div class="mo-section">'+t('mo.goals')+'</div>'+goals.map(g=>{
         const side=g.team_id===away.id?' away':'';
-        const tag=g.detail==='Own Goal'?' (OG)':g.detail==='Penalty'?' (pen)':'';
+        const tag=g.detail==='Own Goal'?' '+t('mo.og'):g.detail==='Penalty'?' '+t('mo.penTag'):'';
         return '<div class="mo-goal'+side+'"><span class="mo-min">'+(g.minute!=null?g.minute+(g.extra?'+'+g.extra:'')+'\'':'')+'</span>'
           +'<span>'+sanitize((g.player||'—')+tag)+(g.assist&&g.detail!=='Own Goal'?'<div class="mo-sub">'+sanitize(g.assist)+'</div>':'')+'</span></div>';
       }).join('');
@@ -5893,56 +5911,89 @@ function renderMatchDetail(d){
     // The reader's Scout points in this match (empty for guests and non-players).
     const mp=d.my_points||[];
     if(mp.length){
-      html+='<div class="mo-section">Your Scout points</div>'+mp.map(p=>
-        '<div class="mo-row"><span>'+sanitize(p.name||'Player')+(p.captain?' <span class="sg-tag">Captain</span>':'')+'</span>'
+      html+='<div class="mo-section">'+t('mo.myPoints')+'</div>'+mp.map(p=>
+        '<div class="mo-row"><span>'+sanitize(p.name||t('sg.player'))+(p.captain?' <span class="sg-tag">'+t('sg.captain')+'</span>':'')+'</span>'
         +'<span class="mo-pl-x">'+sgPts(p.base)+(Number(p.base)>0?' '+sgMult(p.multiplier):'')+' = <b style="color:var(--text);">'+sgPts(p.total)+'</b></span></div>').join('');
     }
 
     // Who played, per club: starters, then the subs who came on.
     const pl=d.players||[];
     if(pl.length){
-      const col=t=>{
-        const mine=pl.filter(p=>p.team_id===t.id);
+      const col=team=>{
+        const mine=pl.filter(p=>p.team_id===team.id);
         if(!mine.length) return '';
         const row=p=>{
           const icons=(p.goals?' ⚽'+(p.goals>1?'×'+p.goals:''):'')+(p.assists?' 👟'+(p.assists>1?'×'+p.assists:''):'')
             +(p.red?' 🟥':p.yellow?' 🟨':'');
-          const mins=p.started?(p.minute_off!=null?'off '+p.minute_off+'\'':''):(p.minute_on!=null?'on '+p.minute_on+'\'':'');
+          const mins=p.started?(p.minute_off!=null?t('mo.off',{m:p.minute_off}):''):(p.minute_on!=null?t('mo.on',{m:p.minute_on}):'');
           return '<div class="mo-pl"><span class="mo-shirt">'+(p.shirt!=null?p.shirt:'')+'</span>'
             +'<span class="mo-pl-name">'+sanitize(p.name||'—')+icons+'</span>'
-            +'<span class="mo-pl-x">'+(SG_POS_LABEL[p.position]||'')+(mins?' · '+mins:'')+'</span>'
-            +'<span class="mo-rating">'+(p.rating!=null?Number(p.rating).toFixed(1):'—')+'</span></div>';
+            +'<span class="mo-pl-x">'+sgPosLabel(p.position)+(mins?' · '+sanitize(mins):'')+'</span>'
+            +'<span class="mo-rating">'+(p.rating!=null?Number(p.rating).toLocaleString(smLocale(),{minimumFractionDigits:1,maximumFractionDigits:1}):'—')+'</span></div>';
         };
         const xi=mine.filter(p=>p.started), subs=mine.filter(p=>!p.started);
-        return '<div><div class="mo-col-head">'+clubCrestById(t.id,18)+sanitize(moTeamName(t))+'</div>'
+        return '<div><div class="mo-col-head">'+clubCrestById(team.id,18)+sanitize(moTeamName(team))+'</div>'
           +xi.map(row).join('')
-          +(subs.length?'<div class="mo-sub" style="margin:8px 0 2px;">Came on</div>'+subs.map(row).join(''):'')+'</div>';
+          +(subs.length?'<div class="mo-sub" style="margin:8px 0 2px;">'+t('mo.cameOn')+'</div>'+subs.map(row).join(''):'')+'</div>';
       };
-      html+='<div class="mo-section">Who played <span>Rating by API-Football</span></div>'
+      html+='<div class="mo-section">'+t('mo.whoPlayed')+' <span>'+t('mo.ratingBy')+'</span></div>'
         +'<div class="mo-cols">'+col(home)+col(away)+'</div>'
-        +(f.players_unidentified?'<div class="mo-note">'+Number(f.players_unidentified)+' player'+(f.players_unidentified===1?' was':'s were')+' not identified by the data provider and '+(f.players_unidentified===1?'is':'are')+' not listed.</div>':'');
+        +(f.players_unidentified?'<div class="mo-note">'+tn('mo.unident',f.players_unidentified)+'</div>':'');
     }else if(done){
-      html+='<div class="mo-section">Who played</div><div class="mo-note">Player ratings and Scout points arrive a few hours after full time.</div>';
+      html+='<div class="mo-section">'+t('mo.whoPlayed')+'</div><div class="mo-note">'+t('mo.ratingsLater')+'</div>';
     }
   }else{
     // Before kickoff: where each club stands and how it has been doing.
     const form=d.form||{};
-    const side=(t,fm)=>{
+    const side=(team,fm)=>{
       fm=fm||{};
       const last=(fm.last5||[]).slice().reverse();   // oldest first, newest on the right
-      return '<div class="mo-row"><span style="display:flex;align-items:center;gap:6px;min-width:0;">'+clubCrestById(t.id,18)
-        +'<span class="mo-pl-name">'+sanitize(moTeamName(t))+'</span></span>'
-        +'<span class="mo-pl-x">'+(fm.rank!=null?sanitize(ordinal(fm.rank))+(fm.points!=null?' · '+fm.points+' pts':''):'—')+'</span></div>'
+      return '<div class="mo-row"><span style="display:flex;align-items:center;gap:6px;min-width:0;">'+clubCrestById(team.id,18)
+        +'<span class="mo-pl-name">'+sanitize(moTeamName(team))+'</span></span>'
+        +'<span class="mo-pl-x">'+(fm.rank!=null?(fm.points!=null?t('mo.rankPts',{rank:sanitize(tOrd(fm.rank)),pts:fm.points}):sanitize(tOrd(fm.rank))):'—')+'</span></div>'
         +'<div class="mo-form" style="margin:8px 0 4px;">'+(last.length?last.map(r=>
-          '<span class="mo-wdl '+sanitize(r.result)+'" title="'+sanitize((r.home?'vs ':'at ')+(r.opponent||'')+' '+(r.score||''))+'">'+sanitize(r.result)+'</span>').join('')
-          :'<span class="mo-sub">No league results yet this season.</span>')+'</div>';
+          '<span class="mo-wdl '+sanitize(r.result)+'" title="'+sanitize(t(r.home?'mo.formHome':'mo.formAway',{opp:r.opponent||'',score:r.score||''}))+'">'
+          +sanitize(['W','D','L'].indexOf(r.result)>=0?t('mo.res.'+r.result):r.result)+'</span>').join('')
+          :'<span class="mo-sub">'+t('mo.noResults')+'</span>')+'</div>';
     };
-    html+='<div class="mo-section">League position and last five <span>oldest → newest</span></div>'
+    html+='<div class="mo-section">'+t('mo.form')+' <span>'+t('mo.oldNew')+'</span></div>'
       +side(home,form.home)+side(away,form.away);
   }
   html+='</div>';
   body.innerHTML=html;
 }
+
+// ── APP LANGUAGE (Day 6, beta) ──────────────────────────────────────────
+// Profile -> Preferences -> App language. What the interface is written in
+// (i18n.js), separate from Content languages, which filter the feed.
+function renderAppLangPref(){
+  const el=document.getElementById('profile-app-lang');
+  if(!el) return;
+  const cur=smLang();
+  el.innerHTML=[['en','English'],['pt-BR','Português (Brasil)']].map(function(l){
+    const on=l[0]===cur;
+    return '<button class="lang-pref" onclick="setLang(\''+l[0]+'\')" aria-pressed="'+on+'"'
+      +' style="font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:\'DM Sans\',sans-serif;'
+      +'border:1px solid '+(on?'var(--accent)':'var(--border)')+';background:'+(on?'rgba(0,229,160,0.1)':'transparent')
+      +';color:'+(on?'var(--accent)':'var(--muted)')+';">'+(on?'✓ ':'')+l[1]+'</button>';
+  }).join('');
+}
+// A switch redraws everything translated that is on screen, from what is
+// already loaded: no re-read, and the search boxes and drafts are kept.
+window.addEventListener('sm-lang',function(){
+  renderAppLangPref();
+  const page=document.getElementById('page-scout');
+  if(page&&page.classList.contains('active')&&SG.loadedAt){ sgTabs(); sgRender(); }
+  const prof=document.getElementById('page-profile');
+  if(prof&&prof.classList.contains('active')) renderProfileGame().catch(e=>console.error('renderProfileGame:',e));
+  const ob=document.getElementById('onboard-modal');
+  if(ob&&ob.style.display==='flex') renderOnboard();
+  const tm=document.getElementById('team-modal');
+  if(tm&&tm.style.display==='flex') renderModalClubs();
+  if(MO_OPEN&&MO_DATA&&MO_DATA.id===MO_OPEN) renderMatchDetail(MO_DATA.d);
+});
+applyI18n();
+renderAppLangPref();
 
 // The Scout tab may be the landing page (?page=scout): showPage ran before
 // this block existed, so render now.

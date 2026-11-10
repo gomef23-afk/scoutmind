@@ -189,10 +189,14 @@ eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
     ...Object.keys(basePoints({ ...one, position: 'G' }, 1).breakdown),
     ...Object.keys(basePoints({ ...one, position: 'G', red: 1 }, 0).breakdown),
   ]);
-  const block = /const SG_BREAKDOWN_LABEL=\{([\s\S]*?)\};/.exec(read('public/index.html'));
-  const labelled = new Set(block ? [...block[1].matchAll(/(\w+):'/g)].map((m) => m[1]) : []);
-  eq('breakdown keys without a label in index.html', [...keys].filter((k) => !labelled.has(k)), []);
-  eq('labels in index.html for keys basePoints() never writes', [...labelled].filter((k) => !keys.has(k)), []);
+  // Since Day 6 index.html lists the keys (SG_BREAKDOWN_KEYS) and the labels
+  // live in public/i18n.js as sg.brk.<key>, in English and Portuguese.
+  const block = /const SG_BREAKDOWN_KEYS=\[([\s\S]*?)\];/.exec(read('public/index.html'));
+  const listed = new Set(block ? [...block[1].matchAll(/'(\w+)'/g)].map((m) => m[1]) : []);
+  const dict = read('public/i18n.js');
+  const labelled = new Set([...listed].filter((k) => dict.split(`'sg.brk.${k}':`).length === 3));   // once per language
+  eq('breakdown keys without a label (index.html list + i18n.js en and pt-BR)', [...keys].filter((k) => !labelled.has(k)), []);
+  eq('labels in index.html for keys basePoints() never writes', [...listed].filter((k) => !keys.has(k)), []);
 }
 
 // ── no money language in the game's code ─────────────────────────────────

@@ -78,17 +78,26 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
 .sm-foot{text-align:center;font-size:12px;color:#5a6a85;padding:18px 16px 10px;}
 .sm-foot a{color:#5a6a85;text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 8px;}
 .sm-foot a:hover{color:#edf2f7;}
+.lang-toggle{display:flex;gap:4px;margin:-20px 0 16px;}
+.lang-toggle button{min-width:44px;min-height:44px;background:transparent;border:1px solid #1a2540;color:#5a6a85;border-radius:22px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;}
+.lang-toggle button.on{border-color:#00e5a0;color:#00e5a0;}
 </style>
 </head>
 <body>
 
 <div class="logo">Scout<span>Mind</span></div>
-<div class="tagline">Your club. Everything around it.</div>
+<div class="tagline" data-i18n="auth.tagline">Your club. Everything around it.</div>
+<!-- EN / PT (Day 6, beta). The choice is kept in localStorage sm_lang and
+     shared with the app and the legal pages. -->
+<div class="lang-toggle" role="group" data-i18n-aria="auth.langLabel" aria-label="Language">
+  <button type="button" data-lang="en" onclick="setLang('en')">EN</button>
+  <button type="button" data-lang="pt-BR" onclick="setLang('pt-BR')">PT</button>
+</div>
 
 <div class="card">
   <div class="tabs">
-    <button class="tab-btn active" id="btn-login" onclick="switchTab('login')">Sign In</button>
-    <button class="tab-btn" id="btn-register" onclick="switchTab('register')">Create Account</button>
+    <button class="tab-btn active" id="btn-login" onclick="switchTab('login')" data-i18n="auth.tab.signin">Sign In</button>
+    <button class="tab-btn" id="btn-register" onclick="switchTab('register')" data-i18n="auth.tab.signup">Create Account</button>
   </div>
 
   <div class="msg error" id="msg-error"></div>
@@ -97,98 +106,99 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
   <!-- Shown when a session already exists. This page used to redirect to '/'
        instead, which raced against a sign-in already in flight. -->
   <div id="already-signed-in" style="display:none;background:rgba(0,229,160,0.07);border:1px solid rgba(0,229,160,0.3);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.6;color:#c7d3e4;">
-    Already signed in as <strong id="already-email"></strong>.
+    <span data-i18n="auth.already.pre">Already signed in as</span> <strong id="already-email"></strong>.
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-      <a href="/" style="background:#00e5a0;color:#000;text-decoration:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:700;">Continue</a>
-      <button onclick="signOutAndStay()" style="background:transparent;border:1px solid #2a3a52;color:#8fa3bf;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;">Sign out and use another account</button>
+      <a href="/" style="background:#00e5a0;color:#000;text-decoration:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:700;" data-i18n="auth.already.continue">Continue</a>
+      <button onclick="signOutAndStay()" style="background:transparent;border:1px solid #2a3a52;color:#8fa3bf;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;" data-i18n="auth.already.switch">Sign out and use another account</button>
     </div>
   </div>
 
   <!-- LOGIN -->
   <div class="form-section active" id="sec-login">
     <div class="field">
-      <label>Email</label>
-      <input type="email" id="l-email" placeholder="your@email.com">
+      <label data-i18n="auth.field.email">Email</label>
+      <input type="email" id="l-email" placeholder="your@email.com" data-i18n-ph="auth.ph.email">
     </div>
     <div class="field">
-      <label>Password</label>
+      <label data-i18n="auth.field.password">Password</label>
       <input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
-    <button class="btn-primary" onclick="doLogin()" id="l-btn">Sign In</button>
-    <div class="link-row"><a role="button" tabindex="0" onclick="showPanel('forgot')">Forgot password?</a></div>
-    <div class="divider">or</div>
-    <button class="btn-demo" onclick="doDemo()">👁 Preview as Demo User (no account needed)</button>
+    <button class="btn-primary" onclick="doLogin()" id="l-btn" data-i18n="auth.tab.signin">Sign In</button>
+    <div class="link-row"><a role="button" tabindex="0" onclick="showPanel('forgot')" data-i18n="auth.forgot.link">Forgot password?</a></div>
+    <div class="divider" data-i18n="auth.or">or</div>
+    <button class="btn-demo" onclick="doDemo()" data-i18n="auth.demo.long">👁 Preview as Demo User (no account needed)</button>
   </div>
 
   <!-- REGISTER -->
   <div class="form-section" id="sec-register">
     <div class="field">
-      <label>Full name</label>
-      <input type="text" id="r-name" placeholder="Your name">
+      <label data-i18n="auth.field.name">Full name</label>
+      <input type="text" id="r-name" placeholder="Your name" data-i18n-ph="auth.ph.name">
     </div>
     <div class="field">
-      <label>Email</label>
-      <input type="email" id="r-email" placeholder="your@email.com">
+      <label data-i18n="auth.field.email">Email</label>
+      <input type="email" id="r-email" placeholder="your@email.com" data-i18n-ph="auth.ph.email">
     </div>
     <div class="field">
-      <label>Password</label>
-      <input type="password" id="r-pass" placeholder="Min. 8 characters">
+      <label data-i18n="auth.field.password">Password</label>
+      <input type="password" id="r-pass" placeholder="Min. 8 characters" data-i18n-ph="auth.ph.min8">
     </div>
-    <button class="btn-primary" onclick="doRegister()" id="r-btn">Create Account</button>
-    <div class="divider">or</div>
-    <button class="btn-demo" onclick="doDemo()">👁 Preview as Demo User</button>
+    <button class="btn-primary" onclick="doRegister()" id="r-btn" data-i18n="auth.tab.signup">Create Account</button>
+    <div class="divider" data-i18n="auth.or">or</div>
+    <button class="btn-demo" onclick="doDemo()" data-i18n="auth.demo.short">👁 Preview as Demo User</button>
   </div>
 
   <!-- CHECK YOUR INBOX — after sign-up, or a sign-in before confirming.
        No session exists yet, so nothing is saved as signed in. -->
   <div class="form-section" id="sec-inbox">
-    <div class="panel-title">Check your inbox</div>
-    <p class="panel-text">We sent a link to <strong id="inbox-email"></strong>. Open it to confirm your address, and you are in.</p>
-    <p class="panel-text muted">Nothing after a few minutes? Check spam, or send it again.</p>
-    <button class="btn-primary" id="resend-btn" onclick="resendConfirmation()">Resend email</button>
-    <div class="link-row"><a role="button" tabindex="0" onclick="showPanel('register')">Use a different email</a> · <a role="button" tabindex="0" onclick="showPanel('login')">Back to sign in</a></div>
+    <div class="panel-title" data-i18n="auth.inbox.title">Check your inbox</div>
+    <p class="panel-text"><span data-i18n="auth.inbox.sent1">We sent a link to</span> <strong id="inbox-email"></strong><span data-i18n="auth.inbox.sent2">. Open it to confirm your address, and you are in.</span></p>
+    <p class="panel-text muted" data-i18n="auth.inbox.spam">Nothing after a few minutes? Check spam, or send it again.</p>
+    <button class="btn-primary" id="resend-btn" onclick="resendConfirmation()" data-i18n="auth.inbox.resend">Resend email</button>
+    <div class="link-row"><a role="button" tabindex="0" onclick="showPanel('register')" data-i18n="auth.inbox.other">Use a different email</a> · <a role="button" tabindex="0" onclick="showPanel('login')" data-i18n="auth.back.signin">Back to sign in</a></div>
   </div>
 
   <!-- EMAIL CONFIRMED — arriving from the link in the confirmation email. -->
   <div class="form-section" id="sec-confirmed">
-    <div class="panel-title">Email confirmed</div>
-    <p class="panel-text">You're signed in as <strong id="confirmed-email"></strong>. Welcome to ScoutMind.</p>
-    <a class="btn-primary btn-link" href="/">Continue</a>
+    <div class="panel-title" data-i18n="auth.confirmed.title">Email confirmed</div>
+    <p class="panel-text"><span data-i18n="auth.confirmed.pre">You're signed in as</span> <strong id="confirmed-email"></strong><span data-i18n="auth.confirmed.post">. Welcome to ScoutMind.</span></p>
+    <a class="btn-primary btn-link" href="/" data-i18n="auth.already.continue">Continue</a>
   </div>
 
   <!-- FORGOT PASSWORD -->
   <div class="form-section" id="sec-forgot">
-    <div class="panel-title">Reset your password</div>
-    <p class="panel-text">Enter your account's email and we'll send a link to choose a new password.</p>
+    <div class="panel-title" data-i18n="auth.forgot.title">Reset your password</div>
+    <p class="panel-text" data-i18n="auth.forgot.text">Enter your account's email and we'll send a link to choose a new password.</p>
     <div class="field">
-      <label>Email</label>
-      <input type="email" id="f-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendReset()">
+      <label data-i18n="auth.field.email">Email</label>
+      <input type="email" id="f-email" placeholder="your@email.com" data-i18n-ph="auth.ph.email" onkeydown="if(event.key==='Enter')sendReset()">
     </div>
-    <button class="btn-primary" id="f-btn" onclick="sendReset()">Send reset link</button>
-    <div class="link-row"><a role="button" tabindex="0" onclick="showPanel('login')">Back to sign in</a></div>
+    <button class="btn-primary" id="f-btn" onclick="sendReset()" data-i18n="auth.forgot.btn">Send reset link</button>
+    <div class="link-row"><a role="button" tabindex="0" onclick="showPanel('login')" data-i18n="auth.back.signin">Back to sign in</a></div>
   </div>
 
   <!-- SET A NEW PASSWORD — arriving from the reset email. -->
   <div class="form-section" id="sec-reset">
-    <div class="panel-title">Choose a new password</div>
+    <div class="panel-title" data-i18n="auth.reset.title">Choose a new password</div>
     <div class="field">
-      <label>New password</label>
-      <input type="password" id="n-pass" placeholder="Min. 8 characters" autocomplete="new-password">
+      <label data-i18n="auth.reset.new">New password</label>
+      <input type="password" id="n-pass" placeholder="Min. 8 characters" data-i18n-ph="auth.ph.min8" autocomplete="new-password">
     </div>
     <div class="field">
-      <label>Repeat it</label>
-      <input type="password" id="n-pass2" placeholder="Same again" autocomplete="new-password" onkeydown="if(event.key==='Enter')saveNewPassword()">
+      <label data-i18n="auth.reset.repeat">Repeat it</label>
+      <input type="password" id="n-pass2" placeholder="Same again" data-i18n-ph="auth.reset.ph2" autocomplete="new-password" onkeydown="if(event.key==='Enter')saveNewPassword()">
     </div>
-    <button class="btn-primary" id="n-btn" onclick="saveNewPassword()">Save new password</button>
+    <button class="btn-primary" id="n-btn" onclick="saveNewPassword()" data-i18n="auth.reset.btn">Save new password</button>
   </div>
 
-  <div class="back" onclick="window.location.href='/'">← Back to scoutmind.app</div>
+  <div class="back" onclick="window.location.href='/'" data-i18n="auth.backHome">← Back to scoutmind.app</div>
 </div>
-<div class="legal-note">By creating an account you accept the <a href="/terms.html">Terms</a> and the <a href="/privacy.html">Privacy Policy</a>. You must be 13 or older; under 18, with a parent's or guardian's permission.</div>
+<div class="legal-note" data-i18n-html="auth.legal">By creating an account you accept the <a href="/terms.html">Terms</a> and the <a href="/privacy.html">Privacy Policy</a>. You must be 13 or older; under 18, with a parent's or guardian's permission.</div>
 <footer class="sm-foot">
-  <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:hello@scoutmind.app">Contact</a>
+  <a href="/privacy.html" data-i18n="foot.privacy">Privacy</a> · <a href="/terms.html" data-i18n="foot.terms">Terms</a> · <a href="mailto:hello@scoutmind.app" data-i18n="foot.contact">Contact</a>
 </footer>
 
+<script src="/i18n.js"></script>
 <script src="/vendor/supabase-js-2.119.0.js"></script>
 <script src="/sm_auth.js"></script>
 <script>
@@ -214,16 +224,46 @@ var ARRIVAL = params.get('confirmed') === '1' ? 'confirmed' : params.get('reset'
 var LINK_ERROR = new URLSearchParams(window.location.hash.slice(1)).get('error_description');
 var REDIRECT = window.location.origin + '/auth.html';
 var PENDING_EMAIL = '';
-// The language the confirmation / reset emails are written in (their
-// templates branch on user_metadata.lang). UI preference only.
-var LANG = /^pt/i.test(navigator.language || '') ? 'pt-BR' : 'en';
+// Language (Day 6): i18n.js picks it (sm_lang, else the browser). Signing up
+// sends it as user_metadata.lang, which the confirmation / reset email
+// templates branch on, so the email matches the page.
+function paintLang() {
+  applyI18n();
+  document.title = t('auth.docTitle');
+  var btns = document.querySelectorAll('.lang-toggle button');
+  for (var i = 0; i < btns.length; i++) {
+    var on = btns[i].getAttribute('data-lang') === smLang();
+    btns[i].className = on ? 'on' : '';
+    btns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+}
+paintLang();
+window.addEventListener('sm-lang', paintLang);
+
+/**
+ * Supabase Auth's messages, readable and in the page's language. Matched on
+ * its English text; anything unknown is shown as it came.
+ */
+function tAuthError(msg) {
+  var m = String(msg || '');
+  var wait = /only request this after (\d+) seconds/i.exec(m);
+  if (wait) return t('auth.sb.wait', { s: wait[1] });
+  if (m === 'Invalid login credentials') return t('auth.err.wrong');
+  if (/already registered|already been registered/i.test(m)) return t('auth.sb.exists');
+  if (/rate limit/i.test(m)) return t('auth.sb.rate');
+  if (/should be different from the old password/i.test(m)) return t('auth.sb.samePass');
+  if (/validate email|invalid format/i.test(m)) return t('auth.err.email');
+  if (/session missing|expired/i.test(m)) return t('auth.sb.session');
+  if (/failed to fetch|network/i.test(m)) return t('auth.sb.network');
+  return m;
+}
 
 sb.auth.getSession().then(function (res) {
   var session = res && res.data && res.data.session;
   if (!session || ARRIVAL) return;
   var box = document.getElementById('already-signed-in');
   var who = document.getElementById('already-email');
-  if (who) who.textContent = (session.user && session.user.email) || 'another account';
+  if (who) who.textContent = (session.user && session.user.email) || t('auth.anotherAccount');
   if (box) box.style.display = 'block';
 });
 
@@ -272,8 +312,7 @@ sb.auth.onAuthStateChange(function (event, session) {
   }
 });
 if (ARRIVAL && LINK_ERROR) {
-  showError('That link has expired or was already used. ' +
-    (ARRIVAL === 'reset' ? 'Ask for a new one below.' : 'Sign in, or send a new confirmation email.'));
+  showError(t(ARRIVAL === 'reset' ? 'auth.err.linkReset' : 'auth.err.linkConfirm'));
   if (ARRIVAL === 'reset') showPanel('forgot');
 }
 
@@ -303,52 +342,52 @@ async function resendConfirmation() {
   btn.disabled = true;
   var res = await sb.auth.resend({ type: 'signup', email: PENDING_EMAIL, options: { emailRedirectTo: REDIRECT + '?confirmed=1' } });
   if (res.error) {
-    showError(res.error.message);
+    showError(tAuthError(res.error.message));
     btn.disabled = false;
     return;
   }
-  showSuccess('Sent again. It can take a minute to arrive.');
+  showSuccess(t('auth.ok.resent'));
   // One resend a minute: Supabase limits them too, and says so less kindly.
   var left = 60;
-  btn.textContent = 'Resend email (' + left + 's)';
-  var t = setInterval(function () {
+  btn.textContent = t('auth.inbox.resendIn', { s: left });
+  var timer = setInterval(function () {
     left--;
-    if (left <= 0) { clearInterval(t); btn.disabled = false; btn.textContent = 'Resend email'; }
-    else btn.textContent = 'Resend email (' + left + 's)';
+    if (left <= 0) { clearInterval(timer); btn.disabled = false; btn.textContent = t('auth.inbox.resend'); }
+    else btn.textContent = t('auth.inbox.resendIn', { s: left });
   }, 1000);
 }
 
 async function sendReset() {
   var email = document.getElementById('f-email').value.trim().slice(0, 254);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Please enter a valid email address.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError(t('auth.err.email'));
   var btn = document.getElementById('f-btn');
-  btn.disabled = true; btn.textContent = 'Sending...';
+  btn.disabled = true; btn.textContent = t('auth.sending');
   var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: REDIRECT + '?reset=1' });
-  btn.disabled = false; btn.textContent = 'Send reset link';
+  btn.disabled = false; btn.textContent = t('auth.forgot.btn');
   // The same answer whether or not the address has an account, so this form
   // cannot be used to find out who is registered.
-  if (res.error && !/not found|no user/i.test(res.error.message)) return showError(res.error.message);
-  showSuccess('If an account exists for ' + email + ', a reset link is on its way.');
+  if (res.error && !/not found|no user/i.test(res.error.message)) return showError(tAuthError(res.error.message));
+  showSuccess(t('auth.ok.resetSent', { email: email }));
 }
 
 async function saveNewPassword() {
   var p1 = document.getElementById('n-pass').value.slice(0, 128);
   var p2 = document.getElementById('n-pass2').value.slice(0, 128);
-  if (p1.length < 8) return showError('Password must be at least 8 characters.');
-  if (!/[\d!@#$%^&*]/.test(p1)) return showError('Password must include at least one number or special character (!@#$%^&*).');
-  if (p1 !== p2) return showError('The two passwords do not match.');
+  if (p1.length < 8) return showError(t('auth.err.pass8'));
+  if (!/[\d!@#$%^&*]/.test(p1)) return showError(t('auth.err.passChar'));
+  if (p1 !== p2) return showError(t('auth.err.passMatch'));
   var btn = document.getElementById('n-btn');
-  btn.disabled = true; btn.textContent = 'Saving...';
+  btn.disabled = true; btn.textContent = t('auth.saving');
   var res = await sb.auth.updateUser({ password: p1 });
   if (res.error) {
-    showError(res.error.message);
-    btn.disabled = false; btn.textContent = 'Save new password';
+    showError(tAuthError(res.error.message));
+    btn.disabled = false; btn.textContent = t('auth.reset.btn');
     return;
   }
   var u = res.data.user;
   var prof = (await sb.from('profiles').select('name,plan').eq('id', u.id).maybeSingle()).data;
   saveUser(u.id, u.email, prof && prof.name ? prof.name : (u.email || '').split('@')[0], prof ? prof.plan : 'fan');
-  showSuccess('Password changed. Taking you in...');
+  showSuccess(t('auth.ok.passChanged'));
   setTimeout(function () { window.location.href = '/'; }, 900);
 }
 
@@ -384,24 +423,24 @@ function saveUser(id, email, name, userPlan) {
 async function doLogin() {
   var email = document.getElementById('l-email').value.trim().slice(0,254);
   var pass = document.getElementById('l-pass').value.slice(0,128);
-  if (!email || !pass) return showError('Please fill in all fields.');
+  if (!email || !pass) return showError(t('auth.err.fill'));
   // Basic email format check
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Please enter a valid email address.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError(t('auth.err.email'));
   var btn = document.getElementById('l-btn');
-  btn.textContent = 'Signing in...'; btn.disabled = true;
+  btn.textContent = t('auth.signingIn'); btn.disabled = true;
   // Any previous session goes first, or signing in as a second account on this
   // browser leaves the first one's token in storage.
   await clearExistingSession();
   var res = await sb.auth.signInWithPassword({email: email, password: pass});
   if (res.error) {
-    btn.textContent = 'Sign In'; btn.disabled = false;
+    btn.textContent = t('auth.tab.signin'); btn.disabled = false;
     // Signed up but never clicked the link: offer the email again, not an error.
     if (/not confirmed/i.test(res.error.message)) {
       showInbox(email);
-      showError('Confirm your email first. We can send the link again.');
+      showError(t('auth.err.confirmFirst'));
       return;
     }
-    showError(res.error.message === 'Invalid login credentials' ? 'Wrong email or password.' : res.error.message);
+    showError(tAuthError(res.error.message));
     return;
   }
   // Prove the session in storage is the one we just created before handing over
@@ -410,9 +449,9 @@ async function doLogin() {
   var check = await sb.auth.getSession();
   var live = check && check.data && check.data.session;
   if (!live || !live.user || live.user.id !== res.data.user.id) {
-    showError('Sign-in did not complete cleanly. Close other ScoutMind tabs and try again.');
+    showError(t('auth.err.unclean'));
     await clearExistingSession();
-    btn.textContent = 'Sign In'; btn.disabled = false;
+    btn.textContent = t('auth.tab.signin'); btn.disabled = false;
     return;
   }
   var profRes = await sb.from('profiles').select('*').eq('id', live.user.id).single();
@@ -426,26 +465,26 @@ async function doRegister() {
   var name = document.getElementById('r-name').value.trim().slice(0,60);
   var email = document.getElementById('r-email').value.trim().slice(0,254);
   var pass = document.getElementById('r-pass').value.slice(0,128);
-  if (!name || !email || !pass) return showError('Please fill in all fields.');
+  if (!name || !email || !pass) return showError(t('auth.err.fill'));
   // Validate name — no HTML/scripts
-  if (/<|>|script/i.test(name)) return showError('Invalid characters in name.');
+  if (/<|>|script/i.test(name)) return showError(t('auth.err.nameChars'));
   // Validate email format
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Please enter a valid email address.');
-  if (pass.length < 8) return showError('Password must be at least 8 characters.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError(t('auth.err.email'));
+  if (pass.length < 8) return showError(t('auth.err.pass8'));
   // Require at least one number or special char in password
-  if (!/[\d!@#$%^&*]/.test(pass)) return showError('Password must include at least one number or special character (!@#$%^&*).');
+  if (!/[\d!@#$%^&*]/.test(pass)) return showError(t('auth.err.passChar'));
   var btn = document.getElementById('r-btn');
-  btn.textContent = 'Creating account...'; btn.disabled = true;
+  btn.textContent = t('auth.creating'); btn.disabled = true;
   await clearExistingSession();
   // `lang` picks the language of the confirmation email (see
   // docs/auth-email-templates.md). No `plan`: 013 locks it, and the trigger
   // makes every new profile a fan.
   var res = await sb.auth.signUp({email: email, password: pass, options: {
-    data: {name: name, lang: LANG},
+    data: {name: name, lang: smLang()},
     emailRedirectTo: REDIRECT + '?confirmed=1'
   }});
-  btn.textContent = 'Create Account'; btn.disabled = false;
-  if (res.error) return showError(res.error.message);
+  btn.textContent = t('auth.tab.signup'); btn.disabled = false;
+  if (res.error) return showError(tAuthError(res.error.message));
   // The profiles row is created server-side by the on_auth_user_created
   // trigger (002) at sign-up, before confirmation.
   if (res.data.session) {
