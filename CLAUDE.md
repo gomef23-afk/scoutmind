@@ -29,7 +29,7 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 - `scripts/bump-sw.mjs` — rewrites `sw.js`'s `VERSION` from a hash of the precached files (rule 24)
 - `public/i18n.js` — UI strings, `en` + `pt-BR` (Day 6, beta): `t(key, vars)`, `tn()` plurals, `tOrd()`, `tServer()` (database messages by exact English text), `applyI18n()` for `data-i18n*` attributes. Language = `localStorage.sm_lang` (shared with the legal pages), else the browser. Translated so far: `auth.html`, onboarding + club picker, the Scout tab, the Profile's Scout Game section, the match panel. **A new string in those areas goes in both dictionaries**; `tests/i18n.test.js` fails on a missing key, a key only one language has, or a money word. Never name a local variable `t` in code that calls `t()`
 - Private leagues (migration 025): `game_leagues` + `game_league_members`, written only through the league rpcs; the "My leagues" strip, Rankings → Leagues and the `/?league=CODE` join link live in `index.html` (search `PRIVATE LEAGUES`). Rows are closed, left or removed — never deleted
-- `tests/` — `node tests/<name>.test.js` (tagger, players, team-stats, scout-game, account-delete, client-reads, sw-version, i18n, leagues), no dependencies
+- `tests/` — `node tests/<name>.test.js` (tagger, players, team-stats, scout-game, account-delete, client-reads, sw-version, i18n, leagues, auth-inbox), no dependencies
 - **Public-read tables are not "mine" by default.** `follows` (and any table whose read policy is `using (true)`) returns every user's rows: a read of the caller's own rows must filter on `user_id`. `tests/client-reads.test.js` checks `follows`
 
 ## Hard rules

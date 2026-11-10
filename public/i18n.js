@@ -54,6 +54,7 @@
     'auth.inbox.sent1': 'We sent a link to',
     'auth.inbox.sent2': '. Open it to confirm your address, and you are in.',
     'auth.inbox.spam': 'Nothing after a few minutes? Check spam, or send it again.',
+    'auth.inbox.slow': 'Didn\'t get it? Check spam. If you use a work email, your account may already be confirmed — try Sign in.',
     'auth.inbox.resend': 'Resend email',
     'auth.inbox.resendIn': 'Resend email ({s}s)',
     'auth.inbox.other': 'Use a different email',
@@ -99,6 +100,10 @@
     'auth.sb.samePass': 'Choose a password different from your current one.',
     'auth.sb.network': 'Could not reach ScoutMind. Check your connection and try again.',
     'auth.sb.session': 'That link has expired. Ask for a new one.',
+
+    // ── Offline empty states (Home, Matches, Scout) ──
+    'off.title': 'You\'re offline',
+    'off.text': 'This needs a connection. It loads by itself when you are back online.',
 
     // ── Club picker and onboarding ──
     'pick.main': 'Main club',
@@ -462,6 +467,7 @@
     'auth.inbox.sent1': 'Enviamos um link para',
     'auth.inbox.sent2': '. Abra o link para confirmar seu endereço e pronto.',
     'auth.inbox.spam': 'Nada depois de alguns minutos? Veja a caixa de spam ou envie de novo.',
+    'auth.inbox.slow': 'Não chegou? Veja a caixa de spam. Se você usa um e-mail de trabalho, sua conta pode já estar confirmada — tente Entrar.',
     'auth.inbox.resend': 'Reenviar e-mail',
     'auth.inbox.resendIn': 'Reenviar e-mail ({s}s)',
     'auth.inbox.other': 'Usar outro e-mail',
@@ -506,6 +512,9 @@
     'auth.sb.samePass': 'Escolha uma senha diferente da atual.',
     'auth.sb.network': 'Não foi possível conectar ao ScoutMind. Verifique sua conexão e tente de novo.',
     'auth.sb.session': 'Esse link expirou. Peça um novo.',
+
+    'off.title': 'Você está offline',
+    'off.text': 'Isto precisa de conexão. Carrega sozinho quando você voltar a ficar online.',
 
     // ── Club picker and onboarding ──
     'pick.main': 'Clube principal',

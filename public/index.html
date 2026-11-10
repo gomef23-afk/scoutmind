@@ -555,6 +555,9 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-rank-n{min-width:30px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
 .sg-rank-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sg-rank-x{font-size:10px;color:var(--muted);white-space:nowrap;}
+/* Offline empty state (Day 6) */
+.offline-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.7;}
+.offline-empty-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);margin-bottom:4px;}
 /* Private leagues (025) */
 .sg-leagues{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 12px;padding:0 16px 2px;scrollbar-width:none;}
 .sg-leagues::-webkit-scrollbar{display:none;}
@@ -1348,6 +1351,18 @@ let PROFILE_LOADED=false;
 /** The access token for the signed-in user, or null. Refreshes when due. */
 async function accessToken(){
   return SMAuth.token(false);
+}
+
+// ── OFFLINE (Day 6) ──
+// The installed app opens offline from the service worker's cache, but every
+// read goes to Supabase and fails. An empty list must not then say "Nothing
+// trending yet" or "No fixtures", which reads as a fact about football.
+// navigator.onLine === false is reliable for "no network at all"; true can
+// still mean a dead network, which then shows the usual empty state.
+function isOffline(){ return navigator.onLine===false; }
+function offlineHtml(){
+  return '<div class="offline-empty" role="status"><div class="offline-empty-t">'+t('off.title')+'</div>'
+    +'<div>'+t('off.text')+'</div></div>';
 }
 
 async function apiGet(path){
@@ -2723,6 +2738,15 @@ function renderMatchDay() {
   const strip = document.getElementById('matches-date-strip');
   if (!el) return;
 
+  // No fixtures loaded and no network: say so, not "no fixtures this week".
+  // Checked BEFORE the load below, so offline never starts a request (and the
+  // catch's re-render below cannot loop).
+  if (isOffline() && !(LIVE_MATCHES && LIVE_MATCHES.length)) {
+    if (strip) strip.innerHTML = '';
+    el.innerHTML = offlineHtml();
+    return;
+  }
+
   // Kick off the Supabase load once; re-render when it lands.
   if (LIVE_MATCHES === null) {
     LIVE_MATCHES = [];
@@ -2733,7 +2757,12 @@ function renderMatchDay() {
         try{ renderSidebarMatches(); }catch(e){}
         try{ renderSidebarYourClub(); }catch(e){}
       })
-      .catch(e => { console.warn('fixtures: using static fallback —', e.message); });
+      .catch(e => {
+        console.warn('fixtures: using static fallback —', e.message);
+        // Offline: forget the failed load, so the next render (or coming back
+        // online) asks again instead of keeping an empty list for good.
+        if (isOffline()) { LIVE_MATCHES = null; renderMatchDay(); }
+      });
   }
 
   // The static ALL_MATCHES fallback has no dates and no team ids. It is
@@ -4506,6 +4535,7 @@ function renderTrending(){
     +'</div>';
   el.innerHTML=toggle+(items.length
     ? items.map(renderFeedItem).join('')
+    : isOffline()?offlineHtml()
     : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
       +(trendWindow==='today'
         ? 'Nothing from today yet. Try This week.'
@@ -4567,12 +4597,13 @@ function renderFeedNews(){
       // behind it.
       el.innerHTML=(filtered.length
         ? filtered.map(renderFeedItem).join('')
+        : isOffline()?offlineHtml()
         : '<div style="text-align:center;padding:40px;color:var(--muted)">'
           +(feedExhausted
             ? 'Nothing here in the last seven days. Try another language or category.'
             : 'No stories yet. The news job runs every 15 minutes.')
           +'</div>')
-        +feedMoreHtml('news');
+        +(!filtered.length&&isOffline()?'':feedMoreHtml('news'));
     }
   }
   renderForYou();
@@ -4670,12 +4701,13 @@ function renderForYou(){
   // have a whole page of news with nothing of theirs in it.
   el.innerHTML=(items.length
     ? items.map(renderFeedItem).join('')
+    : isOffline()?offlineHtml()
     : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
       +(feedExhausted
         ? 'Nothing about your clubs in the last seven days.'
         : 'Nothing about your clubs yet — keep loading, or the news job runs every 15 minutes.')
       +'</div>')
-    +feedMoreHtml('foryou');
+    +(!items.length&&isOffline()?'':feedMoreHtml('foryou'));
 }
 
 
@@ -5167,7 +5199,7 @@ async function renderScout(force){
   }catch(e){
     console.error('renderScout:',e);
     sgTabs();
-    body.innerHTML='<div class="sg-empty">'+t('sg.loadFail')+'</div>';
+    body.innerHTML=isOffline()?offlineHtml():'<div class="sg-empty">'+t('sg.loadFail')+'</div>';
     sgSubmitBar(null);
     return;
   }
@@ -5261,7 +5293,8 @@ async function sgRenderPick(r){
       SG.pickable.set(r.id,rows||[]);
     }catch(e){
       console.error('game_pickable_players:',e);
-      SG.pickErr.set(r.id,'sg.pickUnavailable');   // a key: shown with t(), so it follows a language switch
+      // Offline is not remembered: the list is asked for again once back online.
+      if(!isOffline()) SG.pickErr.set(r.id,'sg.pickUnavailable');   // a key: shown with t(), so it follows a language switch
     }
   }
   if(SG.roundId!==r.id||!document.getElementById('sg-list')) return;   // moved on while loading
@@ -5394,7 +5427,7 @@ function sgRenderList(){
   const err=SG.pickErr.get(SG.roundId);
   if(err){ el.innerHTML='<div class="sg-empty">'+sanitize(t(err))+'</div>'; return; }
   const rows=SG.pickable.get(SG.roundId);
-  if(!rows){ el.innerHTML='<div class="sg-empty">'+t('sg.loadingPlayers')+'</div>'; return; }
+  if(!rows){ el.innerHTML=isOffline()?offlineHtml():'<div class="sg-empty">'+t('sg.loadingPlayers')+'</div>'; return; }
   const q=pickerNorm(SG.filter.q||'');
   const list=rows.filter(p=>(!SG.filter.pos||p.position===SG.filter.pos)
       &&(!SG.filter.club||String(p.team_id)===String(SG.filter.club))
@@ -5700,7 +5733,7 @@ async function sgRenderRankings(){
     if(SG.view==='rankings'&&SG.rankView===v) out.innerHTML=html;
   }catch(e){
     console.error('rankings:',e);
-    out.innerHTML='<div class="sg-empty">'+t('sg.rk.fail')+'</div>';
+    out.innerHTML=isOffline()?offlineHtml():'<div class="sg-empty">'+t('sg.rk.fail')+'</div>';
   }
 }
 function sgRankView(v){ SG.rankView=v; if(v==='leagues'){ GL.id=null; GL.data=null; } sgRenderRankings(); glRenderStrip(); }
@@ -5763,7 +5796,7 @@ async function sgRenderHistory(){
   catch(e){
     console.error('my_game_history:',e);
     // Rule 21: before 023 runs there is no my_game_history to call.
-    if(SG.view==='history') body.innerHTML='<div class="sg-empty">'+t('sg.h.unavailable')+'</div>';
+    if(SG.view==='history') body.innerHTML=isOffline()?offlineHtml():'<div class="sg-empty">'+t('sg.h.unavailable')+'</div>';
     return;
   }
   if(SG.view!=='history') return;
@@ -5882,7 +5915,7 @@ async function openMatch(id){
     console.error('match_detail:',e);
     if(MO_OPEN!==id) return;
     // Rule 21: before 019 runs there is no match_detail to call.
-    body.innerHTML='<div class="sg-empty">'+t('mo.unavailable')+'</div>';
+    body.innerHTML=isOffline()?offlineHtml():'<div class="sg-empty">'+t('mo.unavailable')+'</div>';
   }
 }
 // The last match_detail on screen, so a language switch redraws it without a re-read.
@@ -6046,7 +6079,7 @@ async function glRenderView(out){
     return;
   }
   if(GL.list==null) await glLoad();
-  if(GL.err){ out.innerHTML='<div class="sg-empty">'+t('gl.unavailable')+'</div>'; return; }
+  if(GL.err){ out.innerHTML=isOffline()?offlineHtml():'<div class="sg-empty">'+t('gl.unavailable')+'</div>'; return; }
   if(GL.id!=null) return glRenderLeague(out,GL.id);
   const row=x=>'<div class="sg-rank-row gl-list-row" role="button" tabindex="0" onclick="glOpen('+Number(x.id)+')">'
     +'<span class="sg-rank-name"><b>'+sanitize(x.name)+'</b> <span class="sg-rank-x">'+sanitize(glComp(x))+'</span></span>'
@@ -6208,7 +6241,7 @@ async function glLookUp(){
   box.innerHTML='<div class="gl-msg">'+t('sg.loading')+'</div>';
   let p;
   try{ p=await sgRpc('preview_game_league',{p_code:code}); }
-  catch(e){ console.error('preview_game_league:',e); box.innerHTML='<div class="gl-msg err">'+t('gl.unavailable')+'</div>'; return; }
+  catch(e){ console.error('preview_game_league:',e); box.innerHTML='<div class="gl-msg err">'+t(isOffline()?'off.title':'gl.unavailable')+'</div>'; return; }
   const cancel='<button class="signin-sheet-dismiss" onclick="glSheetClose()">'+t('gl.cancel')+'</button>';
   if(!p){ box.innerHTML='<div class="gl-msg err">'+t('sp.glNoCode')+'</div>'; return; }
   box.innerHTML='<div class="gl-share" style="text-align:left;margin-top:0;"><div class="gl-name">'+sanitize(p.name)+'</div>'
@@ -6291,6 +6324,19 @@ window.addEventListener('sm-lang',function(){
 });
 applyI18n();
 renderAppLangPref();
+
+// Losing the connection turns empty lists into "You're offline"; getting it
+// back loads what never arrived, without a reload (drafts and scroll stay).
+window.addEventListener('offline',function(){
+  try{ if(!FEED_ITEMS.length) renderFeedNews(); }catch(e){}
+  try{ if(!(LIVE_MATCHES&&LIVE_MATCHES.length)) renderMatchDay(); }catch(e){}
+});
+window.addEventListener('online',function(){
+  try{ if(!FEED_ITEMS.length) loadNews(false); }catch(e){ console.error('online: news',e); }
+  try{ if(!(LIVE_MATCHES&&LIVE_MATCHES.length)){ LIVE_MATCHES=null; renderMatchDay(); } }catch(e){ console.error('online: fixtures',e); }
+  const sp=document.getElementById('page-scout');
+  if(sp&&sp.classList.contains('active')) renderScout(true).catch(e=>console.error('online: scout',e));
+});
 
 // The Scout tab may be the landing page (?page=scout): showPage ran before
 // this block existed, so render now.

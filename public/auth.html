@@ -153,7 +153,7 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
   <div class="form-section" id="sec-inbox">
     <div class="panel-title" data-i18n="auth.inbox.title">Check your inbox</div>
     <p class="panel-text"><span data-i18n="auth.inbox.sent1">We sent a link to</span> <strong id="inbox-email"></strong><span data-i18n="auth.inbox.sent2">. Open it to confirm your address, and you are in.</span></p>
-    <p class="panel-text muted" data-i18n="auth.inbox.spam">Nothing after a few minutes? Check spam, or send it again.</p>
+    <p class="panel-text muted" id="inbox-spam" data-i18n="auth.inbox.spam">Nothing after a few minutes? Check spam, or send it again.</p>
     <button class="btn-primary" id="resend-btn" onclick="resendConfirmation()" data-i18n="auth.inbox.resend">Resend email</button>
     <div class="link-row"><a role="button" tabindex="0" onclick="showPanel('register')" data-i18n="auth.inbox.other">Use a different email</a> · <a role="button" tabindex="0" onclick="showPanel('login')" data-i18n="auth.back.signin">Back to sign in</a></div>
   </div>
@@ -291,6 +291,7 @@ function showPanel(name) {
     var el = document.getElementById('sec-' + p);
     if (el) el.className = 'form-section' + (p === name ? ' active' : '');
   });
+  if (name !== 'inbox') { stopInboxPoll(); clearTimeout(INBOX_HINT_T); }
   var tabs = document.querySelector('.tabs');
   if (tabs) tabs.style.display = (name === 'login' || name === 'register') ? 'flex' : 'none';
   document.getElementById('btn-login').className = 'tab-btn' + (name === 'login' ? ' active' : '');
@@ -329,11 +330,93 @@ async function onConfirmed(session) {
 }
 
 /** The "Check your inbox" panel for this address. */
-function showInbox(email) {
+function showInbox(email, pass) {
   PENDING_EMAIL = email;
   var el = document.getElementById('inbox-email');
   if (el) el.textContent = email;
   showPanel('inbox');
+  inboxHint(false);
+  // The hint after a minute stands on its own: it shows even when there is
+  // nothing to poll with, or the poll has stopped.
+  clearTimeout(INBOX_HINT_T);
+  INBOX_HINT_T = setTimeout(function () { inboxHint(true); }, INBOX_FAST_FOR);
+  startInboxPoll(pass);
+}
+var INBOX_HINT_T = null;
+
+// ── WAITING FOR THE CONFIRMATION (Day 6) ─────────────────────────────────
+// The link is often opened somewhere else: on a phone, or by a corporate mail
+// scanner that follows every link seconds after delivery (a real case: the
+// account was confirmed 10 s after sign-up while this page still said "check
+// your inbox"). So the inbox panel checks by itself and moves on when the
+// account is confirmed:
+//   1. a session for this address already in this browser (the link opened
+//      in another tab): read locally, no request;
+//   2. otherwise, the sign-in itself: Supabase answers "Email not confirmed"
+//      until the link has been opened, then signs in.
+// Step 2 is a sign-in request, and Supabase allows 30 sign-ins per 5 minutes
+// per IP by default; spending them all here would lock the person out of
+// signing in by hand. So: every 5 s for the first minute, every 20 s until
+// minute 5, then stop; at most INBOX_MAX_PROBES. Paused while the tab is
+// hidden. Any answer other than "not confirmed" (wrong password, rate limit)
+// stops it. The password is held in memory only while this runs, and cleared
+// when it stops — never stored.
+var INBOX_FAST_MS = 5000, INBOX_FAST_FOR = 60000, INBOX_SLOW_MS = 20000, INBOX_STOP_AT = 300000, INBOX_MAX_PROBES = 24;
+var INBOX = { pass: '', timer: null, started: 0, probes: 0, paused: false, busy: false };
+
+function startInboxPoll(pass) {
+  stopInboxPoll();
+  if (!pass) return;                      // reached without a password (resend after reload): nothing to try
+  INBOX.pass = pass; INBOX.started = Date.now(); INBOX.probes = 0;
+  inboxSchedule();
+}
+function stopInboxPoll() {
+  clearTimeout(INBOX.timer); INBOX.timer = null;
+  INBOX.pass = ''; INBOX.paused = false;
+}
+function inboxSchedule() {
+  clearTimeout(INBOX.timer);
+  var gone = Date.now() - INBOX.started;
+  if (gone >= INBOX_STOP_AT || INBOX.probes >= INBOX_MAX_PROBES) { stopInboxPoll(); return; }
+  INBOX.timer = setTimeout(inboxProbe, gone < INBOX_FAST_FOR ? INBOX_FAST_MS : INBOX_SLOW_MS);
+}
+async function inboxProbe() {
+  if (!INBOX.pass || !PENDING_EMAIL || INBOX.busy) return;
+  if (document.hidden) { INBOX.paused = true; return; }        // resumes on visibilitychange
+  INBOX.busy = true;
+  try {
+    var local = await sb.auth.getSession();
+    var s = local && local.data && local.data.session;
+    if (s && s.user && (s.user.email || '').toLowerCase() === PENDING_EMAIL.toLowerCase()) return inboxDone(s);
+    if (!navigator.onLine) return inboxSchedule();              // offline: no request, try again later
+    INBOX.probes++;
+    var res = await sb.auth.signInWithPassword({ email: PENDING_EMAIL, password: INBOX.pass });
+    if (!res.error && res.data && res.data.session) return inboxDone(res.data.session);
+    var m = res.error ? String(res.error.message || '') : '';
+    if (/not confirmed/i.test(m) || /failed to fetch|network/i.test(m)) return inboxSchedule();
+    stopInboxPoll();                                           // wrong password, rate limit: stop asking
+  } catch (e) {
+    inboxSchedule();
+  } finally {
+    INBOX.busy = false;
+  }
+}
+function inboxDone(session) {
+  stopInboxPoll();
+  onConfirmed(session);
+}
+document.addEventListener('visibilitychange', function () {
+  if (!document.hidden && INBOX.paused && INBOX.pass) { INBOX.paused = false; inboxProbe(); }
+});
+/** After a minute: the spam line becomes the work-email hint (and stays so across a language switch). */
+function inboxHint(on) {
+  var el = document.getElementById('inbox-spam');
+  if (!el) return;
+  var key = on ? 'auth.inbox.slow' : 'auth.inbox.spam';
+  if (el.getAttribute('data-i18n') === key) return;
+  el.setAttribute('data-i18n', key);
+  el.className = on ? 'panel-text' : 'panel-text muted';
+  el.textContent = t(key);
 }
 
 async function resendConfirmation() {
@@ -436,7 +519,7 @@ async function doLogin() {
     btn.textContent = t('auth.tab.signin'); btn.disabled = false;
     // Signed up but never clicked the link: offer the email again, not an error.
     if (/not confirmed/i.test(res.error.message)) {
-      showInbox(email);
+      showInbox(email, pass);
       showError(t('auth.err.confirmFirst'));
       return;
     }
@@ -495,8 +578,9 @@ async function doRegister() {
   }
   // Confirmation on: no session until the link is clicked, so nothing is saved
   // as signed in here. (It used to be, and the app then showed a "signed-in"
-  // user whose every write was refused.)
-  showInbox(email);
+  // user whose every write was refused.) The panel then waits for the
+  // confirmation by itself (startInboxPoll).
+  showInbox(email, pass);
 }
 
 function doDemo() {
