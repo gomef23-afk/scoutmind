@@ -24,7 +24,8 @@ Serverless ingest lives in `api/` (ESM, **zero npm dependencies** — talk to Su
 - `api/_lib/`, `api/cron/` — serverless ingest (see Stack)
 - `api/account/delete.js` — self-service account deletion (migration 024); the rule 13 exception
 - `scripts/make-icons.ps1` — regenerates the favicon, app icons and `og.png` from `scripts/brand/*.html` (headless Edge, no npm). Every page carries the same icon + `og:*` block in its `<head>`; a new page needs it too
-- `tests/` — `node tests/tagger.test.js`, no dependencies
+- `tests/` — `node tests/<name>.test.js` (tagger, players, team-stats, scout-game, account-delete, client-reads), no dependencies
+- **Public-read tables are not "mine" by default.** `follows` (and any table whose read policy is `using (true)`) returns every user's rows: a read of the caller's own rows must filter on `user_id`. `tests/client-reads.test.js` checks `follows`
 
 ## Hard rules
 1. Never use Python string replacement on JS-inside-HTML. Edit files directly with the editor tools.

@@ -1211,23 +1211,28 @@ async function confirmDeleteAccount(){
 let selectedMainClub = null;
 let followingClubs = [];
 let modalFilter = '';
+// True once loadMyAccount() has read this account's own clubs. After that the
+// module state IS the answer, empty included: falling back to the cache on an
+// empty list brought back follows the user had just unticked (or another
+// account's, before 4e scoped the cache).
+let ACCOUNT_CLUBS_LOADED = false;
 
 /**
  * The account is the source of truth once signed in; localStorage is a cache
  * for guests and for the first paint before the profile lands.
  *
- * Written by loadMyClubs() (package step 2), which is why these read the
- * module state first and fall back to storage.
+ * Written by loadMyAccount(), which is why these read the module state first
+ * and fall back to storage only until the account has been read.
  */
 function mainClubId(){
-  if(selectedMainClub)return selectedMainClub;
+  if(selectedMainClub||ACCOUNT_CLUBS_LOADED)return selectedMainClub;
   const m=SMAuth.getJSON('sm_main_club',null);
   if(m&&typeof m.id==='number')return m.id;
   return null;
 }
 
 function followedClubIds(){
-  if(followingClubs.length)return followingClubs.slice();
+  if(followingClubs.length||ACCOUNT_CLUBS_LOADED)return followingClubs.slice();
   const f=SMAuth.getJSON('sm_following_clubs',[]);
   if(Array.isArray(f))return f.filter(x=>typeof x==='number');
   return [];
@@ -1337,7 +1342,13 @@ async function loadMyAccount(){
     // `plan` is what isAdmin() reads. Without it every admin looks like a fan.
     const rows=await apiGet('profiles?select=plan,main_club_id,content_langs,onboarded_at,show_club_news_all_langs&limit=1');
     MY_PROFILE=rows[0]||null;
-    const follows=await apiGet('follows?select=team_id');
+    // MY follows. `follows` is public-read (club pages count followers), so an
+    // unfiltered read returns EVERY user's follows: a brand-new account opened
+    // onboarding with all ~30 clubs anyone followed already ticked, and every
+    // account showed other people's follows as its own.
+    const me=await SMAuth.resolveUser();
+    if(!me)return;
+    const follows=await apiGet('follows?select=team_id&user_id=eq.'+encodeURIComponent(me));
 
     // importLocalClubs() used to run here whenever `onboarded_at` was null. It
     // read the UNKEYED sm_main_club / sm_following_clubs and wrote them onto
@@ -1352,6 +1363,7 @@ async function loadMyAccount(){
 
     selectedMainClub=(MY_PROFILE&&MY_PROFILE.main_club_id)||null;
     followingClubs=follows.map(f=>f.team_id).filter(id=>id!==selectedMainClub);
+    ACCOUNT_CLUBS_LOADED=true;   // from here, an empty list means "none", not "ask the cache"
     saveMyClubsLocal();
   }catch(e){
     // A failed profile read must not cost the user their cached clubs — but it
@@ -1879,8 +1891,11 @@ async function saveMyClubsToAccount(){
     if(!updated||!updated.length){
       throw new Error('no profile row matched '+me);
     }
-    // Replace the follow set: delete what is gone, insert what is new.
-    const existing=(await apiGet('follows?select=team_id')).map(f=>f.team_id);
+    // Replace the follow set: delete what is gone, insert what is new — diffed
+    // against MY rows only. Unfiltered, this read every user's follows, so a
+    // club anyone else already followed counted as "existing" and was never
+    // inserted: each club in the table ended up with at most one follower.
+    const existing=(await apiGet('follows?select=team_id&user_id=eq.'+encodeURIComponent(me))).map(f=>f.team_id);
     const toAdd=follow.filter(id=>existing.indexOf(id)<0);
     const toRemove=existing.filter(id=>follow.indexOf(id)<0);
     if(toAdd.length){
