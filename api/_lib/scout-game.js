@@ -9,25 +9,41 @@
 
 /**
  * Base points per event, by position (G / D / M / F as played in the fixture).
- * Agreed Day 3. The rows marked "gap" were not in the original spec and were
- * filled then: saves, penalty saved, shots on target, key passes, penalty
- * missed, own goal, and goals conceded.
+ * Scoring v2 (Nov 2026), Cartola-style, from our own player_fixture_stats.
+ * No appearance points: a player earns only what he does.
+ *
+ * The proposed table had every positive event at two-thirds of these values.
+ * The backtest (docs/backtest-2026-11.md) found two problems with it: a fan
+ * round's median was 25.5 (target 30-50), because without appearance points
+ * five picks land near 25 whatever the weights; and tackles were 26% of all
+ * positive points, twice goals. So every positive event is x1.5 except the
+ * tackle, which stays at 1.2, and goals conceded is -0.5, not -1, which also
+ * lifts a goalkeeper from 0.68 to 0.86 of a tier-matched forward.
+ *
+ * Values are in quarters (foul drawn 0.75), so base_points is stored to two
+ * decimals (migration 022).
  */
+const ALL = (v) => ({ G: v, D: v, M: v, F: v });
 export const POINTS = {
-  minutes_1_59:  { G: 1, D: 1, M: 1, F: 1 },
-  minutes_60:    { G: 2, D: 2, M: 2, F: 2 },
-  goal:          { G: 6, D: 6, M: 5, F: 4 },
-  assist:        { G: 3, D: 3, M: 3, F: 3 },
-  clean_sheet:   { G: 4, D: 4, M: 1, F: 0 },   // 60+ minutes, nothing conceded while on
-  per_2_conceded:{ G: -1, D: -1, M: 0, F: 0 }, // gap: while on the pitch
-  per_3_saves:   { G: 1, D: 0, M: 0, F: 0 },   // gap
-  pen_saved:     { G: 5, D: 0, M: 0, F: 0 },   // gap
-  shot_on:       { G: 0, D: 0.5, M: 0.5, F: 0.5 }, // gap
-  key_pass:      { G: 0, D: 0.5, M: 0.5, F: 0.5 }, // gap
-  pen_missed:    { G: -2, D: -2, M: -2, F: -2 },   // gap
-  own_goal:      { G: -2, D: -2, M: -2, F: -2 },   // gap: from fixture_events
-  yellow:        { G: -1, D: -1, M: -1, F: -1 },
-  red:           { G: -3, D: -3, M: -3, F: -3 },   // replaces the yellow
+  goal:           ALL(12),
+  assist:         ALL(7.5),
+  clean_sheet:    { G: 7.5, D: 7.5, M: 0, F: 0 }, // 60+ minutes, nothing conceded while on
+  conceded:       { G: -0.5, D: 0, M: 0, F: 0 },  // each, while on the pitch
+  save:           ALL(1.5),
+  pen_saved:      ALL(10.5),
+  tackle:         ALL(1.2),                       // not scaled: it dominated at x1.5
+  interception:   ALL(1.2),
+  shot_on:        ALL(1.8),
+  shot_off:       ALL(1.2),                       // shots_total - shots_on
+  key_pass:       ALL(1.2),
+  foul_drawn:     ALL(0.75),
+  foul_committed: ALL(-0.3),
+  own_goal:       ALL(-3),                      // from fixture_events
+  pen_missed:     ALL(-4),
+  pen_committed:  ALL(-1),
+  yellow:         ALL(-1),
+  red:            ALL(-3),                      // replaces the yellow
+  offside:        ALL(-0.1),
 };
 
 /**
@@ -35,15 +51,14 @@ export const POINTS = {
  * most. "Half compensation": each tier is paid back half its earning gap to
  * tier 5, 1 + (1/r - 1) / 2 with r = its realised base over tier 5's.
  *
- * Adopted after docs/backtest-2026-11.md. The first ladder (1x .. 5x) made
- * picking the best players the worst strategy: a tier-1 pick earns 0.58 of a
- * tier-5 pick, so any tier-1 multiplier above ~1.73x inverts the order. Under
- * this ladder the top tiers beat random picks by ~17% and the bottom tiers
- * stay within reach.
+ * Derived from the v2 points in docs/backtest-2026-11.md (rounded to 0.05):
+ * tier 1 earns 0.57 of tier 5, which gives 1.4. The very first ladder (1x ..
+ * 5x) was rejected by the v1 backtest: it made picking the best players the
+ * worst strategy.
  */
-export const TIER_MULTIPLIER = { 5: 1, 4: 1.05, 3: 1.1, 2: 1.2, 1: 1.35 };
+export const TIER_MULTIPLIER = { 5: 1, 4: 1.05, 3: 1.1, 2: 1.2, 1: 1.4 };
 /** Below the minutes threshold: paid like tier 1. They play only ~40% of the time. */
-export const UNRANKED_MULTIPLIER = 1.35;
+export const UNRANKED_MULTIPLIER = 1.4;
 
 /**
  * Captain. 'additive' (the default): the captain adds +100% of base, i.e. +1
@@ -57,7 +72,7 @@ export const CONTRARIAN = { maxOwnershipPct: 5, minParticipants: 50, bonus: 0.5 
 
 /**
  * No single pick's effective multiplier ever exceeds this. A rule, kept even
- * though the current ladder cannot reach it (1.35 + 1 + 0.5 = 2.85x): it binds
+ * though the current ladder cannot reach it (1.4 + 1 + 0.5 = 2.9x): it binds
  * any future ladder too.
  */
 export const MAX_MULTIPLIER = 6;
@@ -101,7 +116,8 @@ export function pickTotal(base, multiplier) {
  *
  * Data limits, deliberately not guessed:
  *   goals_conceded null (goal events did not add up) -> no clean sheet, no
- *     conceded penalty; pen_saved / pen_missed null (reduced feed) -> 0.
+ *     conceded penalty; pen_saved / pen_missed / pen_committed null (reduced
+ *     feed) -> 0. No appearance points: a row with no events scores 0.
  */
 export function basePoints(row, ownGoals = 0) {
   const pos = POS.has(row.position) ? row.position : 'M';
@@ -111,35 +127,33 @@ export function basePoints(row, ownGoals = 0) {
     if (count || points) breakdown[key] = { count, points: round2(points) };
   };
 
-  const minutes = n(row.minutes);
-  if (minutes >= 60) add('minutes', minutes, POINTS.minutes_60[pos]);
-  else if (minutes > 0) add('minutes', minutes, POINTS.minutes_1_59[pos]);
+  // One counted stat: `count` events at `per` points each, under `key`.
+  const each = (key, count, per) => add(key, count, count * per);
 
-  const goals = n(row.goals);
-  add('goals', goals, goals * POINTS.goal[pos]);
-  const assists = n(row.assists);
-  add('assists', assists, assists * POINTS.assist[pos]);
+  each('goals', n(row.goals), POINTS.goal[pos]);
+  each('assists', n(row.assists), POINTS.assist[pos]);
 
-  if (row.clean_sheet === true) add('clean_sheet', 1, POINTS.clean_sheet[pos]);
-  if (row.goals_conceded !== null && row.goals_conceded !== undefined) {
-    const c = n(row.goals_conceded);
-    add('conceded', c, Math.floor(c / 2) * POINTS.per_2_conceded[pos]);
+  if (row.clean_sheet === true && POINTS.clean_sheet[pos]) add('clean_sheet', 1, POINTS.clean_sheet[pos]);
+  if (row.goals_conceded !== null && row.goals_conceded !== undefined && POINTS.conceded[pos]) {
+    each('conceded', n(row.goals_conceded), POINTS.conceded[pos]);
   }
 
-  const saves = n(row.saves);
-  add('saves', saves, Math.floor(saves / 3) * POINTS.per_3_saves[pos]);
-  const penSaved = n(row.pen_saved);
-  add('pen_saved', penSaved, penSaved * POINTS.pen_saved[pos]);
+  each('saves', n(row.saves), POINTS.save[pos]);
+  each('pen_saved', n(row.pen_saved), POINTS.pen_saved[pos]);
+  each('tackles', n(row.tackles), POINTS.tackle[pos]);
+  each('interceptions', n(row.interceptions), POINTS.interception[pos]);
 
-  const shots = n(row.shots_on);
-  add('shots_on', shots, shots * POINTS.shot_on[pos]);
-  const keyPasses = n(row.passes_key);
-  add('key_passes', keyPasses, keyPasses * POINTS.key_pass[pos]);
+  const shotsOn = n(row.shots_on);
+  each('shots_on', shotsOn, POINTS.shot_on[pos]);
+  each('shots_off', Math.max(0, n(row.shots_total) - shotsOn), POINTS.shot_off[pos]);
+  each('key_passes', n(row.passes_key), POINTS.key_pass[pos]);
+  each('fouls_drawn', n(row.fouls_drawn), POINTS.foul_drawn[pos]);
+  each('fouls_committed', n(row.fouls_committed), POINTS.foul_committed[pos]);
+  each('offsides', n(row.offsides), POINTS.offside[pos]);
 
-  const penMissed = n(row.pen_missed);
-  add('pen_missed', penMissed, penMissed * POINTS.pen_missed[pos]);
-  const og = n(ownGoals);
-  add('own_goals', og, og * POINTS.own_goal[pos]);
+  each('pen_missed', n(row.pen_missed), POINTS.pen_missed[pos]);
+  each('pen_committed', n(row.pen_committed), POINTS.pen_committed[pos]);
+  each('own_goals', n(ownGoals), POINTS.own_goal[pos]);
 
   // A red replaces the yellow (a second yellow arrives as yellow 1 + red 1).
   if (n(row.red) > 0) add('red', 1, POINTS.red[pos]);

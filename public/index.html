@@ -4718,10 +4718,13 @@ const SG_POS_LABEL={G:'GK',D:'DEF',M:'MID',F:'FWD'};
 const SG_POS_MAX={G:1,D:2,M:2,F:2};
 const SG_POS_FULL={G:'One goalkeeper already',D:'Two defenders already',M:'Two midfielders already',F:'Two forwards already'};
 const SG_LIST_MAX=120;
+// Breakdown keys written by basePoints() in api/_lib/scout-game.js (scoring v2).
 const SG_BREAKDOWN_LABEL={
-  minutes:'Minutes',goals:'Goals',assists:'Assists',clean_sheet:'Clean sheet',
-  conceded:'Conceded',saves:'Saves',pen_saved:'Penalty saved',shots_on:'Shots on target',
-  key_passes:'Key passes',pen_missed:'Penalty missed',own_goals:'Own goals',
+  goals:'Goals',assists:'Assists',clean_sheet:'Clean sheet',conceded:'Goals conceded',
+  saves:'Saves',pen_saved:'Penalty saved',tackles:'Tackles',interceptions:'Interceptions',
+  shots_on:'Shots on target',shots_off:'Shots off target',key_passes:'Key passes',
+  fouls_drawn:'Fouls drawn',fouls_committed:'Fouls committed',offsides:'Offsides',
+  pen_missed:'Penalty missed',pen_committed:'Penalty conceded',own_goals:'Own goals',
   yellow:'Yellow card',red:'Red card'
 };
 

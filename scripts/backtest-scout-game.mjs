@@ -7,12 +7,19 @@
 // and makes NO API-Football requests. Tiers come from player_tiers_at(league,
 // season, deadline), so every round is tiered on what was known at its
 // deadline, never with hindsight. Scoring imports api/_lib/scout-game.js, so the
-// numbers here are what the game itself would have awarded.
+// numbers here are what the game itself would award.
+//
+// Two passes. Pass 1 measures what one pick of each tier really earns under
+// the current points table and derives the half-compensation ladder from it
+// (1 + (1/r - 1) / 2, r = a tier's realised base over tier 5's, rounded to
+// 0.05). Pass 2 plays the strategies under that ladder and its neighbours.
 //
 // Random strategies use a fixed seed: the report reproduces exactly.
 
 import { readFileSync } from 'node:fs';
-import { basePoints, effectiveMultiplier, pickTotal, MAX_MULTIPLIER } from '../api/_lib/scout-game.js';
+import {
+  basePoints, effectiveMultiplier, pickTotal, MAX_MULTIPLIER, TIER_MULTIPLIER, UNRANKED_MULTIPLIER, POINTS,
+} from '../api/_lib/scout-game.js';
 
 const repo = new URL('../', import.meta.url);
 const page = readFileSync(new URL('public/index.html', repo), 'utf8');
@@ -23,6 +30,9 @@ const H = { apikey: ANON, Authorization: `Bearer ${ANON}` };
 
 const DRAWS = 200;          // random entries per round for (b) and (d)
 const SEED = 20261109;
+
+/** The lineup rule (migration 020): at most 1 GK and 2 of each outfield position. */
+const MAX_PER_POS = { G: 1, D: 2, M: 2, F: 2 };
 
 // ── data ─────────────────────────────────────────────────────────────────────
 async function get(path) {
@@ -74,25 +84,10 @@ const pct = (a, p) => {
   return s[lo] + (s[hi] - s[lo]) * (i - lo);
 };
 const f1 = (x) => (Number.isFinite(x) ? x.toFixed(1) : '—');
+const f2 = (x) => (Number.isFinite(x) ? x.toFixed(2) : '—');
+const round05 = (x) => Math.round(x * 20) / 20;
 
-// ── rule variants ────────────────────────────────────────────────────────────
-const LADDERS = {
-  '5/4/3/2/1 (agreed)':       { 5: 1, 4: 2, 3: 3, 2: 4, 1: 5 },
-  '1 · 1.5 · 2 · 3 · 4':      { 5: 1, 4: 1.5, 3: 2, 2: 3, 1: 4 },
-  '1 · 1.25 · 1.5 · 2 · 2.5': { 5: 1, 4: 1.25, 3: 1.5, 2: 2, 1: 2.5 },
-  '1 · 1.2 · 1.4 · 1.7 · 2':  { 5: 1, 4: 1.2, 3: 1.4, 2: 1.7, 1: 2 },
-  '1 · 1.15 · 1.3 · 1.5 · 1.75': { 5: 1, 4: 1.15, 3: 1.3, 2: 1.5, 1: 1.75 },
-  '1 · 1.1 · 1.25 · 1.4 · 1.6': { 5: 1, 4: 1.1, 3: 1.25, 2: 1.4, 1: 1.6 },
-  // Half compensation: 1 + (1/r - 1) / 2, r = a tier's realised base over tier
-  // 5's (section 2). Closes half the earning gap, so the top keeps its edge.
-  '1 · 1.05 · 1.1 · 1.2 · 1.35 (half compensation)': { 5: 1, 4: 1.05, 3: 1.1, 2: 1.2, 1: 1.35 },
-  'flat (all 1x)':            { 5: 1, 4: 1, 3: 1, 2: 1, 1: 1 },
-};
-const DEFAULT = { ladder: '5/4/3/2/1 (agreed)', unranked: 3, mode: 'additive' };
-const HALF = '1 · 1.05 · 1.1 · 1.2 · 1.35 (half compensation)';
-const RECOMMENDED = { key: 'recommended: half compensation, unranked 1.35x', ladder: HALF, unranked: 1.35, mode: 'additive' };
-
-// ── main ─────────────────────────────────────────────────────────────────────
+// ── load ─────────────────────────────────────────────────────────────────────
 const t0 = Date.now();
 const leagues = await get('leagues?select=id,slug,name,current_season&active=is.true&order=id');
 const slugOf = new Map(leagues.map((l) => [l.id, l.slug]));
@@ -101,7 +96,8 @@ const links = await getAll('game_round_fixtures?select=round_id,fixture_id&count
 const fixtures = await getAll('fixtures?select=id,league_id,season,kickoff_utc,status_short,home_team_id,away_team_id,players_fetched_at');
 const fxById = new Map(fixtures.map((f) => [f.id, f]));
 const stats = await getAll('player_fixture_stats?select=fixture_id,player_id,team_id,position,minutes,goals,assists,clean_sheet,'
-  + 'goals_conceded,saves,pen_saved,shots_on,passes_key,pen_missed,yellow,red');
+  + 'goals_conceded,saves,pen_saved,shots_total,shots_on,passes_key,tackles,interceptions,fouls_drawn,fouls_committed,'
+  + 'offsides,pen_missed,pen_committed,yellow,red');
 const ogEvents = await getAll('fixture_events?select=fixture_id,player_api_id&type=eq.Goal&detail=eq.Own%20Goal');
 const players = await getAll('players?select=id,api_player_id,name');
 const teams = await getAll('teams?select=id,name');
@@ -116,17 +112,25 @@ for (const e of ogEvents) {
   ownGoals.set(k, (ownGoals.get(k) || 0) + 1);
 }
 
-// Base points per player per fixture, computed once.
+// Base points per player per fixture, computed once; and where the points come
+// from, by event and by position, so a dominant row shows up.
 const baseOf = new Map();               // `${fixture}:${player}` -> base
 const rowsByPlayerLeague = new Map();   // `${league}:${player}` -> [{kickoff, base}]
+const byEvent = {};                     // event -> { G, D, M, F } summed points
+const appsByPos = { G: 0, D: 0, M: 0, F: 0 };
 for (const r of stats) {
   const fx = fxById.get(r.fixture_id);
   if (!fx) continue;
-  const b = basePoints(r, ownGoals.get(`${r.fixture_id}:${r.player_id}`) || 0).base;
-  baseOf.set(`${r.fixture_id}:${r.player_id}`, b);
+  const { base, breakdown, position } = basePoints(r, ownGoals.get(`${r.fixture_id}:${r.player_id}`) || 0);
+  baseOf.set(`${r.fixture_id}:${r.player_id}`, base);
   const k = `${fx.league_id}:${r.player_id}`;
   if (!rowsByPlayerLeague.has(k)) rowsByPlayerLeague.set(k, []);
-  rowsByPlayerLeague.get(k).push({ kickoff: fx.kickoff_utc, base: b });
+  rowsByPlayerLeague.get(k).push({ kickoff: fx.kickoff_utc, base });
+  appsByPos[position]++;
+  for (const [ev, b] of Object.entries(breakdown)) {
+    byEvent[ev] ??= { G: 0, D: 0, M: 0, F: 0 };
+    byEvent[ev][position] += b.points;
+  }
 }
 
 const fixturesOf = new Map();
@@ -136,8 +140,7 @@ for (const l of links) {
 }
 
 // Rounds the backtest can score honestly: past, every counting fixture
-// finished AND carrying player rows. A round with a fixture the API never gave
-// players for would score those picks 0 for a reason that is not football.
+// finished AND carrying player rows.
 const usable = [];
 const excluded = [];
 for (const r of rounds) {
@@ -149,51 +152,96 @@ for (const r of rounds) {
   else if (allDone) excluded.push(`${slugOf.get(r.league_id)} ${r.round_label}`);
 }
 
-// ── simulate ─────────────────────────────────────────────────────────────────
-// results[variantKey][strategy][slug] = [round totals]
-const results = {};
-const push = (variant, strat, slug, v) => {
-  results[variant] ??= {};
-  results[variant][strat] ??= {};
-  (results[variant][strat][slug] ??= []).push(v);
-};
-const fan = new Map();        // club -> [round totals], Série A only, default rules
-const fanRec = new Map();     // the same under the recommended rules
-const roundMeta = [];
-
-// Each alternative ladder is run with unranked paying its tier-2 rate: an
-// unknown pays like a low tier, never more than the bottom one.
-const VARIANTS = [
-  { key: 'default', ...DEFAULT },
-  { key: 'multiplicative captain', ...DEFAULT, mode: 'multiplicative' },
-  { key: 'unranked 2x', ...DEFAULT, unranked: 2 },
-  ...Object.keys(LADDERS).filter((k) => k !== DEFAULT.ladder && k !== HALF).map((k) => ({
-    key: `ladder ${k}`, ...DEFAULT, ladder: k, unranked: LADDERS[k][2],
-  })),
-  { key: 'ladder 1 · 1.15 · 1.3 · 1.5 · 1.75, multiplicative captain', ...DEFAULT,
-    ladder: '1 · 1.15 · 1.3 · 1.5 · 1.75', unranked: 1.5, mode: 'multiplicative' },
-  RECOMMENDED,
-  { key: 'half compensation, unranked 2x', ladder: HALF, unranked: 2, mode: 'additive' },
-  { key: 'half compensation, multiplicative captain', ladder: HALF, unranked: 1.35, mode: 'multiplicative' },
-];
-
-// Realised base points per pick per round, by tier: what one pick of each tier
-// actually earned (0 when he did not play). The size of this gap is what any
-// ladder has to respect.
-const tierBase = {};
-
 /** Expected base per appearance before the deadline: the captain's chooser. */
 function expectedBase(league, playerId, deadline) {
   const rows = (rowsByPlayerLeague.get(`${league}:${playerId}`) || []).filter((x) => x.kickoff < deadline);
   return rows.length ? mean(rows.map((x) => x.base)) : 0;
 }
 
-/** Five picks from an ordered list, at most one goalkeeper. */
+/** Realised base for a pick in a round: summed over its fixtures, 0 if he did not play. */
+function realised(p, round) {
+  let b = 0, played = false;
+  for (const f of round.fxs) {
+    const x = baseOf.get(`${f.id}:${p.player_id}`);
+    if (x !== undefined) { b += x; played = true; }
+  }
+  return { b, played };
+}
+
+// ── pass 1: what each tier earns, per position ───────────────────────────────
+const pools = [];             // per usable round: { round, slug, pool, ranked, unranked, early }
+const tierBase = {};          // 'tier n' | 'unranked' -> { base: [], played }
+const tierPos = {};           // 'tier n' -> pos -> { pick: [], app: [] }
+let n = 0;
+for (const round of usable) {
+  const slug = slugOf.get(round.league_id);
+  const tiers = await rpc('player_tiers_at', {
+    p_league_id: round.league_id, p_season: round.season, p_as_of: round.deadline_utc,
+  });
+  const inRound = new Set(round.fxs.flatMap((f) => [f.home_team_id, f.away_team_id]));
+  const pool = tiers
+    .filter((t) => inRound.has(t.team_id))
+    .map((t) => ({ ...t, exp: expectedBase(round.league_id, t.player_id, round.deadline_utc) }));
+  const ranked = pool.filter((p) => p.tier);
+  const unranked = pool.filter((p) => !p.tier);
+  const early = ranked.length < 50;
+  pools.push({ round, slug, pool, ranked, unranked, early });
+  if (!early) {
+    for (const p of pool) {
+      const { b, played } = realised(p, round);
+      const k = p.tier ? `tier ${p.tier}` : 'unranked';
+      (tierBase[k] ??= { base: [], played: 0 }).base.push(b);
+      if (played) tierBase[k].played++;
+      if (p.tier && p.position) {
+        const tp = ((tierPos[k] ??= {})[p.position] ??= { pick: [], app: [] });
+        tp.pick.push(b);
+        if (played) tp.app.push(b);
+      }
+    }
+  }
+  if (++n % 20 === 0) process.stderr.write(`  pass 1: ${n}/${usable.length} rounds\n`);
+}
+
+const t5 = mean(tierBase['tier 5']?.base || []);
+const ratio = (k) => mean(tierBase[k]?.base || []) / t5;
+const DERIVED = { 5: 1 };
+for (const t of [4, 3, 2, 1]) DERIVED[t] = round05(1 + (1 / ratio(`tier ${t}`) - 1) / 2);
+const DERIVED_UNRANKED = DERIVED[1];   // unranked is paid like tier 1, as before
+const ladderLabel = (l) => [5, 4, 3, 2, 1].map((t) => l[t]).join(' · ');
+
+// ── pass 2: strategies ───────────────────────────────────────────────────────
+const LADDERS = {
+  derived: DERIVED,
+  live: TIER_MULTIPLIER,                    // whatever scout-game.js holds now
+  v1: { 5: 1, 4: 1.05, 3: 1.1, 2: 1.2, 1: 1.35 },
+  flat: { 5: 1, 4: 1, 3: 1, 2: 1, 1: 1 },
+};
+const VARIANTS = [
+  { key: `derived half compensation (${ladderLabel(DERIVED)}, unranked ${DERIVED_UNRANKED}×)`, ladder: 'derived', unranked: DERIVED_UNRANKED, mode: 'additive', main: true },
+  { key: 'derived, multiplicative captain', ladder: 'derived', unranked: DERIVED_UNRANKED, mode: 'multiplicative' },
+  { key: 'v1 ladder kept (1 · 1.05 · 1.1 · 1.2 · 1.35)', ladder: 'v1', unranked: 1.35, mode: 'additive' },
+  { key: 'flat (all 1×)', ladder: 'flat', unranked: 1, mode: 'additive' },
+];
+const MAIN = VARIANTS[0].key;
+const liveMatches = [5, 4, 3, 2, 1].every((t) => LADDERS.live[t] === DERIVED[t]) && UNRANKED_MULTIPLIER === DERIVED_UNRANKED;
+
+const results = {};
+const push = (variant, strat, slug, v) => {
+  results[variant] ??= {};
+  results[variant][strat] ??= {};
+  (results[variant][strat][slug] ??= []).push(v);
+};
+const fan = new Map();          // Série A club -> [round totals], main variant
+const fanPos = { G: 0, D: 0, M: 0, F: 0 };
+
+/** Five picks from an ordered list, within the lineup rule. */
 function takeFive(list) {
   const out = [];
-  let gk = 0;
+  const used = { G: 0, D: 0, M: 0, F: 0 };
   for (const p of list) {
-    if (p.position === 'G') { if (gk) continue; gk++; }
+    const pos = p.position || 'M';
+    if (used[pos] >= MAX_PER_POS[pos]) continue;
+    used[pos]++;
     out.push(p);
     if (out.length === 5) break;
   }
@@ -216,7 +264,6 @@ function randomFive(pool) {
 function entryPoints(five, round, v) {
   const ladder = LADDERS[v.ladder];
   const mult = (p) => (p.tier ? ladder[p.tier] : v.unranked);
-  // Captain = highest expected: expected base per appearance x tier multiplier.
   let cap = five[0], best = -Infinity;
   for (const p of five) {
     const e = p.exp * mult(p);
@@ -225,8 +272,8 @@ function entryPoints(five, round, v) {
   let total = 0;
   for (const p of five) {
     const m = effectiveMultiplier({ tierMult: mult(p), captain: p === cap, contrarian: false, mode: v.mode });
-    for (const fid of round.fxs.map((f) => f.id)) {
-      const b = baseOf.get(`${fid}:${p.player_id}`);
+    for (const f of round.fxs) {
+      const b = baseOf.get(`${f.id}:${p.player_id}`);
       if (b === undefined) continue;   // no row: did not play, scores nothing
       total += pickTotal(b, m);
     }
@@ -234,34 +281,8 @@ function entryPoints(five, round, v) {
   return total;
 }
 
-let n = 0;
-for (const round of usable) {
-  const slug = slugOf.get(round.league_id);
-  const tiers = await rpc('player_tiers_at', {
-    p_league_id: round.league_id, p_season: round.season, p_as_of: round.deadline_utc,
-  });
-  const inRound = new Set(round.fxs.flatMap((f) => [f.home_team_id, f.away_team_id]));
-  const pool = tiers
-    .filter((t) => inRound.has(t.team_id))
-    .map((t) => ({ ...t, exp: expectedBase(round.league_id, t.player_id, round.deadline_utc) }));
-  const ranked = pool.filter((p) => p.tier);
-  const unranked = pool.filter((p) => !p.tier);
-  const early = ranked.length < 50;
-  roundMeta.push({ slug, label: round.round_label, ranked: ranked.length, unranked: unranked.length, early });
+for (const { round, slug, pool, ranked, unranked, early } of pools) {
   const tag = early ? 'early' : 'main';
-  if (!early) {
-    for (const p of pool) {
-      let b = 0, played = false;
-      for (const f of round.fxs) {
-        const x = baseOf.get(`${f.id}:${p.player_id}`);
-        if (x !== undefined) { b += x; played = true; }
-      }
-      const k = p.tier ? `tier ${p.tier}` : 'unranked';
-      (tierBase[k] ??= { base: [], played: 0 }).base.push(b);
-      if (played) tierBase[k].played++;
-    }
-  }
-
   const a = takeFive([...ranked].sort((x, y) => y.tier - x.tier || y.composite - x.composite));
   const c = takeFive([...ranked].sort((x, y) => x.tier - y.tier || x.composite - y.composite));
   const bDraws = []; const dDraws = [];
@@ -271,7 +292,6 @@ for (const round of usable) {
     const d = unranked.length >= 5 ? randomFive(unranked) : null;
     if (d) dDraws.push(d);
   }
-
   for (const v of VARIANTS) {
     if (a) push(v.key, `a:${tag}`, slug, entryPoints(a, round, v));
     if (c) push(v.key, `c:${tag}`, slug, entryPoints(c, round, v));
@@ -280,7 +300,7 @@ for (const round of usable) {
   }
 
   // Fan rounds: Série A, five of a club's regulars (most minutes before the
-  // deadline, at most one GK), default rules.
+  // deadline, within the lineup rule), main variant.
   if (slug === 'serie_a') {
     const byClub = new Map();
     for (const p of pool) {
@@ -290,69 +310,103 @@ for (const round of usable) {
     for (const [club, list] of byClub) {
       const five = takeFive([...list].sort((x, y) => y.minutes - x.minutes));
       if (!five) continue;
+      for (const p of five) fanPos[p.position || 'M']++;
       const name = teamName.get(club) || String(club);
       if (!fan.has(name)) fan.set(name, []);
-      fan.get(name).push(entryPoints(five, round, { ...DEFAULT }));
-      if (!fanRec.has(name)) fanRec.set(name, []);
-      fanRec.get(name).push(entryPoints(five, round, RECOMMENDED));
+      fan.get(name).push(entryPoints(five, round, VARIANTS[0]));
     }
   }
-  n++;
-  if (n % 20 === 0) process.stderr.write(`  ${n}/${usable.length} rounds\n`);
 }
 
 // ── report ───────────────────────────────────────────────────────────────────
-const SLUGS = leagues.map((l) => l.slug).filter((s) => results.default?.['a:main']?.[s]);
+const SLUGS = leagues.map((l) => l.slug).filter((s) => results[MAIN]?.['a:main']?.[s]);
 const LABEL = Object.fromEntries(leagues.map((l) => [l.slug, l.name]));
 const STRATS = [
   ['a', '(a) top 5 tiers'], ['b', '(b) random 5 tiered'], ['c', '(c) bottom 5 tiers'], ['d', '(d) unranked only'],
 ];
 const all = (variant, strat) => Object.values(results[variant]?.[strat] || {}).flat();
+const POS_NAME = { G: 'GK', D: 'DEF', M: 'MID', F: 'FWD' };
 const L = [];
 const out = (s = '') => L.push(s);
 
-out('# Scout Game backtest — November 2026');
+// Position share, tier-matched: within each tier, a position's mean base per
+// pick over the forwards' in the same tier; then the mean of those ratios.
+function posShare(kind) {
+  const r = { G: [], D: [], M: [], F: [] };
+  for (const t of [1, 2, 3, 4, 5]) {
+    const tp = tierPos[`tier ${t}`];
+    if (!tp?.F) continue;
+    const fwd = mean(tp.F[kind]);
+    for (const p of ['G', 'D', 'M', 'F']) if (tp[p]?.[kind].length) r[p].push(mean(tp[p][kind]) / fwd);
+  }
+  return Object.fromEntries(Object.entries(r).map(([p, v]) => [p, mean(v)]));
+}
+const sharePick = posShare('pick');
+const shareApp = posShare('app');
+const fanAll = [...fan.values()].flat();
+
+out('# Scout Game backtest — November 2026 (scoring v2)');
 out('');
 out(`Generated by \`node scripts/backtest-scout-game.mjs\` on ${new Date().toISOString().slice(0, 10)}. `
   + `${usable.length} finished regular-season rounds across ${SLUGS.length} leagues, `
   + `${stats.length.toLocaleString('en')} player-fixture rows. Supabase reads only; no API-Football requests.`);
 out('');
+out('This replaces the first report, which tested the Day 3 points table. Its conclusions are kept in "History" at the end.');
+out('');
 {
-  const m = (v, k) => mean(all(v, `${k}:main`));
-  const r1 = mean(tierBase['tier 1']?.base || []) / mean(tierBase['tier 5']?.base || []);
-  const argA = mean(results[RECOMMENDED.key]['a:main']?.argentina || []);
-  const argB = mean(results[RECOMMENDED.key]['b:main']?.argentina || []);
+  const m = (k) => mean(all(MAIN, `${k}:main`));
+  const argA = mean(results[MAIN]['a:main']?.argentina || []);
+  const argB = mean(results[MAIN]['b:main']?.argentina || []);
   out('## Findings');
   out('');
-  out(`1. **The agreed ladder (tier 1 → 5×) breaks the game.** Picking the five top-tier players scores ${f1(m('default', 'a'))} a round; five random tiered players score ${f1(m('default', 'b'))} and the five bottom-tier players ${f1(m('default', 'c'))}. Scouting the best players is the worst strategy.`);
-  out(`2. **Why: tiers predict points, but not by 5×.** A tier-1 pick earns ${r1.toFixed(2)} of what a tier-5 pick earns (section 2), so any tier-1 multiplier above about ${(1 / r1).toFixed(2)}× makes the bottom tier out-earn the top. With no multiplier at all the order is right (top ${f1(m('ladder flat (all 1x)', 'a'))} > random ${f1(m('ladder flat (all 1x)', 'b'))} > bottom ${f1(m('ladder flat (all 1x)', 'c'))}).`);
-  out(`3. **Recommended ladder: half compensation, 1 · 1.05 · 1.1 · 1.2 · 1.35, unranked 1.35×.** Each tier is paid back half its earning gap. Top ${f1(m(RECOMMENDED.key, 'a'))} beats random ${f1(m(RECOMMENDED.key, 'b'))} (+${Math.round(100 * (m(RECOMMENDED.key, 'a') / m(RECOMMENDED.key, 'b') - 1))}%); bottom ${f1(m(RECOMMENDED.key, 'c'))} stays within reach (${(m(RECOMMENDED.key, 'c') / m(RECOMMENDED.key, 'b')).toFixed(2)} of random); unknowns alone score ${f1(m(RECOMMENDED.key, 'd'))} and never win. A tier-1 player who delivers still pays 35% more than a star with the same line.`);
-  out(`4. **Captain: additive, as agreed.** Additive and multiplicative are within a point of each other under the recommended ladder; additive is simpler to explain. The **${MAX_MULTIPLIER}× cap stays in the rules**, but under the recommended ladder no pick can reach it (the maximum is 1.35 + 1 captain + 0.5 contrarian = 2.85×).`);
-  out(`5. **Exception: Argentina.** Top tiers trail random there (${f1(argA)} vs ${f1(argB)}) under every ladder, flat included: the composite predicts Argentine points poorly. Worth revisiting the composite weights for that league, not the ladder.`);
-  out(`6. **A typical fan round** (five Série A regulars from one club) scores a median of ${f1(pct(fanRecAll0(), 0.5))} under the recommended rules (p10 ${f1(pct(fanRecAll0(), 0.1))}, p90 ${f1(pct(fanRecAll0(), 0.9))}), against ${f1(pct([...fan.values()].flat(), 0.5))} under the agreed ones.`);
+  out(`1. **Ladder from the v2 points: ${ladderLabel(DERIVED)}, unranked ${DERIVED_UNRANKED}×** (half compensation, same method as v1, rounded to 0.05). ${liveMatches ? 'This is the ladder in `api/_lib/scout-game.js`.' : '**Not yet the ladder in `api/_lib/scout-game.js`** (' + ladderLabel(LADDERS.live) + ').'}`);
+  out(`2. **Strategies under it:** top ${f1(m('a'))} > random ${f1(m('b'))} (+${Math.round(100 * (m('a') / m('b') - 1))}%) > bottom ${f1(m('c'))} (${(m('c') / m('b')).toFixed(2)} of random); unknowns alone ${f1(m('d'))}.`);
+  out(`3. **A typical fan round** (five Série A regulars from one club) scores a median of **${f1(pct(fanAll, 0.5))}** (p10 ${f1(pct(fanAll, 0.1))}, p90 ${f1(pct(fanAll, 0.9))}). Target was 30–50.`);
+  out(`4. **Positions, tier-matched, per pick (0 when he did not play), as a share of a forward:** GK ${f2(sharePick.G)} · DEF ${f2(sharePick.D)} · MID ${f2(sharePick.M)} · FWD 1.00. Target: GK and DEF at least ~0.70.`);
+  out(`5. **Argentina:** top ${f1(argA)} vs random ${f1(argB)}.`);
+  out(`6. **Captain:** additive; the ${MAX_MULTIPLIER}× cap stays in the rules and cannot bind under this ladder.`);
   out('');
 }
-function fanRecAll0() { return [...fanRec.values()].flat(); }
 
 out('## Rules under test');
 out('');
-out('- **Base points**: the agreed table in `api/_lib/scout-game.js` (the live scoring code, imported, not copied).');
+{
+  // Written from POINTS itself, so the report always states the table it ran.
+  const sg = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v);
+  const LBL = [['goal', 'goal'], ['assist', 'assist'], ['clean_sheet', 'clean sheet (GK/DEF, 60+ min)', 'G'],
+    ['conceded', 'conceded each (GK)', 'G'], ['save', 'save'], ['pen_saved', 'pen saved'], ['tackle', 'tackle'],
+    ['interception', 'interception'], ['shot_on', 'shot on target'], ['shot_off', 'shot off target'],
+    ['key_pass', 'key pass'], ['foul_drawn', 'foul drawn'], ['foul_committed', 'foul committed'],
+    ['own_goal', 'own goal'], ['pen_missed', 'pen missed'], ['pen_committed', 'pen committed'], ['yellow', 'yellow'],
+    ['red', 'red (replaces the yellow)'], ['offside', 'offside']];
+  const table = LBL.map(([k, label, pos]) => `${label} ${sg(POINTS[k][pos || 'F'])}`).join(' · ');
+  out(`- **Base points (v2)**: the table in \`api/_lib/scout-game.js\`, imported, not copied. ${table}. No appearance points. Reduced-feed fixtures: penalty fields score 0.`);
+}
 out('- **Tier**: from `player_tiers_at(league, season, deadline)`: each round is tiered only on fixtures that kicked off before its deadline.');
-out('- **Multiplier (default)**: tier 5 → 1×, 4 → 2×, 3 → 3×, 2 → 4×, 1 → 5×; unranked (below the minutes threshold) → 3×.');
-out('- **Captain (default, additive)**: +100% of base, i.e. +1 on the pick\'s multiplier. Compared against the multiplicative version (×2 on the whole multiplier).');
-out(`- **Cap**: no single pick's effective multiplier exceeds **${MAX_MULTIPLIER}×**, in either captain mode.`);
-out('- **Negative base**: counted once, unscaled.');
-out('- **Contrarian bonus**: not simulated (it needs real ownership; there are no real entries yet).');
+out('- **Lineup**: at most one goalkeeper and two of each outfield position (migration 020).');
+out('- **Captain (additive)**: +1 on the pick\'s multiplier. **Negative base**: counted once, unscaled. **Contrarian**: not simulated (no real ownership yet).');
 out('');
 out('## Method');
 out('');
 out('- **Pool** for a round: players with at least one appearance in that competition before the deadline whose latest club plays in the round. "Tiered" means at or above the minutes threshold (max(270, 30% of club minutes)).');
-out('- **A pick who does not play scores 0**: once a fixture is ingested, no row means did not play. Strategies pay for picking a star who is injured or rested.');
-out('- **Captain** = the pick with the highest expected value: mean base points per appearance before the deadline × tier multiplier.');
-out('- **At most one goalkeeper** per entry, as in the game.');
-out(`- **(a)** the five highest tiers (composite breaks ties); **(b)** five random tiered players, ${DRAWS} draws per round; **(c)** the five lowest tiers; **(d)** five random *unranked* players, ${DRAWS} draws per round: the "unknowns alone" test.`);
-out(`- Random draws use a fixed seed (${SEED}), so the report reproduces exactly.`);
-out(`- **Early rounds**, where fewer than 50 players in the round are tiered yet, are reported separately: tiers are thin there and every strategy collapses toward "unranked". ${roundMeta.filter((r) => r.early).length} of ${roundMeta.length} rounds are early.`);
+out('- **A pick who does not play scores 0.**');
+out('- **Captain** = the pick with the highest expected value: mean base per appearance before the deadline × tier multiplier.');
+out(`- **(a)** the five highest tiers (composite breaks ties); **(b)** five random tiered players, ${DRAWS} draws per round; **(c)** the five lowest tiers; **(d)** five random *unranked* players, ${DRAWS} draws per round. All within the lineup rule.`);
+out(`- Random draws use a fixed seed (${SEED}). Early rounds (fewer than 50 tiered players: ${pools.filter((p) => p.early).length} of ${pools.length}) are left out of every table below.`);
+out('');
+
+out('## 1. What one pick of each tier earns, and the ladder it gives');
+out('');
+out('Realised base points per pick per round (0 when the player did not play). Multiplier = 1 + (1/r − 1)/2, rounded to 0.05.');
+out('');
+out('| Tier | picks | mean base | played | r = base ÷ tier 5 | multiplier |');
+out('|---|---|---|---|---|---|');
+for (const k of ['tier 5', 'tier 4', 'tier 3', 'tier 2', 'tier 1', 'unranked']) {
+  const t = tierBase[k];
+  if (!t) continue;
+  const mult = k === 'unranked' ? `${DERIVED_UNRANKED} (as tier 1)` : DERIVED[Number(k.slice(5))];
+  out(`| ${k} | ${t.base.length.toLocaleString('en')} | ${mean(t.base).toFixed(2)} | ${Math.round(100 * t.played / t.base.length)}% | ${ratio(k).toFixed(2)} | ${mult} |`);
+}
 out('');
 
 function perLeague(variant) {
@@ -370,89 +424,99 @@ function perLeague(variant) {
   out('');
 }
 
-out('## 1. The agreed rules fail: per league (main rounds)');
+out('## 2. Strategies per league, derived ladder');
 out('');
-{
-  const lm = (k, s) => mean(results.default[`${k}:main`]?.[s] || []);
-  const aLosesB = SLUGS.filter((s) => lm('a', s) < lm('b', s));
-  const cBeatsA = SLUGS.filter((s) => lm('c', s) > lm('a', s));
-  const except = (list) => {
-    const rest = SLUGS.filter((s) => !list.includes(s)).map((s) => LABEL[s]);
-    return list.length === SLUGS.length ? 'in every league' : `in ${list.length} of ${SLUGS.length} leagues (not ${rest.join(', ')})`;
-  };
-  out(`Ladder 5/4/3/2/1, unranked 3×, additive captain. Mean round points ± SD; each (a)/(c) cell is one entry per round, (b)/(d) pool all draws. **(a) loses to (b) ${except(aLosesB)}; (c) beats (a) ${except(cBeatsA)}.**`);
-}
+out('Mean round points ± SD; each (a)/(c) cell is one entry per round, (b)/(d) pool all draws.');
 out('');
-perLeague('default');
+perLeague(MAIN);
 
-out('## 1b. Recommended rules: per league (main rounds)');
-out('');
-out(`Ladder ${HALF}, unranked 1.35×, additive captain, 6× cap.`);
-out('');
-perLeague(RECOMMENDED.key);
-
-out('## 2. What one pick of each tier actually earns');
-out('');
-out('Realised base points per pick per round (main rounds), counting 0 when the player did not play. Any ladder has to respect this gap: if tier 1 is multiplied by more than the ratio below, the bottom tier out-earns the top on average.');
-out('');
-out('| Tier | picks | mean base | played | base ÷ tier 5 |');
-out('|---|---|---|---|---|');
-const t5 = mean(tierBase['tier 5']?.base || []);
-for (const k of ['tier 5', 'tier 4', 'tier 3', 'tier 2', 'tier 1', 'unranked']) {
-  const t = tierBase[k];
-  if (!t) continue;
-  out(`| ${k} | ${t.base.length.toLocaleString('en')} | ${mean(t.base).toFixed(2)} | ${Math.round(100 * t.played / t.base.length)}% | ${(mean(t.base) / t5).toFixed(2)} |`);
-}
-out('');
-
-out('## 3. Rule variants, all leagues (main rounds)');
-out('');
-out('Mean round points ± SD. The criteria: (a) clearly above (b); (c) not hopeless against (b); neither (c) nor (d) beating (a).');
+out('## 3. Variants, all leagues');
 out('');
 out('| Variant | (a) top | (b) random | (c) bottom | (d) unranked | a − b | c ÷ b | (d) beats (a)? |');
 out('|---|---|---|---|---|---|---|---|');
 for (const v of VARIANTS) {
   const m = Object.fromEntries(STRATS.map(([k]) => [k, all(v.key, `${k}:main`)]));
   const ma = mean(m.a), mb = mean(m.b), mc = mean(m.c), md = mean(m.d);
-  out(`| ${v.key === 'default' ? '**default**' : v.key} | ${f1(ma)} ± ${f1(sd(m.a))} | ${f1(mb)} ± ${f1(sd(m.b))} | `
+  out(`| ${v.main ? `**${v.key}**` : v.key} | ${f1(ma)} ± ${f1(sd(m.a))} | ${f1(mb)} ± ${f1(sd(m.b))} | `
     + `${f1(mc)} ± ${f1(sd(m.c))} | ${f1(md)} ± ${f1(sd(m.d))} | ${f1(ma - mb)} | ${(mc / mb).toFixed(2)} | ${md > ma ? '**yes**' : 'no'} |`);
 }
 out('');
 
-out('## 4. Early rounds (fewer than 50 tiered players), default rules');
+out('## 4. Positions, tier-matched');
 out('');
-out('At the start of a season almost nobody has passed the minutes threshold, so (a) to (c), which need five tiered players, cannot be formed ("—"). Only (d) runs; it is shown so the early-season ceiling is visible.');
+out('Within each tier, a position\'s mean base over the forwards\' in the same tier, averaged over the five tiers. "Per pick" counts 0 when the player did not play (what a lineup choice actually gets); "per appearance" only the matches he played.');
 out('');
-out('| League | early rounds | (a) | (b) | (c) | (d) |');
-out('|---|---|---|---|---|---|');
-for (const s of SLUGS) {
-  const v = STRATS.map(([k]) => results.default[`${k}:early`]?.[s] || []);
-  const nEarly = roundMeta.filter((r) => r.early && r.slug === s).length;
-  if (!nEarly) continue;
-  out(`| ${LABEL[s]} | ${nEarly} | ${v.map((x) => (x.length ? `${f1(mean(x))} ± ${f1(sd(x))}` : '—')).join(' | ')} |`);
+out('| | GK | DEF | MID | FWD |');
+out('|---|---|---|---|---|');
+out(`| per pick, ÷ FWD | ${f2(sharePick.G)} | ${f2(sharePick.D)} | ${f2(sharePick.M)} | 1.00 |`);
+out(`| per appearance, ÷ FWD | ${f2(shareApp.G)} | ${f2(shareApp.D)} | ${f2(shareApp.M)} | 1.00 |`);
+out('');
+out('Mean base per pick by tier and position:');
+out('');
+out('| Tier | GK | DEF | MID | FWD |');
+out('|---|---|---|---|---|');
+for (const t of [5, 4, 3, 2, 1]) {
+  const tp = tierPos[`tier ${t}`] || {};
+  out(`| tier ${t} | ${['G', 'D', 'M', 'F'].map((p) => (tp[p] ? `${f2(mean(tp[p].pick))} (n ${tp[p].pick.length})` : '—')).join(' | ')} |`);
 }
 out('');
 
-out('## 5. A typical fan round: five regulars from one Série A club');
+out('## 5. Where the points come from');
 out('');
-out('Five of the club\'s players with the most minutes before the deadline (at most one goalkeeper), captain by expected value: what a supporter picking their own club would score, under both rule sets.');
+out('Every player-fixture row we hold, all rounds. Points per appearance by event and position, and each event\'s share of all positive points. A row that dominates would show here.');
 out('');
-const fanAll = [...fan.values()].flat();
-const fanRecAll = [...fanRec.values()].flat();
-out('| Rules | club-rounds | p10 | median | p90 | mean ± SD |');
+out('| Event | GK | DEF | MID | FWD | share of + points |');
 out('|---|---|---|---|---|---|');
-out(`| agreed (5/4/3/2/1, unranked 3×) | ${fanAll.length} | ${f1(pct(fanAll, 0.1))} | ${f1(pct(fanAll, 0.5))} | ${f1(pct(fanAll, 0.9))} | ${f1(mean(fanAll))} ± ${f1(sd(fanAll))} |`);
-out(`| **recommended** (half compensation, unranked 1.35×) | ${fanRecAll.length} | ${f1(pct(fanRecAll, 0.1))} | ${f1(pct(fanRecAll, 0.5))} | ${f1(pct(fanRecAll, 0.9))} | ${f1(mean(fanRecAll))} ± ${f1(sd(fanRecAll))} |`);
+{
+  const pos = Object.values(byEvent).reduce((s, e) => s + Object.values(e).filter((x) => x > 0).reduce((a, b) => a + b, 0), 0);
+  const rowsE = Object.entries(byEvent).sort((x, y) => Object.values(y[1]).reduce((a, b) => a + b, 0) - Object.values(x[1]).reduce((a, b) => a + b, 0));
+  for (const [ev, v] of rowsE) {
+    const tot = Object.values(v).reduce((a, b) => a + b, 0);
+    out(`| ${ev} | ${['G', 'D', 'M', 'F'].map((p) => f2(v[p] / (appsByPos[p] || 1))).join(' | ')} | ${tot > 0 ? Math.round(100 * tot / pos) + '%' : '—'} |`);
+  }
+  const sums = ['G', 'D', 'M', 'F'].map((p) => f2(Object.values(byEvent).reduce((s, e) => s + e[p], 0) / (appsByPos[p] || 1)));
+  out(`| **base per appearance** | ${sums.join(' | ')} | |`);
+  out(`| appearances | ${['G', 'D', 'M', 'F'].map((p) => appsByPos[p].toLocaleString('en')).join(' | ')} | |`);
+}
 out('');
-out('Per club, recommended rules:');
+
+out('## 6. A typical fan round: five regulars from one Série A club');
+out('');
+out('Five of the club\'s players with the most minutes before the deadline, within the lineup rule, captain by expected value, derived ladder.');
+out('');
+out('| club-rounds | p10 | median | p90 | mean ± SD |');
+out('|---|---|---|---|---|');
+out(`| ${fanAll.length} | ${f1(pct(fanAll, 0.1))} | ${f1(pct(fanAll, 0.5))} | ${f1(pct(fanAll, 0.9))} | ${f1(mean(fanAll))} ± ${f1(sd(fanAll))} |`);
+out('');
+out(`Positions picked across those entries: ${['G', 'D', 'M', 'F'].map((p) => `${POS_NAME[p]} ${fanPos[p]}`).join(' · ')}.`);
+out('');
+out('Per club:');
 out('');
 out('| Club | rounds | p10 | median | p90 | mean |');
 out('|---|---|---|---|---|---|');
-for (const [club, v] of [...fanRec.entries()].sort((x, y) => pct(y[1], 0.5) - pct(x[1], 0.5))) {
+for (const [club, v] of [...fan.entries()].sort((x, y) => pct(y[1], 0.5) - pct(x[1], 0.5))) {
   out(`| ${club} | ${v.length} | ${f1(pct(v, 0.1))} | ${f1(pct(v, 0.5))} | ${f1(pct(v, 0.9))} | ${f1(mean(v))} |`);
 }
 out('');
 
+out('## History: the v1 report (Day 3 points table)');
+out('');
+out('- The first ladder, 1× (tier 5) to 5× (tier 1), made picking the best players the worst strategy: top five 19.7 a round against random 37.0 and bottom five 37.8. A tier-1 pick earned 0.58 of a tier-5 pick, so any tier-1 multiplier above ~1.73× inverted the order.');
+out('- Half compensation (1 · 1.05 · 1.1 · 1.2 · 1.35, unranked 1.35×) fixed it: top 19.7 > random 16.9 > bottom 11.7, unknowns 8.2. A fan round scored a median of 16.3 (p10 6.3, p90 33.8): too low to feel like anything happened, which is one reason for v2.');
+out('- Argentina: top tiers trailed random under every ladder.');
+out('');
+out('## History: the proposed v2 table (10 Nov)');
+out('');
+out('The v2 table as first proposed had every positive event at two-thirds of today\'s values (goal +8, assist +5, clean sheet +5, save +1, tackle +1.2, interception +0.8, shot on +1.2, shot off +0.8, key pass +0.8, foul drawn +0.5) and goals conceded at −1. Run through this same script (lineup rule included):');
+out('');
+out('- Ladder 1 · 1.05 · 1.1 · 1.2 · 1.4, unranked 1.4×: the same as today\'s.');
+out('- Strategies: top 32.9 > random 27.0 > bottom 19.0; unknowns alone 12.5.');
+out('- **Fan round median 25.5** (p10 8.1, p90 51.2), under the 30–50 target. Without appearance points a player earns ~4.5 per appearance and ~22% of picks do not play, so five picks land near 25 whatever the row weights: only the overall scale moves the median.');
+out('- **Tackles were 26% of all positive points**, twice goals (13%): a defender earned more from tackles (1.69 a match) than a forward from goals (1.28).');
+out('- A tier-matched goalkeeper earned 0.68 of a forward, just under the ~0.70 target.');
+out('');
+out('Adopted instead: every positive event ×1.5 except the tackle (kept at 1.2), and goals conceded −0.5. Intermediate steps tested on the way: tackle 0.8 and conceded −0.5 alone (median 24.3, GK 0.85, tackles 19%); then positives ×1.25 (median 31.0).');
+out('');
 out('## Data notes');
 out('');
 out(`- Rounds excluded because a counting fixture has no player rows from the API: ${excluded.length ? excluded.join(', ') : 'none'}.`);
