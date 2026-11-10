@@ -82,7 +82,7 @@ check(`every key used by the pages exists (${used} uses)`, missing.length === 0,
 // Keys built at runtime: position, pick-slot, full-group and status families.
 const idx = pages['public/index.html'];
 const families = { 'sg.pos.': ['G', 'D', 'M', 'F', 'X'], 'sg.pick.': ['G', 'D', 'X'], 'sg.full.': ['G', 'D', 'X'],
-  'sg.rv.': ['round', 'comp', 'overall', 'torcida'], 'mo.st.': ['PST', 'CANC', 'ABD', 'SUSP', 'INT'], 'mo.res.': ['W', 'D', 'L'] };
+  'sg.rv.': ['round', 'comp', 'overall', 'torcida', 'leagues'], 'mo.st.': ['PST', 'CANC', 'ABD', 'SUSP', 'INT'], 'mo.res.': ['W', 'D', 'L'] };
 const famMissing = [];
 for (const [pre, ends] of Object.entries(families)) for (const e of ends) if (!(pre + e in en)) famMissing.push(pre + e);
 check('every runtime-built key family is complete', famMissing.length === 0, famMissing.join(', '));
@@ -102,13 +102,17 @@ check('017 seeds 8 badges', badgeIds.length === 8, badgeIds.join(', '));
 const badgeMissing = badgeIds.filter((id) => !(`badge.${id}.name` in en) || !(`badge.${id}.desc` in en));
 check('every badge has a name and a description', badgeMissing.length === 0, badgeMissing.join(', '));
 
-// submit_picks() messages, by exact text, from 023 (current) and 020 (older).
+// Database messages the browser can see, by exact text: submit_picks() from
+// 023 (current) and 020 (older), and the private-league functions in 025.
+// 'No user given.' is delete_account_data(), service role only.
 const serverMsgs = new Set();
-for (const f of ['supabase/migrations/023_formation_and_history.sql', 'supabase/migrations/020_lineup_rule.sql']) {
+for (const f of ['supabase/migrations/023_formation_and_history.sql', 'supabase/migrations/020_lineup_rule.sql',
+                 'supabase/migrations/025_private_leagues.sql']) {
   for (const m of read(f).matchAll(/raise exception '((?:[^']|'')+)'/g)) serverMsgs.add(m[1].replace(/''/g, "'"));
 }
+serverMsgs.delete('No user given.');
 const unmapped = [...serverMsgs].filter((s) => !(s in w.I18N_SERVER));
-check(`every submit_picks message is mapped (${serverMsgs.size})`, unmapped.length === 0, unmapped.join(' | '));
+check(`every game and league message is mapped (${serverMsgs.size})`, unmapped.length === 0, unmapped.join(' | '));
 const badTarget = Object.entries(w.I18N_SERVER).filter(([s, k]) => !(k in en) || en[k] !== s);
 check('each mapped message is the English string of its key', badTarget.length === 0, badTarget.map((x) => x[1]).join(', '));
 

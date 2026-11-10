@@ -555,6 +555,26 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-rank-n{min-width:30px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
 .sg-rank-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sg-rank-x{font-size:10px;color:var(--muted);white-space:nowrap;}
+/* Private leagues (025) */
+.sg-leagues{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 12px;padding:0 16px 2px;scrollbar-width:none;}
+.sg-leagues::-webkit-scrollbar{display:none;}
+.sg-chip.gl-add{border-style:dashed;}
+.gl-head{margin-bottom:10px;}
+.gl-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;line-height:1.1;overflow-wrap:anywhere;}
+.gl-meta{font-size:11px;color:var(--muted);line-height:1.6;margin-top:2px;}
+.gl-share{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:12px 0;}
+.gl-code{font-family:'DM Mono',monospace;font-size:22px;letter-spacing:3px;color:var(--accent);}
+.gl-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.gl-x{flex:0 0 auto;min-width:44px;min-height:44px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;}
+.gl-x:hover{color:var(--red,#ff4560);}
+.gl-list-row{cursor:pointer;}
+.gl-field{display:block;width:100%;min-height:44px;font-size:16px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0 12px;font-family:'DM Sans',sans-serif;margin-bottom:10px;outline:none;}
+.gl-field:focus{border-color:var(--accent);}
+.gl-label{display:block;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:0 0 6px;}
+.gl-msg{font-size:12px;line-height:1.6;margin:0 0 12px;color:var(--muted);}
+.gl-msg.err{color:var(--red,#ff4560);}
+.gl-danger-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
+@media (min-width:900px){ .gl-field{font-size:13px;} }
 .sg-rank-pts{font-family:'DM Mono',monospace;font-weight:600;min-width:52px;text-align:right;}
 .sg-rank-gap{text-align:center;color:var(--muted);font-size:12px;padding:2px 0;}
 .sg-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
@@ -925,6 +945,8 @@ if(!_cu){
     <div class="sg-title" data-i18n="sg.title">Scout Game</div>
     <div class="sg-sub" data-i18n="sg.sub">Five players and a captain each round. Less-fancied players score more when they deliver. Free, points only.</div>
   </div>
+  <!-- My private leagues (025). Signed in only; hidden until the list loads. -->
+  <div id="sg-leagues" class="sg-leagues" style="display:none;"></div>
   <div id="sg-tabs" class="sg-tabs"></div>
   <div id="sg-body"></div>
 </div>
@@ -1184,6 +1206,12 @@ async function confirmDeleteAccount(){
       <button class="signin-sheet-dismiss" onclick="closeSigninSheet()">Keep browsing</button>
     </div>
   </div>
+</div>
+
+<!-- ── PRIVATE LEAGUE SHEET (025): create, join by code, confirm a join link.
+     display:none here, display:flex only in JS (rule 6). Filled by glSheet(). -->
+<div id="gl-sheet" class="signin-sheet" style="display:none;">
+  <div class="signin-sheet-card" id="gl-sheet-card"></div>
 </div>
 
 <!-- ── TEAM SELECTION MODAL ── -->
@@ -5135,7 +5163,7 @@ async function renderScout(force){
   if(!SG.loadedAt) body.innerHTML='<div class="sg-empty">'+t('sg.loadingGame')+'</div>';
   try{
     await sgLoadBase(force);
-    await sgLoadEntries().catch(e=>console.error('game_entries:',e));
+    await Promise.all([sgLoadEntries().catch(e=>console.error('game_entries:',e)), glLoad()]);
   }catch(e){
     console.error('renderScout:',e);
     sgTabs();
@@ -5165,6 +5193,7 @@ function sgTabs(){
   tabs.push('<button class="sg-tab'+(SG.view==='rankings'?' active':'')+'" onclick="sgShowRankings()">'+t('sg.tab.rankings')+'</button>');
   tabs.push('<button class="sg-tab'+(SG.view==='history'?' active':'')+'" onclick="sgShowHistory()">'+t('sg.tab.history')+'</button>');
   el.innerHTML=tabs.join('');
+  glRenderStrip();
 }
 
 function sgPickLeague(id){
@@ -5619,10 +5648,11 @@ function sgTable(rows,mine,field,extra){
 async function sgRenderRankings(){
   const body=document.getElementById('sg-body');
   if(!body) return;
-  const views=['round','comp','overall','torcida'];
+  const views=['round','comp','overall','torcida','leagues'];
   body.innerHTML='<div class="sg-chips">'+views.map(v=>'<button class="sg-chip'+(SG.rankView===v?' active':'')+'" onclick="sgRankView(\''+v+'\')">'+t('sg.rv.'+v)+'</button>').join('')+'</div>'
     +'<div id="sg-rank-body"><div class="sg-empty">'+t('sg.loading')+'</div></div>';
   const out=document.getElementById('sg-rank-body');
+  if(SG.rankView==='leagues'){ glRenderView(out); return; }   // private leagues (025)
   const me=isGuestNow()?null:myUserId();
   const league=SG.leagueId!=null?SG.leagueId:sgDefaultLeague();
   const lr=SG.rounds.filter(r=>r.league_id===league&&r.status!=='open');
@@ -5673,7 +5703,7 @@ async function sgRenderRankings(){
     out.innerHTML='<div class="sg-empty">'+t('sg.rk.fail')+'</div>';
   }
 }
-function sgRankView(v){ SG.rankView=v; sgRenderRankings(); }
+function sgRankView(v){ SG.rankView=v; if(v==='leagues'){ GL.id=null; GL.data=null; } sgRenderRankings(); glRenderStrip(); }
 
 // ── MY HISTORY ── every round I entered, from rpc my_game_history (023).
 /** The earliest open round, preferring my main club's competition. */
@@ -5963,6 +5993,271 @@ function renderMatchDetail(d){
   body.innerHTML=html;
 }
 
+// ── PRIVATE LEAGUES (025) ───────────────────────────────────────────────
+// A group of friends, one competition, one invite code. Every write is an rpc
+// in 025 (security definer, caller = auth.uid()); reads are my_game_leagues()
+// and game_league_standings(). Rule 21: before 025 runs both calls fail, the
+// strip stays hidden and Rankings -> Leagues says leagues are not ready yet.
+// No room auto-post for leagues (decided Day 6).
+const GL={list:null,err:false,id:null,data:null};
+
+/** My leagues, for the strip and the list. Never throws. */
+async function glLoad(){
+  if(isGuestNow()){ GL.list=[]; GL.err=false; return; }
+  try{ GL.list=(await sgRpc('my_game_leagues',{}))||[]; GL.err=false; }
+  catch(e){ console.error('my_game_leagues:',e); GL.list=null; GL.err=true; }
+}
+/** A write: the rpc's own message, translated, as a toast on refusal. */
+async function glCall(fn,args){
+  try{ return await apiSend('POST','rpc/'+fn,args,'return=representation'); }
+  catch(e){ toast(tServer(friendlyDbError(e.message)),'error'); throw e; }
+}
+function glLink(code){ return location.origin+'/?league='+encodeURIComponent(code); }
+function glComp(x){ return (x.flag?x.flag+' ':'')+(x.competition||''); }
+/** "3rd of 12", or "12 members" before I have a scored round. */
+function glRankText(x){
+  return x.my_rank?t('gl.rankOf',{ord:tOrd(x.my_rank),n:sgCount(x.members)}):tn('sg.members',x.members||0);
+}
+
+function glRenderStrip(){
+  const el=document.getElementById('sg-leagues');
+  if(!el) return;
+  if(isGuestNow()||!GL.list){ el.style.display='none'; el.innerHTML=''; return; }
+  const open=GL.list.filter(x=>!x.closed_at);
+  el.innerHTML=open.map(x=>'<button class="sg-chip'+(SG.view==='rankings'&&SG.rankView==='leagues'&&GL.id===x.id?' active':'')+'" onclick="glOpen('+Number(x.id)+')">'
+      +sanitize(x.name)+'<span class="sg-chip-tag">'+sanitize(glRankText(x))+'</span></button>').join('')
+    +'<button class="sg-chip gl-add" onclick="glOpenCreate()">'+t('gl.create')+'</button>'
+    +'<button class="sg-chip gl-add" onclick="glOpenJoin()">'+t('gl.join')+'</button>';
+  el.style.display='flex';
+}
+
+/** Open one league's table (Rankings -> Leagues). */
+function glOpen(id){
+  SG.view='rankings'; SG.rankView='leagues'; GL.id=id;
+  sgTabs(); sgRender(); glRenderStrip(); window.scrollTo(0,0);
+}
+function glBack(){ GL.id=null; GL.data=null; sgRender(); glRenderStrip(); }
+
+/** Rankings -> Leagues: my list, or one league's table. */
+async function glRenderView(out){
+  if(isGuestNow()){
+    out.innerHTML='<div class="sg-empty">'+t('gl.signin')+'<br><br>'
+      +'<button class="sg-save" onclick="requireAuth(t(\'sg.signupToPlay\'))">'+t('sg.bar.signin')+'</button></div>';
+    return;
+  }
+  if(GL.list==null) await glLoad();
+  if(GL.err){ out.innerHTML='<div class="sg-empty">'+t('gl.unavailable')+'</div>'; return; }
+  if(GL.id!=null) return glRenderLeague(out,GL.id);
+  const row=x=>'<div class="sg-rank-row gl-list-row" role="button" tabindex="0" onclick="glOpen('+Number(x.id)+')">'
+    +'<span class="sg-rank-name"><b>'+sanitize(x.name)+'</b> <span class="sg-rank-x">'+sanitize(glComp(x))+'</span></span>'
+    +'<span class="sg-rank-x">'+sanitize(glRankText(x))+'</span><span class="sg-rank-pts">›</span></div>';
+  const open=GL.list.filter(x=>!x.closed_at), closed=GL.list.filter(x=>x.closed_at);
+  out.innerHTML=(GL.list.length?'':'<div class="sg-empty">'+t('gl.none')+'</div>')
+    +(open.length?'<div class="sg-rank">'+open.map(row).join('')+'</div>':'')
+    +'<div class="gl-actions"><button class="sg-chip gl-add" onclick="glOpenCreate()">'+t('gl.create')+'</button>'
+    +'<button class="sg-chip gl-add" onclick="glOpenJoin()">'+t('gl.join')+'</button></div>'
+    +(closed.length?'<div class="sg-section">'+t('gl.closedSection')+'</div><div class="sg-rank">'+closed.map(row).join('')+'</div>':'');
+}
+
+async function glRenderLeague(out,id){
+  let d;
+  try{ d=await sgRpc('game_league_standings',{p_id:id}); }
+  catch(e){
+    console.error('game_league_standings:',e);
+    // Left, removed, or a stale id: back to the list.
+    GL.id=null; await glLoad();
+    if(SG.view==='rankings'&&SG.rankView==='leagues') glRenderView(out);
+    return;
+  }
+  if(GL.id!==id||!(SG.view==='rankings'&&SG.rankView==='leagues')) return;
+  GL.data=d;
+  const L=d.league||{}, rows=d.rows||[], me=myUserId();
+  const closed=!!L.closed_at;
+  let when='';
+  try{ when=closed?new Date(L.closed_at).toLocaleDateString(smLocale(),{day:'numeric',month:'short',year:'numeric'}):''; }catch(e){}
+  const line=x=>'<div class="sg-rank-row'+(x.user_id===me?' me':'')+'">'
+    +'<span class="sg-rank-n">'+(x.rank!=null?sanitize(String(x.rank)):'—')+'</span>'
+    +(x.main_club_id?clubCrestById(x.main_club_id,16):'<span style="width:16px;display:inline-block;"></span>')
+    +'<span class="sg-rank-name">'+(x.user_id===me?t('sg.you'):sgFan(x.name))
+      +(x.is_owner?' <span class="sg-tag">'+t('gl.owner')+'</span>':'')+'</span>'
+    +'<span class="sg-rank-x">'+sanitize(t('sg.rk.rd',{n:x.rounds_played||0}))+'</span>'
+    +'<span class="sg-rank-pts">'+(x.total!=null?sgPts(x.total):'—')+'</span>'
+    +(L.is_owner&&!closed&&x.user_id!==me
+      ?'<button class="gl-x" onclick="glRemove(\''+sanitize(x.user_id)+'\')" aria-label="'+sanitize(t('gl.remove',{name:x.name||t('sg.deletedUser')}))+'">✕</button>':'')
+    +'</div>';
+  out.innerHTML='<button class="back-btn" onclick="glBack()">'+t('gl.back')+'</button>'
+    +'<div class="gl-head"><div class="gl-name">'+sanitize(L.name)+'</div>'
+    +'<div class="gl-meta">'+sanitize(glComp(L))+' · '+sanitize(tn('sg.members',rows.length))
+      +(L.owner_name?' · '+sanitize(t('gl.ownerLine',{name:L.owner_name})):'')+'</div>'
+    +'<div class="gl-meta">'+(closed?sanitize(t('gl.closedOn',{date:when})):sanitize(t('gl.seasonNote',{comp:L.competition||''})))+'</div></div>'
+    +(rows.length?'<div class="sg-rank">'+rows.map(line).join('')+'</div>':'<div class="sg-empty">'+t('sg.noScored')+'</div>')
+    +(closed?'':'<div class="gl-share"><div class="gl-label">'+t('gl.code')+'</div>'
+      +'<div class="gl-code">'+sanitize(L.code||'')+'</div>'
+      +'<div class="gl-actions"><button class="sg-chip" onclick="glCopy()">'+t('gl.copy')+'</button>'
+      +(navigator.share?'<button class="sg-chip" onclick="glShare()">'+t('gl.share')+'</button>':'')
+      +(L.is_owner?'<button class="sg-chip" onclick="glNewCode()">'+t('gl.newCode')+'</button>':'')+'</div></div>')
+    +'<div class="gl-danger-row">'
+    +(L.is_owner&&!closed?'<button class="danger-btn" onclick="glCloseLeague()">'+t('gl.closeLeague')+'</button>':'')
+    +'<button class="danger-btn" onclick="glLeave()">'+t('gl.leave')+'</button></div>';
+}
+
+function glCurrent(){ return GL.data&&GL.data.league&&GL.data.league.id===GL.id?GL.data.league:null; }
+async function glReload(){ await glLoad(); glRenderStrip(); if(SG.view==='rankings'&&SG.rankView==='leagues') sgRender(); }
+
+async function glCopy(){
+  const L=glCurrent(); if(!L) return;
+  const link=glLink(L.code);
+  try{ await navigator.clipboard.writeText(link); toast(t('gl.copied')); }
+  catch(e){ window.prompt(t('gl.copy'),link); }
+}
+async function glShare(){
+  const L=glCurrent(); if(!L||!navigator.share) return;
+  try{ await navigator.share({title:L.name,text:t('gl.shareText',{name:L.name}),url:glLink(L.code)}); }catch(e){}
+}
+async function glNewCode(){
+  const L=glCurrent(); if(!L||!confirm(t('gl.confirmNewCode'))) return;
+  try{ const code=await glCall('regenerate_league_code',{p_id:L.id}); toast(t('gl.newCodeDone',{code:code})); }catch(e){}
+  sgRender();
+}
+async function glRemove(uid){
+  const L=glCurrent(); if(!L) return;
+  const row=(GL.data.rows||[]).find(x=>x.user_id===uid);
+  const name=(row&&row.name)||t('sg.deletedUser');
+  if(!confirm(t('gl.confirmRemove',{name:name}))) return;
+  try{ await glCall('remove_game_league_member',{p_id:L.id,p_user:uid}); toast(t('gl.removed',{name:name})); }catch(e){}
+  glReload();
+}
+async function glCloseLeague(){
+  const L=glCurrent(); if(!L||!confirm(t('gl.confirmClose'))) return;
+  try{ await glCall('close_game_league',{p_id:L.id}); toast(t('gl.closedToast')); }catch(e){}
+  glReload();
+}
+async function glLeave(){
+  const L=glCurrent(); if(!L||!confirm(t(L.is_owner?'gl.confirmLeaveOwner':'gl.confirmLeave'))) return;
+  try{ await glCall('leave_game_league',{p_id:L.id}); toast(t('gl.left')); GL.id=null; GL.data=null; }catch(e){}
+  glReload();
+}
+
+// ── The sheet: create, join by code, confirm a join link ──
+function glSheet(html){
+  const s=document.getElementById('gl-sheet'), c=document.getElementById('gl-sheet-card');
+  if(!s||!c) return;
+  c.innerHTML=html; s.style.display='flex'; document.body.style.overflow='hidden';
+  const f=c.querySelector('input'); if(f) setTimeout(()=>f.focus(),50);
+}
+function glSheetClose(){
+  const s=document.getElementById('gl-sheet'); if(s) s.style.display='none';
+  document.body.style.overflow='';
+}
+document.addEventListener('click',function(e){
+  const s=document.getElementById('gl-sheet');
+  if(s&&e.target===s) glSheetClose();
+});
+
+/** Competitions with a round in the game now, my main club's first. */
+function glCompetitions(){
+  const seen=new Map();
+  for(const r of SG.rounds) if(r.leagues&&!seen.has(r.league_id)) seen.set(r.league_id,sgLeagueName(r));
+  const first=sgDefaultLeague();
+  return [...seen.entries()].sort((a,b)=>(a[0]===first?-1:b[0]===first?1:0));
+}
+async function glOpenCreate(){
+  if(!requireAuth(t('sg.signupToPlay'))) return;
+  if(!SG.loadedAt) await sgLoadBase().catch(()=>{});
+  const comps=glCompetitions();
+  glSheet('<div class="signin-sheet-title">'+t('gl.createTitle')+'</div>'
+    +'<div class="signin-sheet-sub">'+t('gl.createSub')+'</div>'
+    +'<label class="gl-label" for="gl-name">'+t('gl.namePh')+'</label>'
+    +'<input id="gl-name" class="gl-field" maxlength="40" autocomplete="off" placeholder="'+sanitize(t('gl.namePh'))+'" onkeydown="if(event.key===\'Enter\')glCreate()">'
+    +'<label class="gl-label" for="gl-comp">'+t('gl.competition')+'</label>'
+    +'<select id="gl-comp" class="gl-field">'+comps.map(c=>'<option value="'+Number(c[0])+'">'+sanitize(c[1])+'</option>').join('')+'</select>'
+    +'<div class="signin-sheet-actions"><button class="signin-sheet-primary" id="gl-go" onclick="glCreate()">'+t('gl.createBtn')+'</button>'
+    +'<button class="signin-sheet-dismiss" onclick="glSheetClose()">'+t('gl.cancel')+'</button></div>');
+}
+async function glCreate(){
+  const name=(document.getElementById('gl-name')||{value:''}).value.trim();
+  const comp=Number((document.getElementById('gl-comp')||{value:''}).value);
+  if(name.length<3||name.length>40){ toast(tServer('A league name needs 3 to 40 characters.'),'error'); return; }
+  if(!comp){ toast(tServer('That competition is not in the Scout Game.'),'error'); return; }
+  const btn=document.getElementById('gl-go'); if(btn) btn.disabled=true;
+  try{
+    const r=await glCall('create_game_league',{p_name:name,p_league_id:comp});
+    glSheetClose(); toast(t('gl.created'));
+    await glLoad(); glOpen(r&&r.id);
+  }catch(e){ if(btn) btn.disabled=false; }
+}
+
+/** Type a code (or arrive with one): look it up, then confirm. */
+function glOpenJoin(code){
+  if(!requireAuth(t('gl.signinToJoin'))) return;
+  glSheet('<div class="signin-sheet-title">'+t('gl.joinTitle')+'</div>'
+    +'<div class="signin-sheet-sub">'+t('gl.joinSub')+'</div>'
+    +'<input id="gl-code" class="gl-field" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false"'
+    +' style="font-family:\'DM Mono\',monospace;letter-spacing:2px;text-transform:uppercase;" placeholder="'+sanitize(t('gl.codePh'))+'"'
+    +' value="'+sanitize(code||'')+'" onkeydown="if(event.key===\'Enter\')glLookUp()">'
+    +'<div id="gl-preview"></div>'
+    +'<div class="signin-sheet-actions" id="gl-join-actions"><button class="signin-sheet-primary" onclick="glLookUp()">'+t('gl.lookUp')+'</button>'
+    +'<button class="signin-sheet-dismiss" onclick="glSheetClose()">'+t('gl.cancel')+'</button></div>');
+  if(code) glLookUp();
+}
+async function glLookUp(){
+  const input=document.getElementById('gl-code'), box=document.getElementById('gl-preview'), acts=document.getElementById('gl-join-actions');
+  if(!input||!box||!acts) return;
+  const code=input.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+  if(!code) return;
+  box.innerHTML='<div class="gl-msg">'+t('sg.loading')+'</div>';
+  let p;
+  try{ p=await sgRpc('preview_game_league',{p_code:code}); }
+  catch(e){ console.error('preview_game_league:',e); box.innerHTML='<div class="gl-msg err">'+t('gl.unavailable')+'</div>'; return; }
+  const cancel='<button class="signin-sheet-dismiss" onclick="glSheetClose()">'+t('gl.cancel')+'</button>';
+  if(!p){ box.innerHTML='<div class="gl-msg err">'+t('sp.glNoCode')+'</div>'; return; }
+  box.innerHTML='<div class="gl-share" style="text-align:left;margin-top:0;"><div class="gl-name">'+sanitize(p.name)+'</div>'
+    +'<div class="gl-meta">'+sanitize(glComp(p))+' · '+sanitize(tn('sg.members',p.members||0))
+    +(p.owner_name?' · '+sanitize(t('gl.ownerLine',{name:p.owner_name})):'')+'</div></div>'
+    +(p.closed?'<div class="gl-msg err">'+t('sp.glClosed')+'</div>'
+      :p.removed?'<div class="gl-msg err">'+t('sp.glRemoved')+'</div>'
+      :p.is_member?'<div class="gl-msg">'+t('gl.alreadyIn')+'</div>':'');
+  acts.innerHTML=(p.is_member
+      ?'<button class="signin-sheet-primary" onclick="glSheetClose();glOpen('+Number(p.id)+')">'+t('gl.openLeague')+'</button>'
+      :(!p.closed&&!p.removed)?'<button class="signin-sheet-primary" id="gl-go" onclick="glJoin(\''+sanitize(code)+'\')">'+t('gl.joinBtn')+'</button>':'')
+    +cancel;
+}
+async function glJoin(code){
+  const btn=document.getElementById('gl-go'); if(btn) btn.disabled=true;
+  try{
+    const id=await glCall('join_game_league',{p_code:code});
+    glSheetClose();
+    await glLoad();
+    const x=(GL.list||[]).find(l=>l.id===id);
+    toast(t('gl.joined',{name:x?x.name:''}));
+    glOpen(id);
+  }catch(e){ if(btn) btn.disabled=false; }
+}
+
+/**
+ * /?league=CODE, the link a member shares. Signed in: the join sheet opens
+ * on the Scout tab. Signed out: the code waits in localStorage (one pending
+ * UI value, used once and cleared; rule 10) through sign-in, sign-up and the
+ * email confirmation, and the sheet opens on the next signed-in visit.
+ */
+function glArrival(){
+  const q=new URLSearchParams(location.search).get('league');
+  let code=q?q.replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,12):'';
+  if(q){
+    try{ const u=new URL(location.href); u.searchParams.delete('league'); history.replaceState(null,'',u.pathname+u.search+u.hash); }catch(e){}
+  }
+  if(isGuestNow()){
+    if(code){
+      try{ localStorage.setItem('sm_pending_league',code); }catch(e){}
+      openSigninSheet(t('gl.signinToJoin'));
+    }
+    return;
+  }
+  if(!code){ try{ code=localStorage.getItem('sm_pending_league')||''; }catch(e){} }
+  try{ localStorage.removeItem('sm_pending_league'); }catch(e){}
+  if(code){ showPage('scout'); glOpenJoin(code); }
+}
+
 // ── APP LANGUAGE (Day 6, beta) ──────────────────────────────────────────
 // Profile -> Preferences -> App language. What the interface is written in
 // (i18n.js), separate from Content languages, which filter the feed.
@@ -5984,6 +6279,8 @@ window.addEventListener('sm-lang',function(){
   renderAppLangPref();
   const page=document.getElementById('page-scout');
   if(page&&page.classList.contains('active')&&SG.loadedAt){ sgTabs(); sgRender(); }
+  const gls=document.getElementById('gl-sheet');
+  if(gls&&gls.style.display==='flex') glSheetClose();     // reopened in the new language on the next tap
   const prof=document.getElementById('page-profile');
   if(prof&&prof.classList.contains('active')) renderProfileGame().catch(e=>console.error('renderProfileGame:',e));
   const ob=document.getElementById('onboard-modal');
@@ -6004,6 +6301,8 @@ renderAppLangPref();
   if(page&&page.classList.contains('active')) renderScout().catch(e=>console.error('renderScout:',e));
   const prof=document.getElementById('page-profile');
   if(prof&&prof.classList.contains('active')) renderProfileGame().catch(e=>console.error('renderProfileGame:',e));
+  // A league invite link (/?league=CODE), or one waiting from before sign-in.
+  try{ glArrival(); }catch(e){ console.error('league link:',e); }
 })();
 </script>
 </body>
