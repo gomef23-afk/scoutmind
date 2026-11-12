@@ -905,6 +905,9 @@ if(!_cu){
       <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 10px;" data-i18n="pref.lang.note">Beta: so far only sign-in, choosing your clubs and the Scout Game are translated.</div>
       <div id="profile-app-lang" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
     </div>
+    <!-- Round reminder emails (027). Hidden until the setting can be read:
+         signed out, or before 027 runs (rule 21). -->
+    <div id="profile-remind" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"></div>
   </div>
   <!-- Admins only. RLS is the real guard: a non-admin who unhid this reads nothing. -->
   <div class="profile-section" id="profile-reports" style="display:none;">
@@ -3386,6 +3389,49 @@ function renderClubLangToggle(){
     +'Also show news about my clubs in other languages</span></button>';
 }
 
+// ── ROUND REMINDER EMAILS (027) ──
+// profiles.notify_round_emails, read on its own so the main profile read never
+// names a column that may not exist yet (rule 21): before 027 this read fails
+// and the switch simply stays hidden. The same switch is behind the
+// unsubscribe link in every reminder.
+let REMIND_ON=null;   // null = unknown / not available
+async function renderRemindPref(){
+  const el=document.getElementById('profile-remind');
+  if(!el)return;
+  if(isGuestNow()){ el.style.display='none'; return; }
+  if(REMIND_ON===null){
+    try{
+      const rows=await apiGet('profiles?select=notify_round_emails&id=eq.'+encodeURIComponent(myUserId()));
+      if(!rows.length||typeof rows[0].notify_round_emails!=='boolean'){ el.style.display='none'; return; }
+      REMIND_ON=rows[0].notify_round_emails;
+    }catch(e){ el.style.display='none'; return; }
+  }
+  const on=REMIND_ON;
+  el.innerHTML='<div style="font-size:12px;font-weight:600;margin-bottom:4px;">'+t('pref.remind.title')+'</div>'
+    +'<div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 10px;">'+t('pref.remind.note')+'</div>'
+    +'<button onclick="toggleRemind()" role="switch" aria-checked="'+on+'" style="display:flex;align-items:center;gap:10px;min-height:44px;'
+    +'background:transparent;border:none;padding:0;cursor:pointer;font-family:\'DM Sans\',sans-serif;text-align:left;">'
+    +'<span style="width:34px;height:19px;border-radius:12px;flex-shrink:0;position:relative;transition:background .2s;'
+    +'background:'+(on?'var(--accent)':'var(--bg3)')+';border:1px solid '+(on?'var(--accent)':'var(--border)')+';">'
+    +'<span style="position:absolute;top:2px;left:'+(on?'17px':'2px')+';width:13px;height:13px;border-radius:50%;'
+    +'background:'+(on?'#000':'var(--muted)')+';transition:left .2s;"></span></span>'
+    +'<span style="font-size:12px;color:'+(on?'var(--text)':'var(--muted)')+';line-height:1.5;">'
+    +t(on?'pref.remind.on':'pref.remind.off')+'</span></button>';
+  el.style.display='block';
+}
+async function toggleRemind(){
+  if(!requireAuth(t('sg.signupToPlay'))||REMIND_ON===null)return;
+  const before=REMIND_ON;
+  REMIND_ON=!REMIND_ON; renderRemindPref();
+  try{
+    await apiSend('PATCH','profiles?id=eq.'+encodeURIComponent(myUserId()),{notify_round_emails:REMIND_ON});
+  }catch(e){
+    console.error('toggleRemind:',e.message);
+    REMIND_ON=before; renderRemindPref();
+    toast(t('pref.remind.fail'),'error');
+  }
+}
+
 async function toggleClubLangs(){
   if(!requireAuth('Create a free account to change this.'))return;
   if(!MY_PROFILE)MY_PROFILE={};
@@ -4953,6 +4999,7 @@ function filterWeekly(league, btn) {
   try{ renderModalClubs(); }catch(e){}
   try{ renderProfileClubs(); }catch(e){}
   try{ renderLangPrefs(); renderClubLangToggle(); }catch(e){}
+  renderRemindPref().catch(e=>console.error('renderRemindPref:',e));
   // A direct load of ?page=profile calls showPage() before the account arrives,
   // when isAdmin() cannot be true yet, so the queue has to render again here.
   renderReports().catch(e=>console.error('renderReports:',e));
@@ -6332,6 +6379,7 @@ function renderAppLangPref(){
 // already loaded: no re-read, and the search boxes and drafts are kept.
 window.addEventListener('sm-lang',function(){
   renderAppLangPref();
+  if(REMIND_ON!==null) renderRemindPref();
   const page=document.getElementById('page-scout');
   if(page&&page.classList.contains('active')&&SG.loadedAt){ sgTabs(); sgRender(); }
   const gls=document.getElementById('gl-sheet');

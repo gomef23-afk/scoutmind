@@ -33,7 +33,7 @@
   DRAFT — A LAWYER MUST REVIEW THIS PAGE BEFORE PUBLIC LAUNCH.
   ============================================================================
   Written to be edited clause by clause, not rewritten. Every statement of
-  fact was checked against the code and database on 10 Nov 2026; if the
+  fact was checked against the code and database on 12 Nov 2026; if the
   product changes (a new table, a new provider, analytics, ads, payments),
   this page must change in the same commit.
 
@@ -48,6 +48,10 @@
        deletion, attributed to "[deleted user]" — confirm this is
        anonymisation under art. 5 XI / art. 16 and not retained personal data.
     5. Controller identity (section 1): an individual until the MEI exists.
+    6. Section 4, round reminder emails (Day 7): on by default for anyone
+       with a confirmed address who plays or follows a club in a
+       competition, off in one click. Basis given as legitimate interest
+       (art. 7, IX); confirm, or whether consent (opt-in) is needed.
 
   English and Portuguese say the same thing; keep them in step. The
   Portuguese text is the one a Brazilian authority will read.
@@ -139,7 +143,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
   <!-- ═══════════════════════════════ ENGLISH ═══════════════════════════════ -->
   <article class="legal-body" lang="en">
     <h1 class="legal-title">Privacy Policy</h1>
-    <div class="legal-meta">Last updated: 10 November 2026</div>
+    <div class="legal-meta">Last updated: 12 November 2026</div>
     <div class="legal-draft">Draft under legal review. It describes what ScoutMind does today, accurately; the wording may change before public launch.</div>
 
     <h2>1. Who we are</h2>
@@ -156,6 +160,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
       <tr><td>What you post</td><td>Comments on news items; messages in club rooms; reactions and likes; reports you file (the reason and the item reported).</td></tr>
       <tr><td>Scout Game</td><td>Your picks and captain for each round, your points, ranks, streaks and badges.</td></tr>
       <tr><td>Private leagues</td><td>The private leagues you create (name, competition, invite code) and the ones you are in: when you joined, left or were removed.</td></tr>
+      <tr><td>Emails we send</td><td>Your round-reminder setting (on or off) and a record of each Scout Game round reminder we email you: which round, which reminder (24 hours or 2 hours before), and when it was sent or why it failed.</td></tr>
       <tr><td>Activity events</td><td>When you are signed in, a short record of some actions — the type (for example: comment, like, follow, report, choosing your club, saving your Scout Game picks for a round, creating or joining a private league, opening ScoutMind from your home screen for the first time, one "session" per day), the item concerned and the time. These records contain <strong>no IP address, no device information and no location</strong>. Nothing is recorded for visitors who are not signed in.</td></tr>
       <tr><td>Technical logs</td><td>Our hosting and database providers process IP addresses and request logs to deliver the service and keep it secure (section 6).</td></tr>
       <tr><td>On your device</td><td>Your browser's local storage keeps your sign-in session, interface preferences and cached copies of what you have already loaded. ScoutMind's offline cache (a "service worker") keeps the app's own files and club crests on your device so it opens quickly and works offline; it never stores your account data, posts or anything from our database. We use <strong>no advertising or tracking cookies and no third-party analytics</strong>.</td></tr>
@@ -168,6 +173,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
       <li><strong>To keep it safe</strong> — moderation, reports, blocking abuse, security logs: our legitimate interest (art. 7, IX), balanced against your rights.</li>
       <li><strong>Activity events</strong> — to understand which features are used and improve them: legitimate interest (art. 7, IX). They identify no device or location.</li>
       <li><strong>Account emails</strong> — confirming your address, resetting your password: performance of our terms (art. 7, V). We send no marketing email.</li>
+      <li><strong>Round reminder emails</strong> — when a Scout Game round in a competition you play or follow a club in closes within 24 hours, or 2 hours, and you have not picked yet: our legitimate interest in the game you signed up for (art. 7, IX). They are on by default and off in one click: the link at the bottom of every reminder, or Profile → Preferences. At most one email per reminder window, whatever the number of rounds.</li>
       <li><strong>Legal obligations</strong> — when a law or authority requires it (art. 7, II).</li>
     </ul>
     <p>We do not sell your data, show ads, or build profiles for advertising.</p>
@@ -180,7 +186,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
     <ul>
       <li><strong>Supabase</strong> — database and sign-in. Our project is hosted in AWS region <strong>us-east-2 (Ohio, USA)</strong>. It holds everything in section 3.</li>
       <li><strong>Vercel</strong> — hosts the website and runs our server functions in region <strong>iad1 (US East)</strong>. It sees IP addresses and request logs.</li>
-      <li><strong>Resend</strong> — sends account emails (confirmation, password reset). It receives your email address and the message.</li>
+      <li><strong>Resend</strong> — sends account emails (confirmation, password reset) and Scout Game round reminders. It receives your email address, your display name and the message.</li>
     </ul>
     <p>When you open ScoutMind, <strong>your browser also fetches images directly from one other service</strong>, which therefore receives your IP address and standard browser information:</p>
     <ul>
@@ -194,7 +200,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
     <h2>8. How long we keep it</h2>
     <p>While your account exists, we keep your data so the service works. When you <strong>delete your account</strong> (Profile → Account actions → Delete my account), immediately:</p>
     <ul>
-      <li><strong>Erased:</strong> your login, email address, display name, profile, club and language preferences, follows, reactions, likes, badges and private-league memberships.</li>
+      <li><strong>Erased:</strong> your login, email address, display name, profile, club and language preferences, follows, reactions, likes, badges, private-league memberships and the record of reminder emails.</li>
       <li><strong>Kept without your identity:</strong> your comments and room messages stay in their threads, shown as "[deleted user]", so conversations still make sense; your Scout Game entries and scores move to an anonymous identifier, so other players' rankings do not change; private leagues you created pass to their longest-standing member, or close if nobody else is in them; reports you filed are kept without your name, as a moderation record; activity events are kept without any link to you.</li>
     </ul>
     <p>Copies can remain in our providers' backups and logs for a limited period, under their retention schedules, before they are overwritten.</p>
@@ -225,7 +231,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
   <!-- ═══════════════════════════════ PORTUGUÊS ══════════════════════════════ -->
   <article class="legal-body" lang="pt-BR">
     <h1 class="legal-title">Política de Privacidade</h1>
-    <div class="legal-meta">Última atualização: 10 de novembro de 2026</div>
+    <div class="legal-meta">Última atualização: 12 de novembro de 2026</div>
     <div class="legal-draft">Rascunho em revisão jurídica. Descreve com precisão o que o ScoutMind faz hoje; o texto pode mudar antes do lançamento público.</div>
 
     <h2>1. Quem somos</h2>
@@ -242,6 +248,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
       <tr><td>O que você publica</td><td>Comentários em notícias; mensagens nas salas dos clubes; reações e curtidas; denúncias que você faz (o motivo e o item denunciado).</td></tr>
       <tr><td>Scout Game</td><td>Suas escolhas e seu capitão em cada rodada, seus pontos, posições, sequências e conquistas.</td></tr>
       <tr><td>Ligas privadas</td><td>As ligas privadas que você cria (nome, competição, código de convite) e as ligas de que você participa: quando você entrou, saiu ou foi tirado delas.</td></tr>
+      <tr><td>E-mails que enviamos</td><td>Sua configuração de lembretes de rodada (ligados ou desligados) e um registro de cada lembrete de rodada do Scout Game que enviamos a você: qual rodada, qual lembrete (24 horas ou 2 horas antes) e quando foi enviado ou por que falhou.</td></tr>
       <tr><td>Eventos de uso</td><td>Quando você está conectado, um registro curto de algumas ações — o tipo (por exemplo: comentário, curtida, seguir, denúncia, escolha do clube, salvar sua escalação de uma rodada do Scout Game, criar ou entrar numa liga privada, abrir o ScoutMind pela tela inicial pela primeira vez, uma "sessão" por dia), o item envolvido e o horário. Esses registros <strong>não contêm endereço IP, informações do aparelho nem localização</strong>. Nada é registrado para visitantes não conectados.</td></tr>
       <tr><td>Registros técnicos</td><td>Nossos provedores de hospedagem e de banco de dados tratam endereços IP e registros de acesso para prestar o serviço e mantê-lo seguro (seção 6).</td></tr>
       <tr><td>No seu aparelho</td><td>O armazenamento local do navegador guarda sua sessão, suas preferências de interface e cópias do que você já carregou. O cache offline do ScoutMind (um "service worker") guarda no seu aparelho os próprios arquivos do app e os escudos dos clubes, para que ele abra rápido e funcione sem conexão; ele nunca guarda dados da sua conta, publicações nem nada do nosso banco de dados. <strong>Não usamos cookies de publicidade ou rastreamento nem ferramentas de análise de terceiros</strong>.</td></tr>
@@ -254,6 +261,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
       <li><strong>Para manter o serviço seguro</strong> — moderação, denúncias, bloqueio de abusos, registros de segurança: nosso legítimo interesse (art. 7º, IX), ponderado com os seus direitos.</li>
       <li><strong>Eventos de uso</strong> — para entender quais recursos são usados e melhorá-los: legítimo interesse (art. 7º, IX). Eles não identificam aparelho nem localização.</li>
       <li><strong>E-mails da conta</strong> — confirmação do endereço, redefinição de senha: execução dos nossos termos (art. 7º, V). Não enviamos e-mail de marketing.</li>
+      <li><strong>Lembretes de rodada</strong> — quando uma rodada do Scout Game, numa competição em que você joga ou segue um clube, fecha em até 24 horas, ou 2 horas, e você ainda não escalou: nosso legítimo interesse no jogo em que você se cadastrou (art. 7º, IX). Vêm ligados e se desligam com um clique: o link no fim de cada lembrete, ou Perfil → Preferências. No máximo um e-mail por janela de lembrete, qualquer que seja o número de rodadas.</li>
       <li><strong>Obrigações legais</strong> — quando a lei ou uma autoridade exigir (art. 7º, II).</li>
     </ul>
     <p>Não vendemos seus dados, não exibimos anúncios e não criamos perfis para publicidade.</p>
@@ -266,7 +274,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
     <ul>
       <li><strong>Supabase</strong> — banco de dados e login. Nosso projeto fica na região AWS <strong>us-east-2 (Ohio, EUA)</strong>. Guarda tudo o que está na seção 3.</li>
       <li><strong>Vercel</strong> — hospeda o site e executa nossas funções de servidor na região <strong>iad1 (leste dos EUA)</strong>. Vê endereços IP e registros de acesso.</li>
-      <li><strong>Resend</strong> — envia os e-mails da conta (confirmação, redefinição de senha). Recebe seu e-mail e a mensagem.</li>
+      <li><strong>Resend</strong> — envia os e-mails da conta (confirmação, redefinição de senha) e os lembretes de rodada do Scout Game. Recebe seu e-mail, seu nome de exibição e a mensagem.</li>
     </ul>
     <p>Quando você abre o ScoutMind, <strong>o seu navegador também baixa imagens diretamente de um outro serviço</strong>, que por isso recebe seu endereço IP e as informações padrão do navegador:</p>
     <ul>
@@ -280,7 +288,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
     <h2>8. Por quanto tempo guardamos</h2>
     <p>Enquanto sua conta existir, guardamos seus dados para que o serviço funcione. Quando você <strong>exclui sua conta</strong> (Perfil → Ações da conta → Excluir minha conta), imediatamente:</p>
     <ul>
-      <li><strong>Apagados:</strong> seu login, e-mail, nome de exibição, perfil, preferências de clube e de idioma, clubes seguidos, reações, curtidas, conquistas e participação em ligas privadas.</li>
+      <li><strong>Apagados:</strong> seu login, e-mail, nome de exibição, perfil, preferências de clube e de idioma, clubes seguidos, reações, curtidas, conquistas, participação em ligas privadas e o registro dos lembretes por e-mail.</li>
       <li><strong>Mantidos sem a sua identidade:</strong> seus comentários e mensagens nas salas permanecem nas conversas, exibidos como "[deleted user]", para que as discussões continuem fazendo sentido; suas participações e pontos no Scout Game passam para um identificador anônimo, para que a classificação dos outros jogadores não mude; as ligas privadas que você criou passam para o membro mais antigo, ou são encerradas se não houver mais ninguém nelas; as denúncias que você fez são mantidas sem o seu nome, como registro de moderação; os eventos de uso são mantidos sem qualquer vínculo com você.</li>
     </ul>
     <p>Cópias podem permanecer por um período limitado nos backups e registros dos nossos provedores, conforme os prazos deles, até serem sobrescritas.</p>

@@ -125,3 +125,53 @@ Two things share the domain's DNS and must not collide:
 
 Accounts created while confirmation was off are already marked confirmed, so
 no existing user is locked out.
+
+---
+
+## E. Round reminder emails (Day 7, migration 027)
+
+`/api/cron/reminders` emails a fan when a Scout Game round in a competition
+they play (or follow a club in) closes within 24 hours, and again within 2
+hours, if they have not picked. One email per fan per window, listing all
+their closing rounds. It talks to **Resend's HTTP API**, not SMTP, with its
+own key.
+
+20. Resend → **API Keys → Create API Key**: name `scoutmind-reminders`,
+    permission **Sending access**, domain **scoutmind.app** → Create. Copy it
+    now (shown once). It is separate from `supabase-smtp`, so either can be
+    revoked without touching the other.
+21. Make the token secret (PowerShell, any machine; prints 44 characters):
+    ```powershell
+    [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+    ```
+    It signs the unsubscribe links. Changing it later breaks every link in
+    every reminder already sent, so set it once.
+22. Vercel → project → **Settings → Environment Variables**, environment
+    **Production only** (a preview deploy must never send email):
+    - `RESEND_API_KEY` = the key from step 20
+    - `EMAIL_TOKEN_SECRET` = the value from step 21
+    - optional `REMINDER_DAILY_CAP` (default `60`; Resend's free tier is 100
+      a day and the sign-up / reset emails share it)
+
+    Then **Redeploy** the latest production deployment so the function sees
+    them.
+23. Run `supabase/migrations/027_round_reminders.sql` (after 026) and its
+    VERIFY block.
+24. cron-job.org → **Create cronjob**:
+    - URL `https://scoutmind.app/api/cron/reminders`
+    - Schedule: every 30 minutes
+    - Request method `GET`; **Advanced → Headers**:
+      `Authorization: Bearer <CRON_SECRET>` (the same secret as the other jobs)
+    - Timeout 30 s; notify on failure; save responses ON (the response says
+      `sent`, `failed`, `held_back` and `cap_hit`).
+25. Check: in the SQL editor, `select * from public.reminder_candidates('round_24h');`
+    shows who the next run would email. After a run, Resend → **Logs** shows
+    the emails, and `public.email_log` has one `sent` row per fan and round.
+    Open the unsubscribe link from a test email: the page asks first (opening
+    it changes nothing), the button turns reminders off, and Profile →
+    Preferences → Round reminder emails shows **Off**.
+
+When the cap is hit, the run logs `[reminders] daily cap of 60 reached: N fan
+email(s) held back` (Vercel → Logs), returns `"cap_hit": true`, and writes
+`cap 60 hit, N held back` into `ingest_runs.cursor`. Held-back fans are not
+claimed, so a later run picks them up when the rolling 24 h has room.
