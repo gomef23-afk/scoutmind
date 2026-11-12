@@ -64,6 +64,18 @@ const loose = defs.filter((b) => !/security definer/.test(b.slice(0, 400)) || !/
 check('every function is security definer with an empty search_path', loose.length === 0, loose.join(' | '));
 check('026 deletes nothing', !/\bdelete from\b/i.test(sql));
 
+// ── Day 7 fixes on Home ──
+const nudge = /function renderClubNudge\(\)\{([\s\S]*?)\n\}/.exec(idx);
+check('the club nudge exists and is called on load, on club changes and on a language switch',
+  !!nudge && /try\{ renderClubNudge\(\); \}catch\(e\)\{\}\r?\n\}\)\(\);/.test(idx)
+  && /function applyClubSelection\(\)\{[\s\S]{0,200}renderClubNudge\(\)/.test(idx) && /sm-lang[\s\S]{0,300}renderClubNudge\(\)/.test(idx));
+check('the nudge shows for any signed-in reader without a main club — "later" AND never-onboarded accounts',
+  !!nudge && /!isGuestNow\(\)&&!!MY_PROFILE&&ACCOUNT_CLUBS_LOADED&&!mainClubId\(\)/.test(nudge[1]) && !/onboarded_at/.test(nudge[1]));
+check('the nudge hides while the onboarding sheet is open', !!nudge && /ob\.style\.display==='flex'/.test(nudge[1]));
+const shown = [...idx.matchAll(/'([^'\n]*(?:job runs|every 15 minutes)[^'\n]*)'/g)].map((m) => m[1]).filter((s) => !/^trending: empty/.test(s));
+check('no ingest-job detail in on-screen copy', shown.length === 0, shown.join(' | '));
+check('Trending says "Nothing trending right now."', /'Nothing trending right now\.'/.test(idx));
+
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);
 process.exit(failures.length ? 1 : 0);

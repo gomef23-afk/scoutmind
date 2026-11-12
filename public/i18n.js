@@ -101,6 +101,10 @@
     'auth.sb.network': 'Could not reach ScoutMind. Check your connection and try again.',
     'auth.sb.session': 'That link has expired. Ask for a new one.',
 
+    // ── Home: the "pick your club" nudge ──
+    'home.nudge': 'Pick your club to shape your feed.',
+    'home.nudgeBtn': 'Choose',
+
     // ── Offline empty states (Home, Matches, Scout) ──
     'off.title': 'You\'re offline',
     'off.text': 'This needs a connection. It loads by itself when you are back online.',
@@ -517,6 +521,9 @@
     'auth.sb.samePass': 'Escolha uma senha diferente da atual.',
     'auth.sb.network': 'Não foi possível conectar ao ScoutMind. Verifique sua conexão e tente de novo.',
     'auth.sb.session': 'Esse link expirou. Peça um novo.',
+
+    'home.nudge': 'Escolha seu clube para montar o seu feed.',
+    'home.nudgeBtn': 'Escolher',
 
     'off.title': 'Você está offline',
     'off.text': 'Isto precisa de conexão. Carrega sozinho quando você voltar a ficar online.',

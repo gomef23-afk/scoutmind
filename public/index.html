@@ -555,6 +555,9 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-rank-n{min-width:30px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
 .sg-rank-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sg-rank-x{font-size:10px;color:var(--muted);white-space:nowrap;}
+/* "Pick your club" nudge on Home (Day 7) */
+.club-nudge{align-items:center;justify-content:space-between;gap:12px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:6px 6px 6px 14px;margin:0 0 12px;font-size:13px;line-height:1.4;color:var(--text);}
+.club-nudge-btn{flex-shrink:0;min-height:44px;padding:0 18px;border-radius:22px;border:none;background:var(--accent);color:#000;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
 /* Offline empty state (Day 6) */
 .offline-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.7;}
 .offline-empty-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);margin-bottom:4px;}
@@ -720,6 +723,9 @@ if(!_cu){
 <div class="page active" id="page-feed">
 <div class="feed-page">
   <div class="feed-main">
+    <!-- "Pick your club" nudge (Day 7): signed in, no main club. Filled and
+         shown by renderClubNudge(); empty and hidden otherwise. -->
+    <div id="club-nudge" class="club-nudge" style="display:none;"></div>
     <div class="feed-tabs-bar">
       <button class="ftab active" onclick="showFeedTab('trending',this)">Trending</button>
       <button class="ftab" onclick="showFeedTab('transfers',this)">News</button>
@@ -2438,6 +2444,7 @@ function openOnboarding(){
   pickerMainOpen=false;
   renderOnboard();
   m.style.display='flex';
+  try{ renderClubNudge(); }catch(e){}   // the sheet says it already
 }
 
 /**
@@ -2533,8 +2540,28 @@ async function finishOnboarding(){
 
 function skipOnboarding(){ selectedMainClub=null; followingClubs=[]; finishOnboarding(); }
 
+/**
+ * One line on Home for a signed-in reader with no main club: whoever pressed
+ * "I'll do this later" in onboarding, and the older accounts that never saw
+ * onboarding at all (onboarded_at and main_club_id both null) — most of the
+ * accounts without a club. Gone as soon as a club is chosen; not shown while
+ * the onboarding sheet itself is open, or before the account has loaded.
+ */
+function renderClubNudge(){
+  const el=document.getElementById('club-nudge');
+  if(!el)return;
+  const ob=document.getElementById('onboard-modal');
+  const show=!isGuestNow()&&!!MY_PROFILE&&ACCOUNT_CLUBS_LOADED&&!mainClubId()
+    &&!(ob&&ob.style.display==='flex');
+  if(!show){ el.style.display='none'; el.innerHTML=''; return; }
+  el.innerHTML='<span>'+t('home.nudge')+'</span>'
+    +'<button class="club-nudge-btn" onclick="openTeamModal()">'+t('home.nudgeBtn')+'</button>';
+  el.style.display='flex';
+}
+
 function applyClubSelection(){
   // Re-render everything that shows a club. Each of these handles "no club".
+  try{ renderClubNudge(); }catch(e){}
   try{ renderSidebarClubs(); }catch(e){}
   try{ renderMyClubCard(); }catch(e){}
   try{ renderClubsGrid(); }catch(e){}
@@ -4606,8 +4633,10 @@ function renderTrending(){
     : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
       +(trendWindow==='today'
         ? 'Nothing from today yet. Try This week.'
-        : 'Nothing trending yet. The news job runs every 15 minutes.')
+        : 'Nothing trending right now.')
       +'</div>');
+  // How the feed is fed is for whoever is debugging, not for the reader.
+  if(!items.length&&!isOffline()) console.info('trending: empty — news arrives through /api/cron/news, every 15 minutes');
 }
 
 function visibleFeedItems(opts){
@@ -4668,7 +4697,7 @@ function renderFeedNews(){
         : '<div style="text-align:center;padding:40px;color:var(--muted)">'
           +(feedExhausted
             ? 'Nothing here in the last seven days. Try another language or category.'
-            : 'No stories yet. The news job runs every 15 minutes.')
+            : 'No stories right now.')
           +'</div>')
         +(!filtered.length&&isOffline()?'':feedMoreHtml('news'));
     }
@@ -4772,7 +4801,7 @@ function renderForYou(){
     : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
       +(feedExhausted
         ? 'Nothing about your clubs in the last seven days.'
-        : 'Nothing about your clubs yet — keep loading, or the news job runs every 15 minutes.')
+        : 'Nothing about your clubs yet. Load more to look further back.')
       +'</div>')
     +(!items.length&&isOffline()?'':feedMoreHtml('foryou'));
 }
@@ -5015,6 +5044,7 @@ function filterWeekly(league, btn) {
   try{ logSessionOnce(); }catch(e){}
   try{ logInstallOnce(); }catch(e){}
   try{ maybeStartOnboarding(); }catch(e){ console.error('onboarding:',e); }
+  try{ renderClubNudge(); }catch(e){}
 })();
 try{initProfile();}catch(e){console.error('initProfile:',e);}
 try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
@@ -6380,6 +6410,7 @@ function renderAppLangPref(){
 window.addEventListener('sm-lang',function(){
   renderAppLangPref();
   if(REMIND_ON!==null) renderRemindPref();
+  renderClubNudge();
   const page=document.getElementById('page-scout');
   if(page&&page.classList.contains('active')&&SG.loadedAt){ sgTabs(); sgRender(); }
   const gls=document.getElementById('gl-sheet');
