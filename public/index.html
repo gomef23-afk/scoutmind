@@ -1500,6 +1500,27 @@ function logSessionOnce(){
   logEvent('session');
 }
 
+/**
+ * 'app_installed' (026): the first signed-in open from the home screen. Once
+ * per account — the database's unique index guarantees it; the local flag only
+ * saves a request. The flag is set only when the write lands (or the row was
+ * already there), so before 026 runs, when the type is still refused, it is
+ * simply tried again next time.
+ */
+function logInstallOnce(){
+  if(isGuestNow())return;
+  const standalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)
+    ||window.navigator.standalone===true;
+  if(!standalone)return;
+  const me=myUserId(); if(!me)return;
+  const key='sm_install_logged_'+me;
+  try{ if(localStorage.getItem(key)==='1')return; }catch(e){}
+  const done=()=>{ try{ localStorage.setItem(key,'1'); }catch(e){} };
+  apiSend('POST','events',[{user_id:me,type:'app_installed',ref_type:null,ref_id:null}])
+    .then(done)
+    .catch(e=>{ if(/HTTP 409/.test(e.message)) done(); else console.warn('event app_installed:',e.message); });
+}
+
 // ── REACTIONS AND COMMENTS ───────────────────────────────────────────────
 // Counts always come from the rows. There is no cached counter to drift.
 
@@ -4945,6 +4966,7 @@ function filterWeekly(league, btn) {
   try{ renderMatchDay(); }catch(e){}
   try{ renderSidebarMatches(); }catch(e){}
   try{ logSessionOnce(); }catch(e){}
+  try{ logInstallOnce(); }catch(e){}
   try{ maybeStartOnboarding(); }catch(e){ console.error('onboarding:',e); }
 })();
 try{initProfile();}catch(e){console.error('initProfile:',e);}
