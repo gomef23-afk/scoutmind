@@ -140,9 +140,10 @@ own key.
     permission **Sending access**, domain **scoutmind.app** → Create. Copy it
     now (shown once). It is separate from `supabase-smtp`, so either can be
     revoked without touching the other.
-21. Make the token secret (PowerShell, any machine; prints 44 characters):
+21. Make the token secret (Windows PowerShell 5.1 or PowerShell 7; prints
+    44 characters):
     ```powershell
-    [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+    $b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
     ```
     It signs the unsubscribe links. Changing it later breaks every link in
     every reminder already sent, so set it once.
