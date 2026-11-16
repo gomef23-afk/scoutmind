@@ -144,6 +144,10 @@
     // ── Profile: app language (beta) ──
     'pref.lang.title': 'App language',
     'pref.lang.note': 'Beta: so far only sign-in, choosing your clubs and the Scout Game are translated.',
+    'pref.theme.title': 'Theme',
+    'pref.theme.system': 'System',
+    'pref.theme.light': 'Light',
+    'pref.theme.dark': 'Dark',
     'pref.remind.title': 'Round reminder emails',
     'pref.remind.note': 'An email 24 hours and 2 hours before a Scout Game round closes, if you have not picked yet — for competitions you play or follow a club in.',
     'pref.remind.on': 'On',
@@ -563,6 +567,10 @@
     // ── Profile: app language (beta) ──
     'pref.lang.title': 'Idioma do app',
     'pref.lang.note': 'Beta: por enquanto, só a entrada, a escolha de clubes e o Scout Game estão traduzidos.',
+    'pref.theme.title': 'Tema',
+    'pref.theme.system': 'Sistema',
+    'pref.theme.light': 'Claro',
+    'pref.theme.dark': 'Escuro',
     'pref.remind.title': 'E-mails de lembrete de rodada',
     'pref.remind.note': 'Um e-mail 24 horas e 2 horas antes de uma rodada do Scout Game fechar, se você ainda não escalou — nas competições em que você joga ou segue um clube.',
     'pref.remind.on': 'Ligados',

@@ -11,7 +11,32 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#07090f">
+<meta name="theme-color" content="#0F141B">
+<!-- Theme (design spec v1.2), BEFORE any stylesheet so the first paint is
+     already right: data-theme on <html> from localStorage sm_theme
+     (system | light | dark). No saved choice = DARK until Sequence 2 commit
+     4b, then it follows the device. window.smTheme is the Profile switch. -->
+<script>
+(function(){
+  var DEFAULT='dark';                                   // 4b: 'system'
+  var root=document.documentElement, mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+  function pref(){ try{ var s=localStorage.getItem('sm_theme'); return s==='light'||s==='dark'||s==='system'?s:DEFAULT; }catch(e){ return DEFAULT; } }
+  function resolve(p){ return p==='system'?(mq&&mq.matches?'dark':'light'):p; }
+  function apply(){
+    var t=resolve(pref());
+    root.setAttribute('data-theme',t);
+    var m=document.querySelector('meta[name="theme-color"]');
+    if(m) m.setAttribute('content',t==='dark'?'#0F141B':'#F6F7F9');
+  }
+  apply();
+  if(mq&&mq.addEventListener) mq.addEventListener('change',function(){ if(pref()==='system') apply(); });
+  window.smTheme={
+    get:pref,
+    set:function(p){ try{ localStorage.setItem('sm_theme',p); }catch(e){} apply(); try{ window.dispatchEvent(new CustomEvent('sm-theme',{detail:{theme:p}})); }catch(e){} }
+  };
+})();
+</script>
+<link rel="stylesheet" href="/theme.css">
 <!-- Installable app (Day 6): manifest, iOS home-screen tags, service worker + install hint. -->
 <link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -38,27 +63,32 @@
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
 <script src="/i18n.js"></script>
 <style>
-:root{--bg:#07090f;--bg2:#0d1117;--bg3:#141b27;--accent:#00e5a0;--accent2:#00b8ff;--warn:#ff6b35;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;--red:#ff4560;--yellow:#f5c842;--green:#00e5a0;}
+/* The pre-Sequence-2 names, kept as aliases of the v1.2 tokens in /theme.css
+   so every existing rule keeps working in light and dark. Removed in commit
+   4b once nothing uses them. --accent is navy used as TEXT or a line (light
+   in dark mode); a FILL uses var(--navy) with var(--on-navy) text. There is
+   no second accent: the old cyan, yellow and orange fold into these. */
+:root{--bg:var(--ground);--bg2:var(--card);--bg3:var(--field);--accent:var(--navy-ink);--accent2:var(--navy-ink);--warn:var(--loss-ink);--text:var(--ink);--red:var(--loss-ink);--yellow:var(--ink);--green:var(--win);}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100;}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);}
 .logo span{color:var(--text);}
 .nav-right{display:flex;align-items:center;gap:10px;}
-.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--field);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
 .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
 .logout-btn:hover{border-color:var(--accent);color:var(--text);}
 /* ── GUEST MODE ── */
 .nav-about-link{font-size:12px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px;transition:color .2s;}
 .nav-about-link:hover{color:var(--text);}
-.signin-btn{background:var(--accent);color:#000;border:none;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
-.signin-btn:hover{background:#00ffb3;}
-.signin-sheet{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);}
+.signin-btn{background:var(--navy);color:var(--on-navy);border:none;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+.signin-btn:hover{background:var(--navy-hover);}
+.signin-sheet{position:fixed;inset:0;background:var(--scrim);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);}
 .signin-sheet-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:360px;width:100%;text-align:center;}
 .signin-sheet-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:8px;}
 .signin-sheet-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
 .signin-sheet-actions{display:flex;flex-direction:column;gap:9px;}
-.signin-sheet-primary{background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.signin-sheet-primary{background:var(--navy);color:var(--on-navy);border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .signin-sheet-secondary{background:transparent;color:var(--text);border:1px solid var(--border);padding:12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .signin-sheet-dismiss{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;padding:6px;margin-top:2px;}
 select,input[type=text],input[type=number]{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;}
@@ -72,8 +102,8 @@ hr{border:none;border-top:1px solid var(--border);}
    One tab list is rendered twice: .sm-tabs-top for desktop, .sm-tabs-bottom
    for the fixed mobile bar. Tabs are keyed by data-tab, never by id, so the
    duplication cannot produce duplicate element ids. */
-.sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
-.sm-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent);text-decoration:none;flex-shrink:0;}
+.sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100;}
+.sm-logo{font-family:var(--font-num);font-weight:700;font-size:22px;letter-spacing:0.5px;color:var(--accent);text-decoration:none;flex-shrink:0;}
 .sm-logo span{color:var(--text);}
 .sm-nav-right{display:flex;align-items:center;gap:4px;margin-left:auto;}
 /* Placeholder for the B4 language switcher. Empty until then. */
@@ -90,7 +120,7 @@ hr{border:none;border-top:1px solid var(--border);}
 .sm-tab:hover{color:var(--text);}
 .sm-tab.active{color:var(--accent);}
 .sm-tabs-top{display:none;}
-.sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(7,9,15,0.98);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
+.sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:var(--card);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
 /* Clearance so the fixed bar never covers page content on mobile. */
 body{padding-bottom:64px;}
 @media(min-width:900px){
@@ -122,13 +152,13 @@ body{padding-bottom:64px;}
 .ftab{background:transparent;border:none;color:var(--muted);padding:8px 14px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px;}
 .ftab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .feed-post{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;transition:border-color .2s;}
-.feed-post:hover{border-color:rgba(0,229,160,0.2);}
+.feed-post:hover{border-color:var(--border-strong);}
 .feed-post-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .feed-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
 .feed-author{font-size:12px;font-weight:600;color:var(--text);}
 .feed-submeta{font-size:10px;color:var(--muted);margin-top:1px;}
 .feed-vbadge{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;margin-left:auto;}
-.feed-body{font-size:12px;color:#8892a4;line-height:1.7;margin-bottom:10px;}
+.feed-body{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px;}
 .feed-insight-box{background:var(--bg3);border-left:2px solid var(--accent);padding:8px 12px;border-radius:0 8px 8px 0;margin-bottom:10px;}
 .feed-insight-label{font-size:9px;color:var(--accent);font-weight:700;letter-spacing:1px;margin-bottom:3px;}
 .feed-insight-body{font-size:11px;color:var(--text);line-height:1.5;}
@@ -166,8 +196,9 @@ body{padding-bottom:64px;}
 @media (min-width: 900px){ .date-strip{margin:0 0 18px;padding:0;} }
 .date-chip{flex:0 0 auto;min-width:72px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;text-align:center;line-height:1.3;}
 .date-chip .dc-n{display:block;font-size:9px;font-weight:500;margin-top:2px;}
-.date-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
-.date-chip.empty{opacity:.55;}
+.date-chip.active{border-color:var(--accent);color:var(--accent);background:var(--tint);}
+/* A day with no matches reads quieter, but stays legible (no opacity fade). */
+.date-chip.empty{color:var(--muted);}
 .md-league{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);margin:16px 0 8px;display:flex;align-items:center;gap:6px;}
 .md-section{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:4px 0 10px;display:flex;align-items:center;gap:6px;color:var(--accent);}
 .yc-line{display:flex;gap:8px;font-size:11px;padding:6px 0;border-top:1px solid var(--border);min-width:0;}
@@ -179,21 +210,17 @@ body{padding-bottom:64px;}
 .match-teams-sm{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);}
 /* ── CLUBS PAGE ── */
 .clubs-page{min-height:calc(100vh - 53px);padding:20px 28px;}
-.my-club-banner-wrap{border-radius:12px;overflow:hidden;border:1px solid rgba(0,229,160,0.2);margin-bottom:20px;cursor:pointer;transition:border-color .2s;}
-.my-club-banner-wrap:hover{border-color:rgba(0,229,160,0.5);}
-.my-club-banner{height:56px;background:linear-gradient(135deg,#6b0000 0%,#c8000a 50%,#1a0000 100%);position:relative;overflow:hidden;}
-.my-club-banner::after{content:'';position:absolute;inset:0;opacity:0.08;background-image:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:8px 8px;}
 .my-club-body{background:var(--bg2);padding:14px 16px;display:flex;align-items:center;gap:14px;}
 .my-club-crest{width:52px;height:52px;border-radius:10px;background:var(--bg3);border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:24px;margin-top:-28px;flex-shrink:0;}
 .my-club-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text);}
 .my-club-sub{font-size:10px;color:var(--muted);margin-top:2px;}
 .my-club-badges{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
 .c-pill{font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;}
-.c-pill-g{background:rgba(0,229,160,0.1);color:var(--accent);border:1px solid rgba(0,229,160,0.2);}
-.c-pill-b{background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);}
-.c-pill-y{background:rgba(245,200,66,0.1);color:var(--yellow);border:1px solid rgba(245,200,66,0.2);}
-.c-pill-r{background:rgba(255,69,96,0.1);color:var(--red);border:1px solid rgba(255,69,96,0.2);}
-.c-pill-o{background:rgba(255,107,53,0.1);color:var(--warn);border:1px solid rgba(255,107,53,0.2);}
+.c-pill-g{background:var(--tint);color:var(--accent);border:1px solid var(--border);}
+.c-pill-b{background:var(--tint);color:var(--accent2);border:1px solid var(--border);}
+.c-pill-y{background:var(--tint);color:var(--yellow);border:1px solid var(--border);}
+.c-pill-r{background:var(--loss-tint);color:var(--red);border:1px solid var(--loss-ink);}
+.c-pill-o{background:var(--tint);color:var(--warn);border:1px solid var(--border);}
 .my-club-stats-row{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg3);border-top:1px solid var(--border);}
 .my-club-stat{padding:10px 0;text-align:center;border-right:1px solid var(--border);}
 .my-club-stat:last-child{border-right:none;}
@@ -207,7 +234,7 @@ body{padding-bottom:64px;}
 .clubs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 @media (min-width: 900px){ .clubs-grid{grid-template-columns:repeat(3,1fr);} }
 .club-explore-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;}
-.club-explore-card:hover{border-color:rgba(0,229,160,0.3);transform:translateY(-2px);}
+.club-explore-card:hover{border-color:var(--border-strong);transform:translateY(-2px);}
 .club-explore-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .club-explore-crest{width:36px;height:36px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;}
 .club-explore-name{font-size:12px;font-weight:600;color:var(--text);}
@@ -229,14 +256,14 @@ body{padding-bottom:64px;}
 .club-chip-emoji{font-size:18px;}
 .club-chip-name{flex:1;font-size:12px;font-weight:500;color:var(--text);}
 .club-chip-badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;}
-.danger-btn{font-size:11px;padding:7px 16px;background:transparent;border:1px solid rgba(255,69,96,0.3);color:var(--red);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
-.danger-btn:hover{background:rgba(255,69,96,0.08);}
+.danger-btn{font-size:11px;padding:7px 16px;background:transparent;border:1px solid var(--loss-ink);color:var(--red);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.danger-btn:hover{background:var(--loss-tint);}
 .back-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:20px;background:transparent;border:none;font-family:'DM Sans',sans-serif;transition:color .2s;}
 .back-btn:hover{color:var(--accent);}
 .filter-btn{background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
-.filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+.filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--tint);}
 .lang-chip{background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.5px;}
-.lang-chip:hover,.lang-chip.active{border-color:var(--accent2);color:var(--accent2);background:rgba(0,184,255,0.06);}
+.lang-chip:hover,.lang-chip.active{border-color:var(--accent2);color:var(--accent2);background:var(--tint);}
 /* ── SEARCH ── */
 .search-wrap{position:relative;display:flex;align-items:center;margin-bottom:12px;}
 .search-icon{position:absolute;left:12px;font-size:13px;opacity:.6;pointer-events:none;}
@@ -250,13 +277,13 @@ body{padding-bottom:64px;}
 .reaction-row{display:flex;gap:6px;flex:0 1 auto;min-width:0;}
 .reaction{display:inline-flex;align-items:center;gap:4px;background:transparent;border:1px solid var(--border);border-radius:16px;padding:3px 9px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);transition:border-color .15s,background .15s;min-height:28px;}
 .reaction:hover{border-color:var(--accent2);}
-.reaction.on{border-color:var(--accent);background:rgba(0,229,160,0.08);color:var(--accent);}
+.reaction.on{border-color:var(--accent);background:var(--tint);color:var(--accent);}
 .reaction-emoji{font-size:14px;line-height:1;}
 .reaction-n{font-family:'DM Mono',monospace;font-size:11px;}
 /* Pushed to the right, and never stretched: it is a button, not a bar. */
 .comment-toggle{margin-left:auto;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:3px 11px;white-space:nowrap;min-height:28px;}
 .comment-toggle:hover{color:var(--accent);border-color:var(--accent);}
-.comment-toggle.open{color:var(--accent);border-color:var(--accent);background:rgba(0,229,160,0.06);}
+.comment-toggle.open{color:var(--accent);border-color:var(--accent);background:var(--tint);}
 .comments-body{display:none;border-top:1px solid var(--border);padding:12px 14px 14px;background:var(--bg2);}
 .comment-empty{font-size:12px;color:var(--muted);text-align:center;padding:10px 0 14px;}
 .comment-showall{display:block;width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);font-size:11px;padding:7px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:10px;}
@@ -281,7 +308,7 @@ body{padding-bottom:64px;}
 .comment-compose-foot{display:flex;align-items:center;gap:10px;margin-top:7px;}
 .comment-counter{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
 .comment-hint{font-size:10px;color:var(--muted);flex:1;}
-.comment-post-btn{background:var(--accent);color:#000;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;min-height:34px;}
+.comment-post-btn{background:var(--navy);color:var(--on-navy);border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;min-height:34px;}
 .comment-post-btn:disabled{opacity:.6;cursor:default;}
 .comment-error{font-size:11px;color:var(--red);margin-top:7px;line-height:1.5;}
 .comment-signin{margin-top:10px;text-align:center;}
@@ -295,7 +322,7 @@ body{padding-bottom:64px;}
 .report-btn{font-size:11px;padding:6px 12px;border-radius:16px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;min-height:30px;}
 .report-btn:hover{border-color:var(--accent);color:var(--accent);}
 .report-btn.danger:hover{border-color:var(--red);color:var(--red);}.comment-compose{margin-top:12px;display:flex;gap:9px;align-items:flex-start;}
-.compose-av{width:28px;height:28px;border-radius:50%;background:rgba(0,229,160,0.12);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;}
+.compose-av{width:28px;height:28px;border-radius:50%;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;}
 .compose-box{flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:8px 10px;transition:border-color .15s;}
 .compose-box:focus-within{border-color:var(--accent);}
 .compose-box .comment-input{background:transparent;border:none;padding:0;border-radius:0;}
@@ -312,7 +339,7 @@ body{padding-bottom:64px;}
 .like-count{font-family:'DM Mono',monospace;min-width:6px;}
 /* Toast. Above the bottom tab bar on mobile (z-index 120 there), and above the
    chat overlay (520) so a failure inside a room is still visible. */
-.sm-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(74px + env(safe-area-inset-bottom));z-index:900;max-width:min(440px,calc(100vw - 32px));background:var(--bg2);border:1px solid var(--accent);color:var(--text);padding:12px 18px;border-radius:12px;font-size:13px;line-height:1.5;box-shadow:0 8px 28px rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
+.sm-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(74px + env(safe-area-inset-bottom));z-index:900;max-width:min(440px,calc(100vw - 32px));background:var(--bg2);border:1px solid var(--border-strong);color:var(--text);padding:12px 18px;border-radius:12px;font-size:13px;line-height:1.5;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
 .sm-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .sm-toast.error{border-color:var(--red);}
 @media (min-width: 900px){
@@ -327,11 +354,13 @@ body{padding-bottom:64px;}
 /* The two halves of the one-screen picker. */
 .picker-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
 .picker-change{background:transparent;border:none;color:var(--accent);font-size:11px;letter-spacing:0;text-transform:none;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:4px 2px;min-height:28px;}
-.picker-current{display:flex;align-items:center;gap:10px;background:rgba(0,229,160,0.08);border:1px solid var(--accent);border-radius:10px;padding:10px 12px;}
+/* The chosen club: marked by the navy line, on the card (muted text on
+   --tint is 4.26:1 in light, so the tint stays for chips without muted text). */
+.picker-current{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:10px 12px;}
 /* The sort row. Not shown until a thread has more than one comment. */
 .csort{display:flex;gap:6px;margin:2px 0 8px;}
 .csort-btn{font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;min-height:26px;}
-.csort-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.07);}
+.csort-btn.active{border-color:var(--accent);color:var(--accent);background:var(--tint);}
 /* ── CLUB PICKER ──
    Two columns at 375px, three from 900px. Section headers span every column,
    so "Popular" and each league read as a band across the list rather than as a
@@ -344,9 +373,9 @@ body{padding-bottom:64px;}
    column past the container — the whole picker scrolled sideways at 375px. */
 .picker-row{display:flex;align-items:center;gap:8px;min-width:0;min-height:40px;padding:7px 9px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);transition:border-color .15s,background .15s;}
 .picker-row:hover{border-color:var(--accent2);}
-.picker-row.is-main{background:rgba(0,229,160,0.08);border-color:var(--accent);}
-.picker-row.is-following{background:rgba(0,184,255,0.06);border-color:var(--accent2);}
-.picker-row.is-locked{cursor:default;opacity:.75;}
+.picker-row.is-main{background:var(--tint);border-color:var(--accent);}
+.picker-row.is-following{background:var(--tint);border-color:var(--accent2);}
+.picker-row.is-locked{cursor:default;}
 .picker-row.is-locked:hover{border-color:var(--accent);}
 .picker-name{flex:1;min-width:0;font-size:11px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .picker-badge{font-size:9px;font-weight:700;flex-shrink:0;}
@@ -385,7 +414,7 @@ body{padding-bottom:64px;}
 .chat-msg-body{flex:1;min-width:0;}
 .chat-msg-author{font-size:12px;font-weight:600;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;}
 .chat-msg-text{font-size:14px;line-height:1.5;margin-top:2px;overflow-wrap:anywhere;}
-.chat-pinned{background:var(--bg3);border:1px solid rgba(0,229,160,0.2);border-radius:10px;padding:10px 12px;margin-bottom:12px;}
+.chat-pinned{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px;}
 .chat-pinned .chat-msg-text{color:var(--muted);font-size:13px;}
 .chat-system-name{color:var(--accent);}
 .chat-empty{text-align:center;color:var(--muted);font-size:13px;padding:30px 16px;line-height:1.6;}
@@ -397,11 +426,12 @@ body{padding-bottom:64px;}
   .chat-body{max-width:760px;width:100%;margin:0 auto;}
 }
 /* ── NEWS TAGS ── */
-.tag-transfer{background:rgba(0,229,160,0.1);color:var(--accent);}
-.tag-financial{background:rgba(0,184,255,0.1);color:var(--accent2);}
-.tag-injury{background:rgba(255,69,96,0.1);color:var(--red);}
-.tag-contract{background:rgba(245,200,66,0.1);color:var(--yellow);}
-.tag-rumor{background:rgba(255,107,53,0.1);color:var(--warn);}
+/* Category labels (spec §1): the word in its category colour on the card,
+   no tinted pill (a tint under the colour drops it below 4.5:1). */
+.tag-transfer,.tag-financial,.tag-contract,.tag-rumor{background:transparent;color:var(--cat-transfer);}
+.tag-match{background:transparent;color:var(--cat-match);}
+.tag-injury{background:transparent;color:var(--cat-injury);}
+.tag-general{background:transparent;color:var(--muted);}
 @media(max-width:768px){
   nav{padding:12px 16px;flex-wrap:wrap;gap:8px;}
   nav>div:first-child{order:1;}
@@ -469,8 +499,8 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-chips::-webkit-scrollbar{display:none;}
 .sg-chips-tight{margin:0;padding:0;flex:1;min-width:0;}
 .sg-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
-.sg-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
-.sg-chip-tag{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.8;}
+.sg-chip.active{border-color:var(--accent);color:var(--accent);background:var(--tint);}
+.sg-chip-tag{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
 .sg-round-head{margin-bottom:14px;}
 .sg-round-title{font-size:15px;font-weight:600;}
 .sg-round-sub{font-size:12px;color:var(--muted);margin-top:3px;}
@@ -490,10 +520,10 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-slot-meta{font-size:11px;color:var(--muted);margin-top:1px;}
 .sg-cap,.sg-x,.sg-add{flex:0 0 auto;min-width:44px;min-height:44px;border-radius:22px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
 .sg-cap{padding:0 10px;}
-.sg-cap.on{background:var(--accent);border-color:var(--accent);color:#000;}
+.sg-cap.on{background:var(--navy);border-color:var(--navy);color:var(--gold);}
 .sg-x{border:none;font-size:14px;}
-.sg-add{font-size:20px;color:var(--accent);border-color:rgba(0,229,160,0.35);}
-.sg-add.on{background:var(--accent);color:#000;border-color:var(--accent);font-size:16px;}
+.sg-add{font-size:20px;color:var(--accent);border-color:var(--border-strong);}
+.sg-add.on{background:var(--navy);color:var(--on-navy);border-color:var(--navy);font-size:16px;}
 .sg-photo{border-radius:50%;object-fit:cover;background:var(--bg3);flex-shrink:0;}
 .sg-photo-init{display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--border);}
 /* 16px: anything smaller makes iOS Safari zoom the page on focus. */
@@ -512,7 +542,7 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-lm{white-space:nowrap;}
 .sg-lm.ok{color:var(--accent);}
 .sg-lm.warn{color:var(--yellow);}
-.sg-submit{position:fixed;left:0;right:0;bottom:calc(52px + env(safe-area-inset-bottom));z-index:110;align-items:center;gap:12px;padding:10px 16px;background:rgba(13,17,23,0.98);border-top:1px solid var(--border);backdrop-filter:blur(16px);}
+.sg-submit{position:fixed;left:0;right:0;bottom:calc(52px + env(safe-area-inset-bottom));z-index:110;align-items:center;gap:12px;padding:10px 16px;background:var(--card);border-top:1px solid var(--border);}
 .sg-bar-text{flex:1;min-width:0;font-size:12px;color:var(--muted);}
 .sg-bar-text b{color:var(--text);font-family:'DM Mono',monospace;}
 /* Wraps between groups, never inside one: "Salvar escalação" is wider than
@@ -520,11 +550,14 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-bar-pos{font-size:10px;margin-top:3px;font-family:'DM Mono',monospace;line-height:1.5;}
 .sg-bar-pos span{white-space:nowrap;}
 .sg-bar-pos .full{color:var(--yellow);}
-.sg-row.blocked{opacity:.55;}
+/* A player who cannot be added now: name muted, add button disabled; the
+   text stays >= 4.5:1 (it used to be faded with opacity). */
+.sg-row.blocked .sg-row-name{color:var(--muted);}
+.sg-row.blocked .sg-photo{filter:grayscale(1);}
 .sg-row-fx{font-size:11px;color:var(--text);margin-top:3px;}
 .sg-row-fx.none,.sg-fx-none{color:var(--yellow);}
 .sg-add:disabled{cursor:not-allowed;color:var(--muted);border-color:var(--border);}
-.sg-save{flex:0 0 auto;min-height:44px;padding:0 20px;border-radius:22px;border:none;background:var(--accent);color:#000;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.sg-save{flex:0 0 auto;min-height:44px;padding:0 20px;border-radius:22px;border:none;background:var(--navy);color:var(--on-navy);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
 .sg-save:disabled{opacity:.45;cursor:default;}
 /* Lift the toast above the save bar while the bar is on screen. */
 body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(safe-area-inset-bottom));}
@@ -539,8 +572,8 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-pick.open .sg-brk{display:block;}
 .sg-brk-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:2px 0;}
 .sg-brk-row.b{color:var(--text);margin-top:3px;}
-.sg-tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(0,229,160,0.12);color:var(--accent);vertical-align:middle;}
-.sg-tag.b{background:rgba(0,184,255,0.12);color:var(--accent2);}
+.sg-tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--tint);color:var(--accent);vertical-align:middle;}
+.sg-tag.b{background:var(--tint);color:var(--accent2);}
 .sg-fx{display:flex;flex-direction:column;}
 .sg-fx-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;}
 .sg-fx-team{display:flex;align-items:center;gap:6px;min-width:0;}
@@ -551,13 +584,13 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-rank-title{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-bottom:8px;}
 .sg-rank-row{display:flex;align-items:center;gap:8px;min-height:44px;border-bottom:1px solid var(--border);font-size:13px;}
 .sg-rank-row.me{color:var(--accent);}
-.sg-rank-row.pinned{background:rgba(0,229,160,0.05);}
+.sg-rank-row.pinned{background:var(--tint);}
 .sg-rank-n{min-width:30px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
 .sg-rank-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sg-rank-x{font-size:10px;color:var(--muted);white-space:nowrap;}
 /* "Pick your club" nudge on Home (Day 7) */
 .club-nudge{align-items:center;justify-content:space-between;gap:12px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:6px 6px 6px 14px;margin:0 0 12px;font-size:13px;line-height:1.4;color:var(--text);}
-.club-nudge-btn{flex-shrink:0;min-height:44px;padding:0 18px;border-radius:22px;border:none;background:var(--accent);color:#000;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.club-nudge-btn{flex-shrink:0;min-height:44px;padding:0 18px;border-radius:22px;border:none;background:var(--navy);color:var(--on-navy);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
 /* Offline empty state (Day 6) */
 .offline-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.7;}
 .offline-empty-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);margin-bottom:4px;}
@@ -572,13 +605,13 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .gl-code{font-family:'DM Mono',monospace;font-size:22px;letter-spacing:3px;color:var(--accent);}
 .gl-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
 .gl-x{flex:0 0 auto;min-width:44px;min-height:44px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;}
-.gl-x:hover{color:var(--red,#ff4560);}
+.gl-x:hover{color:var(--loss-ink);}
 .gl-list-row{cursor:pointer;}
 .gl-field{display:block;width:100%;min-height:44px;font-size:16px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0 12px;font-family:'DM Sans',sans-serif;margin-bottom:10px;outline:none;}
 .gl-field:focus{border-color:var(--accent);}
 .gl-label{display:block;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:0 0 6px;}
 .gl-msg{font-size:12px;line-height:1.6;margin:0 0 12px;color:var(--muted);}
-.gl-msg.err{color:var(--red,#ff4560);}
+.gl-msg.err{color:var(--loss-ink);}
 .gl-danger-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);}
 @media (min-width:900px){ .gl-field{font-size:13px;} }
 .sg-rank-pts{font-family:'DM Mono',monospace;font-weight:600;min-width:52px;text-align:right;}
@@ -590,12 +623,12 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-history-row{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;}
 .sg-history-top{display:flex;align-items:center;gap:10px;min-height:36px;}
 .sg-history-best{font-size:11px;color:var(--text);margin-top:4px;}
-.sg-history-cta{min-height:44px;padding:0 20px;border-radius:22px;border:1px solid var(--accent);background:rgba(0,229,160,0.08);color:var(--accent);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.sg-history-cta{min-height:44px;padding:0 20px;border-radius:22px;border:1px solid var(--accent);background:var(--tint);color:var(--accent);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
 @media (min-width: 900px){ .sg-history-head{grid-template-columns:repeat(4,1fr);} }
-.sg-badge{font-size:11px;font-weight:600;padding:5px 10px;border-radius:14px;border:1px solid rgba(0,229,160,0.3);color:var(--accent);background:rgba(0,229,160,0.06);}
+.sg-badge{font-size:11px;font-weight:600;padding:5px 10px;border-radius:14px;border:1px solid var(--border);color:var(--accent);background:var(--tint);}
 /* ── MATCH PANEL (Day 4) ── */
 .match-tap{cursor:pointer;}
-.match-tap:hover{border-color:rgba(0,229,160,0.3)!important;}
+.match-tap:hover{border-color:var(--border-strong)!important;}
 .mo-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(24px + env(safe-area-inset-bottom));}
 .mo-inner{max-width:720px;margin:0 auto;}
 .mo-meta{font-size:11px;color:var(--muted);text-align:center;line-height:1.6;}
@@ -620,9 +653,10 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .mo-pl-x{font-size:10px;color:var(--muted);white-space:nowrap;}
 .mo-rating{flex:0 0 32px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;}
 .mo-form{display:flex;gap:4px;}
-.mo-wdl{width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:var(--bg3);color:var(--muted);}
-.mo-wdl.W{background:rgba(0,229,160,0.15);color:var(--accent);}
-.mo-wdl.L{background:rgba(255,69,96,0.12);color:var(--red);}
+/* Result chips (spec §3): letter in white on the chip colour, same in both modes. */
+.mo-wdl{width:26px;height:26px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:var(--chip-draw);color:var(--on-chip);}
+.mo-wdl.W{background:var(--chip-win);}
+.mo-wdl.L{background:var(--chip-loss);}
 .mo-row{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px;padding:8px 0;border-bottom:1px solid var(--border);}
 .mo-note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px;}
 @media (min-width: 900px){
@@ -704,7 +738,7 @@ if(!_cu){
         <span class="live-dot"></span>
         <span id="nav-name" style="font-size:12px;font-weight:500"></span>
       </div>
-      <div id="nav-avatar" onclick="showPage('profile')" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s;flex-shrink:0;" onmouseover="this.style.background='rgba(0,229,160,0.25)'" onmouseout="this.style.background='rgba(0,229,160,0.15)'">?</div>
+      <div id="nav-avatar" onclick="showPage('profile')" style="width:32px;height:32px;border-radius:50%;background:var(--tint);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s;flex-shrink:0;" onmouseover="this.style.borderColor='var(--navy-hover)'" onmouseout="this.style.borderColor='var(--accent)'">?</div>
       <button class="logout-btn" onclick="logout()">Sign out</button>
     </div>
     <!-- Guest: sign in. -->
@@ -860,7 +894,7 @@ if(!_cu){
 
   <div id="profile-signedin">
   <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
-    <div id="profile-avatar-big" style="width:60px;height:60px;border-radius:50%;background:rgba(0,229,160,0.15);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--accent);flex-shrink:0;">?</div>
+    <div id="profile-avatar-big" style="width:60px;height:60px;border-radius:50%;background:var(--tint);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--accent);flex-shrink:0;">?</div>
     <div>
       <div id="profile-name-big" style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;"></div>
       <div id="profile-email-big" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
@@ -874,7 +908,7 @@ if(!_cu){
       <div class="profile-row-label">Name</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="profile-row-value" id="profile-name-val">—</div>
-        <div id="profile-name-edit" style="display:none;align-items:center;gap:6px;"><input type="text" id="profile-name-input" placeholder="Enter name..." onkeydown="if(event.key==='Enter')saveName();if(event.key==='Escape')cancelEditName();" style="background:var(--bg3);border:1px solid var(--accent);color:var(--text);padding:5px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:160px;"><button onclick="saveName()" style="font-size:11px;font-weight:700;padding:5px 12px;background:var(--accent);color:#000;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">Save</button><button onclick="cancelEditName()" style="font-size:11px;padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-family:inherit;">&#x2715;</button></div><button class="profile-edit-btn" id="profile-edit-btn" onclick="editName()">Edit</button>
+        <div id="profile-name-edit" style="display:none;align-items:center;gap:6px;"><input type="text" id="profile-name-input" placeholder="Enter name..." onkeydown="if(event.key==='Enter')saveName();if(event.key==='Escape')cancelEditName();" style="background:var(--bg3);border:1px solid var(--accent);color:var(--text);padding:5px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:160px;"><button onclick="saveName()" style="font-size:11px;font-weight:700;padding:5px 12px;background:var(--navy);color:var(--on-navy);border:none;border-radius:6px;cursor:pointer;font-family:inherit;">Save</button><button onclick="cancelEditName()" style="font-size:11px;padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-family:inherit;">&#x2715;</button></div><button class="profile-edit-btn" id="profile-edit-btn" onclick="editName()">Edit</button>
       </div>
     </div>
     <div class="profile-row">
@@ -911,6 +945,12 @@ if(!_cu){
       <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 10px;" data-i18n="pref.lang.note">Beta: so far only sign-in, choosing your clubs and the Scout Game are translated.</div>
       <div id="profile-app-lang" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
     </div>
+    <!-- Theme (design spec v1.2): System / Light / Dark, kept on this device
+         (localStorage sm_theme). The head script applies it before paint. -->
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="font-size:12px;font-weight:600;margin-bottom:4px;" data-i18n="pref.theme.title">Theme</div>
+      <div id="profile-theme" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"></div>
+    </div>
     <!-- Round reminder emails (027). Hidden until the setting can be read:
          signed out, or before 027 runs (rule 21). -->
     <div id="profile-remind" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"></div>
@@ -928,8 +968,8 @@ if(!_cu){
   </div>
 
   <!-- Danger Zone -->
-  <div class="profile-section" style="border-color:rgba(255,69,96,0.15);">
-    <div class="profile-section-title" style="color:rgba(255,69,96,0.6);">Account actions</div>
+  <div class="profile-section" style="border-color:var(--loss-ink);">
+    <div class="profile-section-title" style="color:var(--loss-ink);">Account actions</div>
     <div class="profile-row">
       <div class="profile-row-label">Sign out of ScoutMind</div>
       <button class="danger-btn" onclick="logout()">Sign out</button>
@@ -1229,7 +1269,7 @@ async function confirmDeleteAccount(){
 <!-- ── TEAM SELECTION MODAL ── -->
 <!-- ONBOARDING — shown once, to a signed-in user with no club. display:flex is
      set only in JS (rule 6). Both steps are skippable. -->
-<div id="onboard-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+<div id="onboard-modal" style="display:none;position:fixed;inset:0;background:var(--scrim);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:26px;width:min(560px,92vw);max-height:88vh;overflow-y:auto;">
     <div id="onboard-title" style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:4px;" data-i18n="onb.title">Pick your clubs</div>
     <div id="onboard-sub" style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;"></div>
@@ -1243,7 +1283,7 @@ async function confirmDeleteAccount(){
   </div>
 </div>
 
-<div id="team-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+<div id="team-modal" style="display:none;position:fixed;inset:0;background:var(--scrim);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:min(520px,92vw);max-height:85vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;" data-i18n="team.title">Your Club</div>
@@ -1264,7 +1304,7 @@ async function confirmDeleteAccount(){
     <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;" data-i18n="pick.also">Also following</div>
     <div id="modal-following-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;min-height:32px;"></div>
 
-    <button id="save-club-btn" onclick="saveTeamSelection()" style="width:100%;background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;" data-i18n="team.save">SAVE MY CLUB</button>
+    <button id="save-club-btn" onclick="saveTeamSelection()" style="width:100%;background:var(--navy);color:var(--on-navy);border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;" data-i18n="team.save">SAVE MY CLUB</button>
     <button onclick="skipTeamModal()" style="width:100%;background:transparent;border:none;color:var(--muted);padding:10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;" data-i18n="team.skip">Skip for now — I'll set this later</button>
   </div>
 </div>
@@ -2103,8 +2143,8 @@ function renderFollowingChips(){
     const c = CLUB_DATA.get(id);
     if(!c)return '';
     const col = isMain ? 'var(--accent)' : 'var(--accent2)';
-    const bg  = isMain ? 'rgba(0,229,160,0.08)' : 'rgba(0,184,255,0.08)';
-    const br  = isMain ? 'rgba(0,229,160,0.2)'  : 'rgba(0,184,255,0.2)';
+    const bg  = isMain ? 'var(--tint)' : 'var(--tint)';
+    const br  = isMain ? 'var(--border)'  : 'var(--border)';
     const clear = isMain ? 'clearMainClub()' : 'unfollowClub('+id+')';
     return `<div style="display:flex;align-items:center;gap:5px;background:${bg};border:1px solid ${br};border-radius:20px;padding:3px 10px 3px 4px;font-size:11px;color:${col};">
       ${clubCrestById(id,16)} ${sanitize(c.label)}${isMain?' <span style="font-size:9px;font-weight:700;">MAIN</span>':''}
@@ -2911,9 +2951,9 @@ function renderMatchDay() {
 function matchCard(m, featured, label, hideDay) {
   const isLive = m.status === 'live';
   const isFinished = m.status === 'finished';
-  const borderColor = featured ? 'rgba(0,229,160,0.25)' : isLive ? 'rgba(0,229,160,0.15)' : 'var(--border)';
+  const borderColor = featured ? 'var(--accent)' : isLive ? 'var(--border-strong)' : 'var(--border)';
   let statusBadge = '';
-  if (isLive) statusBadge = '<span style="font-size:9px;font-weight:700;color:var(--accent);background:rgba(0,229,160,0.1);padding:2px 8px;border-radius:10px;animation:blink 2s infinite;">🔴 LIVE ' + (m.minute ? m.minute + "'" : '') + '</span>';
+  if (isLive) statusBadge = '<span style="font-size:9px;font-weight:700;color:var(--accent);background:var(--tint);padding:2px 8px;border-radius:10px;animation:blink 2s infinite;">🔴 LIVE ' + (m.minute ? m.minute + "'" : '') + '</span>';
   else if (isFinished) statusBadge = '<span style="font-size:9px;font-weight:700;color:var(--muted)">FT</span>';
   else statusBadge = '<span style="font-size:9px;color:var(--muted)">' + (m.time || '') + '</span>';
 
@@ -2976,8 +3016,8 @@ const CATEGORY_LABEL={
   transfer:{label:'Transfer',cls:'tag-transfer'},
   rumor:{label:'Rumor',cls:'tag-rumor'},
   contract:{label:'Contract',cls:'tag-contract'},
-  match:{label:'Match',cls:'tag-injury'},
-  general:{label:'News',cls:'tag-contract'},
+  match:{label:'Match',cls:'tag-match'},
+  general:{label:'News',cls:'tag-general'},
 };
 
 let FEED_ITEMS=[];
@@ -3110,7 +3150,7 @@ function renderMyClubCard(){
     +statCell('Goals/g',s.goalsFor,null,s.lgGoalsFor)
     +statCell('Conceded/g',s.goalsAgainst,null,s.lgGoalsAgainst)
     +statCell('Pass',s.passPct,null,s.lgPassPct);
-  el.innerHTML='<div onclick="window.location.href=\'/community.html\'" style="background:var(--bg2);border:1px solid rgba(0,229,160,0.2);border-radius:12px;overflow:hidden;cursor:pointer;">'
+  el.innerHTML='<div onclick="window.location.href=\'/community.html\'" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;">'
     +'<div style="padding:14px 16px;display:flex;align-items:center;gap:14px;">'
     +clubCrestById(id,44)
     +'<div style="flex:1;min-width:0;">'
@@ -3390,7 +3430,7 @@ function renderLangPrefs(){
       +(last?' title="Keep at least one language"':'')
       +' style="font-size:11px;padding:5px 12px;border-radius:20px;cursor:'+(last?'not-allowed':'pointer')
       +';font-family:\'DM Sans\',sans-serif;border:1px solid '+(active?'var(--accent)':'var(--border)')
-      +';background:'+(active?'rgba(0,229,160,0.1)':'transparent')
+      +';background:'+(active?'var(--tint)':'transparent')
       +';color:'+(active?'var(--accent)':'var(--muted)')+';opacity:'+(last?'0.7':'1')+';">'
       +(active?'✓ ':'')+sanitize(l.label)+'</button>';
   }).join('');
@@ -3409,9 +3449,9 @@ function renderClubLangToggle(){
   el.innerHTML='<button onclick="toggleClubLangs()" style="display:flex;align-items:center;gap:9px;min-height:44px;'
     +'background:transparent;border:none;padding:0;cursor:pointer;font-family:\'DM Sans\',sans-serif;text-align:left;">'
     +'<span style="width:34px;height:19px;border-radius:12px;flex-shrink:0;position:relative;transition:background .2s;'
-    +'background:'+(on?'var(--accent)':'var(--bg3)')+';border:1px solid '+(on?'var(--accent)':'var(--border)')+';">'
+    +'background:'+(on?'var(--navy)':'var(--bg3)')+';border:1px solid '+(on?'var(--navy)':'var(--border-strong)')+';">'
     +'<span style="position:absolute;top:2px;left:'+(on?'17px':'2px')+';width:13px;height:13px;border-radius:50%;'
-    +'background:'+(on?'#000':'var(--muted)')+';transition:left .2s;"></span></span>'
+    +'background:'+(on?'var(--on-navy)':'var(--muted)')+';transition:left .2s;"></span></span>'
     +'<span style="font-size:12px;color:'+(on?'var(--text)':'var(--muted)')+';line-height:1.5;">'
     +'Also show news about my clubs in other languages</span></button>';
 }
@@ -3439,9 +3479,9 @@ async function renderRemindPref(){
     +'<button onclick="toggleRemind()" role="switch" aria-checked="'+on+'" style="display:flex;align-items:center;gap:10px;min-height:44px;'
     +'background:transparent;border:none;padding:0;cursor:pointer;font-family:\'DM Sans\',sans-serif;text-align:left;">'
     +'<span style="width:34px;height:19px;border-radius:12px;flex-shrink:0;position:relative;transition:background .2s;'
-    +'background:'+(on?'var(--accent)':'var(--bg3)')+';border:1px solid '+(on?'var(--accent)':'var(--border)')+';">'
+    +'background:'+(on?'var(--navy)':'var(--bg3)')+';border:1px solid '+(on?'var(--navy)':'var(--border-strong)')+';">'
     +'<span style="position:absolute;top:2px;left:'+(on?'17px':'2px')+';width:13px;height:13px;border-radius:50%;'
-    +'background:'+(on?'#000':'var(--muted)')+';transition:left .2s;"></span></span>'
+    +'background:'+(on?'var(--on-navy)':'var(--muted)')+';transition:left .2s;"></span></span>'
     +'<span style="font-size:12px;color:'+(on?'var(--text)':'var(--muted)')+';line-height:1.5;">'
     +t(on?'pref.remind.on':'pref.remind.off')+'</span></button>';
   el.style.display='block';
@@ -3729,7 +3769,7 @@ function renderNewsCard(n){
   const foreign=showClubNewsAllLangs()&&myLangs().indexOf(n.lang)<0;
   const meta=CONTENT_LANGS.find(l=>l.code===n.lang);
   const hint=foreign
-    ? '<span title="Use your browser\'s translate option" style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border);">'
+    ? '<span title="Use your browser\'s translate option" style="font-size:9px;padding:2px 7px;border-radius:10px;background:var(--field);color:var(--muted);border:1px solid var(--border);">'
       +sanitize((meta&&meta.short)||n.lang)+' · Translate</span>'
     : '';
   // lang on the card itself, so per-item browser translation targets the
@@ -4892,7 +4932,7 @@ function renderWeeklyReport() {
   let html = '<div style="margin-bottom:24px;">';
   html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">';
   html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;letter-spacing:2px;">ScoutMind Weekly</div>';
-  html += '<div style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(0,229,160,0.1),rgba(0,184,255,0.1));border:1px solid rgba(0,229,160,0.2);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--accent);">📊 Every Monday</div>';
+  html += '<div style="display:inline-flex;align-items:center;gap:5px;background:var(--tint);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--accent);">📊 Every Monday</div>';
   html += '</div>';
   html += '<div style="font-size:13px;color:var(--muted);">Deep tactical analysis across all major leagues — who\'s rising, who\'s struggling, and which signings the data recommends.</div>';
   html += '</div>';
@@ -4927,7 +4967,7 @@ function weeklyReportCard(r) {
   html += '<div style="font-size:24px;">' + r.flag + '</div>';
   html += '<div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;letter-spacing:1px;">' + r.league + '</div>';
   html += '<div style="font-size:11px;color:var(--muted);">Week of ' + r.week + '</div></div></div>';
-  html += '<div style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(0,229,160,0.08);color:var(--accent);border:1px solid rgba(0,229,160,0.2);">WEEKLY REPORT</div>';
+  html += '<div style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--tint);color:var(--accent);border:1px solid var(--border);">WEEKLY REPORT</div>';
   html += '</div>';
 
   html += '<div style="padding:18px 20px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">';
@@ -4942,7 +4982,7 @@ function weeklyReportCard(r) {
   html += '</div>';
 
   // Weakness alert
-  html += '<div style="background:rgba(255,107,53,0.06);border:1px solid rgba(255,107,53,0.15);border-radius:10px;padding:14px;">';
+  html += '<div style="background:var(--tint);border:1px solid var(--border);border-radius:10px;padding:14px;">';
   html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--warn);text-transform:uppercase;margin-bottom:8px;">⚠️ Weakness Alert</div>';
   html += '<div style="font-size:15px;font-weight:700;margin-bottom:3px;">' + r.alert.team + '</div>';
   html += '<div style="font-size:11px;font-weight:600;color:var(--warn);margin-bottom:6px;">' + r.alert.weakness + '</div>';
@@ -4958,7 +4998,7 @@ function weeklyReportCard(r) {
   html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent2);text-transform:uppercase;margin-bottom:8px;">🔄 Most Needed Position This Week</div>';
   html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">';
   html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:var(--text)">' + r.transfer.position + '</div>';
-  html += '<div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(255,107,53,0.1);color:var(--warn)">Demand: ' + r.transfer.demand + '</div></div>';
+  html += '<div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--tint);color:var(--warn)">Demand: ' + r.transfer.demand + '</div></div>';
   html += '<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px">' + r.transfer.note + '</div>';
   html += r.transfer.players.map(p =>
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
@@ -4972,7 +5012,7 @@ function weeklyReportCard(r) {
 
   // Deep dive
   html += '<div style="margin:0 20px 20px;">';
-  html += '<div style="background:linear-gradient(135deg,rgba(0,229,160,0.04),rgba(0,184,255,0.02));border:1px solid rgba(0,229,160,0.15);border-radius:10px;padding:16px;">';
+  html += '<div style="background:var(--tint);border:1px solid var(--border);border-radius:10px;padding:16px;">';
   html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s infinite"></span>Deep Dive — ' + r.deepDive.team + '</div>';
   html += '<div style="font-size:13px;font-weight:600;margin-bottom:4px;">' + r.deepDive.team + ' <span style="font-size:11px;color:var(--muted);font-weight:400">· Coach: ' + r.deepDive.coach + '</span></div>';
   html += '<div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px">' + r.deepDive.summary + '</div>';
@@ -5109,7 +5149,7 @@ function editName(){if(!requireAuth('Create a free account to set up your profil
   ['EUR','USD','BRL','GBP'].forEach(x=>{
     const btn=document.getElementById('pref-'+x);
     if(!btn) return;
-    if(x===c){btn.style.borderColor='var(--accent)';btn.style.background='rgba(0,229,160,0.1)';btn.style.color='var(--accent)';}
+    if(x===c){btn.style.borderColor='var(--accent)';btn.style.background='var(--tint)';btn.style.color='var(--accent)';}
     else{btn.style.borderColor='var(--border)';btn.style.background='transparent';btn.style.color='var(--muted)';}
   });
 }
@@ -6401,14 +6441,30 @@ function renderAppLangPref(){
     const on=l[0]===cur;
     return '<button class="lang-pref" onclick="setLang(\''+l[0]+'\')" aria-pressed="'+on+'"'
       +' style="font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:\'DM Sans\',sans-serif;'
-      +'border:1px solid '+(on?'var(--accent)':'var(--border)')+';background:'+(on?'rgba(0,229,160,0.1)':'transparent')
+      +'border:1px solid '+(on?'var(--accent)':'var(--border)')+';background:'+(on?'var(--tint)':'transparent')
       +';color:'+(on?'var(--accent)':'var(--muted)')+';">'+(on?'✓ ':'')+l[1]+'</button>';
   }).join('');
 }
+/** Profile -> Preferences -> Theme. The choice lives in sm_theme (the head
+ *  script's window.smTheme); the page repaints itself through CSS variables. */
+function renderThemePref(){
+  const el=document.getElementById('profile-theme');
+  if(!el||!window.smTheme) return;
+  const cur=window.smTheme.get();
+  el.innerHTML=['system','light','dark'].map(function(p){
+    const on=p===cur;
+    return '<button class="lang-pref" onclick="window.smTheme.set(\''+p+'\');renderThemePref();" aria-pressed="'+on+'"'
+      +' style="font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:\'DM Sans\',sans-serif;'
+      +'border:1px solid '+(on?'var(--accent)':'var(--border)')+';background:'+(on?'var(--tint)':'transparent')
+      +';color:'+(on?'var(--accent)':'var(--muted)')+';">'+(on?'✓ ':'')+t('pref.theme.'+p)+'</button>';
+  }).join('');
+}
+
 // A switch redraws everything translated that is on screen, from what is
 // already loaded: no re-read, and the search boxes and drafts are kept.
 window.addEventListener('sm-lang',function(){
   renderAppLangPref();
+  renderThemePref();
   if(REMIND_ON!==null) renderRemindPref();
   renderClubNudge();
   const page=document.getElementById('page-scout');
@@ -6425,6 +6481,7 @@ window.addEventListener('sm-lang',function(){
 });
 applyI18n();
 renderAppLangPref();
+renderThemePref();
 
 // Losing the connection turns empty lists into "You're offline"; getting it
 // back loads what never arrived, without a reload (drafts and scroll stay).

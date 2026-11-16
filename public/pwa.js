@@ -65,13 +65,15 @@
     var css = document.createElement('style');
     css.textContent =
       '.a2hs{position:fixed;left:12px;right:12px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:600;' +
-      'display:flex;align-items:center;gap:12px;background:#0d1117;border:1px solid #00e5a0;border-radius:14px;' +
-      'padding:12px 12px 12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.55);font-family:\'DM Sans\',sans-serif;color:#edf2f7;}' +
+      // Tokens from /theme.css where the page loads it; the fallbacks are the
+      // old palette, for pages not yet converted (Sequence 2, commit 4b).
+      'display:flex;align-items:center;gap:12px;background:var(--card,#0d1117);border:1px solid var(--border-strong,#00e5a0);border-radius:12px;' +
+      'padding:12px 12px 12px 14px;font-family:\'DM Sans\',sans-serif;color:var(--ink,#edf2f7);}' +
       '.a2hs img{width:40px;height:40px;border-radius:9px;flex-shrink:0;}' +
       '.a2hs-text{flex:1;min-width:0;font-size:13px;line-height:1.45;}' +
       '.a2hs-text b{display:block;font-size:14px;}' +
-      '.a2hs-go{min-height:44px;padding:0 16px;border-radius:22px;border:none;background:#00e5a0;color:#000;font-weight:700;font-family:inherit;font-size:13px;cursor:pointer;}' +
-      '.a2hs-x{min-width:44px;min-height:44px;border:none;background:transparent;color:#5a6a85;font-size:18px;cursor:pointer;}';
+      '.a2hs-go{min-height:44px;padding:0 16px;border-radius:8px;border:none;background:var(--navy,#00e5a0);color:var(--on-navy,#000);font-weight:800;font-family:inherit;font-size:13px;cursor:pointer;}' +
+      '.a2hs-x{min-width:44px;min-height:44px;border:none;background:transparent;color:var(--muted,#5a6a85);font-size:18px;cursor:pointer;}';
     document.head.appendChild(css);
     var el = document.createElement('div');
     el.className = 'a2hs';

@@ -14,7 +14,7 @@
 // changed and VERSION did not (CLAUDE.md rule 24), so an old shell can never
 // outlive a deploy: a new VERSION is a new cache, and activate drops the old.
 
-const VERSION = 'sm-1470a166fa55';
+const VERSION = 'sm-e0e5422a545b';
 const SHELL = 'scoutmind-shell-' + VERSION;
 const IMAGES = 'scoutmind-img-v1';
 const IMAGE_MAX = 300;
@@ -29,6 +29,7 @@ const PRECACHE = [
   '/terms.html',
   '/offline.html',
   '/manifest.json',
+  '/theme.css',
   '/pwa.js',
   '/i18n.js',
   '/sm_auth.js',
@@ -42,6 +43,10 @@ const PRECACHE = [
   '/vendor/supabase-js-2.119.0.js',
   '/vendor/fonts/fonts.css',
   '/vendor/fonts/bebas-neue-normal-400-latin.woff2',
+  '/vendor/fonts/barlow-condensed-normal-600-latin.woff2',
+  '/vendor/fonts/barlow-condensed-normal-600-latin-ext.woff2',
+  '/vendor/fonts/barlow-condensed-normal-700-latin.woff2',
+  '/vendor/fonts/barlow-condensed-normal-700-latin-ext.woff2',
   '/vendor/fonts/bebas-neue-normal-400-latin-ext.woff2',
   '/vendor/fonts/dm-mono-normal-400-latin.woff2',
   '/vendor/fonts/dm-mono-normal-400-latin-ext.woff2',

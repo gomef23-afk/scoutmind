@@ -1,0 +1,95 @@
+/* ScoutMind tokens — design spec v1.2 "Scoreboard" (docs/design-spec-2026-11.md).
+ *
+ * One file for every page. Light values sit on :root; dark is ONE block,
+ * [data-theme="dark"], which the no-flash script in each page's <head> sets
+ * before the first paint from localStorage sm_theme (system | light | dark).
+ * Until commit 4b of Sequence 2 a reader with no saved choice gets DARK, the
+ * look they know, while the screens are converted; 4b makes it follow the
+ * device.
+ *
+ * Every text-on-background pair the app uses is >= 4.5:1 in both modes;
+ * tests/theme.test.js recomputes them from the values below. Change a value
+ * here and that test tells you if a pair broke.
+ *
+ * The club's own colour never appears in chrome (spec §1). The one exception
+ * is the news crest tile (spec §6), which tints from the crest at runtime.
+ */
+:root{
+  /* Brand: navy is the only one. --navy fills; --navy-ink is navy used as
+     text or a line, which in dark mode must be light to be read. */
+  --navy:#12304F;
+  --navy-hover:#1B4170;
+  --navy-ink:#12304F;
+  --on-navy:#FFFFFF;
+  /* Surfaces and text */
+  --ground:#F6F7F9;
+  --card:#FFFFFF;
+  --field:#F4F6F9;
+  --border:#E6E9EF;
+  --border-strong:#CDD3DD;
+  --ink:#13203A;
+  --muted:#677082;
+  --tint:#E6EEF8;
+  /* Gold: the countdown on the navy band and the captain "C" only. */
+  --gold:#FFD166;
+  /* Results. --win/--loss are text and marks; the W/D/L chips use the
+     --chip-* fills with a white letter, the same in both modes. */
+  --win:#1A8548;
+  --loss:#D7263D;
+  --draw:#6C7689;
+  --chip-win:#1A8548;
+  --chip-loss:#D7263D;
+  --chip-draw:#6C7689;
+  --on-chip:#FFFFFF;
+  --loss-ink:#D7263D;
+  --loss-tint:rgba(215,38,61,0.08);
+  /* LIVE as a word on the navy band */
+  --live-on-band:#E77B89;
+  /* News category labels: always next to the word */
+  --cat-transfer:#1D4ED8;
+  --cat-injury:#D7263D;
+  --cat-interview:#0B7C7A;
+  --cat-match:#1A8548;
+  /* Modal scrim: dark in both modes */
+  --scrim:rgba(7,12,20,0.72);
+  /* Type */
+  --font-sans:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-num:'Barlow Condensed','DM Sans',system-ui,sans-serif;
+  color-scheme:light;
+}
+
+[data-theme="dark"]{
+  --navy:#16365A;
+  --navy-hover:#1E4470;
+  --navy-ink:#A9C7EA;
+  --on-navy:#FFFFFF;
+  --ground:#0F141B;
+  --card:#1A2029;
+  --field:#222A35;
+  --border:#2A323E;
+  --border-strong:#3A4452;
+  --ink:#EEF1F5;
+  --muted:#9AA5B5;
+  --tint:#1F2E42;
+  --gold:#FFD166;
+  --win:#2FA865;
+  --loss:#E5485D;
+  --draw:#6C7689;
+  --chip-win:#1A8548;
+  --chip-loss:#D7263D;
+  --chip-draw:#6C7689;
+  --on-chip:#FFFFFF;
+  --loss-ink:#E85C6F;
+  --loss-tint:rgba(229,72,93,0.14);
+  --live-on-band:#ED8391;
+  --cat-transfer:#6A8AE5;
+  --cat-injury:#E26373;
+  --cat-interview:#419997;
+  --cat-match:#489D6D;
+  --scrim:rgba(0,0,0,0.72);
+  color-scheme:dark;
+}
+
+/* The scoreboard number face: kick-off times, countdowns, scores, points,
+   positions, ranks. Tabular figures so columns line up. */
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;font-weight:700;letter-spacing:0;}
