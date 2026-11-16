@@ -215,6 +215,11 @@
     'cm.err.removed': 'That has already been removed.',
     'cm.err.notYours': 'Only the author or an admin can remove this.',
     'cm.err.rules': 'That message breaks the community rules. Please rephrase it.',
+    'cm.err.followRoom': 'Follow this club to chat in its room.',
+
+    // ── Club rooms (index.html): writing is for members (028b) ──
+    'room.follow': 'Follow {club} to chat.',
+    'room.followBtn': 'Follow {club}',
 
     // ── Home: the "pick your club" nudge ──
     'home.nudge': 'Pick your club to shape your feed.',
@@ -752,7 +757,10 @@
     'cm.err.removed': 'Isso já foi removido.',
     'cm.err.notYours': 'Só o autor ou um administrador pode remover isto.',
     'cm.err.rules': 'Essa mensagem viola as regras da comunidade. Escreva de outro jeito.',
+    'cm.err.followRoom': 'Siga este clube para conversar na sala dele.',
 
+    'room.follow': 'Siga o {club} para conversar.',
+    'room.followBtn': 'Seguir o {club}',
     'home.nudge': 'Escolha seu clube para montar o seu feed.',
     'home.nudgeBtn': 'Escolher',
 
@@ -1162,7 +1170,9 @@
     'Nothing to remove.': 'cm.err.nothing',
     'That has already been removed.': 'cm.err.removed',
     'Only the author or an admin can remove this.': 'cm.err.notYours',
-    'That message breaks the community rules. Please rephrase it.': 'cm.err.rules'
+    'That message breaks the community rules. Please rephrase it.': 'cm.err.rules',
+    // 028b: club rooms.
+    'Follow this club to chat in its room.': 'cm.err.followRoom'
   };
 
   var LANGS = ['en', 'pt-BR'];

@@ -418,6 +418,7 @@ body{padding-bottom:64px;}
 .chat-pinned .chat-msg-text{color:var(--muted);font-size:13px;}
 .chat-system-name{color:var(--accent);}
 .chat-empty{text-align:center;color:var(--muted);font-size:13px;padding:30px 16px;line-height:1.6;}
+.chat-follow-gate{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
 .chat-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text);}
 .chat-card:hover{border-color:var(--accent);}
 .chat-card-last{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -4226,12 +4227,43 @@ function paintChat(scroll){
   if(scroll||nearBottom)body.scrollTop=body.scrollHeight;
 }
 
+/**
+ * Writing in a room is for its members: the club is your main club or one you
+ * follow (migration 028b enforces it in the database). Reading stays open.
+ */
+function isRoomMember(clubId){ return myClubIds().indexOf(Number(clubId))>=0; }
+
+/** One tap from the room: add the club to your follows, the same save as the picker. */
+async function followFromRoom(){
+  if(!requireAuth('Create a free account to join your club\'s chat.'))return;
+  if(!chatRoom)return;
+  const id=Number(chatRoom.clubId);
+  const btn=document.getElementById('chat-follow');
+  if(btn)btn.disabled=true;
+  const before=followingClubs;
+  followingClubs=followedClubIds().filter(x=>x!==id).concat(id===mainClubId()?[]:[id]);
+  const ok=await saveMyClubsToAccount();
+  if(!ok){ followingClubs=before; if(btn)btn.disabled=false; return; }
+  saveMyClubsLocal();
+  applyClubSelection();
+  logEvent('follow','team',id);
+  paintChatFoot();
+}
+
 function paintChatFoot(){
   const foot=document.getElementById('chat-foot');
   if(!foot)return;
   if(!currentUser){
     foot.innerHTML='<div class="comment-signin" style="margin:0;">'
       +'<button class="comment-post-btn" onclick="requireAuth(\'Create a free account to join your club\\\'s chat.\')">Sign in to join the conversation</button>'
+      +'</div>';
+    return;
+  }
+  if(chatRoom&&!isRoomMember(chatRoom.clubId)){
+    const club=clubLabel(chatRoom.clubId);
+    foot.innerHTML='<div class="comment-signin chat-follow-gate" style="margin:0;">'
+      +'<span>'+sanitize(t('room.follow',{club:club}))+'</span>'
+      +'<button class="comment-post-btn" id="chat-follow" onclick="followFromRoom()">'+sanitize(t('room.followBtn',{club:club}))+'</button>'
       +'</div>';
     return;
   }

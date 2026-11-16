@@ -126,6 +126,29 @@ check('database messages are translated through tServer', /return tServer\(/.tes
 check('a second report is answered kindly, not as an error', /e\.code==='23505'\|\|e\.code==='409'/.test(fn('sendReport')));
 check('the badge application box stays, without user_id (rule 7)', /openBadgeModal\(\)/.test(fn('doAnalyst')) && !/user_id/.test(fn('submitBadgeApp')));
 
+// ── 8. Club rooms: writing is for members (028b) ──
+const rb = read('supabase/migrations/028b_room_members.sql').split('\n').map((l) => l.replace(/--.*$/, '')).join('\n');
+const guard = (/create or replace function public\.group_message_guard\(\)[\s\S]*?\n\$\$;/.exec(rb) || [''])[0];
+check('028b: one transaction, and it refuses to run before 028', /^\s*begin;/m.test(rb) && /^\s*commit;/m.test(rb) && /to_regprocedure\('public\.is_club_member\(bigint\)'\) is null/.test(rb));
+check('028b: the room guard checks membership after the room is open', /if not found or not room\.active[\s\S]*?if room\.club_id is null or not public\.is_club_member\(room\.club_id\) then\s+raise exception 'Follow this club to chat in its room\.'/.test(guard));
+check("028b: 011's rules survive (system skip, empty, closed room, 5 s, 60 an hour, no stored name, blocklist)",
+  /if new\.is_system then\s+return new;/.test(guard) && /Message is empty\./.test(guard) && /That room is closed\./.test(guard)
+  && /interval '5 seconds'/.test(guard) && /hourly >= 60/.test(guard) && /new\.user_name := null;/.test(guard) && /perform public\.moderation_check\(new\.content\);/.test(guard));
+check('028b: the insert policy holds on its own (membership, no posting as ScoutMind)',
+  /drop policy if exists "group_messages self insert" on public\.group_messages;\s*create policy "group_messages self insert" on public\.group_messages\s+for insert to authenticated\s+with check \(auth\.uid\(\) = user_id and not is_system and not pinned\s+and public\.is_club_member\(\(select g\.club_id from public\.groups g where g\.id = group_id\)\)\);/.test(rb));
+check('028b: the trigger is re-created idempotently and the guard is not callable', /drop trigger if exists group_messages_guard on public\.group_messages;\s*create trigger group_messages_guard/.test(rb)
+  && /revoke all on function public\.group_message_guard\(\) from public, anon, authenticated;/.test(rb));
+check('028b: reading is not touched, nothing is deleted', !/"group_messages read"/.test(rb.replace(/drop policy if exists "group_messages self insert"/, '')) && !/\bdelete\s+from\b/i.test(rb));
+const idx = read('public/index.html');
+const foot = (/function paintChatFoot\(\)\{[\s\S]*?\n\}/.exec(idx) || [''])[0];
+check('the room shows "Follow <club> to chat" instead of the composer for non-members',
+  /if\(chatRoom&&!isRoomMember\(chatRoom\.clubId\)\)\{[\s\S]*?t\('room\.follow',\{club:club\}\)[\s\S]*?return;\s*\}/.test(foot)
+  && foot.indexOf('isRoomMember') < foot.indexOf('id="chat-input"'));
+check('membership on the page = main club or a follow', /function isRoomMember\(clubId\)\{ return myClubIds\(\)\.indexOf\(Number\(clubId\)\)>=0; \}/.test(idx));
+check('Follow from the room uses the same save as the club picker', /async function followFromRoom\(\)\{[\s\S]*?await saveMyClubsToAccount\(\);[\s\S]*?saveMyClubsLocal\(\);[\s\S]*?paintChatFoot\(\);/.test(idx));
+const i18 = read('public/i18n.js');
+check("the room's database message is translated", /'Follow this club to chat in its room\.': 'cm\.err\.followRoom'/.test(i18) && (i18.match(/'room\.follow(Btn)?':/g) || []).length === 4);
+
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);
 process.exit(failures.length ? 1 : 0);
