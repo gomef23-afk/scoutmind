@@ -48,9 +48,9 @@ check('?club=<teams.id> is honoured first', /get\('club'\)/.test(start));
 check("the main club comes from SMAuth.getJSON('sm_main_club')", /SMAuth\.getJSON\('sm_main_club',null\)/.test(start));
 check("the bare localStorage 'sm_main_club' is no longer read", !/localStorage\.getItem\('sm_main_club'\)/.test(html));
 
-// ── 5. Tabs hidden, code kept ──
-check('the four tabs are not rendered', !/class="ctabs"|switchTab\(\\'polls\\'/.test(page));
-check('their code is kept (hidden, not deleted)', ['doPolls', 'doAnalyst', 'doGroups', 'doWishlist', 'renderTab'].every((f) => new RegExp('function ' + f + '\\(').test(js)));
+// ── 5. The tabs (028; tests/community-features.test.js covers them in depth) ──
+check('the header leaves a slot for the tabs and fills it from Supabase', /<div id="club-feat"><\/div>/.test(page) && /loadFeatures\(c\);/.test(page));
+check('Groups is gone for good (the club room replaced it)', !/function doGroups\(|'groups'/.test(js));
 check('the page links to the club room by teams.id', /href="\/\?room='\+Number\(c\.id\)\+'"/.test(page));
 
 // ── 6. The subtitle ──

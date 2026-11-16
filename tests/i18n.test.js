@@ -49,7 +49,7 @@ const ph = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().
 const phDiff = enKeys.filter((k) => k in pt && ph(en[k]) !== ph(pt[k]));
 check('the same {placeholders} in both languages', phDiff.length === 0, phDiff.map((k) => `${k}: en {${ph(en[k])}} pt {${ph(pt[k])}}`).join('; '));
 const untranslated = enKeys.filter((k) => en[k] === pt[k] && /[a-z]{4,}/i.test(en[k])
-  && !/^(sg\.title|sg\.tab\.rankings|badge\.top_ten_percent\.name|auth\.ph\.email|sg\.base|pg\.pts|mo\.rankPts|sg\.dur\.dh)$/.test(k));
+  && !/^(sg\.title|sg\.tab\.rankings|badge\.top_ten_percent\.name|auth\.ph\.email|sg\.base|pg\.pts|mo\.rankPts|sg\.dur\.dh|cm\.deletedUser)$/.test(k));
 check('nothing left in English in pt-BR (beyond names that stay)', untranslated.length === 0, untranslated.join(', '));
 
 // ── Money words (CLAUDE.md: no betting language anywhere) ──
@@ -59,7 +59,8 @@ const moneyHits = [...enKeys.filter((k) => MONEY_EN.test(en[k])).map((k) => 'en 
 check('no money words in either language', moneyHits.length === 0, moneyHits.join(', '));
 
 // ── Every key the pages use exists ──
-const pages = { 'public/index.html': read('public/index.html'), 'public/auth.html': read('public/auth.html') };
+const pages = { 'public/index.html': read('public/index.html'), 'public/auth.html': read('public/auth.html'),
+  'public/community.html': read('public/community.html') };
 const missing = [];
 let used = 0;
 for (const [file, html] of Object.entries(pages)) {
@@ -74,14 +75,16 @@ for (const [file, html] of Object.entries(pages)) {
   for (const m of html.matchAll(/data-i18n(?:-html|-ph|-aria|-title)?="([^"]+)"/g)) { used++; if (!(m[1] in en)) missing.push(`${file} data-i18n "${m[1]}"`); }
   // t(cond ? 'a' : 'b') and t('prefix.'+x): every quoted key inside a t( … ) call.
   for (const m of html.matchAll(/\bt\(([^()]*\?[^()]*)\)/g)) {
-    for (const k of m[1].matchAll(/'((?:sg|mo|pick|onb|auth|pg|sp|team|pref)\.[\w.]+)'/g)) { used++; if (!(k[1] in en)) missing.push(`${file} t(…'${k[1]}'…)`); }
+    for (const k of m[1].matchAll(/'((?:sg|mo|pick|onb|auth|pg|sp|team|pref|cm)\.[\w.]+)'/g)) { used++; if (!(k[1] in en)) missing.push(`${file} t(…'${k[1]}'…)`); }
   }
 }
 check(`every key used by the pages exists (${used} uses)`, missing.length === 0, missing.join('; '));
 
 // Keys built at runtime: position, pick-slot, full-group and status families.
 const idx = pages['public/index.html'];
-const families = { 'sg.pos.': ['G', 'D', 'M', 'F', 'X'], 'sg.pick.': ['G', 'D', 'X'], 'sg.full.': ['G', 'D', 'X'],
+const families = { 'cm.pos.': ['GK', 'DF', 'MF', 'FW', 'none'], 'cm.reason.': ['spam', 'abuse', 'hate', 'off_topic', 'other'],
+  'cm.r.': ['fire', 'clap', 'mind_blown'], 'cm.tab.': ['polls', 'wishlist', 'analyst'],
+  'sg.pos.': ['G', 'D', 'M', 'F', 'X'], 'sg.pick.': ['G', 'D', 'X'], 'sg.full.': ['G', 'D', 'X'],
   'sg.rv.': ['round', 'comp', 'overall', 'torcida', 'leagues'], 'mo.st.': ['PST', 'CANC', 'ABD', 'SUSP', 'INT'], 'mo.res.': ['W', 'D', 'L'] };
 const famMissing = [];
 for (const [pre, ends] of Object.entries(families)) for (const e of ends) if (!(pre + e in en)) famMissing.push(pre + e);
@@ -107,7 +110,7 @@ check('every badge has a name and a description', badgeMissing.length === 0, bad
 // 'No user given.' is delete_account_data(), service role only.
 const serverMsgs = new Set();
 for (const f of ['supabase/migrations/023_formation_and_history.sql', 'supabase/migrations/020_lineup_rule.sql',
-                 'supabase/migrations/025_private_leagues.sql']) {
+                 'supabase/migrations/025_private_leagues.sql', 'supabase/migrations/028_club_features.sql']) {
   for (const m of read(f).matchAll(/raise exception '((?:[^']|'')+)'/g)) serverMsgs.add(m[1].replace(/''/g, "'"));
 }
 serverMsgs.delete('No user given.');

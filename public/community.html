@@ -113,6 +113,39 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .wvbtn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
 .wvbtn:hover,.wvbtn.voted{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
 .empty{text-align:center;padding:40px 20px;color:var(--muted);}
+/* Club page features (028): polls, wishlist, analyst insights. */
+#club-feat{margin-top:4px;}
+.cm-err{color:var(--red);font-size:13px;margin-bottom:10px;}
+.cm-err:empty{display:none;}
+.cm-gate{font-size:13px;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px;line-height:1.6;}
+.cm-link{background:none;border:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;text-decoration:underline;padding:0;}
+.cm-new{width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);padding:12px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:12px;}
+.cm-form{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.cm-area{min-height:110px;resize:vertical;}
+.cm-sec{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:18px 0 10px;}
+.cm-intro{font-size:12px;color:var(--muted);margin-bottom:12px;}
+.cm-meta{font-size:11px;color:var(--muted);}
+.cm-acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+.cm-act{background:none;border:1px solid var(--border);color:var(--muted);border-radius:16px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:inherit;}
+.cm-act:hover{color:var(--text);}
+.cm-why{font-size:11px;color:var(--muted);}
+.po-btn{display:block;cursor:pointer;border-radius:8px;padding:4px;margin-left:-4px;margin-right:-4px;}
+.po-btn:hover .pol,.po-btn:focus-visible .pol{color:var(--accent);}
+.po:not(.po-btn){cursor:default;}
+.rbtn.on{border-color:var(--accent);}
+.cm-react{display:flex;gap:8px;flex-wrap:wrap;}
+.cm-ahead{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.cm-awho{flex:1;min-width:0;}
+.cm-aname{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;font-weight:600;}
+.cm-abody{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px;overflow-wrap:anywhere;}
+.cm-apply{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.cm-apply-t{font-size:13px;font-weight:600;margin-bottom:3px;}
+.cm-apply-s{font-size:12px;color:var(--muted);}
+.cm-apply-b{margin-left:0;white-space:nowrap;}
+.cm-wbody{flex:1;min-width:0;}
+.cm-wname{font-size:14px;font-weight:600;margin-bottom:2px;overflow-wrap:anywhere;}
+.cm-wvote{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.cm-suggest{margin-top:14px;}
 .sp{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:24px auto;}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* Day 6 audit. A grid item's min-width defaults to auto, so the club view's
@@ -299,7 +332,7 @@ body{padding-bottom:64px;}
 <script src="/club_names.js"></script>
 <script src="/sm_auth.js"></script>
 <script src="/i18n.js"></script>
-<!-- Still loaded for the hidden tabs' code (rule 8); nothing visible reads it. -->
+<!-- Still loaded because init() waits on it (rule 8, until R10 deletes the file); nothing on screen reads it. -->
 <script src="/leagues_data.js"></script>
 <script>
 var _SB_URL='https://kdhbpzooyjxcglbxbuya.supabase.co',_SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
@@ -310,7 +343,8 @@ var _sb=window.supabase.createClient(_SB_URL,_SB_KEY);
 SMAuth.init(_sb,{url:_SB_URL,anonKey:_SB_KEY});
 var cu=JSON.parse(localStorage.getItem('sm_current_user')||'null');
 var isGuest=!cu;
-var isAnalyst=cu&&cu.plan==='analyst';
+// Whether the reader may post insights is asked of the database (is_analyst(),
+// 028), not read from this cache: the role changes only in the dashboard.
 
 // Swap the nav between guest (Sign in) and signed-in (name + avatar + sign out).
 function renderAuthUi(){
@@ -367,7 +401,7 @@ function logout(){
   });
 }
 // AGid, GTimer and GICONS went with the group-chat overlay in package 4.
-var AL='serie_a',AT=null,ATab='polls';
+var AL='serie_a',AT=null,CTAB='polls';
 // ── Clubs from Supabase (Sequence 2 fixes, 16 Nov 2026) ──────────────────
 // The club list, header, crest, coach, position and numbers all come from
 // the `teams` row and the tables keyed on teams.id — no name matching, and
@@ -521,208 +555,351 @@ function renderTeamPage(){
     // Five real numbers from standings + team_season_stats, by team_id.
     +realStatsRow(c)
     +'<div style="margin-top:16px;"><a class="pfbtn" href="/?room='+Number(c.id)+'" style="display:inline-block;text-decoration:none;">Open the club room</a></div>'
-    +'</div></div>';
-  // Polls, Analyst Insights, Groups and Transfer Wishlist are HIDDEN, not
-  // deleted (16 Nov 2026): polls and the wishlist lived only in this browser's
-  // localStorage (rule 10), the analyst table is empty, and Groups was a
-  // signpost. Their code (doPolls, doAnalyst, doGroups, doWishlist, renderTab)
-  // and tables stay, to come back on Supabase later.
+    +'</div></div>'
+    // Polls · Transfer Wishlist · Analyst Insights (migration 028). Filled by
+    // loadFeatures(); stays empty until 028 has run (rule 21). Groups is gone
+    // for good: the club room replaced it.
+    +'<div id="club-feat"></div>';
   document.getElementById('comm-main').innerHTML=html;
+  loadFeatures(c);
 }
-function switchTab(tab,el){ATab=tab;document.querySelectorAll('.ctab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');renderTab();}
+// ── CLUB PAGE FEATURES (migration 028) ────────────────────────────────────
+// Polls, the transfer wishlist and analyst insights, all in Supabase and keyed
+// on teams.id. Every limit lives in the database (028's guard triggers): this
+// code shows or hides forms, the database decides. Nothing social is kept in
+// localStorage (rule 10). Counts come from views that carry numbers only; the
+// vote tables are readable by the voter alone.
+var FEAT=null;                 // {polls,wishlist,analyst}: which tables answer (rule 21)
+var ME={uid:null,admin:false,analyst:false,analystChecked:false,member:{}};
+
+function myUid(){ if(isGuest)return null; return (SMAuth.userId&&SMAuth.userId())||(cu&&cu.id)||null; }
+async function getJ(p){
+  var r=await SMAuth.rest(p);
+  if(!r.ok)throw new Error(p.split('?')[0]+' '+r.status+' '+(await r.text()).slice(0,200));
+  return r.json();
+}
+/** A write. Throws an Error carrying the database's own message and code. */
+async function sendJ(path,method,body){
+  var r=await SMAuth.rest(path,{method:method,headers:{'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:body==null?undefined:JSON.stringify(body)});
+  if(!r.ok){
+    var j={}; try{ j=await r.json(); }catch(e){}
+    var err=new Error(j.message||('HTTP '+r.status)); err.code=j.code||String(r.status); throw err;
+  }
+  return r;
+}
+function showErr(msg){ var el=document.getElementById('cm-err'); if(el){ el.textContent=msg||''; if(msg)el.scrollIntoView({block:'nearest'}); } }
+function errText(e){ return tServer(String((e&&e.message)||e)); }
+function val(id){ var el=document.getElementById(id); return el?el.value.trim():''; }
+
+/** Which of the three tables exist. Before 028 runs, none: the page stays as it was. */
+async function probeFeatures(){
+  if(FEAT)return FEAT;
+  var ok=async function(p){ try{ return (await SMAuth.rest(p)).ok; }catch(e){ return false; } };
+  var r=await Promise.all([ok('polls?select=id&limit=1'),ok('wishlist_ranked?select=id&limit=1'),ok('analyst_posts?select=club_id&limit=1')]);
+  FEAT={polls:r[0],wishlist:r[1],analyst:r[2]};
+  return FEAT;
+}
+/** Who the reader is for this club: signed in, a member of its room, an analyst. */
+async function whoAmI(clubId){
+  ME.uid=myUid();
+  if(!ME.uid)return;
+  ME.admin=!!(cu&&cu.plan==='admin');   // shows Remove; the database decides
+  var rpc=async function(fn,args){
+    try{
+      var r=await SMAuth.rest('rpc/'+fn,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(args||{})});
+      return r.ok?(await r.json())===true:false;
+    }catch(e){ return false; }
+  };
+  if(ME.member[clubId]===undefined)ME.member[clubId]=await rpc('is_club_member',{p_club:clubId});
+  if(!ME.analystChecked){ ME.analyst=await rpc('is_analyst'); ME.analystChecked=true; }
+}
+
+var CTABS=[['polls','cm.tab.polls'],['wishlist','cm.tab.wishlist'],['analyst','cm.tab.analyst']];
+async function loadFeatures(c){
+  var box=document.getElementById('club-feat');
+  if(!box)return;
+  var f=await probeFeatures();
+  var tabs=CTABS.filter(function(x){ return f[x[0]]; });
+  if(AT!==c)return;
+  if(!tabs.length){ box.innerHTML=''; return; }
+  await whoAmI(c.id);
+  if(AT!==c)return;
+  if(!f[CTAB])CTAB=tabs[0][0];
+  box.innerHTML='<div class="ctabs" role="tablist">'
+    +tabs.map(function(x){
+      return '<button class="ctab'+(x[0]===CTAB?' active':'')+'" role="tab" data-tab="'+x[0]+'" aria-selected="'+(x[0]===CTAB)+'" onclick="switchTab(\''+x[0]+'\')">'+escH(t(x[1]))+'</button>';
+    }).join('')
+    +'</div><div id="ctc"></div>';
+  renderTab();
+}
+function switchTab(tab){
+  CTAB=tab;
+  document.querySelectorAll('#club-feat .ctab').forEach(function(b){
+    var on=b.getAttribute('data-tab')===tab; b.classList.toggle('active',on); b.setAttribute('aria-selected',String(on));
+  });
+  renderTab();
+}
 function renderTab(){
   var el=document.getElementById('ctc');
   if(!el||!AT)return;
-  var tk=AT.id||(AT.name.toLowerCase().replace(/\s+/g,'_'));
-  if(ATab==='polls')doPolls(el,tk);
-  else if(ATab==='analyst')doAnalyst(el,tk);
-  else if(ATab==='groups')doGroups(el,tk);
-  else if(ATab==='wishlist')doWishlist(el,tk);
-}
-function getTD(tk){var s=localStorage.getItem('sm_comm_'+tk);return s?JSON.parse(s):getDD(tk);}
-function saveTD(tk,d){localStorage.setItem('sm_comm_'+tk,JSON.stringify(d));}
-/**
- * Per-club polls and wishlist.
- *
- * This used to return seeded polls with invented vote counts (Flamengo
- * 142/89/210, Palmeiras 312/87/56, Botafogo 120/98/75/45) and a seeded
- * wishlist (Julián Álvarez 234 votes, Nico Williams 189, Wirtz 178, Luiz
- * Henrique 289, Thiago Almada 156), all attributed to "ScoutMind". None of it
- * came from a real person, so none of it is here any more.
- *
- * Polls and wishlist entries created in this session still work; they live in
- * memory only. Persisting them to Supabase is Phase C.
- */
-function getDD(tk){
-  if(!getDD._mem)getDD._mem={};
-  if(!getDD._mem[tk])getDD._mem[tk]={polls:[],wishlist:[]};
-  return getDD._mem[tk];
-}
-function doPolls(el,tk){
-  var d=getTD(tk),html='';
-  html+='<button onclick="tPF()" style="width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);padding:12px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:12px;">+ Create a Poll</button>';
-  html+='<div id="pform" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;">';
-  html+='<div class="pfi">Poll question</div><input class="pfinput" id="pfq" placeholder="e.g. Who should we sign?">';
-  html+='<div class="pfi">Option 1</div><input class="pfinput" id="pfo1" placeholder="Option A">';
-  html+='<div class="pfi">Option 2</div><input class="pfinput" id="pfo2" placeholder="Option B">';
-  html+='<div class="pfi">Option 3 (optional)</div><input class="pfinput" id="pfo3" placeholder="Option C">';
-  html+='<button class="pfbtn" onclick="subPoll(\''+tk+'\')">Create Poll</button>';
-  html+='<button class="pfcancel" onclick="tPF()">Cancel</button></div>';
-  d.polls.forEach(function(p){
-    var tot=p.votes.reduce(function(a,b){return a+b;},0);
-    html+='<div class="poll-card"><div class="poll-q">'+p.q+'</div><div class="poll-m">by '+p.author+' · '+p.time+' · '+tot+' votes</div>';
-    p.opts.forEach(function(o,i){
-      var pct=tot>0?Math.round(p.votes[i]/tot*100):0;
-      var voted=p.userVote===i;
-      html+='<div class="po" onclick="doVote(\''+tk+'\',\''+p.id+'\','+i+')">';
-      html+='<div class="por"><div class="pol">'+o+(voted?'<span class="pvb">✓ Your vote</span>':'')+'</div><div class="pop">'+pct+'%</div></div>';
-      html+='<div class="pbar"><div class="pbarfill'+(voted?' v':'')+'" style="width:'+pct+'%"></div></div></div>';
-    });
-    html+='</div>';
-  });
-  el.innerHTML=html;
-}
-function tPF(){var f=document.getElementById('pform');if(f)f.style.display=f.style.display==='none'?'block':'none';}
-function subPoll(tk){
-  if(!requireAuth('Create a free account to create a poll.'))return;
-  var q=document.getElementById('pfq').value.trim();
-  var o1=document.getElementById('pfo1').value.trim();
-  var o2=document.getElementById('pfo2').value.trim();
-  var o3=document.getElementById('pfo3').value.trim();
-  if(!q||!o1||!o2){alert('Please fill in the question and at least 2 options.');return;}
-  var d=getTD(tk);
-  var opts=[o1,o2].concat(o3?[o3]:[]);
-  d.polls.unshift({id:'p'+Date.now(),q:q,opts:opts,votes:opts.map(function(){return 0;}),userVote:null,author:cu.name||'Fan',time:'just now'});
-  saveTD(tk,d);renderTab();
-}
-function doVote(tk,pid,idx){
-  if(!requireAuth('Create a free account to vote in polls.'))return;
-  var d=getTD(tk);
-  var p=d.polls.find(function(x){return x.id===pid;});
-  if(!p||p.userVote!==null)return;
-  p.votes[idx]++;p.userVote=idx;saveTD(tk,d);renderTab();
-}
-async function doAnalyst(el,tk){
+  var c=AT;
   el.innerHTML='<div class="sp"></div>';
-  var res=await _sb.from('analyst_posts').select('*').eq('team_id',tk).order('created_at',{ascending:false});
-  var posts=res.data,err=res.error;
-  var html='';
-  if(isAnalyst){
-    html+='<div style="background:var(--bg2);border:1px solid rgba(0,229,160,0.2);border-radius:12px;padding:18px;margin-bottom:18px;">'
-      +'<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:10px;">📊 Post an Insight</div>'
-      +'<textarea id="ai" placeholder="Share your tactical analysis, scouting report or professional insight..." style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;font-family:DM Sans,sans-serif;outline:none;resize:vertical;min-height:100px;margin-bottom:10px;"></textarea>'
-      +'<button onclick="postAI(\''+tk+'\')" style="background:var(--accent);color:#000;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Post Insight</button>'
-      +'</div>';
-  }else{
-    html+='<div style="background:var(--bg2);border:1px solid rgba(0,184,255,0.15);border-radius:12px;padding:16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">'
-      +'<div><div style="font-size:13px;font-weight:600;margin-bottom:3px">Want to post analyst insights?</div>'
-      +'<div style="font-size:12px;color:var(--muted)">Licensed scouts, journalists and agents can apply for a free verified badge.</div></div>'
-      +'<button onclick="openBadgeModal()" style="background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;white-space:nowrap;">Apply for Badge →</button>'
-      +'</div>';
+  var fn=CTAB==='wishlist'?doWishlist:CTAB==='analyst'?doAnalyst:doPolls;
+  fn(el,c).catch(function(e){
+    console.error('club page '+CTAB+':',e.message);
+    if(AT===c)el.innerHTML='<div class="empty">'+escH(t('cm.loadFail'))+'</div>';
+  });
+}
+
+/** The line under a tab when the reader cannot take part: sign in, or follow the club. */
+function gateLine(c){
+  if(!ME.uid)return '<div class="cm-gate">'+escH(t('cm.gate.guest'))+' <button class="cm-link" onclick="requireAuth(t(\'cm.gate.guestSheet\'))">'+escH(t('cm.gate.signin'))+'</button></div>';
+  if(!ME.member[c.id])return '<div class="cm-gate">'+escH(t('cm.gate.follow',{club:c.label}))+' <a class="cm-link" href="/?page=communities">'+escH(t('cm.gate.followBtn'))+'</a></div>';
+  return '';
+}
+async function authorNames(ids){
+  var u=ids.filter(function(v,i,a){ return v&&a.indexOf(v)===i; });
+  if(!u.length)return {};
+  var rows=await getJ('public_profiles?select=id,name&id=in.('+u.join(',')+')');
+  var m={}; rows.forEach(function(r){ m[r.id]=r.name; }); return m;
+}
+/** A removed account is "[deleted user]" (privacy policy, section 8). */
+function authorLabel(map,id){ return id?(map[id]||t('cm.someone')):t('cm.deletedUser'); }
+function timeLeft(iso){
+  var m=Math.max(0,(new Date(iso).getTime()-Date.now())/60000);
+  if(m<60)return t('cm.left.m',{n:Math.max(1,Math.round(m))});
+  if(m<48*60)return t('cm.left.h',{n:Math.round(m/60)});
+  return tn('cm.left.d',Math.round(m/1440));
+}
+
+/** Remove (author or admin) and Report (anyone signed in but the author). */
+function itemMenu(kind,id,owner){
+  if(!ME.uid)return '';
+  var mine=!!owner&&owner===ME.uid, sid=escH(String(id)), b='';
+  if(mine||ME.admin)b+='<button class="cm-act" onclick="removeItem(\''+kind+'\',\''+sid+'\')">'+escH(t('cm.remove'))+'</button>';
+  if(!mine)b+='<button class="cm-act" onclick="openReport(this,\''+kind+'\',\''+sid+'\')">'+escH(t('cm.report'))+'</button>';
+  return b?'<div class="cm-acts">'+b+'</div>':'';
+}
+async function removeItem(kind,id){
+  if(!requireAuth(t('cm.gate.guestSheet')))return;
+  if(!confirm(t('cm.removeConfirm')))return;
+  try{ await sendJ('rpc/remove_club_item','POST',{p_kind:kind,p_id:String(id)}); renderTab(); }
+  catch(e){ showErr(errText(e)); }
+}
+var REPORT_REASONS=['spam','abuse','hate','off_topic','other'];
+function openReport(btn,kind,id){
+  if(!requireAuth(t('cm.gate.guestSheet')))return;
+  var box=btn.parentNode;
+  box.innerHTML='<span class="cm-why">'+escH(t('cm.reportWhy'))+'</span>'
+    +REPORT_REASONS.map(function(r){
+      return '<button class="cm-act" onclick="sendReport(this,\''+kind+'\',\''+escH(String(id))+'\',\''+r+'\')">'+escH(t('cm.reason.'+r))+'</button>';
+    }).join('');
+}
+async function sendReport(btn,kind,id,reason){
+  var box=btn.parentNode;
+  try{
+    await sendJ('reports','POST',{target_type:kind,target_id:String(id),reporter_id:ME.uid,reason:reason});
+    box.innerHTML='<span class="cm-why">'+escH(t('cm.reported'))+'</span>';
+  }catch(e){
+    // One open report per person per item (008): a second one is a 409.
+    box.innerHTML='<span class="cm-why">'+escH(e.code==='23505'||e.code==='409'?t('cm.reportedAlready'):errText(e))+'</span>';
   }
-  if(err||!posts||posts.length===0){
-    html+='<div class="empty"><div style="font-size:32px;margin-bottom:10px;opacity:.3">📊</div><div style="font-size:14px;opacity:.4;margin-bottom:6px">No analyst insights yet</div><div style="font-size:12px">Verified analysts post weekly tactical breakdowns here.</div></div>';
+}
+// ── Polls: members create and vote (once, final); everyone sees the results ──
+async function doPolls(el,c){
+  var id=Number(c.id);
+  var rows=await getJ('polls?select=id,created_by,question,options,closes_at,created_at&club_id=eq.'+id+'&order=created_at.desc&limit=40');
+  var ids=rows.map(function(p){ return p.id; });
+  var res=ids.length?await getJ('poll_results?select=poll_id,option_idx,votes&poll_id=in.('+ids.join(',')+')'):[];
+  // Filtered on user_id as well as by RLS (CLAUDE.md: public-read is not "mine").
+  var mine=(ids.length&&ME.uid)?await getJ('poll_votes?select=poll_id,option_idx&user_id=eq.'+ME.uid+'&poll_id=in.('+ids.join(',')+')'):[];
+  var names=await authorNames(rows.map(function(p){ return p.created_by; }));
+  if(AT!==c)return;
+  var counts={}; res.forEach(function(r){ (counts[r.poll_id]=counts[r.poll_id]||{})[r.option_idx]=r.votes; });
+  var my={}; mine.forEach(function(v){ my[v.poll_id]=v.option_idx; });
+  var now=Date.now();
+  var open=rows.filter(function(p){ return new Date(p.closes_at).getTime()>now; });
+  var closed=rows.filter(function(p){ return new Date(p.closes_at).getTime()<=now; }).slice(0,10);
+  var member=!!(ME.uid&&ME.member[c.id]);
+  var html='<div id="cm-err" class="cm-err" role="alert"></div>';
+  if(member){
+    html+='<button class="cm-new" onclick="togglePollForm()">'+escH(t('cm.poll.new'))+'</button>'
+      +'<div id="pform" class="cm-form" style="display:none;">'
+      +'<label class="pfi" for="pfq">'+escH(t('cm.poll.q'))+'</label><input class="pfinput" id="pfq" maxlength="140" placeholder="'+escH(t('cm.poll.qPh'))+'">'
+      +[1,2,3,4].map(function(n){
+        return '<label class="pfi" for="pfo'+n+'">'+escH(t(n<3?'cm.poll.opt':'cm.poll.optOpt',{n:n}))+'</label><input class="pfinput" id="pfo'+n+'" maxlength="60">';
+      }).join('')
+      +'<label class="pfi" for="pfd">'+escH(t('cm.poll.len'))+'</label><select class="pfinput" id="pfd">'
+      +'<option value="24">'+escH(t('cm.poll.len24'))+'</option><option value="72">'+escH(t('cm.poll.len72'))+'</option><option value="168">'+escH(t('cm.poll.len168'))+'</option></select>'
+      +'<button class="pfbtn" id="pfsub" onclick="submitPoll('+id+')">'+escH(t('cm.poll.create'))+'</button>'
+      +'<button class="pfcancel" onclick="togglePollForm()">'+escH(t('cm.cancel'))+'</button></div>';
   }else{
-    posts.forEach(function(p){
-      var ini=p.user_name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
-      var r=p.reactions||{fire:0,clap:0,mind_blown:0};
-      html+='<div class="apost">'
-        +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'
-        +'<div class="aav">'+ini+'</div>'
-        +'<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:14px;font-weight:600">'+p.user_name+'</span><span class="acred">'+p.credential+'</span></div>'
-        +'<div style="font-size:11px;color:var(--muted)">'+ago(p.created_at)+'</div></div></div>'
-        +'<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:12px">'+p.content.replace(/\n/g,'<br>')+'</div>'
-        +'<div style="display:flex;gap:8px;">'
-        +'<button class="rbtn" onclick="reactAI(\''+p.id+'\',\'fire\')">🔥 '+(r.fire||0)+'</button>'
-        +'<button class="rbtn" onclick="reactAI(\''+p.id+'\',\'clap\')">👏 '+(r.clap||0)+'</button>'
-        +'<button class="rbtn" onclick="reactAI(\''+p.id+'\',\'mind_blown\')">🤯 '+(r.mind_blown||0)+'</button>'
-        +'</div></div>';
+    html+=gateLine(c);
+  }
+  if(!rows.length)html+='<div class="empty">'+escH(t(member?'cm.poll.emptyMember':'cm.poll.empty',{club:c.label}))+'</div>';
+  var card=function(p,isOpen){
+    var cnt=counts[p.id]||{}, tot=0;
+    p.options.forEach(function(o,i){ tot+=cnt[i]||0; });
+    var voted=my[p.id], canVote=isOpen&&member&&voted===undefined;
+    var h='<div class="poll-card"><div class="poll-q">'+escH(p.question)+'</div>'
+      +'<div class="poll-m">'+escH(t('cm.by',{name:authorLabel(names,p.created_by)}))+' · '
+      +escH(isOpen?t('cm.poll.closesIn',{t:timeLeft(p.closes_at)}):t('cm.poll.closed'))
+      +' · <span class="num">'+escH(tn('cm.votes',tot))+'</span></div>';
+    p.options.forEach(function(o,i){
+      var pct=tot?Math.round((cnt[i]||0)/tot*100):0, mineHere=voted===i;
+      h+=(canVote?'<div class="po po-btn" role="button" tabindex="0" onclick="castVote('+Number(p.id)+','+i+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">':'<div class="po">')
+        +'<div class="por"><div class="pol">'+escH(o)+(mineHere?'<span class="pvb">'+escH(t('cm.poll.yourVote'))+'</span>':'')+'</div>'
+        +'<div class="pop num">'+pct+'%</div></div>'
+        +'<div class="pbar"><div class="pbarfill'+(mineHere?' v':'')+'" style="width:'+pct+'%"></div></div>'
+        +'</div>';
     });
-  }
+    return h+itemMenu('poll',p.id,p.created_by)+'</div>';
+  };
+  open.forEach(function(p){ html+=card(p,true); });
+  if(closed.length)html+='<div class="cm-sec">'+escH(t('cm.poll.final'))+'</div>'+closed.map(function(p){ return card(p,false); }).join('');
   el.innerHTML=html;
 }
-async function postAI(tk){
-  if(!requireAuth('Create a free account to post an insight.'))return;
-  var inp=document.getElementById('ai');
-  var content=inp&&inp.value.trim();
-  if(!content)return;
-  var prof=await _sb.from('profiles').select('credential').eq('id',cu.id).single();
-  var cred=(prof.data&&prof.data.credential)||'Analyst';
-  var ins=await _sb.from('analyst_posts').insert({team_id:tk,user_id:cu.id,user_name:cu.name||cu.email.split('@')[0],credential:cred,content:content});
-  if(ins.error){alert('Error posting. Please try again.');return;}
-  renderTab();
+function togglePollForm(){ var f=document.getElementById('pform'); if(f)f.style.display=f.style.display==='none'?'block':'none'; }
+async function submitPoll(clubId){
+  if(!requireAuth(t('cm.gate.guestSheet')))return;
+  var q=val('pfq'), opts=['pfo1','pfo2','pfo3','pfo4'].map(val).filter(Boolean);
+  if(q.length<5||opts.length<2){ showErr(t('cm.poll.fill')); return; }
+  var btn=document.getElementById('pfsub'); if(btn)btn.disabled=true;
+  try{
+    await sendJ('polls','POST',{club_id:clubId,created_by:ME.uid,question:q,options:opts,duration_hours:Number(val('pfd'))||24});
+    renderTab();
+  }catch(e){ showErr(errText(e)); if(btn)btn.disabled=false; }
 }
-async function reactAI(pid,reaction){
-  if(!requireAuth('Create a free account to react to posts.'))return;
-  var pr=await _sb.from('analyst_posts').select('reactions').eq('id',pid).single();
-  if(!pr.data)return;
-  var r=pr.data.reactions||{fire:0,clap:0,mind_blown:0};
-  r[reaction]=(r[reaction]||0)+1;
-  await _sb.from('analyst_posts').update({reactions:r}).eq('id',pid);
-  renderTab();
+async function castVote(pollId,idx){
+  if(!requireAuth(t('cm.gate.guestSheet')))return;
+  try{ await sendJ('poll_votes','POST',{poll_id:pollId,user_id:ME.uid,option_idx:idx}); renderTab(); }
+  catch(e){ showErr(errText(e)); }
 }
-// Group chat moved into the app in package 4: one official room per club,
-// keyed on teams.id. This page still keys clubs on the pre-package-2 25-slug
-// `tk`, which nothing produces any more, so the old query here could only ever
-// find the eight retired May groups.
-//
-// It is a signpost now, not a second implementation. Rebuilding the room here
-// would mean two chat UIs against one table, on two different data layers
-// (this page uses supabase-js, the app uses PostgREST directly).
-function doGroups(el,tk){
-  el.innerHTML='<div class="empty" style="padding:36px 20px;">'
-    +'<div style="font-size:32px;margin-bottom:12px;opacity:.35">💬</div>'
-    +'<div style="font-size:15px;font-weight:600;margin-bottom:8px;">Community chat has moved</div>'
-    +'<div style="font-size:13px;color:var(--muted);line-height:1.6;max-width:340px;margin:0 auto 18px;">'
-    +'Every club now has one official room in the app, with moderation and your '
-    +'real profile name. Open it from the Clubs tab.</div>'
-    +'<a href="/?page=communities" class="pfbtn" style="display:inline-block;text-decoration:none;">Open the Clubs tab</a>'
-    +'</div>';
-}
-function doWishlist(el,tk){
-  var d=getTD(tk);
-  var html='<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Vote for the players you want your club to sign.</div>';
-  var sorted=d.wishlist.slice().sort(function(a,b){return b.votes-a.votes;});
-  sorted.forEach(function(p,i){
-    html+='<div class="wcard">'
-      +'<div class="wrank'+(i<3?' top':'')+'">'+(i+1<10?'0'+(i+1):i+1)+'</div>'
-      +'<div style="flex:1"><div style="font-size:14px;font-weight:600;margin-bottom:2px">'+p.name+'</div><div style="font-size:11px;color:var(--muted)">📍 '+p.club+' · '+p.pos+'</div></div>'
-      +'<div style="text-align:right"><button class="wvbtn'+(p.userVoted?' voted':'')+'" onclick="wVote(\''+tk+'\','+i+')">'+(p.userVoted?'✓ Voted':'▲ Want')+'</button><div style="font-size:11px;color:var(--muted);margin-top:4px">'+p.votes+' votes</div></div>'
+// ── Analyst Insights: verified analysts post; anyone signed in reacts ──
+var REACTIONS=[['fire','🔥'],['clap','👏'],['mind_blown','🤯']];
+async function doAnalyst(el,c){
+  var id=Number(c.id);
+  var rows=await getJ('analyst_posts?select=id,user_id,credential,content,created_at&club_id=eq.'+id+'&order=created_at.desc&limit=30');
+  var ids=rows.map(function(p){ return p.id; });
+  var res=ids.length?await getJ('analyst_reaction_counts?select=post_id,kind,reactions&post_id=in.('+ids.join(',')+')'):[];
+  var mine=(ids.length&&ME.uid)?await getJ('analyst_post_reactions?select=post_id,kind&user_id=eq.'+ME.uid+'&post_id=in.('+ids.join(',')+')'):[];
+  var names=await authorNames(rows.map(function(p){ return p.user_id; }));
+  if(AT!==c)return;
+  var counts={}; res.forEach(function(r){ (counts[r.post_id]=counts[r.post_id]||{})[r.kind]=r.reactions; });
+  var my={}; mine.forEach(function(r){ my[r.post_id+':'+r.kind]=true; });
+  var html='<div id="cm-err" class="cm-err" role="alert"></div>';
+  if(ME.analyst){
+    html+='<div class="cm-form">'
+      +'<label class="pfi" for="ai">'+escH(t('cm.ai.post'))+'</label>'
+      +'<textarea id="ai" class="pfinput cm-area" maxlength="2000" placeholder="'+escH(t('cm.ai.ph'))+'"></textarea>'
+      +'<button class="pfbtn" id="aisub" onclick="postInsight('+id+')">'+escH(t('cm.ai.publish'))+'</button></div>';
+  }else{
+    // The badge application box stays: approval is by hand, in the dashboard.
+    html+='<div class="cm-apply"><div><div class="cm-apply-t">'+escH(t('cm.ai.applyTitle'))+'</div>'
+      +'<div class="cm-apply-s">'+escH(t('cm.ai.applySub'))+'</div></div>'
+      +'<button class="pfcancel cm-apply-b" onclick="openBadgeModal()">'+escH(t('cm.ai.apply'))+'</button></div>';
+  }
+  if(!rows.length)html+='<div class="empty">'+escH(t('cm.ai.empty',{club:c.label}))+'</div>';
+  rows.forEach(function(p){
+    var who=authorLabel(names,p.user_id);
+    var ini=who.replace(/[^\p{L}\p{N} ]/gu,'').split(/\s+/).map(function(w){ return w[0]||''; }).join('').toUpperCase().slice(0,2)||'?';
+    var cnt=counts[p.id]||{};
+    html+='<div class="apost">'
+      +'<div class="cm-ahead"><div class="aav">'+escH(ini)+'</div>'
+      +'<div class="cm-awho"><div class="cm-aname"><span>'+escH(who)+'</span>'+(p.credential?'<span class="acred">'+escH(p.credential)+'</span>':'')+'</div>'
+      +'<div class="cm-meta">'+escH(ago(p.created_at))+'</div></div></div>'
+      +'<div class="cm-abody">'+escH(p.content).replace(/\n/g,'<br>')+'</div>'
+      +'<div class="cm-react">'
+      +REACTIONS.map(function(r){
+        var on=!!my[p.id+':'+r[0]];
+        return '<button class="rbtn'+(on?' on':'')+'" aria-pressed="'+on+'" aria-label="'+escH(t('cm.r.'+r[0]))+'" onclick="toggleReact(\''+escH(String(p.id))+'\',\''+r[0]+'\','+on+')">'
+          +r[1]+' <span class="num">'+(cnt[r[0]]||0)+'</span></button>';
+      }).join('')
+      +'</div>'
+      +itemMenu('analyst_post',p.id,p.user_id)
       +'</div>';
   });
-  html+='<div style="margin-top:14px"><div style="font-size:12px;color:var(--muted);margin-bottom:8px">Suggest a player:</div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-    +'<input id="wn" class="pfinput" style="margin:0;flex:2" placeholder="Player name">'
-    +'<input id="wc" class="pfinput" style="margin:0;flex:2" placeholder="Current club">'
-    +'<input id="wp" class="pfinput" style="margin:0;width:70px;flex:1" placeholder="Pos">'
-    +'<button class="pfbtn" onclick="addW(\''+tk+'\')">Add</button></div></div>';
   el.innerHTML=html;
 }
-function wVote(tk,i){
-  if(!requireAuth('Create a free account to vote on transfer targets.'))return;
-  var d=getTD(tk);
-  var sorted=d.wishlist.slice().sort(function(a,b){return b.votes-a.votes;});
-  var p=sorted[i];if(!p)return;
-  var orig=d.wishlist.find(function(x){return x.name===p.name;});
-  if(!orig||orig.userVoted)return;
-  orig.votes++;orig.userVoted=true;saveTD(tk,d);renderTab();
+async function postInsight(clubId){
+  if(!requireAuth(t('cm.gate.guestSheet')))return;
+  var content=val('ai');
+  if(content.length<20){ showErr(t('cm.ai.short')); return; }
+  var btn=document.getElementById('aisub'); if(btn)btn.disabled=true;
+  // Name and credential are not sent: the database fills them (028).
+  try{ await sendJ('analyst_posts','POST',{club_id:clubId,user_id:ME.uid,content:content}); renderTab(); }
+  catch(e){ showErr(errText(e)); if(btn)btn.disabled=false; }
 }
-function addW(tk){
-  if(!requireAuth('Create a free account to suggest a signing.'))return;
-  var n=document.getElementById('wn')&&document.getElementById('wn').value.trim();
-  var c=document.getElementById('wc')&&document.getElementById('wc').value.trim();
-  var p=document.getElementById('wp')&&document.getElementById('wp').value.trim();
-  if(!n||!c)return;
-  var d=getTD(tk);
-  d.wishlist.push({name:n,club:c,pos:p||'???',votes:1,userVoted:true});
-  saveTD(tk,d);renderTab();
+async function toggleReact(postId,kind,on){
+  if(!requireAuth(t('cm.gate.guestSheet')))return;
+  try{
+    if(on)await sendJ('analyst_post_reactions?post_id=eq.'+encodeURIComponent(postId)+'&user_id=eq.'+ME.uid+'&kind=eq.'+kind,'DELETE');
+    else await sendJ('analyst_post_reactions','POST',{post_id:postId,user_id:ME.uid,kind:kind});
+    renderTab();
+  }catch(e){ showErr(errText(e)); }
+}
+// ── Transfer Wishlist: members suggest and upvote (one each, can take it back) ──
+var POSITIONS=['GK','DF','MF','FW'];
+async function doWishlist(el,c){
+  var id=Number(c.id);
+  var rows=await getJ('wishlist_ranked?select=id,created_by,player_name,current_club,position,upvotes&club_id=eq.'+id+'&order=upvotes.desc,created_at.asc&limit=50');
+  var ids=rows.map(function(r){ return r.id; });
+  var mine=(ids.length&&ME.uid)?await getJ('wishlist_votes?select=item_id&user_id=eq.'+ME.uid+'&item_id=in.('+ids.join(',')+')'):[];
+  if(AT!==c)return;
+  var my={}; mine.forEach(function(v){ my[v.item_id]=true; });
+  var member=!!(ME.uid&&ME.member[c.id]);
+  var html='<div id="cm-err" class="cm-err" role="alert"></div>'
+    +'<div class="cm-intro">'+escH(t('cm.wish.intro',{club:c.label}))+'</div>'
+    +(member?'':gateLine(c));
+  if(!rows.length)html+='<div class="empty">'+escH(t('cm.wish.empty',{club:c.label}))+'</div>';
+  rows.forEach(function(r,i){
+    var on=!!my[r.id];
+    var meta=[r.current_club,r.position?t('cm.pos.'+r.position):null].filter(Boolean).map(escH).join(' · ');
+    html+='<div class="wcard">'
+      +'<div class="wrank num'+(i<3?' top':'')+'">'+(i+1)+'</div>'
+      +'<div class="cm-wbody"><div class="cm-wname">'+escH(r.player_name)+'</div>'+(meta?'<div class="cm-meta">'+meta+'</div>':'')
+      +itemMenu('wishlist_item',r.id,r.created_by)+'</div>'
+      +'<div class="cm-wvote">'
+      +(member?'<button class="wvbtn'+(on?' voted':'')+'" aria-pressed="'+on+'" onclick="toggleWish('+Number(r.id)+','+on+')">'+escH(t(on?'cm.wish.wanted':'cm.wish.want'))+'</button>':'')
+      +'<div class="cm-meta num">'+escH(tn('cm.votes',r.upvotes))+'</div></div>'
+      +'</div>';
+  });
+  if(member){
+    html+='<div class="cm-form cm-suggest"><div class="pfi">'+escH(t('cm.wish.suggest'))+'</div>'
+      +'<label class="pfi" for="wn">'+escH(t('cm.wish.name'))+'</label><input id="wn" class="pfinput" maxlength="60">'
+      +'<label class="pfi" for="wc">'+escH(t('cm.wish.club'))+'</label><input id="wc" class="pfinput" maxlength="60">'
+      +'<label class="pfi" for="wp">'+escH(t('cm.wish.pos'))+'</label><select id="wp" class="pfinput"><option value="">'+escH(t('cm.pos.none'))+'</option>'
+      +POSITIONS.map(function(p){ return '<option value="'+p+'">'+escH(t('cm.pos.'+p))+'</option>'; }).join('')+'</select>'
+      +'<button class="pfbtn" id="wsub" onclick="suggestPlayer('+id+')">'+escH(t('cm.wish.add'))+'</button></div>';
+  }
+  el.innerHTML=html;
+}
+async function toggleWish(itemId,on){
+  if(!requireAuth(t('cm.gate.guestSheet')))return;
+  try{
+    if(on)await sendJ('wishlist_votes?item_id=eq.'+Number(itemId)+'&user_id=eq.'+ME.uid,'DELETE');
+    else await sendJ('wishlist_votes','POST',{item_id:itemId,user_id:ME.uid});
+    renderTab();
+  }catch(e){ showErr(errText(e)); }
+}
+async function suggestPlayer(clubId){
+  if(!requireAuth(t('cm.gate.guestSheet')))return;
+  var name=val('wn');
+  if(name.length<2){ showErr(t('cm.wish.fill')); return; }
+  var btn=document.getElementById('wsub'); if(btn)btn.disabled=true;
+  try{
+    await sendJ('wishlist_items','POST',{club_id:clubId,created_by:ME.uid,player_name:name,
+      current_club:val('wc')||null,position:val('wp')||null});
+    renderTab();
+  }catch(e){ showErr(errText(e)); if(btn)btn.disabled=false; }
 }
 function ago(iso){
   var s=(Date.now()-new Date(iso).getTime())/1000;
-  if(s<60)return 'just now';
-  if(s<3600)return Math.floor(s/60)+'m ago';
-  if(s<86400)return Math.floor(s/3600)+'h ago';
-  return Math.floor(s/86400)+'d ago';
+  if(s<60)return t('cm.ago.now');
+  if(s<3600)return t('cm.ago.m',{n:Math.floor(s/60)});
+  if(s<86400)return t('cm.ago.h',{n:Math.floor(s/3600)});
+  return t('cm.ago.d',{n:Math.floor(s/86400)});
 }
 /**
  * Which club to open: ?club=<teams.id> (the Clubs tab's "Open" button), else
