@@ -226,25 +226,14 @@ body{padding-bottom:64px;}
 <div class="page">
   <div style="margin-bottom:20px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:4px">Communities</div>
-    <div style="font-size:13px;color:var(--muted)">Pick your team. Read analyst insights. Chat in groups. Vote on transfers.</div>
+    <div style="font-size:13px;color:var(--muted)" data-i18n="comm.sub">Pick a club to see its league position, this season's numbers and a link to its fan room.</div>
   </div>
   <div class="two-col">
     <div>
       <div class="team-selector">
         <div class="ts-title">Find Your Club</div>
-        <select class="league-select" id="comm-league" onchange="loadLeague()">
-          <option value="serie_a">🇧🇷 Série A</option>
-          <option value="serie_b">🇧🇷 Série B</option>
-          <option value="premier_league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</option>
-          <option value="la_liga">🇪🇸 La Liga</option>
-          <option value="bundesliga">🇩🇪 Bundesliga</option>
-          <option value="serie_a_it">🇮🇹 Serie A Italy</option>
-          <option value="ligue_1">🇫🇷 Ligue 1</option>
-          <option value="argentina">🇦🇷 Argentina</option>
-          <option value="mls">🇺🇸 MLS</option>
-          <option value="saudi_pro">🇸🇦 Saudi Pro League</option>
-          <option value="eredivisie">🇳🇱 Eredivisie</option>
-          <option value="primeira_liga">🇵🇹 Primeira Liga</option>
+        <!-- Filled by fillLeagueSelect() with the leagues we carry (from `teams`). -->
+        <select class="league-select" id="comm-league" onchange="loadLeague()" aria-label="League">
         </select>
         <input type="text" class="ts-search" id="comm-search" placeholder="Search teams..." oninput="filterTeams()">
         <div class="ts-scroll" id="comm-list"></div>
@@ -309,6 +298,8 @@ body{padding-bottom:64px;}
      in the app now: one official room per club. -->
 <script src="/club_names.js"></script>
 <script src="/sm_auth.js"></script>
+<script src="/i18n.js"></script>
+<!-- Still loaded for the hidden tabs' code (rule 8); nothing visible reads it. -->
 <script src="/leagues_data.js"></script>
 <script>
 var _SB_URL='https://kdhbpzooyjxcglbxbuya.supabase.co',_SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
@@ -377,106 +368,78 @@ function logout(){
 }
 // AGid, GTimer and GICONS went with the group-chat overlay in package 4.
 var AL='serie_a',AT=null,ATab='polls';
-// ── Real numbers from Supabase ───────────────────────────────────────────
-// This page's team list comes from leagues_data.js (slug ids), while the
-// football tables key on teams.id. Until the page is moved onto `teams`
-// wholesale in R9, bridge the two by normalised name — and show NOTHING when
-// there is no confident match, rather than someone else's numbers.
-var REAL_STATS={};   // normalised name -> {rank,points,played,gs,gc,pa}
+// ── Clubs from Supabase (Sequence 2 fixes, 16 Nov 2026) ──────────────────
+// The club list, header, crest, coach, position and numbers all come from
+// the `teams` row and the tables keyed on teams.id — no name matching, and
+// nothing from leagues_data.js. That file used to supply the coach (typed by
+// hand, stale), the founding year, the stadium, an Instagram handle, a typed
+// "full name" and a league position per club (wrong for 71 of the 85 clubs we
+// could check); none of it is read here any more. Only the leagues we carry
+// are listed (the 22 others had no data at all).
+var CLUBS={};        // league slug -> [club], each club built in loadClubs()
+var CLUB_BY_ID={};   // teams.id -> club
+var LEAGUES=[];      // [{slug,name}], in LEAGUE_ORDER first
+var LEAGUE_ORDER=['serie_a','premier_league','la_liga','serie_a_it','bundesliga','ligue_1','argentina'];
 
-function _norm(s){
-  return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
-    .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+/** Text for innerHTML: names and places come from the database. */
+function escH(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
 }
+function ordN(n){ if(n==null)return null; var s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
 
-// Club-name furniture. leagues_data.js says "Olympique Lyon" and "OGC Nice"
-// where the API says "Lyon" and "Nice", so compare the cores too.
-var _AFFIX=['fc','ac','as','sc','ss','us','ca','rc','cf','cd','sv','vfb','vfl','tsg','fsv',
-  'afc','ogc','losc','rcd','ec','sd','olympique','stade','club','de','the','1'];
-
-function _core(s){
-  var w=_norm(s).split(' ').filter(Boolean);
-  while(w.length>1&&_AFFIX.indexOf(w[0])>-1)w.shift();
-  while(w.length>1&&_AFFIX.indexOf(w[w.length-1])>-1)w.pop();
-  return w.join(' ');
-}
-
-/**
- * Index a key only if it is unambiguous. Two clubs sharing a core means we
- * cannot tell them apart, so neither gets it — the same rule the news tagger
- * uses. Showing the wrong club's league position would be worse than none.
- */
-// Clubs this page names differently from the API, where stripping affixes is
-// not enough. Only for clubs we actually hold; anything else stays unmatched.
-var _NAME_BRIDGE={
-  'atletico mineiro':'atletico mg',
-  'red bull bragantino':'rb bragantino',
-  'newcastle united':'newcastle',
-  'leeds united':'leeds',
-  'athletic bilbao':'athletic club',
-  'deportivo alaves':'alaves',
-  'bayern munich':'bayern munchen',
-  'hoffenheim':'1899 hoffenheim',
-  'inter milan':'inter',
-  'stade rennais':'rennes',
-  'stade brestois':'stade brestois 29',
-  'angers sco':'angers',
-  'estudiantes lp':'estudiantes la plata',
-};
-
-function _indexKey(map,key,row){
-  if(!key||key.length<4)return;
-  if(map[key]&&map[key]!==row){ map[key]=null; return; }   // ambiguous: burn it
-  if(map[key]===null)return;
-  map[key]=row;
-}
-
-async function loadRealStats(){
+async function loadClubs(){
+  // Through SMAuth so a signed-in reader sends a live token and a guest sends
+  // the anon key. A non-2xx reports its body (rule 20).
+  var get=async function(p){var r=await SMAuth.rest(p);if(!r.ok)throw new Error(p+' '+r.status+' '+(await r.text()).slice(0,200));return r.json();};
+  var res=await Promise.all([
+    // `leagues` is disambiguated: standings also joins teams to leagues (rule 20).
+    get('teams?select=id,api_team_id,name,founded,venue_name,venue_city,logo_url,coach_name,leagues!teams_league_id_fkey(slug,name)&limit=1000'),
+    get('standings?select=team_id,rank,points,played&limit=2000'),
+    get('team_season_stats?select=team_id,gs,gc,pa&limit=1000').catch(function(e){ console.warn('team_season_stats:',e.message); return []; })
+  ]);
+  var teams=res[0],standings=res[1],stats=res[2];
+  // League baselines (016), apart so a 404 costs the "lg avg" labels only (rule 21).
+  var avgBySlug={};
   try{
-    // Through SMAuth so a signed-in reader sends a live token and a guest sends
-    // the anon key, without this page deciding which for itself.
-    var get=async function(p){var r=await SMAuth.rest(p);if(!r.ok)throw new Error(p+' '+r.status);return r.json();};
-    var res=await Promise.all([
-      get('teams?select=id,api_team_id,name,leagues!teams_league_id_fkey(slug)&limit=500'),
-      get('standings?select=team_id,rank,points,played&limit=500'),
-      get('team_season_stats?select=team_id,gs,gc,pa&limit=500')
-    ]);
-    var teams=res[0],standings=res[1],stats=res[2];
-    // League baselines (016). Fetched apart so a 404 before 016 is applied
-    // costs the "lg avg" labels only (rule 21).
-    var avgBySlug={};
-    try{
-      var avgs=await get('league_averages?select=slug,gs,gc,pa&is_current=is.true');
-      avgs.forEach(function(a){ avgBySlug[a.slug]=a; });
-    }catch(e2){ console.warn('league_averages unavailable (016 not applied yet?):',e2.message); }
-    var byId={};
-    teams.forEach(function(t){
-      var label=(typeof clubDisplayName==='function')?clubDisplayName(t):t.name;
-      var row={label:label,avg:avgBySlug[t.leagues&&t.leagues.slug]||null};
-      byId[t.id]=row;
-      _indexKey(REAL_STATS,_norm(label),row);
-      _indexKey(REAL_STATS,_norm(t.name),row);
-      _indexKey(REAL_STATS,_core(label),row);
-      _indexKey(REAL_STATS,_core(t.name),row);
-    });
-    standings.forEach(function(s){
-      var r=byId[s.team_id]; if(!r)return;
-      if(r.rank==null||(s.rank!=null&&s.rank<r.rank)){r.rank=s.rank;r.points=s.points;r.played=s.played;}
-    });
-    stats.forEach(function(s){
-      var r=byId[s.team_id]; if(!r)return;
-      r.gs=s.gs; r.gc=s.gc; r.pa=s.pa;
-    });
-  }catch(e){ console.warn('loadRealStats:',e.message); }
+    var avgs=await get('league_averages?select=slug,gs,gc,pa&is_current=is.true');
+    avgs.forEach(function(a){ avgBySlug[a.slug]=a; });
+  }catch(e2){ console.warn('league_averages unavailable:',e2.message); }
+  CLUBS={}; CLUB_BY_ID={};
+  var names={};
+  teams.forEach(function(row){
+    var lg=row.leagues||{};
+    if(!lg.slug)return;
+    var club={
+      id:row.id,
+      label:(typeof clubDisplayName==='function')?clubDisplayName(row):row.name,
+      founded:row.founded||null, venue:row.venue_name||null, city:row.venue_city||null,
+      logo:row.logo_url||null, coach:row.coach_name||null,
+      league:lg.slug, leagueName:lg.name||lg.slug,
+      rank:null, points:null, played:null, gs:null, gc:null, pa:null,
+      avg:avgBySlug[lg.slug]||null
+    };
+    CLUB_BY_ID[row.id]=club;
+    (CLUBS[lg.slug]=CLUBS[lg.slug]||[]).push(club);
+    names[lg.slug]=club.leagueName;
+  });
+  // Standings by team_id. A league split into groups (Argentina) has one row
+  // per group a team sits in; keep the best, as the app does.
+  standings.forEach(function(s){
+    var c=CLUB_BY_ID[s.team_id]; if(!c||s.rank==null)return;
+    if(c.rank==null||s.rank<c.rank){ c.rank=s.rank; c.points=s.points; c.played=s.played; }
+  });
+  stats.forEach(function(s){ var c=CLUB_BY_ID[s.team_id]; if(c){ c.gs=s.gs; c.gc=s.gc; c.pa=s.pa; } });
+  var slugs=Object.keys(CLUBS);
+  slugs.sort(function(a,b){
+    var ia=LEAGUE_ORDER.indexOf(a), ib=LEAGUE_ORDER.indexOf(b);
+    return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);
+  });
+  LEAGUES=slugs.map(function(s){ return {slug:s,name:names[s]}; });
 }
 
-/** The same five numbers the Clubs page shows, or '' when we have none. */
-function realStatsRow(teamName){
-  var n=_norm(teamName);
-  var bridged=_NAME_BRIDGE[n];
-  var r=REAL_STATS[n]||REAL_STATS[_core(teamName)]
-    ||(bridged?(REAL_STATS[bridged]||REAL_STATS[_core(bridged)]):null);
-  if(!r)return '';   // null means ambiguous, undefined means unknown — both: nothing
+/** Position, points and three per-game numbers, or '' when we hold none. */
+function realStatsRow(r){
+  if(!r)return '';
   var cell=function(label,val,avg){
     if(val==null||val==='')return '';
     return '<div class="sc"><div class="sv">'+val+'</div><div class="sl">'+label+'</div>'
@@ -497,18 +460,26 @@ function realStatsRow(teamName){
 
 var _ft=[];
 function loadLeague(){AL=document.getElementById('comm-league').value;filterTeams();}
+/** The league picker: only the leagues we carry, from the data itself. */
+function fillLeagueSelect(){
+  var sel=document.getElementById('comm-league');
+  if(!sel)return;
+  sel.innerHTML=LEAGUES.map(function(l){ return '<option value="'+escH(l.slug)+'">'+escH(l.name)+'</option>'; }).join('');
+  if(AL)sel.value=AL;
+}
 function filterTeams(){
   var q=document.getElementById('comm-search').value.toLowerCase();
-  var teams=(TEAMS[AL]||[]).slice().sort(function(a,b){return a.name.localeCompare(b.name);});
-  _ft=q?teams.filter(function(t){return t.name.toLowerCase().includes(q);}):teams;
+  var clubs=(CLUBS[AL]||[]).slice().sort(function(a,b){return a.label.localeCompare(b.label);});
+  _ft=q?clubs.filter(function(c){return c.label.toLowerCase().includes(q);}):clubs;
   var el=document.getElementById('comm-list');
   if(_ft.length===0){el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">No teams found</div>';return;}
   var html='';
   for(var i=0;i<_ft.length;i++){
-    var t=_ft[i];
-    var act=(AT&&(t.id===AT.id||t.name===AT.name))?'active':'';
+    var c=_ft[i];
+    var act=(AT&&c.id===AT.id)?'active':'';
+    // The position is the real standings rank, or nothing.
     html+='<div class="ts-team '+act+'" onclick="pickTeam('+i+')">'
-      +'<div><div class="ts-name">'+t.name+'</div><div class="ts-pos">'+(t.pos||'')+'</div></div>'
+      +'<div><div class="ts-name">'+escH(c.label)+'</div><div class="ts-pos">'+(c.rank!=null?escH(ordN(c.rank)):'')+'</div></div>'
       +'<div style="font-size:10px;color:var(--muted)">›</div></div>';
   }
   el.innerHTML=html;
@@ -520,41 +491,43 @@ function pickTeam(i){
 }
 function renderTeamPage(){
   if(!AT)return;
-  var t=AT;
-  var tk=t.id||(t.name.toLowerCase().replace(/\s+/g,'_'));
-  var av=LEAGUE_AVGS[AL]||{};
-  var info=(typeof TEAM_INFO!=='undefined'&&(TEAM_INFO[tk]||TEAM_INFO[t.id]))||{};
-  var coach=(typeof COACHES!=='undefined'&&(COACHES[tk]||COACHES[t.id]))||{};
-  var ini=t.name.split(' ').map(function(w){return w[0];}).join('').slice(0,3).toUpperCase();
-  var lm=(typeof LEAGUE_META!=='undefined'&&LEAGUE_META[AL])?LEAGUE_META[AL].flag+' '+LEAGUE_META[AL].name:AL;
+  var c=AT;
+  var ini=c.label.split(/\s+/).map(function(w){return w[0]||'';}).join('').slice(0,3).toUpperCase();
+  var box='width:64px;height:64px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);align-items:center;justify-content:center;flex-shrink:0;';
+  // The crest from teams.logo_url; the initials only if the image fails.
+  var crest=(c.logo
+      ?'<div style="display:flex;'+box+'"><img src="'+escH(c.logo)+'" alt="" width="48" height="48" style="object-fit:contain;" crossorigin="anonymous" referrerpolicy="no-referrer"'
+        +' onerror="this.parentNode.style.display=\'none\';this.parentNode.nextElementSibling.style.display=\'flex\';"></div>'
+        +'<div style="display:none;'+box+'">'
+      :'<div style="display:flex;'+box+'">')
+    +'<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--text)">'+escH(ini)+'</div></div>';
+  var meta=[c.city,c.venue,c.founded?'Est. '+c.founded:null].filter(Boolean).map(escH).join(' · ');
+  var chip='font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:var(--bg3);color:var(--muted)';
   var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;">'
-    +'<div style="height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>'
     +'<div style="padding:20px 22px;">'
     +'<div style="display:flex;align-items:center;gap:18px;margin-bottom:16px;">'
-    +'<div style="width:64px;height:64px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--text)">'+ini+'</div></div>'
-    +'<div style="flex:1"><div style="font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:1px;margin-bottom:4px">'+(info.fullName||t.name)+'</div>'
-    +'<div style="font-size:12px;color:var(--muted);margin-bottom:6px">'+[info.city,info.stadium,info.founded?'Est. '+info.founded:null].filter(Boolean).join(' · ')+'</div>'
+    +crest
+    +'<div style="flex:1;min-width:0;"><div style="font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:1px;margin-bottom:4px">'+escH(c.label)+'</div>'
+    +(meta?'<div style="font-size:12px;color:var(--muted);margin-bottom:6px">'+meta+'</div>':'')
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-    +'<div style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--muted)">'+lm+'</div>'
-    +(t.pos?'<div style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--muted)">'+t.pos+' in league</div>':'')
+    +'<div style="'+chip+'">'+escH(c.leagueName)+'</div>'
+    // One position source: the standings rank, the same number as the box below.
+    +(c.rank!=null?'<div style="'+chip+'">'+escH(ordN(c.rank))+' in league</div>':'')
     +'</div></div>'
-    +(info.instagram?'<a href="https://instagram.com/'+info.instagram.replace('@','')+'\" target="_blank" style="text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-size:18px">📸</div><div style="font-size:10px;color:var(--muted)">'+info.instagram+'</div></a>':'')
     +'</div>'
-    +(coach.name?'<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;margin-bottom:14px;"><div style="font-size:20px">👔</div><div><div style="font-size:13px;font-weight:600">'+coach.name+'</div><div style="font-size:11px;color:var(--muted)">Head Coach · Since '+coach.since+'</div></div></div>':'')
-    // The style badges and the "ScoutMind Weekly Verdict" are gone: both were
-    // computed from hardcoded leagues_data.js. These five numbers are real,
-    // from standings + team_season_stats, matched by name in loadRealStats().
-    // No match means no numbers, never someone else's.
-    +realStatsRow(t.name)
-    +'</div></div>'
-    +'<div class="ctabs">'
-    +'<button class="ctab'+(ATab==='polls'?' active':'')+'" onclick="switchTab(\'polls\',this)">🗳 Polls</button>'
-    +'<button class="ctab'+(ATab==='analyst'?' active':'')+'" onclick="switchTab(\'analyst\',this)">📊 Analyst Insights</button>'
-    +'<button class="ctab'+(ATab==='groups'?' active':'')+'" onclick="switchTab(\'groups\',this)">💬 Groups</button>'
-    +'<button class="ctab'+(ATab==='wishlist'?' active':'')+'" onclick="switchTab(\'wishlist\',this)">⭐ Transfer Wishlist</button>'
-    +'</div><div id="ctc"></div>';
+    // The coach only when the teams job has named one (teams.coach_name).
+    +(c.coach?'<div style="background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:14px;">'
+      +'<div style="font-size:11px;color:var(--muted)">Head coach</div><div style="font-size:13px;font-weight:600">'+escH(c.coach)+'</div></div>':'')
+    // Five real numbers from standings + team_season_stats, by team_id.
+    +realStatsRow(c)
+    +'<div style="margin-top:16px;"><a class="pfbtn" href="/?room='+Number(c.id)+'" style="display:inline-block;text-decoration:none;">Open the club room</a></div>'
+    +'</div></div>';
+  // Polls, Analyst Insights, Groups and Transfer Wishlist are HIDDEN, not
+  // deleted (16 Nov 2026): polls and the wishlist lived only in this browser's
+  // localStorage (rule 10), the analyst table is empty, and Groups was a
+  // signpost. Their code (doPolls, doAnalyst, doGroups, doWishlist, renderTab)
+  // and tables stay, to come back on Supabase later.
   document.getElementById('comm-main').innerHTML=html;
-  renderTab();
 }
 function switchTab(tab,el){ATab=tab;document.querySelectorAll('.ctab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');renderTab();}
 function renderTab(){
@@ -751,24 +724,37 @@ function ago(iso){
   if(s<86400)return Math.floor(s/3600)+'h ago';
   return Math.floor(s/86400)+'d ago';
 }
-var _mc=JSON.parse(localStorage.getItem('sm_main_club')||'null');
-var CLM={flamengo:'serie_a',palmeiras:'serie_a',corinthians:'serie_a',botafogo:'serie_a',fluminense:'serie_a',atletico_mg:'serie_a',gremio:'serie_a',internacional:'serie_a',sao_paulo:'serie_a',cruzeiro:'serie_a',bahia:'serie_a',athletico_pr:'serie_a',real_madrid:'la_liga',barcelona:'la_liga',atletico_madrid:'la_liga',man_city:'premier_league',arsenal:'premier_league',liverpool:'premier_league',man_utd:'premier_league',chelsea:'premier_league',bayern:'bundesliga',dortmund:'bundesliga',leverkusen:'bundesliga',psg:'ligue_1',juventus:'serie_a_it',inter:'serie_a_it',milan:'serie_a_it',napoli:'serie_a_it',river:'argentina',boca:'argentina'};
-function init(){
-  // Real numbers arrive asynchronously; re-render the club header once they do
-  // so the page never waits on the network to show anything.
-  loadRealStats().then(function(){ if(AT)try{renderTeamPage();}catch(e){} });
-  if(_mc){
-    var lg=CLM[_mc.id];
-    if(!lg&&_mc.league){var l=_mc.league.toLowerCase();if(l.includes('série a')||l.includes('serie a'))lg='serie_a';else if(l.includes('premier'))lg='premier_league';else if(l.includes('la liga'))lg='la_liga';else if(l.includes('bundesliga'))lg='bundesliga';else if(l.includes('ligue'))lg='ligue_1';else if(l.includes('serie a it'))lg='serie_a_it';else if(l.includes('argentina'))lg='argentina';}
-    lg=lg||'serie_a';
-    var sel=document.getElementById('comm-league');if(sel)sel.value=lg;
-    AL=lg;
-    var teams=TEAMS[lg]||[];
-    AT=teams.find(function(t){return t.id===_mc.id;})||teams.find(function(t){return t.name===_mc.name;})||null;
-    filterTeams();
-    if(AT)renderTeamPage();
+/**
+ * Which club to open: ?club=<teams.id> (the Clubs tab's "Open" button), else
+ * the reader's main club from the per-account cache. The app stores it under
+ * SMAuth's scoped key (sm_main_club:<user id>); the bare 'sm_main_club' this
+ * page used to read is deleted on every load, which is why it always showed
+ * "Choose Your Club".
+ */
+function startingClub(){
+  var want=Number(new URLSearchParams(window.location.search).get('club'))||null;
+  if(want&&CLUB_BY_ID[want])return CLUB_BY_ID[want];
+  var mc=null; try{ mc=SMAuth.getJSON('sm_main_club',null); }catch(e){}
+  if(mc&&mc.id&&CLUB_BY_ID[Number(mc.id)])return CLUB_BY_ID[Number(mc.id)];
+  return null;
+}
+async function init(){
+  try{ applyI18n(); }catch(e){}
+  document.getElementById('comm-list').innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">Loading clubs…</div>';
+  try{
+    await loadClubs();
+  }catch(e){
+    console.error('loadClubs:',e.message);
+    document.getElementById('comm-list').innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">Clubs could not load just now.</div>';
+    return;
+  }
+  AT=startingClub();
+  AL=AT?AT.league:(LEAGUES[0]&&LEAGUES[0].slug)||null;
+  fillLeagueSelect();
+  filterTeams();
+  if(AT){
+    renderTeamPage();
   }else{
-    filterTeams();
     document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div style="font-family:Bebas Neue,sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the list, or set your main club so it loads automatically every time.</div><button onclick="window.location.href=\'/\'" style="background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Set My Main Club</button></div>';
   }
 }

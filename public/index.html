@@ -3150,7 +3150,9 @@ function renderMyClubCard(){
     +statCell('Goals/g',s.goalsFor,null,s.lgGoalsFor)
     +statCell('Conceded/g',s.goalsAgainst,null,s.lgGoalsAgainst)
     +statCell('Pass',s.passPct,null,s.lgPassPct);
-  el.innerHTML='<div onclick="window.location.href=\'/community.html\'" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;">'
+  // The club goes in the URL: community.html opens it without relying on a
+  // cached main club (it used to land on "Choose Your Club").
+  el.innerHTML='<div onclick="window.location.href=\'/community.html?club='+Number(id)+'\'" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;">'
     +'<div style="padding:14px 16px;display:flex;align-items:center;gap:14px;">'
     +clubCrestById(id,44)
     +'<div style="flex:1;min-width:0;">'
@@ -3275,7 +3277,7 @@ function renderSidebarClubs(){
   el.innerHTML=ids.map(function(id){
     const c=CLUB_DATA.get(id);
     if(!c)return '';
-    return '<div style="display:flex;align-items:center;gap:8px;min-height:44px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="window.location.href=\'/community.html\'">'
+    return '<div style="display:flex;align-items:center;gap:8px;min-height:44px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="window.location.href=\'/community.html?club='+Number(id)+'\'">'
       +clubCrestById(id,24)
       +'<div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;color:var(--text);">'+sanitize(c.label)+'</div>'
       +'<div style="font-size:9px;color:var(--muted);">'+(id===main?'My club':'Following')+'</div></div>'
@@ -4107,7 +4109,7 @@ async function openChat(clubId){
     // Rule 21: this page deploys before 011 runs, and until it does there is no
     // club_chat_overview to read. Fall back to where these cards used to go
     // rather than dead-ending every club on the Clubs tab.
-    window.location.href='/community.html';
+    window.location.href='/community.html?club='+Number(clubId);
     return;
   }
   chatRoom={groupId:String(o.group_id),clubId:clubId,name:o.group_name};
@@ -5075,6 +5077,16 @@ function filterWeekly(league, btn) {
   // Chat summaries before the club cards paint, so the "Community chat" block
   // is there on the first render rather than appearing a beat later.
   try{ await loadChatOverview(); }catch(e){}
+  // /?room=<teams.id>: the club page's "Open the club room" link. Opens that
+  // room once the overview is in, then drops the parameter so a reload does
+  // not reopen it.
+  try{
+    const room=Number(new URLSearchParams(location.search).get('room'))||null;
+    if(room){
+      try{ const u=new URL(location.href); u.searchParams.delete('room'); history.replaceState(null,'',u.pathname+u.search+u.hash); }catch(e){}
+      if(CLUB_DATA.get(room)){ showPage('communities'); openChat(room); }
+    }
+  }catch(e){ console.error('room link:',e); }
   try{ renderSidebarYourClub(); }catch(e){}
   try{ renderMyClubCard(); renderClubsGrid(); }catch(e){}
   try{ await loadNews(false); }catch(e){ console.error('loadNews:',e); }

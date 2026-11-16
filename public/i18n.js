@@ -101,6 +101,9 @@
     'auth.sb.network': 'Could not reach ScoutMind. Check your connection and try again.',
     'auth.sb.session': 'That link has expired. Ask for a new one.',
 
+    // ── community.html (the club page) ──
+    'comm.sub': 'Pick a club to see its league position, this season\'s numbers and a link to its fan room.',
+
     // ── Home: the "pick your club" nudge ──
     'home.nudge': 'Pick your club to shape your feed.',
     'home.nudgeBtn': 'Choose',
@@ -525,6 +528,8 @@
     'auth.sb.samePass': 'Escolha uma senha diferente da atual.',
     'auth.sb.network': 'Não foi possível conectar ao ScoutMind. Verifique sua conexão e tente de novo.',
     'auth.sb.session': 'Esse link expirou. Peça um novo.',
+
+    'comm.sub': 'Escolha um clube para ver a posição na tabela, os números da temporada e o link para a sala da torcida.',
 
     'home.nudge': 'Escolha seu clube para montar o seu feed.',
     'home.nudgeBtn': 'Escolher',
