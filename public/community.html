@@ -9,7 +9,32 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#07090f">
+<meta name="theme-color" content="#0F141B">
+<!-- Theme (design spec v1.2), BEFORE any stylesheet so the first paint is
+     already right: data-theme on <html> from localStorage sm_theme
+     (system | light | dark), the same script as index.html. No saved choice =
+     DARK until Sequence 2 commit 4b, then it follows the device. -->
+<script>
+(function(){
+  var DEFAULT='dark';                                   // 4b: 'system'
+  var root=document.documentElement, mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+  function pref(){ try{ var s=localStorage.getItem('sm_theme'); return s==='light'||s==='dark'||s==='system'?s:DEFAULT; }catch(e){ return DEFAULT; } }
+  function resolve(p){ return p==='system'?(mq&&mq.matches?'dark':'light'):p; }
+  function apply(){
+    var t=resolve(pref());
+    root.setAttribute('data-theme',t);
+    var m=document.querySelector('meta[name="theme-color"]');
+    if(m) m.setAttribute('content',t==='dark'?'#0F141B':'#F6F7F9');
+  }
+  apply();
+  if(mq&&mq.addEventListener) mq.addEventListener('change',function(){ if(pref()==='system') apply(); });
+  window.smTheme={
+    get:pref,
+    set:function(p){ try{ localStorage.setItem('sm_theme',p); }catch(e){} apply(); try{ window.dispatchEvent(new CustomEvent('sm-theme',{detail:{theme:p}})); }catch(e){} }
+  };
+})();
+</script>
+<link rel="stylesheet" href="/theme.css">
 <!-- Installable app (Day 6): manifest, iOS home-screen tags, service worker. -->
 <link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -31,31 +56,35 @@
 <script src="/vendor/supabase-js-2.119.0.js"></script>
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <style>
-:root{--bg:#07090f;--bg2:#0d1117;--bg3:#141b27;--accent:#00e5a0;--accent2:#00b8ff;--warn:#ff6b35;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;--red:#ff4560;--yellow:#f5c842;--green:#00e5a0;}
+/* Sequence 2, commit B: this page is on the v1.2 tokens (/theme.css), light
+   and dark. The pre-Sequence-2 names stay as aliases, exactly as in
+   index.html, until commit 4b removes them. --accent is navy used as TEXT or a
+   line (light in dark mode); a FILL uses var(--navy) with var(--on-navy). No
+   literal colours in this page: tests/theme.test.js checks it. */
+:root{--bg:var(--ground);--bg2:var(--card);--bg3:var(--field);--accent:var(--navy-ink);--accent2:var(--navy-ink);--warn:var(--loss-ink);--text:var(--ink);--red:var(--loss-ink);--yellow:var(--ink);--green:var(--win);}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);text-decoration:none;}
-.logo span{color:var(--text);}
-.mnb{background:transparent;border:none;color:var(--muted);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;border-bottom:2px solid transparent;text-decoration:none;display:inline-block;}
-.mnb:hover{color:var(--text);}
-.mnb.active{color:var(--accent);border-bottom-color:var(--accent);}
+body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100;}
+/* Display headings: the number face in capitals (the old display face was
+   never self-hosted, so these were falling back to a system font). */
+.cm-display{font-family:var(--font-num);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;line-height:1.05;}
 .nav-right{display:flex;align-items:center;gap:10px;}
-.user-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--field);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
 .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
 .logout-btn:hover{border-color:var(--accent);color:var(--text);}
 /* ── GUEST MODE ── */
 .nav-about-link{font-size:12px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px;transition:color .2s;}
 .nav-about-link:hover{color:var(--text);}
-.signin-btn{background:var(--accent);color:#000;border:none;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
-.signin-btn:hover{background:#00ffb3;}
-.signin-sheet{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);}
+.signin-btn{background:var(--navy);color:var(--on-navy);border:none;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s;}
+.signin-btn:hover{background:var(--navy-hover);}
+.signin-sheet{position:fixed;inset:0;background:var(--scrim);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);}
 .signin-sheet-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:360px;width:100%;text-align:center;}
-.signin-sheet-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:8px;}
+.signin-sheet-title{font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:24px;letter-spacing:0.5px;margin-bottom:8px;}
 .signin-sheet-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
 .signin-sheet-actions{display:flex;flex-direction:column;gap:9px;}
-.signin-sheet-primary{background:var(--accent);color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.signin-sheet-secondary{background:transparent;color:var(--text);border:1px solid var(--border);padding:12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.signin-sheet-primary{background:var(--navy);color:var(--on-navy);border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.signin-sheet-primary:hover{background:var(--navy-hover);}
+.signin-sheet-secondary{background:transparent;color:var(--text);border:1px solid var(--border);padding:12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
 .signin-sheet-dismiss{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;padding:6px;margin-top:2px;}
 .live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
@@ -66,29 +95,28 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .ts-search{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;}
 .ts-search:focus{border-color:var(--accent);}
 .ts-team{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:2px;}
-.ts-team:hover{background:rgba(255,255,255,0.04);}
-.ts-team.active{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);}
+.ts-team:hover{background:var(--field);}
+/* Not --tint: the row carries muted text (the position), which never sits on --tint. */
+.ts-team.active{background:var(--field);border:1px solid var(--navy-ink);}
+.ts-team.active .ts-name{color:var(--navy-ink);font-weight:700;}
 .ts-name{font-size:13px;font-weight:500;}
 .ts-pos{font-size:10px;color:var(--muted);}
 .ts-scroll{max-height:calc(100vh - 280px);overflow-y:auto;}
 .league-select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px;font-family:inherit;outline:none;margin-bottom:8px;}
 .stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;}
 .sc{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
-.sv{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;}
+.sv{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:700;font-size:26px;line-height:1;}
 .sl{font-size:10px;color:var(--muted);margin-top:2px;}
-.tbadge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
-.bs{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--accent);}
-.bw{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.2);color:var(--warn);}
 .ctabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px;overflow-x:auto;}
-.ctab{padding:9px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;white-space:nowrap;}
-.ctab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.ctab{padding:9px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;white-space:nowrap;}
+.ctab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700;}
 .poll-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;}
 .poll-q{font-size:15px;font-weight:600;margin-bottom:4px;}
 .poll-m{font-size:11px;color:var(--muted);margin-bottom:14px;}
 .po{margin-bottom:8px;cursor:pointer;}
 .por{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
 .pol{font-size:13px;font-weight:500;}
-.pop{font-size:12px;font-family:'DM Mono',monospace;color:var(--accent);}
+.pop{font-size:15px;color:var(--accent);}
 .pbar{height:6px;background:var(--border);border-radius:3px;}
 .pbarfill{height:100%;border-radius:3px;background:var(--accent);transition:width .6s ease;}
 .pbarfill.v{background:var(--accent2);}
@@ -96,22 +124,24 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .pfi{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;}
 .pfinput{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:7px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;}
 .pfinput:focus{border-color:var(--accent);}
-.pfbtn{background:var(--accent);color:#000;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.pfbtn{background:var(--navy);color:var(--on-navy);border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.pfbtn:hover{background:var(--navy-hover);}
+.pfbtn:disabled{opacity:1;background:var(--border-strong);color:var(--ink);cursor:default;}
 .pfcancel{background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-left:8px;}
 .apost{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;}
-.apost:hover{border-color:rgba(0,229,160,0.2);}
-.aav{width:40px;height:40px;border-radius:50%;background:rgba(0,184,255,0.12);border:1.5px solid rgba(0,184,255,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent2);flex-shrink:0;}
-.acred{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,184,255,0.1);color:var(--accent2);border:1px solid rgba(0,184,255,0.2);}
-.rbtn{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;color:var(--text);}
-.rbtn:hover{border-color:var(--accent);background:rgba(0,229,160,0.06);}
+.apost:hover{border-color:var(--border-strong);}
+.aav{width:40px;height:40px;border-radius:50%;background:var(--tint);border:1.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--navy-ink);flex-shrink:0;}
+.acred{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--tint);color:var(--navy-ink);border:1px solid var(--border);}
+.rbtn{background:var(--field);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;transition:all .2s;font-family:inherit;color:var(--text);}
+.rbtn:hover{border-color:var(--accent);}
 /* The .gcard/.gicon/.gc* group-chat styles were removed with the overlay in
    package 4. Leaving them behind is how a stale .comment-toggle{width:100%}
    survived package 3 and silently stretched the new comment button. */
 .wcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
-.wrank{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--muted);min-width:36px;line-height:1;}
+.wrank{font-size:30px;color:var(--muted);min-width:36px;line-height:1;}
 .wrank.top{color:var(--accent);}
-.wvbtn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
-.wvbtn:hover,.wvbtn.voted{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+.wvbtn{background:transparent;border:1px solid var(--border-strong);color:var(--ink);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+.wvbtn:hover,.wvbtn.voted{border-color:var(--accent);color:var(--navy-ink);background:var(--tint);}
 .empty{text-align:center;padding:40px 20px;color:var(--muted);}
 /* Club page features (028): polls, wishlist, analyst insights. */
 #club-feat{margin-top:4px;}
@@ -177,20 +207,20 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 @media(max-width:768px){.two-col{grid-template-columns:minmax(0,1fr);}.team-selector{position:static;}.ts-scroll{max-height:200px;}.stats4{grid-template-columns:repeat(2,1fr);}nav{padding:12px 16px;}.page{padding:14px;}}
 /* ── B2: FIVE-TAB NAV — mobile-first (base = 375px, desktop at 900px) ──
    Copied verbatim from index.html (rule #5 — keep all three in sync). */
-.sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
-.sm-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent);text-decoration:none;flex-shrink:0;}
+.sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100;}
+.sm-logo{font-family:var(--font-num);font-weight:700;font-size:22px;letter-spacing:0.5px;color:var(--accent);text-decoration:none;flex-shrink:0;}
 .sm-logo span{color:var(--text);}
 .sm-nav-right{display:flex;align-items:center;gap:4px;margin-left:auto;}
 .sm-lang-slot{display:flex;align-items:center;}
 .sm-about{font-size:12px;color:var(--muted);text-decoration:none;padding:0 8px;min-height:44px;display:flex;align-items:center;}
 .sm-about:hover{color:var(--text);}
 .sm-tabs{display:flex;}
-.sm-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;line-height:1.2;cursor:pointer;text-decoration:none;transition:color .2s;}
+.sm-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:transparent;border:none;color:var(--muted);font-family:inherit;font-size:10px;font-weight:600;line-height:1.2;cursor:pointer;text-decoration:none;transition:color .2s;}
 .sm-tab-icon{font-size:17px;line-height:1;}
 .sm-tab:hover{color:var(--text);}
 .sm-tab.active{color:var(--accent);}
 .sm-tabs-top{display:none;}
-.sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(7,9,15,0.98);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
+.sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:var(--card);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
 body{padding-bottom:64px;}
 @media(min-width:900px){
   .sm-nav{padding:10px 28px;gap:18px;}
@@ -228,7 +258,7 @@ body{padding-bottom:64px;}
         <span class="live-dot"></span>
         <span id="nav-name" style="font-size:12px;font-weight:500"></span>
       </div>
-      <div id="nav-av" onclick="window.location.href='/?page=profile'" style="width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,0.15);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0;">?</div>
+      <div id="nav-av" onclick="window.location.href='/?page=profile'" style="width:32px;height:32px;border-radius:50%;background:var(--tint);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0;">?</div>
       <button class="logout-btn" onclick="logout()">Sign out</button>
     </div>
     <button id="nav-signin" class="signin-btn" style="display:none;" onclick="window.location.href='/auth.html'">Sign in</button>
@@ -258,7 +288,7 @@ body{padding-bottom:64px;}
 </div>
 <div class="page">
   <div style="margin-bottom:20px">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:4px">Communities</div>
+    <div class="cm-display" style="font-size:32px;margin-bottom:4px">Communities</div>
     <div style="font-size:13px;color:var(--muted)" data-i18n="comm.sub">Pick a club to see its league position, this season's numbers and a link to its fan room.</div>
   </div>
   <div class="two-col">
@@ -275,17 +305,17 @@ body{padding-bottom:64px;}
     <div id="comm-main">
       <div class="empty">
         <div style="font-size:40px;margin-bottom:16px;opacity:0.3">👥</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;opacity:.35;margin-bottom:6px">Select Your Club</div>
+        <div class="cm-display" style="font-size:22px;margin-bottom:6px">Select Your Club</div>
         <div style="font-size:13px">Pick a team from the list to see their community</div>
       </div>
     </div>
   </div>
 </div>
 <!-- BADGE APPLICATION MODAL -->
-<div id="badge-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
-  <div style="background:var(--bg2);border:1px solid rgba(0,184,255,0.25);border-radius:16px;width:min(540px,95vw);max-height:90vh;overflow-y:auto;padding:28px;">
+<div id="badge-modal" style="display:none;position:fixed;inset:0;background:var(--scrim);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:min(540px,95vw);max-height:90vh;overflow-y:auto;padding:28px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Apply for Analyst Badge</div>
+      <div class="cm-display" style="font-size:26px;">Apply for Analyst Badge</div>
       <button onclick="closeBadgeModal()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;">✕</button>
     </div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;">The Analyst badge is <strong style="color:var(--accent)">free</strong> and reserved for verified football professionals. We review every application manually and get back within 48 hours.</div>
@@ -308,20 +338,20 @@ body{padding-bottom:64px;}
       <div class="pfi">Organisation / Affiliation</div>
       <input id="ba-org" class="pfinput" placeholder="e.g. ESPN Brasil, Flamengo FC, Independent">
       <div class="pfi" style="margin-top:4px;">Brief bio <span style="font-weight:400;color:var(--muted)">(tell us about your experience)</span></div>
-      <textarea id="ba-bio" placeholder="e.g. I've covered Série A for ESPN Brasil for 8 years..." style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;min-height:90px;margin-bottom:18px;"></textarea>
-      <div style="background:rgba(0,184,255,0.06);border:1px solid rgba(0,184,255,0.15);border-radius:8px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:1.8;">
+      <textarea id="ba-bio" placeholder="e.g. I've covered Série A for ESPN Brasil for 8 years..." style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;font-family:inherit;outline:none;resize:vertical;min-height:90px;margin-bottom:18px;"></textarea>
+      <div style="background:var(--field);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:1.8;">
         ✓ Completely free — no payment required<br>
         ✓ Post insights in any team's community<br>
         ✓ Your name + verified credential badge on every post<br>
         ✓ Applications reviewed within 48 hours
       </div>
-      <button onclick="submitBadgeApp()" style="width:100%;background:var(--accent2);color:#000;border:none;padding:13px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;">SUBMIT APPLICATION</button>
+      <button class="pfbtn" onclick="submitBadgeApp()" style="width:100%;padding:13px;font-size:14px;letter-spacing:1px;">SUBMIT APPLICATION</button>
     </div>
     <div id="badge-success" style="display:none;text-align:center;padding:20px 0;">
       <div style="font-size:48px;margin-bottom:16px;">✅</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Application Submitted!</div>
+      <div class="cm-display" style="font-size:24px;margin-bottom:8px;">Application Submitted!</div>
       <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;">We'll review it and get back to you within 48 hours. Once approved, you'll be able to post analyst insights across all team communities.</div>
-      <button onclick="closeBadgeModal()" style="background:var(--accent);color:#000;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Done</button>
+      <button class="pfbtn" onclick="closeBadgeModal()">Done</button>
     </div>
   </div>
 </div>
@@ -477,7 +507,7 @@ function realStatsRow(r){
   var cell=function(label,val,avg){
     if(val==null||val==='')return '';
     return '<div class="sc"><div class="sv">'+val+'</div><div class="sl">'+label+'</div>'
-      +(avg!=null?'<div class="sl" style="margin-top:2px;font-family:\'DM Mono\',monospace;">lg avg '+avg+'</div>':'')
+      +(avg!=null?'<div class="sl" style="margin-top:2px;">lg avg <span class="num">'+avg+'</span></div>':'')
       +'</div>';
   };
   var ord=function(n){ if(n==null)return null; var s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
@@ -534,14 +564,14 @@ function renderTeamPage(){
         +' onerror="this.parentNode.style.display=\'none\';this.parentNode.nextElementSibling.style.display=\'flex\';"></div>'
         +'<div style="display:none;'+box+'">'
       :'<div style="display:flex;'+box+'">')
-    +'<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--text)">'+escH(ini)+'</div></div>';
+    +'<div class="cm-display" style="font-size:24px;color:var(--text)">'+escH(ini)+'</div></div>';
   var meta=[c.city,c.venue,c.founded?'Est. '+c.founded:null].filter(Boolean).map(escH).join(' · ');
   var chip='font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:var(--bg3);color:var(--muted)';
   var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;">'
     +'<div style="padding:20px 22px;">'
     +'<div style="display:flex;align-items:center;gap:18px;margin-bottom:16px;">'
     +crest
-    +'<div style="flex:1;min-width:0;"><div style="font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:1px;margin-bottom:4px">'+escH(c.label)+'</div>'
+    +'<div style="flex:1;min-width:0;"><div class="cm-display" style="font-size:28px;margin-bottom:4px">'+escH(c.label)+'</div>'
     +(meta?'<div style="font-size:12px;color:var(--muted);margin-bottom:6px">'+meta+'</div>':'')
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
     +'<div style="'+chip+'">'+escH(c.leagueName)+'</div>'
@@ -932,7 +962,7 @@ async function init(){
   if(AT){
     renderTeamPage();
   }else{
-    document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div style="font-family:Bebas Neue,sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the list, or set your main club so it loads automatically every time.</div><button onclick="window.location.href=\'/\'" style="background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Set My Main Club</button></div>';
+    document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div class="cm-display" style="font-size:24px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the list, or set your main club so it loads automatically every time.</div><button class="pfbtn" onclick="window.location.href=\'/\'">Set My Main Club</button></div>';
   }
 }
 function openBadgeModal(){

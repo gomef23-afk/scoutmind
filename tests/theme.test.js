@@ -64,6 +64,7 @@ const PAIRS = [
   // Not a pair: muted on --tint is 4.26:1 in light. --tint never carries muted
   // text (the club picker's chosen row moved to --card for this reason).
   ['navy-ink', 'card', 'navy text, links, active tab'], ['navy-ink', 'ground', 'navy text on the page'], ['navy-ink', 'tint', 'active chip text'],
+  ['navy-ink', 'field', 'the chosen club in the club list'], ['ink', 'border-strong', 'a primary button while it works'],
   ['on-navy', 'navy', 'white on the band / primary button'], ['gold', 'navy', 'countdown, captain C'], ['live-on-band', 'navy', 'LIVE on the band'],
   ['on-chip', 'chip-win', 'W chip'], ['on-chip', 'chip-loss', 'L chip'], ['on-chip', 'chip-draw', 'D chip'],
   ['loss-ink', 'card', 'LIVE / errors on cards'], ['win', 'card', 'positive text'],
@@ -83,7 +84,7 @@ for (const [fg, bg, use] of PAIRS) {
 }
 
 // ── Pages: the no-flash script, then theme.css, then the page's own CSS ──
-const CONVERTED = ['public/index.html'];   // the static pages join in Sequence 2 commit 4b
+const CONVERTED = ['public/index.html', 'public/community.html'];   // the static pages join in Sequence 2 commit 4b
 for (const page of CONVERTED) {
   const html = read(page);
   const s = html.indexOf("localStorage.getItem('sm_theme')");
@@ -100,6 +101,13 @@ for (const page of CONVERTED) {
 }
 const dflt = /var DEFAULT='(\w+)'/.exec(read('public/index.html'));
 check('rollout: no saved choice = dark until commit 4b (then system)', !!dflt && ['dark', 'system'].includes(dflt[1]), dflt && dflt[1]);
+const dfltC = /var DEFAULT='(\w+)'/.exec(read('public/community.html'));
+check('community.html has the same default as index.html', !!dfltC && !!dflt && dfltC[1] === dflt[1], dfltC && dfltC[1]);
+const comm = read('public/community.html');
+check('community.html: primary buttons are navy with on-navy text', /\.pfbtn\{background:var\(--navy\);color:var\(--on-navy\)/.test(comm) && /\.signin-btn\{background:var\(--navy\);color:var\(--on-navy\)/.test(comm));
+check('community.html: numbers use the number face', /\.sv\{font-family:var\(--font-num\)/.test(comm) && /class="wrank num/.test(comm) && /class="pop num"/.test(comm) && /lg avg <span class="num">/.test(comm));
+check('community.html: no Bebas Neue or DM Mono left (neither is self-hosted)', !/Bebas|DM Mono/.test(comm));
+check('community.html: muted text never sits on --tint (the chosen club row is --field)', /\.ts-team\.active\{background:var\(--field\)/.test(comm));
 check('pwa.js banner uses the tokens (old palette only as fallbacks)', /background:var\(--card,#0d1117\)/.test(read('public/pwa.js')) && /background:var\(--navy,/.test(read('public/pwa.js')));
 check('the service worker precaches theme.css', /'\/theme\.css'/.test(read('public/sw.js')));
 

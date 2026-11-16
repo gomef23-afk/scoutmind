@@ -19,7 +19,8 @@ const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
 const raw = read('supabase/migrations/028_club_features.sql');
 // Comments out, so the VERIFY block and prose cannot satisfy a check.
-const sql = raw.split('\n').map((l) => l.replace(/--.*$/, '')).join('\n');
+// [^\r\n]*, not .*$: the files are CRLF, and `.*$` stops short of the \r.
+const sql = raw.split('\n').map((l) => l.replace(/--[^\r\n]*/, '')).join('\n');
 const fnBody = (name) => { const m = new RegExp('create or replace function public\\.' + name + '\\([\\s\\S]*?\\n\\$\\$;').exec(sql); return m ? m[0] : ''; };
 const TABLES = ['polls', 'poll_votes', 'wishlist_items', 'wishlist_votes', 'analyst_posts', 'analyst_post_reactions'];
 
@@ -127,7 +128,7 @@ check('a second report is answered kindly, not as an error', /e\.code==='23505'\
 check('the badge application box stays, without user_id (rule 7)', /openBadgeModal\(\)/.test(fn('doAnalyst')) && !/user_id/.test(fn('submitBadgeApp')));
 
 // ── 8. Club rooms: writing is for members (028b) ──
-const rb = read('supabase/migrations/028b_room_members.sql').split('\n').map((l) => l.replace(/--.*$/, '')).join('\n');
+const rb = read('supabase/migrations/028b_room_members.sql').split('\n').map((l) => l.replace(/--[^\r\n]*/, '')).join('\n');
 const guard = (/create or replace function public\.group_message_guard\(\)[\s\S]*?\n\$\$;/.exec(rb) || [''])[0];
 check('028b: one transaction, and it refuses to run before 028', /^\s*begin;/m.test(rb) && /^\s*commit;/m.test(rb) && /to_regprocedure\('public\.is_club_member\(bigint\)'\) is null/.test(rb));
 check('028b: the room guard checks membership after the room is open', /if not found or not room\.active[\s\S]*?if room\.club_id is null or not public\.is_club_member\(room\.club_id\) then\s+raise exception 'Follow this club to chat in its room\.'/.test(guard));
