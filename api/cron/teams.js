@@ -7,20 +7,25 @@
 //                                start of each cycle. Weekly on cron-job.org.
 //
 // The coaches pass is paced like players.js (rule 16): it stops STARTING work
-// at TIME_BUDGET_MS and saves where it got to in ingest_runs.cursor
+// at TIME_BUDGET_MS (RUN_BUDGET_MS, api/_lib/cron.js) and saves where it got to in ingest_runs.cursor
 // ({ after_team_id, cycle_started_at }); the next call resumes from there. When
 // every team is done the cursor says { complete_at } and calls within
 // REFRESH_DAYS do nothing (0 requests), so the job can fire several times on
 // the same morning and only the first few spend anything.
 //
-// Upserts only (rule 13). A team whose coach the API cannot name keeps the
-// coach_name it had.
+// No deletes (rule 13). The coach is written with a PATCH on the existing row
+// (id=eq.<teams.id>), never an upsert: an upsert is INSERT ... ON CONFLICT, and
+// Postgres checks NOT NULL on the row it would insert before it looks for the
+// conflict, so a row carrying only api_team_id + coach_name fails with 23502
+// (teams.name is NOT NULL) even though the team exists. A PATCH cannot create
+// a row. Teams themselves are created only by refreshTeams, with every
+// required column.
 
 import { createClient } from '../_lib/apifootball.js';
-import { activeLeagues, upsert, select } from '../_lib/supabase.js';
-import { withCron } from '../_lib/cron.js';
+import { activeLeagues, upsert, update, select } from '../_lib/supabase.js';
+import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 
-export const TIME_BUDGET_MS = 20_000;   // stop starting work at 20 s; cron-job.org gives up at 30 s
+export const TIME_BUDGET_MS = RUN_BUDGET_MS;   // 20 s: cron-job.org gives up at 30 s
 export const REFRESH_DAYS = 6;          // a finished cycle waits this long before the next
 const nowIso = () => new Date(Date.now()).toISOString();   // one clock for every stamp and age
 
@@ -29,7 +34,8 @@ async function refreshTeams(api, leagues) {
   let rows = 0;
   for (const lg of leagues) {
     const json = await api.get('teams', { league: lg.api_league_id, season: lg.current_season });
-    const teamRows = (json.response || []).map((r) => ({
+    // teams.name is NOT NULL: an entry without one would fail the whole batch.
+    const teamRows = (json.response || []).filter((r) => r.team?.id && r.team?.name).map((r) => ({
       api_team_id: r.team.id,
       league_id: lg.id,
       slug: slugify(r.team.name),
@@ -100,9 +106,9 @@ export default withCron('teams', async ({ req }) => {
     // spell (assistants and a duplicated record). Pick the open spell at this
     // club with the latest start date.
     // No open spell at this club = no current coach we can name: store null, so
-    // the club page shows no coach rather than a former one (an update, rule 13).
+    // the club page shows no coach rather than a former one.
     const current = pickCurrentCoach(c.response || [], t.api_team_id);
-    await upsert('teams', [{ api_team_id: t.api_team_id, coach_name: (current && current.name) || null, updated_at: new Date().toISOString() }], 'api_team_id');
+    await update('teams', `id=eq.${Number(t.id)}`, { coach_name: (current && current.name) || null, updated_at: nowIso() });
     if (current && current.name) coachRows++;
     cursor = { ...cursor, after_team_id: t.id };
   }

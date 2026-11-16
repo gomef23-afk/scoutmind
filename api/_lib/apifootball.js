@@ -10,6 +10,12 @@ const BASE = 'https://v3.football.api-sports.io';
 
 export class QuotaExhausted extends Error {}
 
+// One call may not hang the run (api/_lib/cron.js RUN_LIMIT_MS): a request
+// is abandoned after REQUEST_TIMEOUT_MS, and a 429 is retried once, after
+// RETRY_429_MS. Worst case for one get(): 2 x 3 s + 1 s.
+export const REQUEST_TIMEOUT_MS = 3_000;
+const RETRY_429_MS = 1_000;
+
 export function createClient() {
   const key = process.env.API_FOOTBALL_KEY;
   if (!key) throw new Error('API_FOOTBALL_KEY is not set');
@@ -33,11 +39,18 @@ export function createClient() {
     state.lastUrl = url;
 
     let res;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      res = await fetch(url, { headers: { 'x-apisports-key': key } });
-      // 429 = rate limited (per-minute ceiling). Back off and retry.
-      if (res.status !== 429) break;
-      await sleep(1500 * (attempt + 1));
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        res = await fetch(url, { headers: { 'x-apisports-key': key }, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+      } catch (e) {
+        if (e?.name === 'TimeoutError' || e?.name === 'AbortError') {
+          throw new Error(`API-Football timeout after ${REQUEST_TIMEOUT_MS} ms on /${path}`);
+        }
+        throw e;
+      }
+      // 429 = rate limited (per-minute ceiling). Back off once and retry.
+      if (res.status !== 429 || attempt === 1) break;
+      await sleep(RETRY_429_MS);
     }
 
     state.used++;

@@ -8,14 +8,14 @@
 // body, and never store or hotlink images. Sources marked headline_only get
 // no snippet stored at all.
 
-import { withCron } from '../_lib/cron.js';
+import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 import { select, upsert, upsertReturning, update } from '../_lib/supabase.js';
 import { parseFeed } from '../_lib/rss.js';
 import { buildIndex, tagText, clipSummary, normalise } from '../_lib/tagger.js';
 import { isFootball } from '../_lib/football-filter.js';
 
 const FETCH_TIMEOUT_MS = 8000;
-const WALL_CLOCK_BUDGET_MS = 20000; // rule 16: cron-job.org gives up at 30s
+const WALL_CLOCK_BUDGET_MS = RUN_BUDGET_MS; // rule 16: cron-job.org gives up at 30s
 const USER_AGENT = 'ScoutMindBot/1.0 (+https://scoutmind.app)';
 
 // Category markers, matched against normalised (lowercased, unaccented) text.
@@ -84,7 +84,7 @@ export default withCron('news', async ({ req }) => {
   const [sources, teams, aliasRows] = await Promise.all([
     select(
       'news_sources',
-      'select=id,slug,name,url,lang,country,headline_only,exclude_patterns,consecutive_failures&active=is.true&order=slug'
+      'select=id,slug,name,url,lang,country,headline_only,exclude_patterns,consecutive_failures&active=is.true&order=last_fetched_at.asc.nullsfirst,slug'
     ),
     select('teams', 'select=id,api_team_id,name,league_id'),
     select('team_aliases', 'select=team_id,alias,kind,langs,short_ok'),

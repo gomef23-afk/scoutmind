@@ -20,11 +20,11 @@
 
 import { createClient, cmToNumber } from '../_lib/apifootball.js';
 import { select, upsert, activeLeagues } from '../_lib/supabase.js';
-import { withCron } from '../_lib/cron.js';
+import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 import { bioRow } from '../_lib/players.js';
 
 const MAX_PAGES = 15;
-const TIME_BUDGET_MS = 20_000;
+const TIME_BUDGET_MS = RUN_BUDGET_MS;   // 20 s: cron-job.org gives up at 30 s
 const REFRESH_DAYS = 7;
 
 export default withCron('players', async () => {
@@ -75,7 +75,9 @@ export default withCron('players', async () => {
     // each, or the upsert fails with "cannot affect row a second time".
     const byId = new Map();
     for (const entry of json.response || []) {
-      if (!entry.player?.id) continue;
+      // players.name is NOT NULL, and the upsert's INSERT is checked before
+      // its conflict: one nameless entry would fail the page with 23502.
+      if (!entry.player?.id || !entry.player?.name) continue;
       byId.set(entry.player.id, bioRow(entry, cmToNumber));
     }
     rows += await upsert('players', [...byId.values()], 'api_player_id');

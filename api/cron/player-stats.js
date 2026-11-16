@@ -20,7 +20,7 @@
 
 import { createClient } from '../_lib/apifootball.js';
 import { select, upsert, update, rpc, activeLeagues, teamIdMap, count } from '../_lib/supabase.js';
-import { withCron } from '../_lib/cron.js';
+import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 import { parseFixture } from '../_lib/players.js';
 import {
   scorePick, TIER_MULTIPLIER, UNRANKED_MULTIPLIER, CONTRARIAN, CAPTAIN_MODE, MAX_MULTIPLIER,
@@ -30,11 +30,11 @@ const FINISHED = ['FT', 'AET', 'PEN'];
 
 const IDS_PER_REQUEST = 20;     // the API's limit for /fixtures?ids=
 const MAX_FIXTURES = 60;        // 3 requests per run
-const TIME_BUDGET_MS = 20_000;  // stop STARTING requests at 20s; target <25s
+const TIME_BUDGET_MS = RUN_BUDGET_MS;  // stop STARTING requests at 20s; target <25s
 const MAX_ATTEMPTS = 3;
 const MIN_AGE_HOURS = 3;        // player stats are not published at the whistle
 const RETRY_AFTER_HOURS = [2, 24];
-const GAME_START_BY_MS = 21_000; // the Scout Game steps start only if there is time left
+const GAME_START_BY_MS = RUN_BUDGET_MS + 1_000; // 21 s: the Scout Game steps start only if there is time left
 
 export default withCron('player-stats', async ({ req }) => {
   const api = createClient();

@@ -23,14 +23,14 @@
 //
 // Rule 13: nothing here deletes. Rule 16: bounded by wall clock (~20 s).
 
-import { withCron } from '../_lib/cron.js';
+import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 import { rpc, select } from '../_lib/supabase.js';
 import { reminderEmail, sendBatch } from '../_lib/email.js';
 import { createHash } from 'node:crypto';
 
 const KINDS = ['round_2h', 'round_24h'];
 const BATCH = 100;
-const BUDGET_MS = 20000;
+const BUDGET_MS = RUN_BUDGET_MS;   // 20 s: cron-job.org gives up at 30 s
 
 /** Candidate rows -> one fan per user, rounds soonest first. */
 export function groupByFan(rows) {

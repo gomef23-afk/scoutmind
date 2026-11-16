@@ -5,7 +5,12 @@
 // Runs the real job against a fake Supabase and a fake API-Football with a
 // fake clock: it stops starting work at the time budget (rule 16), saves a
 // cursor and resumes from it, finishes the cycle and then waits (0 requests),
-// never names a former coach, and only upserts (rule 13). No dependencies.
+// never names a former coach, and never deletes (rule 13).
+//
+// The fake enforces teams.name NOT NULL on every POST the way Postgres does an
+// upsert (INSERT ... ON CONFLICT checks NOT NULL on the inserted row first):
+// a partial row answers 400 / 23502, which is the production failure of
+// 16 Nov 2026 (coach upserted as { api_team_id, coach_name }). No dependencies.
 
 let passed = 0;
 const failures = [];
@@ -21,7 +26,8 @@ const job = await import('../api/cron/teams.js');
 // ── A fake world ──
 const TEAMS = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, api_team_id: 1000 + i }));
 function world() {
-  return { runs: [], coach: new Map(), apiCalls: [], methods: new Set(), clockStep: 0, now: 1_800_000_000_000 };
+  return { runs: [], coach: new Map(), apiCalls: [], methods: new Set(), clockStep: 0, now: 1_800_000_000_000,
+    teamPosts: [], teamPatches: [], rejected: [] };
 }
 let W = world();
 const realNow = Date.now;
@@ -33,9 +39,13 @@ globalThis.fetch = async (url, opt = {}) => {
   W.methods.add(opt.method || 'GET');
   if (u.host === 'v3.football.api-sports.io') {
     W.apiCalls.push(u.pathname + u.search);
-    W.now += W.clockStep;                              // each API call "takes" clockStep ms
+    if (u.pathname === '/coachs') W.now += W.clockStep;  // each coach call "takes" clockStep ms
     const hdr = { 'x-ratelimit-requests-remaining': '7000', 'x-ratelimit-requests-limit': '7500' };
-    if (u.pathname === '/teams') return json({ errors: [], response: [] }, 200, hdr);
+    if (u.pathname === '/teams') return json({ errors: [], response: [
+      { team: { id: 1000, name: 'Club 1000', code: 'C10', country: 'Brazil', founded: 1904, logo: 'https://x/1000.png' },
+        venue: { name: 'Stadium', city: 'Rio', capacity: 40000 } },
+      { team: { id: 1999, name: null }, venue: {} },     // nameless: must be skipped, not sent
+    ] }, 200, hdr);
     if (u.pathname === '/coachs') {
       const team = Number(u.searchParams.get('team'));
       // Team 1003 has only a former coach (spell ended): must NOT be named.
@@ -56,7 +66,23 @@ globalThis.fetch = async (url, opt = {}) => {
     return json(ok.length ? [{ cursor: ok[0].cursor }] : []);
   }
   if (p === '/rest/v1/leagues') return json([{ id: 1, api_league_id: 71, slug: 'serie_a', name: 'Série A', current_season: 2026 }]);
-  if (p === '/rest/v1/teams' && opt.method === 'POST') { for (const r of body) if ('coach_name' in r) W.coach.set(r.api_team_id, r.coach_name); return new Response(null, { status: 201 }); }
+  if (p === '/rest/v1/teams' && opt.method === 'POST') {
+    // Postgres: the INSERT half of an upsert is checked for NOT NULL first.
+    const bad = body.find((r) => r.api_team_id == null || r.name == null);
+    if (bad) {
+      W.rejected.push(bad);
+      return json({ code: '23502', details: `Failing row contains (${JSON.stringify(bad)})`, message: 'null value in column "name" of relation "teams" violates not-null constraint' }, 400);
+    }
+    W.teamPosts.push(...body);
+    return new Response(null, { status: 201 });
+  }
+  if (p === '/rest/v1/teams' && opt.method === 'PATCH') {
+    const id = Number((u.searchParams.get('id') || '').replace('eq.', ''));
+    const t = TEAMS.find((x) => x.id === id);
+    W.teamPatches.push({ filter: u.search, body });
+    if (t && 'coach_name' in body) W.coach.set(t.api_team_id, body.coach_name);
+    return new Response(null, { status: 204 });
+  }
   if (p === '/rest/v1/teams') {
     const after = Number((u.searchParams.get('id') || 'gt.0').replace('gt.', ''));
     return json(TEAMS.filter((t) => t.id > after));
@@ -72,7 +98,7 @@ async function run(query = '?coaches=1') {
 
 // ── 1. A run that hits the clock stops and saves where it got to ──
 W = world();
-W.clockStep = 6000;          // each coach call "takes" 6 s, so ~3 fit in the 20 s budget
+W.clockStep = 7000;          // each coach call "takes" 7 s, so 3 start inside the 20 s budget
 let r = await run();
 const first = W.apiCalls.filter((c) => c.startsWith('/coachs')).length;
 check('the job answers 200', r.code === 200, JSON.stringify(r.body));
@@ -113,14 +139,29 @@ const m = W.apiCalls.length;
 r = await run('');
 check('teams-only run: teams requests, no coach requests, no cursor', W.apiCalls.slice(m).every((c) => c.startsWith('/teams')) && r.body.cursor == null, JSON.stringify(r.body));
 
-// ── 7. Rule 13 and auth ──
+// ── 7. No partial rows: the 23502 of 16 Nov 2026 ──
+check('no request was rejected for a missing NOT NULL column', W.rejected.length === 0, JSON.stringify(W.rejected[0]));
+check('the fake really enforces NOT NULL (a partial upsert answers 400 / 23502)', await (async () => {
+  const res = await fetch('https://db.test/rest/v1/teams?on_conflict=api_team_id', { method: 'POST', body: JSON.stringify([{ api_team_id: 1000, coach_name: 'X' }]) });
+  W.rejected.pop();
+  return res.status === 400 && (await res.json()).code === '23502';
+})());
+check('every teams row the job inserts carries api_team_id and name', W.teamPosts.length > 0 && W.teamPosts.every((r) => r.api_team_id != null && r.name), JSON.stringify(W.teamPosts.find((r) => !r.name)));
+check('an API team without a name is skipped, not sent', !W.teamPosts.some((r) => r.api_team_id === 1999));
+check('the coach is written by PATCH on the existing row (id=eq.), never by upsert',
+  W.teamPatches.length >= TEAMS.length && W.teamPatches.every((x) => /^\?id=eq\.\d+$/.test(x.filter))
+  && W.teamPosts.every((r) => !('coach_name' in r)), JSON.stringify(W.teamPatches[0]));
+check('the coach PATCH touches only coach_name and updated_at',
+  W.teamPatches.every((x) => Object.keys(x.body).sort().join(',') === 'coach_name,updated_at'), JSON.stringify(W.teamPatches[0]?.body));
+
+// ── 8. Rule 13 and auth ──
 check('nothing is deleted (no DELETE request)', !W.methods.has('DELETE'), [...W.methods].join(','));
 {
   const res = { code: 0, status(c) { this.code = c; return this; }, json() {} };
   await job.default({ headers: {}, url: '/api/cron/teams?coaches=1' }, res);
   check('no cron secret, 401', res.code === 401);
 }
-check('the time budget is under cron-job.org\'s 30 s (rule 16)', job.TIME_BUDGET_MS <= 20_000);
+check('the time budget is the shared 20 s window (cron-job.org gives up at 30 s)', job.TIME_BUDGET_MS === 20_000);
 
 Date.now = realNow;
 for (const f of failures) console.log(`  FAIL  ${f}`);

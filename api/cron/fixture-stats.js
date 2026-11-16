@@ -16,12 +16,12 @@
 
 import { createClient, pctToNumber, statsArrayToObject } from '../_lib/apifootball.js';
 import { select, upsert, update, activeLeagues, teamIdMap, count } from '../_lib/supabase.js';
-import { withCron } from '../_lib/cron.js';
+import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 
 const FINISHED = ['FT', 'AET', 'PEN'];
 
 const MAX_FIXTURES = 40;        // ~160 req/min, well under the 300/min ceiling
-const TIME_BUDGET_MS = 20_000;  // stop STARTING work at 20s; target <25s total
+const TIME_BUDGET_MS = RUN_BUDGET_MS;  // stop STARTING work at 20s; target <25s total
 const MAX_ATTEMPTS = 3;
 const MIN_AGE_HOURS = 3;        // stats are not published the instant a match ends
 const RETRY_AFTER_HOURS = [2, 24]; // backoff after attempt 1, then attempt 2

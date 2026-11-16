@@ -9,6 +9,16 @@ import { QuotaExhausted } from './apifootball.js';
 
 import { timingSafeEqual } from 'node:crypto';
 
+// Fluid Compute is on (Hobby, 300 s function limit), so the real cap is
+// cron-job.org, which stops waiting at RUN_LIMIT_MS. A run it gives up on
+// leaves no reliable result, and a resumable job whose cursor is not written
+// redoes the same slice. Every job therefore stops STARTING work at
+// RUN_BUDGET_MS, which leaves room for one request already in flight
+// (API-Football calls time out at REQUEST_TIMEOUT_MS in apifootball.js) and
+// the closing writes. tests/cron-budget.test.js pins both numbers.
+export const RUN_LIMIT_MS = 30_000;
+export const RUN_BUDGET_MS = 20_000;
+
 function safeEqual(a, b) {
   const ab = Buffer.from(String(a));
   const bb = Buffer.from(String(b));
