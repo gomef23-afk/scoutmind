@@ -90,7 +90,7 @@ const CONVERTED = ['public/index.html', 'public/community.html'];   // the stati
 for (const page of CONVERTED) {
   const html = read(page);
   const s = html.indexOf("localStorage.getItem('sm_theme')");
-  const link = html.indexOf('<link rel="stylesheet" href="/theme.css">');
+  const link = html.search(/<link rel="stylesheet" href="\/theme\.css(\?v=[0-9a-f]+)?">/);
   const style = html.indexOf('<style>');
   check(`${page}: no-flash script reads sm_theme and sets data-theme`, s > -1 && /setAttribute\('data-theme',t\)/.test(html));
   check(`${page}: script, then theme.css, then the page's <style>`, s > -1 && link > s && style > link, `${s} ${link} ${style}`);

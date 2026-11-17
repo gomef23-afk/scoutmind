@@ -60,7 +60,16 @@ check('Scout band: round, the countdown in gold, my season rank', /sgBand\(\[[\s
 check('Scout band: the season rank is mine, read from game_competition_standings', /game_competition_standings\?select=rank,total&league_id=eq\.'\+r\.league_id\+'&season=eq\.'\+r\.season\+'&user_id=eq\.'\+me/.test(fn('sgLoadSeasonRank')));
 check('Scout band: a played round shows my points and my rank, dashes until scored', /sg\.band\.points[\s\S]*?total==null\?'—'[\s\S]*?sg\.band\.rank/.test(fn('sgPlayedBand')));
 check('the countdown ticks in the band\'s compact form', /el\.classList\.contains\('hb-big'\)\?HomeBand\.countdownText/.test(idx));
-check('tier chip: "T3 ×1.10" from the ladder; unranked shows its multiplier', /'T'\+Number\(tier\)\+' '/.test(fn('sgTierChip')) && /c\.unranked_multiplier/.test(fn('sgTierFor')) && /lad\[String\(p\.tier\)\]/.test(fn('sgTierFor')));
+check('tier chip: a word and the multiplier from the ladder ("Steady ×1.10"), no "T3"',
+  /sanitize\(w\)\+' '\+sanitize\(m\)/.test(fn('sgTierChip')) && !/'T'\+Number/.test(idx) && /c\.unranked_multiplier/.test(fn('sgTierFor')) && /lad\[String\(p\.tier\)\]/.test(fn('sgTierFor')));
+const i18 = read('public/i18n.js');
+check('five tier words + "few minutes", in both languages', ['sg.tier.1', 'sg.tier.2', 'sg.tier.3', 'sg.tier.4', 'sg.tier.5', 'sg.tier.none', 'sg.tierExplain']
+  .every((k) => (i18.match(new RegExp(`'${k.replace(/\./g, '\\.')}':`, 'g')) || []).length === 2));
+check('one line above the player list explains the words, with the real multipliers', /sgTierExplain\(\)/.test(fn('sgRenderFilters')) && /lad\['5'\][\s\S]*?lad\['1'\]/.test(fn('sgTierExplain')));
+check('Matches: league chips (All + the competitions) above the day picker, remembered on this device',
+  /<div id="matches-league-chips"[\s\S]*?<div id="matches-date-strip"/.test(idx) && /localStorage\.setItem\('sm_matches_league'/.test(fn('setMatchLeague'))
+  && /MATCH_LEAGUE_NAMES\['\s*\+\s*i\s*\+\s*'\]/.test(fn('renderMatchDay')) && /dated = dated\.filter\(m => \(m\.compName \|\| m\.comp\) === pickedLeague\)/.test(fn('renderMatchDay')));
+check('Matches: one 760px column, centred', /\.matches-col\{max-width:760px;margin:0 auto;/.test(idx) && /<div class="matches-col">/.test(idx));
 check('my five: position, photo, name, opponent line, tier chip', /sg-slot-pos[\s\S]*?sgPhoto\(p,30\)[\s\S]*?sgFixtureLine\(p\)[\s\S]*?sgTierFor\(p\)/.test(fn('sgRenderSlots')));
 check('played picks: the locked tier chip and points in the number face', /sgTierChip\(p\.locked_tier,p\.locked_multiplier\)/.test(fn('sgRenderMine')) && /\.sg-pick-pts\{font-family:var\(--font-num\)/.test(idx));
 check('no "average" anywhere in the Scout Game', !/average/i.test(fn('sgRenderSlots') + fn('sgRenderList') + fn('sgRenderMine')));

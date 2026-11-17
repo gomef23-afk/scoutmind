@@ -58,7 +58,7 @@ check('the subtitle is the new sentence, translated', /data-i18n="comm\.sub"/.te
 const i18n = read('public/i18n.js');
 check('comm.sub exists in en and pt-BR', (i18n.match(/'comm\.sub':/g) || []).length === 2);
 check('community.html loads i18n.js and still loads leagues_data.js before init (rule 8)',
-  html.indexOf('<script src="/i18n.js"></script>') > -1 && html.indexOf('<script src="/leagues_data.js"></script>') > -1
+  /<script src="\/i18n\.js(\?v=[0-9a-f]+)?"><\/script>/.test(html) && /<script src="\/leagues_data\.js(\?v=[0-9a-f]+)?"><\/script>/.test(html)
   && /if\(typeof TEAMS!=='undefined'\)\{init\(\);\}else\{window\.addEventListener\('load',init\);\}/.test(html));
 check('names and places from the database are escaped before innerHTML', /function escH\(s\)/.test(js) && /escH\(c\.leagueName\)/.test(page));
 

@@ -270,6 +270,17 @@
     'news.r.mind_blown': 'No way',
 
     // ── Scout band, match panel events, Matches rows (Sequence 2 commit 4a) ──
+    // Tier words (17 Nov): 5 is the obvious pick (pays least), 1 the least rated.
+    'sg.tier.5': 'Star',
+    'sg.tier.4': 'Proven',
+    'sg.tier.3': 'Steady',
+    'sg.tier.2': 'Underrated',
+    'sg.tier.1': 'Hidden gem',
+    'sg.tier.none': 'Few minutes',
+    'sg.tierExplain': 'The less obvious the pick, the bigger the multiplier: from {top} to {bottom}.',
+    'fx.all': 'All',
+    'fx.title': 'Matches',
+    'fx.sub': 'Pick a day. Your clubs come first, then every league. Times are your local time.',
     'sg.rfx.n.one': '{n} match',
     'sg.rfx.n.other': '{n} matches',
     'sg.rfx.range': '{a} to {b}',
@@ -903,6 +914,16 @@
     'news.r.fire': 'Fogo',
     'news.r.clap': 'Respeito',
     'news.r.mind_blown': 'Não acredito',
+    'sg.tier.5': 'Craque',
+    'sg.tier.4': 'Confiável',
+    'sg.tier.3': 'Regular',
+    'sg.tier.2': 'Subestimado',
+    'sg.tier.1': 'Joia escondida',
+    'sg.tier.none': 'Poucos minutos',
+    'sg.tierExplain': 'Quanto menos óbvia a escolha, maior o multiplicador: de {top} a {bottom}.',
+    'fx.all': 'Todas',
+    'fx.title': 'Jogos',
+    'fx.sub': 'Escolha um dia. Seus clubes primeiro, depois todas as ligas. Horários no seu fuso.',
     'sg.rfx.n.one': '{n} jogo',
     'sg.rfx.n.other': '{n} jogos',
     'sg.rfx.range': '{a} a {b}',
@@ -1381,12 +1402,16 @@
     if (!vars) return s;
     return s.replace(/\{(\w+)\}/g, function (m, k) { return vars[k] == null ? m : String(vars[k]); });
   }
-  /** The string for `key` in the current language, else English, else the key. */
+  /**
+   * The string for `key` in the current language, else English, else ''.
+   * Never the key itself: a page newer than this file (a stale cache) must not
+   * print "sg.rfx.hint" on screen (17 Nov 2026). The miss is logged instead.
+   */
   function t(key, vars) {
     var d = I18N[smLang()] || I18N.en;
     var s = d[key];
     if (s == null) s = I18N.en[key];
-    if (s == null) { if (root.console) console.warn('i18n: no string for ' + key); s = key; }
+    if (s == null) { if (root.console) console.warn('i18n: no string for ' + key); return ''; }
     return fill(s, vars);
   }
   /** Plural: key.one / key.other, chosen by the language's own rule. {n} is filled. */

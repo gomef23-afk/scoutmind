@@ -68,7 +68,7 @@ check('no pixels → null', NC.pickColour(null) === null && NC.pickColour(new Ui
 // ── The page ──
 const idx = read('public/index.html');
 const theme = read('public/theme.css');
-check('index.html loads news-card.js', /<script src="\/news-card\.js"><\/script>/.test(idx));
+check('index.html loads news-card.js', /<script src="\/news-card\.js(\?v=[0-9a-f]+)?"><\/script>/.test(idx));
 check('the service worker precaches news-card.js', /'\/news-card\.js'/.test(read('public/sw.js')));
 check('rule 12: Trending, News, For you and search all go through renderFeedItem',
   (idx.match(/\.map\(renderFeedItem\)|renderFeedItem\(n,1\)/g) || []).length >= 4 && /function renderFeedItem\(item,pos\)\{\s*switch\(item\.type\)/.test(idx));

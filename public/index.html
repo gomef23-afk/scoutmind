@@ -46,7 +46,7 @@
   };
 })();
 </script>
-<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/theme.css?v=5ba9b60d1c">
 <!-- Installable app (Day 6): manifest, iOS home-screen tags, service worker + install hint. -->
 <link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -55,7 +55,7 @@
      bar (the Home band's navy runs to the top edge; other tabs pad the nav). -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ScoutMind">
-<script src="/pwa.js" defer></script>
+<script src="/pwa.js?v=91655c8750" defer></script>
 <meta property="og:site_name" content="ScoutMind">
 <meta property="og:type" content="website">
 <meta property="og:title" content="ScoutMind — Your club. Everything around it.">
@@ -71,13 +71,13 @@
      script or font host; the service worker can cache both. -->
 <script src="/vendor/supabase-js-2.119.0.js"></script>
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
-<script src="/club_names.js"></script>
+<script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js"></script>
+<script src="/i18n.js?v=36c14984d0"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
-<script src="/home-band.js"></script>
+<script src="/home-band.js?v=d008ee2323"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
-<script src="/news-card.js"></script>
+<script src="/news-card.js?v=b8aff44b00"></script>
 <style>
 /* The pre-Sequence-2 names, kept as aliases of the v1.2 tokens in /theme.css
    so every existing rule keeps working in light and dark. Removed in commit
@@ -728,8 +728,9 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .fx-mid small.live{color:var(--loss-ink);}
 .md-league{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:18px 0 4px;padding:0 8px;display:flex;align-items:center;gap:6px;}
 .md-league:first-child{margin-top:4px;}
-/* A laptop: the rows stay readable, names near the time, not 1000px apart. */
-#matchday-content{max-width:760px;}
+/* The Matches page: one 760px column, centred; rows stay readable. */
+.matches-col{max-width:760px;margin:0 auto;padding:24px 16px;}
+#matches-league-chips{margin-bottom:12px;}
 /* The match panel's band (spec v1.2 §7): crests on white discs, the score in
    the 44px number face, the status line. LIVE in --live-on-band. */
 .mo-band{background:var(--navy);color:var(--on-navy);border-radius:12px;padding:14px 12px 16px;}
@@ -950,7 +951,7 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 <body>
 
 <!-- SESSION HYDRATION — no auth guard. Guests get the full read-only app. -->
-<script src="/sm_auth.js"></script>
+<script src="/sm_auth.js?v=2a7db71965"></script>
 <script>
 const _supa = window.supabase.createClient('https://kdhbpzooyjxcglbxbuya.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw');
 // One token source for the whole page. Everything authenticated goes through
@@ -1161,11 +1162,17 @@ if(!_cu){
 
 <!-- MATCHES PAGE — promoted from the old "Match day" feed tab in B2 -->
 <div class="page" id="page-matches">
-<div style="max-width:1100px;margin:0 auto;padding:24px 16px;">
-  <div style="margin-bottom:18px;">
-    <div class="feed-title">Matches</div>
-    <div style="font-size:13px;color:var(--muted);">Pick a day. Your clubs come first, then every league. Times are your local time.</div>
+<!-- 760px and centred (17 Nov): the title, the league chips, the day picker
+     and the rows share one column in the middle of a laptop screen. -->
+<div class="matches-col">
+  <div style="margin-bottom:14px;">
+    <div class="feed-title" data-i18n="fx.title">Matches</div>
+    <div style="font-size:13px;color:var(--muted);" data-i18n="fx.sub">Pick a day. Your clubs come first, then every league. Times are your local time.</div>
   </div>
+  <!-- League filter (17 Nov): All + our seven leagues, above the day picker,
+       remembered on this device (localStorage sm_matches_league, a UI
+       preference, rule 10). -->
+  <div id="matches-league-chips" class="chip-scroll" role="group" aria-label="League"></div>
   <!-- Yesterday, today, tomorrow and the next four days. Rendered by
        renderMatchDay() from the fixtures it already loads. -->
   <div id="matches-date-strip" class="date-strip"></div>
@@ -3159,14 +3166,39 @@ function renderMatchDay() {
       });
   }
 
-  const dated = (LIVE_MATCHES || []).filter(m => m.kickoff);
+  let dated = (LIVE_MATCHES || []).filter(m => m.kickoff);
+  const chipsEl = document.getElementById('matches-league-chips');
   if (!dated.length) {
+    if (chipsEl) chipsEl.innerHTML = '';
     if (strip) strip.innerHTML = '';
     el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">'
       + (LIVE_MATCHES && !LIVE_MATCHES.length && !MATCHES_ERR ? sanitize(t('fx.loading'))
         : MATCHES_ERR ? sanitize(t('fx.loadFail')) : sanitize(t('fx.none'))) + '</div>';
     return;
   }
+
+  // ── the league chips (17 Nov): All + every competition we hold fixtures for,
+  // in the page's usual order. The choice is remembered on this device. ──
+  // My clubs' competitions first (as the rows below), then the usual order.
+  const tierOf = new Map(), withMine = new Set(), myIds = new Set(myClubIds());
+  for (const m of dated) {
+    const k = m.compName || m.comp;
+    if (!tierOf.has(k)) tierOf.set(k, m.compTier);
+    if (m.teamIds && m.teamIds.some(id => myIds.has(id))) withMine.add(k);
+  }
+  const leagueNames = [...tierOf.keys()].sort((a, b) => (withMine.has(b) - withMine.has(a))
+    || (tierOf.get(a) - tierOf.get(b)) || a.localeCompare(b));
+  const pickedLeague = MATCH_LEAGUE && leagueNames.indexOf(MATCH_LEAGUE) >= 0 ? MATCH_LEAGUE : null;
+  MATCH_LEAGUE_NAMES = leagueNames;
+  if (chipsEl) {
+    // By index into MATCH_LEAGUE_NAMES: a name never goes inside an onclick string.
+    const chip = (i, label) => { const name = i < 0 ? null : leagueNames[i];
+      return '<button class="filter-btn' + (name === pickedLeague ? ' active' : '') + '"'
+        + ' aria-pressed="' + (name === pickedLeague) + '" onclick="setMatchLeague(' + (i < 0 ? 'null' : 'MATCH_LEAGUE_NAMES[' + i + ']') + ')">'
+        + sanitize(label) + '</button>'; };
+    chipsEl.innerHTML = chip(-1, t('fx.all')) + leagueNames.map((n, i) => chip(i, n)).join('');
+  }
+  if (pickedLeague) dated = dated.filter(m => (m.compName || m.comp) === pickedLeague);
 
   // ── the strip ──
   const days = stripDays();
@@ -3240,6 +3272,16 @@ function renderMatchDay() {
 }
 
 let MATCHES_ERR = false;
+
+// The Matches tab's league filter: a UI preference on this device (rule 10).
+let MATCH_LEAGUE = null, MATCH_LEAGUE_NAMES = [];
+try { MATCH_LEAGUE = localStorage.getItem('sm_matches_league') || null; } catch (e) {}
+function setMatchLeague(name){
+  MATCH_LEAGUE = name || null;
+  try { if (MATCH_LEAGUE) localStorage.setItem('sm_matches_league', MATCH_LEAGUE); else localStorage.removeItem('sm_matches_league'); } catch (e) {}
+  MATCH_DAY = null;      // open on the first day this league plays
+  renderMatchDay();
+}
 
 /**
  * One fixture as a compact row (4a): home crest + name, the kick-off time or
@@ -5570,13 +5612,23 @@ function sgMult(m){ return m==null||isNaN(Number(m))?'×—':'×'+Number(m).toLo
 function sgCount(n){ return Number(n||0).toLocaleString(smLocale()); }
 
 /**
- * The tier as a chip (spec v1.2 §7): "T3 ×1.10", from the ladder the lock step
- * uses; an unranked player shows his multiplier alone, the level in the title.
+ * The tier as a chip: a word and the multiplier, "Steady ×1.10" (17 Nov: "T5
+ * ×1.00" was unreadable). Tier 5 is the obvious pick and pays least, tier 1
+ * the least rated and pays most (api/_lib/scout-game.js); below the minutes
+ * threshold, "Few minutes". The multiplier comes from the ladder the lock
+ * step uses, never from this file.
  */
+function sgTierWord(tier){ return tier==null||!(tier>=1&&tier<=5)?t('sg.tier.none'):t('sg.tier.'+Number(tier)); }
 function sgTierChip(tier,mult){
-  const m=sgMult(mult);
-  const label=tier==null?t('sg.notEnough'):t('sg.level',{n:tier});
-  return '<span class="sg-tier" title="'+sanitize(label+' · '+m)+'">'+(tier==null?'':'T'+Number(tier)+' ')+sanitize(m)+'</span>';
+  const m=sgMult(mult), w=sgTierWord(tier);
+  return '<span class="sg-tier" title="'+sanitize(w+' · '+m)+'">'+sanitize(w)+' '+sanitize(m)+'</span>';
+}
+/** One line above the player list: what the words mean, with the real multipliers. */
+function sgTierExplain(){
+  const c=SG.config||{}, lad=c.ladder||null;
+  if(!lad||lad['5']==null||lad['1']==null) return '';
+  return '<div class="sg-note sg-tier-explain">'+sanitize(t('sg.tierExplain',{
+    top:sgTierWord(5)+' '+sgMult(lad['5']),bottom:sgTierWord(1)+' '+sgMult(lad['1'])}))+'</div>';
 }
 function sgTierFor(p){
   const c=SG.config||{}, lad=c.ladder||null;
@@ -5983,6 +6035,7 @@ function sgRenderFilters(){
   const pos=['','G','D','M','F'].map(k=>'<button class="sg-chip'+(SG.filter.pos===k?' active':'')+'" onclick="sgFilterPos(\''+k+'\')">'
     +(k?sgPosLabel(k):t('sg.all'))+'</button>').join('');
   el.innerHTML='<div class="sg-section">'+t('sg.players')+'</div>'
+    +sgTierExplain()
     +'<input type="search" class="sg-search" id="sg-q" placeholder="'+sanitize(t('sg.searchPlayers'))+'" value="'+sanitize(SG.filter.q)+'" oninput="sgFilterQ(this.value)">'
     +'<div class="sg-filter-row"><div class="sg-chips sg-chips-tight">'+pos+'</div>'
     +'<select class="sg-club" onchange="sgFilterClub(this.value)"><option value="">'+t('sg.allClubs')+'</option>'

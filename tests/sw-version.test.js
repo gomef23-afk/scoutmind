@@ -8,7 +8,7 @@
 // must not (Supabase, /api/). No dependencies.
 
 import { readFileSync, existsSync } from 'node:fs';
-import { precacheList, computeVersion, storedVersion } from '../scripts/bump-sw.mjs';
+import { precacheList, computeVersion, storedVersion, staleStamps, VERSIONED } from '../scripts/bump-sw.mjs';
 
 let passed = 0;
 const failures = [];
@@ -47,7 +47,7 @@ check('manifest icons exist', mf.icons.every((i) => existsSync(new URL(i.src.sli
 for (const page of ['index.html', 'about.html', 'community.html', 'news.html', 'auth.html', 'terms.html', 'privacy.html']) {
   const html = readFileSync(new URL(page, pub), 'utf8');
   check(`${page}: manifest + pwa.js + apple tags`,
-    html.includes('<link rel="manifest" href="/manifest.json">') && html.includes('<script src="/pwa.js" defer></script>')
+    html.includes('<link rel="manifest" href="/manifest.json">') && /<script src="\/pwa\.js(\?v=[0-9a-f]+)?" defer><\/script>/.test(html)
       && html.includes('apple-mobile-web-app-capable'));
   check(`${page}: no third-party font or script host`, !/fonts\.googleapis\.com|cdn\.jsdelivr\.net/.test(html));
 }
@@ -61,6 +61,15 @@ check('Matches: the offline check comes before the fixtures load',
 check('Home and Scout use the offline empty state',
   (idx.match(/isOffline\(\)\?offlineHtml\(\)/g) || []).length >= 6);
 check('offline strings exist in both languages', /'off\.title':/.test(readFileSync(new URL('i18n.js', pub), 'utf8')));
+
+// ── Versioned assets (17 Nov 2026): a page and its scripts update together ──
+const stale = staleStamps();
+check('every page asks for the shared scripts and styles with their current ?v= hash (run: node scripts/bump-sw.mjs)',
+  stale.length === 0, stale.slice(0, 5).map((x) => `${x.page} ${x.name} ${x.found}`).join('; '));
+check('i18n.js is one of the versioned assets', VERSIONED.includes('i18n.js'));
+const swText = readFileSync(new URL('sw.js', pub), 'utf8');
+check('sw.js answers a ?v= request only from an exact cache match, else the network',
+  /if \(new URL\(req\.url\)\.searchParams\.has\('v'\)\) \{\s*const exact = await cache\.match\(req\);\s*if \(exact\) return exact;\s*try \{\s*const res = await fetch\(req\);/.test(swText));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);

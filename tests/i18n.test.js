@@ -133,7 +133,7 @@ check('a saved choice beats the browser', o.smLang() === 'en');
 p.setLang('en');
 check('setLang saves and switches', p.smLang() === 'en' && p.localStorage.getItem('sm_lang') === 'en');
 check('placeholders fill', w.t('sg.closesIn', { t: '2h 5m' }) === 'Picks close in 2h 5m');
-check('an unknown key falls back to the key', w.t('no.such.key') === 'no.such.key');
+check('an unknown key prints nothing, never its code', w.t('no.such.key') === '' && w.tn('no.such.plural', 3) === '');
 check('English plurals', w.tn('sg.members', 1) === '1 member' && w.tn('sg.members', 12) === '12 members');
 const pp = load({ nav: 'pt-BR' });
 check('Portuguese plurals', pp.tn('sg.members', 1) === '1 membro' && pp.tn('sg.members', 3) === '3 membros');

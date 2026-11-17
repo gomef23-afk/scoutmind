@@ -14,7 +14,7 @@
 // changed and VERSION did not (CLAUDE.md rule 24), so an old shell can never
 // outlive a deploy: a new VERSION is a new cache, and activate drops the old.
 
-const VERSION = 'sm-ff771788e0aa';
+const VERSION = 'sm-6f0cd0d5be6b';
 const SHELL = 'scoutmind-shell-' + VERSION;
 const IMAGES = 'scoutmind-img-v1';
 const IMAGE_MAX = 300;
@@ -115,9 +115,27 @@ async function pageNetworkFirst(req) {
   }
 }
 
-/** Shell files: answer from the cache, refresh it in the background. */
+/**
+ * Shell files: answer from the cache, refresh it in the background.
+ *
+ * A versioned request (/i18n.js?v=<hash>, written into the pages by
+ * scripts/bump-sw.mjs) is answered only by an EXACT cache match, else from the
+ * network: a new page never runs with the previous copy of its scripts (raw
+ * i18n keys on screen, 17 Nov 2026). Offline, any cached copy will do.
+ */
 async function shellStaleWhileRevalidate(req) {
   const cache = await caches.open(SHELL);
+  if (new URL(req.url).searchParams.has('v')) {
+    const exact = await cache.match(req);
+    if (exact) return exact;
+    try {
+      const res = await fetch(req);
+      if (res.ok && res.type === 'basic') cache.put(req, res.clone());
+      return res;
+    } catch (e) {
+      return (await cache.match(req, { ignoreSearch: true })) || Response.error();
+    }
+  }
   const hit = await cache.match(req, { ignoreSearch: true });
   const fresh = fetch(req).then((res) => {
     if (res.ok && res.type === 'basic') cache.put(req, res.clone());
