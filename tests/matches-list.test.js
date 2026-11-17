@@ -116,10 +116,10 @@ MX.leagues = [ENG, BRA, ITA, { name: 'Liga Profesional', slug: 'argentina', coun
 eq('chips: my clubs\' leagues first, then the usual order', ctx.mxChipOrder().map((l) => l.slug), ['serie_a', 'premier_league', 'serie_a_it', 'argentina']);
 const chips = fn('mxRenderChips');
 check('chips: by index, never a name in onclick; labelled with the country', /onclick="mxSetLeague\('\+i\+'\)"/.test(chips) && /LeagueNames\.label\(l\)/.test(chips) && /chip\(-1,t\('fx\.all'\),!MX\.league\)/.test(chips));
-check('chips come from the leagues table, not from the loaded fixtures', /apiGet\('leagues\?select=id,slug,name,country&active=is\.true&order=id\.asc'\)/.test(fn('mxStart')));
+check('chips come from the leagues table, not from the loaded fixtures', /apiGet\('leagues\?select=id,slug,name,country,current_season&active=is\.true&order=id\.asc'\)/.test(fn('mxStart')));
 check('the choice is the slug; a name saved before 4b-2 still finds its league', /mxSavePref\(l\?l\.slug:null\)/.test(fn('mxSetLeague'))
   && /const p=mxPref\(\), known=p&&LeagueNames\.find\(p\);/.test(fn('mxStart')) && /l\.slug===p\|\|\(known&&l\.slug===known\.slug\)/.test(fn('mxStart')));
-check('a new league chosen reloads the list from today', /mxRenderChips\(\);\s*mxStart\(\);/.test(fn('mxSetLeague')));
+check('a new league chosen reloads the list from today', /mxRenderChips\(\);\s*mxRenderView\(\);\s*mxStart\(\);/.test(fn('mxSetLeague')));
 
 // ── Scrolling, anchoring, Today ──
 const more = fn('mxMore');
