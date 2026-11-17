@@ -73,7 +73,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=89ac499876"></script>
+<script src="/i18n.js?v=fac005badc"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=d008ee2323"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -82,7 +82,7 @@
      row (also on community.html), line icons. -->
 <script src="/league-names.js?v=cdddf511b0"></script>
 <script src="/fx-row.js?v=2a5a74a713"></script>
-<script src="/icons.js?v=23521045ee"></script>
+<script src="/icons.js?v=9b84b2e441"></script>
 <style>
 /* The pre-Sequence-2 names, kept as aliases of the v1.2 tokens in /theme.css
    so every existing rule keeps working in light and dark. Removed in commit
@@ -137,9 +137,15 @@ hr{border:none;border-top:1px solid var(--border);}
 /* Tab lists */
 .sm-tabs{display:flex;}
 .sm-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;line-height:1.2;cursor:pointer;text-decoration:none;transition:color .2s;}
-.sm-tab-icon{font-size:17px;line-height:1;}
+.sm-tab-icon{display:flex;line-height:1;}
+.sm-tab-icon svg{width:22px;height:22px;}
 .sm-tab:hover{color:var(--text);}
 .sm-tab.active{color:var(--accent);}
+/* Spec v1.2 §3: the active tab is a navy icon with a 3px navy bar above it. */
+.sm-tabs-bottom .sm-tab.active{box-shadow:inset 0 3px 0 var(--navy-ink);}
+.nav-prefs{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:none;border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;}
+.nav-prefs:hover{color:var(--ink);}
+.nav-prefs svg{width:22px;height:22px;}
 .sm-tabs-top{display:none;}
 .sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:var(--card);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
 /* Clearance so the fixed bar never covers page content on mobile, including
@@ -155,7 +161,7 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
   body{padding-bottom:0;}
   .sm-tabs-top{display:flex;gap:2px;margin-left:18px;}
   .sm-tabs-top .sm-tab{flex:0 0 auto;flex-direction:row;gap:7px;min-height:38px;font-size:12px;font-weight:500;padding:0 14px;border-bottom:2px solid transparent;}
-  .sm-tabs-top .sm-tab-icon{font-size:14px;}
+  .sm-tabs-top .sm-tab-icon svg{width:18px;height:18px;}
   .sm-tabs-top .sm-tab.active{border-bottom-color:var(--accent);}
   .sm-curr{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px;}
 }
@@ -718,6 +724,19 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .md-league:first-child{margin-top:4px;}
 /* The Matches page: one 760px column, centred; rows stay readable. */
 .matches-col{max-width:760px;margin:0 auto;padding:24px 16px;}
+/* Rooms (4b-4): one row per room of my clubs; the whole row opens it. */
+.room-row{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:10px 8px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--ink);font:inherit;text-align:left;cursor:pointer;}
+.room-row:hover{background:var(--field);}
+.room-main{display:block;flex:1;min-width:0;}
+.room-last,.room-meta{display:block;}
+.room-name{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;}
+.room-name .sg-tag{font-weight:600;}
+.room-last{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;}
+.room-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+.room-go{flex-shrink:0;color:var(--muted);}
+.rooms-more{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:48px;margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--navy-ink);font:inherit;font-size:14px;font-weight:700;cursor:pointer;}
+.rooms-empty{padding:24px 8px;font-size:14px;color:var(--muted);line-height:1.6;}
+.rooms-empty .rooms-more{margin-top:12px;}
 /* Matches (4b-2): the title scrolls away; the league bar sticks under the
    nav, each day's heading under the bar (--mx-nav / --mx-top, measured in JS). */
 .mx-head{margin-bottom:10px;}
@@ -1035,18 +1054,21 @@ if(!_cu){
 <!-- ── B2 NAV — replicated in community.html and about.html (rule #5) ── -->
 <nav class="sm-nav">
   <a class="sm-logo" href="/">Scout<span>Mind</span></a>
+  <!-- NAV TABS (4b-4, spec v1.2 §4): Home · Clubs · Scout · Matches · Rooms,
+       Tabler line icons (MIT) inline, never emoji. Profile opens from the
+       avatar (or the profile icon for guests). Same five on every page (rule 5). -->
   <div class="sm-tabs sm-tabs-top">
-    <button class="sm-tab" data-tab="feed" onclick="showPage('feed')"><span class="sm-tab-icon">🏠</span>Home</button>
-    <button class="sm-tab" data-tab="communities" onclick="showPage('communities')"><span class="sm-tab-icon">⚽</span>Clubs</button>
-    <button class="sm-tab" data-tab="scout" onclick="showPage('scout')"><span class="sm-tab-icon">🔍</span>Scout</button>
-    <button class="sm-tab" data-tab="matches" onclick="showPage('matches')"><span class="sm-tab-icon">📅</span>Matches</button>
-    <button class="sm-tab" data-tab="profile" onclick="showPage('profile')"><span class="sm-tab-icon">👤</span>Profile</button>
+    <button class="sm-tab" data-tab="feed" onclick="showPage('feed')"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span><span data-i18n="nav.home">Home</span></button>
+    <button class="sm-tab" data-tab="communities" onclick="showPage('communities')"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/></svg></span><span data-i18n="nav.clubs">Clubs</span></button>
+    <button class="sm-tab" data-tab="scout" onclick="showPage('scout')"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M12 12m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/></svg></span><span data-i18n="nav.scout">Scout</span></button>
+    <button class="sm-tab" data-tab="matches" onclick="showPage('matches')"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span><span data-i18n="nav.matches">Matches</span></button>
+    <button class="sm-tab" data-tab="rooms" onclick="showPage('rooms')"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg></span><span data-i18n="nav.rooms">Rooms</span></button>
   </div>
   <div class="sm-nav-right">
     <!-- Currency switcher removed: market values were dropped in R0, so it changed nothing. -->
     <!-- B4 fills this with the language switcher. -->
     <div class="sm-lang-slot" id="lang-slot"></div>
-    <a href="/about.html" class="sm-about">About</a>
+    <a href="/about.html" class="sm-about" data-i18n="nav.about">About</a>
     <!-- Logged-in: name + avatar + sign out. Toggled by renderAuthUi(). -->
     <div id="nav-user" style="display:none;align-items:center;gap:10px;">
       <div class="user-badge" onclick="showPage('profile')" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
@@ -1054,19 +1076,20 @@ if(!_cu){
         <span id="nav-name" style="font-size:12px;font-weight:500"></span>
       </div>
       <div id="nav-avatar" onclick="showPage('profile')" style="width:32px;height:32px;border-radius:50%;background:var(--tint);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s;flex-shrink:0;" onmouseover="this.style.borderColor='var(--navy-hover)'" onmouseout="this.style.borderColor='var(--accent)'">?</div>
-      <button class="logout-btn" onclick="logout()">Sign out</button>
+      <button class="logout-btn" onclick="logout()" data-i18n="nav.signout">Sign out</button>
     </div>
-    <!-- Guest: sign in. -->
-    <button id="nav-signin" class="signin-btn" style="display:none;" onclick="window.location.href='/auth.html'">Sign in</button>
+    <!-- Guest: Profile & settings (language, theme), then sign in. -->
+    <button id="nav-prefs" class="nav-prefs" type="button" style="display:none;" onclick="showPage('profile')" aria-label="Profile and settings" data-i18n-aria="nav.profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg></button>
+    <button id="nav-signin" class="signin-btn" style="display:none;" onclick="window.location.href='/auth.html'" data-i18n="nav.signin">Sign in</button>
   </div>
 </nav>
 <!-- Mobile bottom bar — same five tabs, keyed by data-tab. -->
 <div class="sm-tabs sm-tabs-bottom">
-  <button class="sm-tab" data-tab="feed" onclick="showPage('feed')"><span class="sm-tab-icon">🏠</span>Home</button>
-  <button class="sm-tab" data-tab="communities" onclick="showPage('communities')"><span class="sm-tab-icon">⚽</span>Clubs</button>
-  <button class="sm-tab" data-tab="scout" onclick="showPage('scout')"><span class="sm-tab-icon">🔍</span>Scout</button>
-  <button class="sm-tab" data-tab="matches" onclick="showPage('matches')"><span class="sm-tab-icon">📅</span>Matches</button>
-  <button class="sm-tab" data-tab="profile" onclick="showPage('profile')"><span class="sm-tab-icon">👤</span>Profile</button>
+  <button class="sm-tab" data-tab="feed" onclick="showPage('feed')"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span><span data-i18n="nav.home">Home</span></button>
+  <button class="sm-tab" data-tab="communities" onclick="showPage('communities')"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/></svg></span><span data-i18n="nav.clubs">Clubs</span></button>
+  <button class="sm-tab" data-tab="scout" onclick="showPage('scout')"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M12 12m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/></svg></span><span data-i18n="nav.scout">Scout</span></button>
+  <button class="sm-tab" data-tab="matches" onclick="showPage('matches')"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span><span data-i18n="nav.matches">Matches</span></button>
+  <button class="sm-tab" data-tab="rooms" onclick="showPage('rooms')"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg></span><span data-i18n="nav.rooms">Rooms</span></button>
 </div>
 
 <div class="page active" id="page-feed">
@@ -1243,6 +1266,19 @@ if(!_cu){
 </div>
 </div>
 
+<!-- ROOMS (4b-4, spec v1.2 §4): the rooms of my clubs (main club first), from
+     club_chat_overview, and a link to find more on the Clubs tab. No online
+     counts: we have no presence tracking (spec §8). renderRooms() fills it. -->
+<div class="page" id="page-rooms">
+<div class="matches-col">
+  <div class="mx-head">
+    <div class="feed-title" data-i18n="rooms.title">Rooms</div>
+    <div class="mx-sub" data-i18n="rooms.sub">The fan rooms of your clubs.</div>
+  </div>
+  <div id="rooms-list"></div>
+</div>
+</div>
+
 <!-- PROFILE PAGE -->
 <div class="page" id="page-profile">
 <div class="profile-page">
@@ -1404,8 +1440,10 @@ function renderAuthUi(){
   const guest=isGuestNow();
   const userBlock=document.getElementById('nav-user');
   const signinBtn=document.getElementById('nav-signin');
+  const prefsBtn=document.getElementById('nav-prefs');   // 4b-4: Profile is no longer a tab
   if(userBlock)userBlock.style.display=guest?'none':'flex';
   if(signinBtn)signinBtn.style.display=guest?'block':'none';
+  if(prefsBtn)prefsBtn.style.display=guest?'flex':'none';
   if(!guest){
     const nameEl=document.getElementById('nav-name');
     if(nameEl)nameEl.textContent=currentUser.name||'User';
@@ -2985,6 +3023,7 @@ function applyClubSelection(){
   try{ renderProfileClubs(); }catch(e){}
   try{ renderFeedNews(); }catch(e){}
   try{ mxRefresh(); }catch(e){}
+  try{ renderRooms(); }catch(e){}
   try{ renderSidebarYourClub(); }catch(e){}
   // Changing your clubs changes the member counts, so re-read them and paint
   // the club cards again once they land.
@@ -3037,6 +3076,7 @@ function showPage(id){
   if(id==='communities'){ try{renderMyClubCard();renderClubsGrid();}catch(e){console.error('clubs page:',e);} }
   if(id==='feed') try{renderFeedNews();}catch(e){}
   if(id==='matches') try{renderMatchDay();}catch(e){}
+  if(id==='rooms') try{renderRooms();}catch(e){ console.error('rooms:',e); }
   // The Home band is the header on a phone (2a): the nav hides on Home only.
   document.body.classList.toggle('on-home', id==='feed');
   // The browser / status bar: navy on Home, the page ground elsewhere (3).
@@ -4713,6 +4753,70 @@ async function loadChatOverview(){
 
 function chatOverview(clubId){ return CHAT_OVERVIEW.get(clubId)||null; }
 
+// ── ROOMS TAB (4b-4) ──
+// The rooms of my clubs, main club first: crest, room name, the last message
+// and when, the follower count (club_chat_overview.member_count). A row opens
+// the room. "Find more rooms" goes to the Clubs tab. No presence, no online
+// counts (spec §8).
+let ROOMS_LOADING=false;
+/** "5 min ago" / "yesterday" in the reader's language. */
+function relTime(iso){
+  const then=new Date(iso).getTime();
+  if(!then) return '';
+  const s=Math.round((then-Date.now())/1000), a=Math.abs(s);
+  try{
+    const f=new Intl.RelativeTimeFormat(smLocale()||undefined,{numeric:'auto'});
+    if(a<3600) return f.format(Math.round(s/60),'minute');
+    if(a<86400) return f.format(Math.round(s/3600),'hour');
+    if(a<7*86400) return f.format(Math.round(s/86400),'day');
+  }catch(e){}
+  return new Date(iso).toLocaleDateString(smLocale()||[],{day:'numeric',month:'short'});
+}
+function renderRooms(){
+  const el=document.getElementById('rooms-list'), page=document.getElementById('page-rooms');
+  if(!el||!page||!page.classList.contains('active')) return;   // drawn when the tab opens
+  const more='<button type="button" class="rooms-more" onclick="showPage(\'communities\')">'+sanitize(t('rooms.findMore'))+Icons.svg('chevronRight',18)+'</button>';
+  if(isGuestNow()){
+    el.innerHTML='<div class="rooms-empty">'+sanitize(t('rooms.guest'))
+      +'<button type="button" class="rooms-more" onclick="window.location.href=\'/auth.html\'">'+sanitize(t('nav.signin'))+'</button></div>'+more;
+    return;
+  }
+  const main=mainClubId();
+  const ids=myClubIds().slice().sort((a,b)=>(b===main)-(a===main));
+  if(!ids.length){
+    el.innerHTML='<div class="rooms-empty">'+sanitize(t('rooms.noClubs'))
+      +'<button type="button" class="rooms-more" onclick="openTeamModal()">'+sanitize(t('rooms.choose'))+'</button></div>';
+    return;
+  }
+  if(!CHAT_OVERVIEW.size){
+    if(isOffline()){ el.innerHTML=offlineHtml(); return; }
+    el.innerHTML='<div class="mx-edge">'+sanitize(t('sg.loading'))+'</div>';
+    if(!ROOMS_LOADING){
+      ROOMS_LOADING=true;
+      loadChatOverview().finally(()=>{
+        ROOMS_LOADING=false;
+        // Still empty: the overview could not load (or before 011): say so once, no loop.
+        if(!CHAT_OVERVIEW.size){ el.innerHTML='<div class="rooms-empty">'+sanitize(t('rooms.unavailable'))+'</div>'+more; return; }
+        renderRooms();
+      });
+    }
+    return;
+  }
+  const rows=ids.map(id=>{
+    const o=chatOverview(id);
+    if(!o) return '';
+    const last=o.last_message_preview?(o.last_message_is_system?'ScoutMind: ':'')+o.last_message_preview:t('hb.roomEmpty');
+    const meta=[tn('hb.followers',o.member_count||0),o.last_message_at?relTime(o.last_message_at):''].filter(Boolean).join(' · ');
+    return '<button type="button" class="room-row" onclick="openChat('+Number(id)+')">'+clubCrestById(id,36)
+      +'<span class="room-main"><span class="room-name">'+sanitize(t('hb.roomName',{club:clubLabel(id)}))
+      +(id===main?' <span class="sg-tag">'+sanitize(t('rooms.main'))+'</span>':'')+'</span>'
+      +'<span class="room-last">'+sanitize(last)+'</span>'
+      +'<span class="room-meta">'+sanitize(meta)+'</span></span>'
+      +'<span class="room-go">'+Icons.svg('chevronRight',20)+'</span></button>';
+  }).join('');
+  el.innerHTML=(rows||'<div class="rooms-empty">'+sanitize(t('rooms.unavailable'))+'</div>')+more;
+}
+
 function memberLabel(n){
   const v=Number(n||0);
   return v===1?'1 member':v.toLocaleString()+' members';
@@ -5803,6 +5907,7 @@ function filterWeekly(league, btn) {
   }catch(e){ console.error('room link:',e); }
   try{ renderSidebarYourClub(); }catch(e){}
   try{ renderMyClubCard(); renderClubsGrid(); }catch(e){}
+  try{ renderRooms(); }catch(e){}   // a ?page=rooms load: the overview and my clubs are in now
   try{ await loadNews(false); }catch(e){ console.error('loadNews:',e); }
   try{ loadSocialForFeed(); }catch(e){}
   try{ loadSidebarFixtures(); }catch(e){}
@@ -5826,7 +5931,7 @@ try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
 // Handle ?page= URL parameter (e.g. from the nav on community.html / about.html)
 // and set the initial tab highlight. Unknown values fall back to Home.
 (function(){
-  const VALID = ['feed','communities','scout','matches','profile'];
+  const VALID = ['feed','communities','scout','matches','rooms','profile'];
   const urlPage = new URLSearchParams(window.location.search).get('page');
   const page = VALID.includes(urlPage) ? urlPage : 'feed';
   try{showPage(page);}catch(e){console.error('showPage:',e);}
@@ -7617,8 +7722,10 @@ function renderHomeBand(){
   if(!band) return;
   // Me: avatar (opens Profile) or Sign in.
   const meEl=document.getElementById('hb-me');
+  // A guest reaches Profile & settings (language, theme) from here too (4b-4).
   if(meEl) meEl.innerHTML=isGuestNow()
-    ?'<button class="hb-signin" onclick="window.location.href=\'/auth.html\'">'+sanitize(t('hb.signin'))+'</button>'
+    ?'<button class="hb-icon" type="button" onclick="showPage(\'profile\')" aria-label="'+sanitize(t('nav.profile'))+'">'+Icons.svg('user',22)+'</button>'
+      +'<button class="hb-signin" onclick="window.location.href=\'/auth.html\'">'+sanitize(t('hb.signin'))+'</button>'
     :'<button class="hb-av" onclick="showPage(\'profile\')" aria-label="'+sanitize(t('hb.profile'))+'"><span>'+sanitize(myInitials())+'</span></button>';
 
   const clubId=HBD.clubId, club=clubId&&CLUB_DATA.get(clubId);

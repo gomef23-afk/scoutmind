@@ -62,7 +62,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .sm-about:hover{color:var(--text);}
 .sm-tabs{display:flex;}
 .sm-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;line-height:1.2;cursor:pointer;text-decoration:none;}
-.sm-tab-icon{font-size:17px;line-height:1;}
+.sm-tab-icon{display:flex;line-height:1;}
+.sm-tab-icon svg{width:22px;height:22px;}
+.sm-tabs-bottom .sm-tab.active{box-shadow:inset 0 3px 0 var(--accent);}
+.nav-prefs{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;color:var(--muted);text-decoration:none;}
+.nav-prefs:hover{color:var(--text);}
+.nav-prefs svg{width:22px;height:22px;}
 .sm-tab:hover{color:var(--text);}
 .sm-tabs-top{display:none;}
 .sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(7,9,15,0.98);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
@@ -96,7 +101,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
   .sm-tabs-bottom{display:none;}
   .sm-tabs-top{display:flex;gap:2px;margin-left:18px;}
   .sm-tabs-top .sm-tab{flex:0 0 auto;flex-direction:row;gap:7px;min-height:38px;font-size:12px;font-weight:500;padding:0 14px;border-bottom:2px solid transparent;}
-  .sm-tabs-top .sm-tab-icon{font-size:14px;}
+  .sm-tabs-top .sm-tab-icon svg{width:18px;height:18px;}
   .legal{padding:36px 24px 56px;}
 }
 </style>
@@ -105,23 +110,25 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
 
 <nav class="sm-nav">
   <a class="sm-logo" href="/">Scout<span>Mind</span></a>
+  <!-- NAV TABS (4b-4): Home · Clubs · Scout · Matches · Rooms, line icons; Profile from the icon on the right. -->
   <div class="sm-tabs sm-tabs-top">
-    <a class="sm-tab" href="/?page=feed"><span class="sm-tab-icon">🏠</span>Home</a>
-    <a class="sm-tab" href="/community.html"><span class="sm-tab-icon">⚽</span>Clubs</a>
-    <a class="sm-tab" href="/?page=scout"><span class="sm-tab-icon">🔍</span>Scout</a>
-    <a class="sm-tab" href="/?page=matches"><span class="sm-tab-icon">📅</span>Matches</a>
-    <a class="sm-tab" href="/?page=profile"><span class="sm-tab-icon">👤</span>Profile</a>
+    <a class="sm-tab" href="/?page=feed"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span><span data-i18n="nav.home">Home</span></a>
+    <a class="sm-tab" href="/?page=communities"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/></svg></span><span data-i18n="nav.clubs">Clubs</span></a>
+    <a class="sm-tab" href="/?page=scout"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M12 12m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/></svg></span><span data-i18n="nav.scout">Scout</span></a>
+    <a class="sm-tab" href="/?page=matches"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span><span data-i18n="nav.matches">Matches</span></a>
+    <a class="sm-tab" href="/?page=rooms"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg></span><span data-i18n="nav.rooms">Rooms</span></a>
   </div>
   <div class="sm-nav-right">
-    <a href="/about.html" class="sm-about">About</a>
+    <a href="/about.html" class="sm-about" data-i18n="nav.about">About</a>
+    <a class="nav-prefs" href="/?page=profile" aria-label="Profile and settings" data-i18n-aria="nav.profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg></a>
   </div>
 </nav>
 <div class="sm-tabs sm-tabs-bottom">
-  <a class="sm-tab" href="/?page=feed"><span class="sm-tab-icon">🏠</span>Home</a>
-  <a class="sm-tab" href="/community.html"><span class="sm-tab-icon">⚽</span>Clubs</a>
-  <a class="sm-tab" href="/?page=scout"><span class="sm-tab-icon">🔍</span>Scout</a>
-  <a class="sm-tab" href="/?page=matches"><span class="sm-tab-icon">📅</span>Matches</a>
-  <a class="sm-tab" href="/?page=profile"><span class="sm-tab-icon">👤</span>Profile</a>
+  <a class="sm-tab" href="/?page=feed"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></svg></span><span data-i18n="nav.home">Home</span></a>
+  <a class="sm-tab" href="/?page=communities"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/></svg></span><span data-i18n="nav.clubs">Clubs</span></a>
+  <a class="sm-tab" href="/?page=scout"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M12 12m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/></svg></span><span data-i18n="nav.scout">Scout</span></a>
+  <a class="sm-tab" href="/?page=matches"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span><span data-i18n="nav.matches">Matches</span></a>
+  <a class="sm-tab" href="/?page=rooms"><span class="sm-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg></span><span data-i18n="nav.rooms">Rooms</span></a>
 </div>
 
 <main class="legal">
