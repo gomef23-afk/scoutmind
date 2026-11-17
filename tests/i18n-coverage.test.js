@@ -128,6 +128,41 @@ for (const file of ['public/index.html', 'public/auth.html', 'public/community.h
   check(`${file}: no English string literal outside t()`, r.js.length === 0, r.js.join('\n      '));
 }
 
+// ── Rendered, not just written: the Home feed in Portuguese ──
+// 18 Nov 2026: "Trending · News · For you", the heading, its line and the
+// Today / This week chips were reported in English with the app in PT. The
+// cause was production serving an older build, but the screen is pinned here
+// by RUNNING what draws it: the real renderTrending() with pt-BR selected, and
+// every static data-i18n key of the feed bar resolved in pt-BR.
+{
+  const vm = await import('node:vm');
+  const idxSrc = read('public/index.html');
+  const fnSrc = (name) => (new RegExp('(?:async )?function ' + name + '\\([^)]*\\)\\s*\\{[\\s\\S]*?\\n\\}').exec(idxSrc) || [''])[0];
+  const box = { innerHTML: '' };
+  const ctx = {
+    navigator: { languages: ['en-US'], language: 'en-US' },
+    localStorage: { getItem: (k) => (k === 'sm_lang' ? 'pt-BR' : null), setItem() {} },
+    document: { documentElement: {}, querySelectorAll: () => [], getElementById: (id) => (id === 'trending-content' ? box : null) },
+    console: { warn() {}, info() {} },
+    CustomEvent: function () {}, dispatchEvent: () => true, Intl,
+    trendWindow: 'today', trendingItems: () => [], isOffline: () => false, offlineHtml: () => '', paintClubTints() {}, renderFeedItem: () => '',
+    sanitize: (s) => String(s == null ? '' : s),
+  };
+  ctx.window = ctx;
+  vm.createContext(ctx);
+  vm.runInContext(read('public/i18n.js'), ctx);
+  vm.runInContext(fnSrc('renderTrending') + '\nthis.renderTrending=renderTrending;', ctx);
+  ctx.renderTrending();
+  const out = box.innerHTML.replace(/<[^>]*>/g, ' ');
+  check('Home → Trending rendered in pt-BR: the chips and the empty line in Portuguese', /Hoje/.test(out) && /Esta semana/.test(out) && /Nada de hoje ainda/.test(out), out);
+  check('…and no English left in it', !/\b(Today|This week|Nothing|Try)\b/.test(out), out);
+  const bar = (/<div class="feed-tabs-bar">([\s\S]*?)<\/div>/.exec(idxSrc) || [])[1] || '';
+  const feedKeys = [...bar.matchAll(/data-i18n="([\w.]+)"/g)].map((m) => m[1]).concat(['home.trending.sub']);
+  const en = (k) => ctx.I18N.en[k], pt = (k) => ctx.I18N['pt-BR'][k];
+  check('Home → the feed tabs, heading and its line exist in pt-BR and differ from English',
+    feedKeys.length === 4 && feedKeys.every((k) => pt(k) && pt(k) !== en(k)), feedKeys.map((k) => `${k}=${pt(k)}`).join(', '));
+}
+
 // The scanner itself catches what it should (a guard against it going blind).
 const probe = literals("el.innerHTML='<div class=\"x\">No matches today.</div>'; const k=t('fx.today'); console.warn('Debug only here');", 1);
 check('the scanner flags a plain English literal and skips t() / console', probe.filter((x) => !ALLOW.has(x.s) && looksText(visible(x.s)) && !SKIP_BEFORE.test(x.before)).map((x) => x.s).join('|') === '<div class="x">No matches today.</div>');
