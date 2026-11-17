@@ -105,3 +105,26 @@
 /* The scoreboard number face: kick-off times, countdowns, scores, points,
    positions, ranks. Tabular figures so columns line up. */
 .num{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;font-weight:700;letter-spacing:0;}
+
+/* ── Shared components (4b): drawn by more than one page ── */
+
+/* An inline line icon (icons.js): sits on the text baseline, takes its colour. */
+.ic{display:inline-block;vertical-align:middle;flex-shrink:0;}
+
+/* The fixture row (fx-row.js): crests, names, time or score in the number
+   face; no box. My clubs: a navy-ink bar and bold names (not colour alone). */
+.fx-list{display:flex;flex-direction:column;}
+.fx-row{display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);align-items:center;gap:8px;min-height:48px;padding:6px 8px;border-bottom:1px solid var(--border);font-size:13px;color:var(--ink);cursor:pointer;}
+.fx-row:hover{background:var(--field);}
+.fx-row.mine{box-shadow:inset 3px 0 0 var(--navy-ink);font-weight:700;}
+/* A match chosen as the player filter (pick screen): --tint, every text ink
+   (muted never sits on --tint). */
+.fx-row.sel,.fx-row.sel:hover{background:var(--tint);}
+.fx-row.sel small,.fx-row.sel .fx-mid b{color:var(--ink);}
+.fx-team{display:flex;align-items:center;gap:8px;min-width:0;}
+.fx-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fx-team.r{justify-content:flex-end;text-align:right;}
+.fx-mid{text-align:center;line-height:1.1;}
+.fx-mid b{display:block;font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:17px;font-weight:700;color:var(--ink);white-space:nowrap;}
+.fx-mid small{display:block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-top:2px;}
+.fx-mid small.live{color:var(--loss-ink);}

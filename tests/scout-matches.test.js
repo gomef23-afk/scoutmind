@@ -27,21 +27,24 @@ check('Matches: the competition by name, no flag emoji', /sanitize\(ms\[0\]\.com
 check('Matches: the one-card-per-fixture layout is gone', !/function matchCard\(/.test(idx) && !/matchCard\(/.test(idx));
 check('Matches: no fake "sample fixtures" fallback', !/ALL_MATCHES\s*=/.test(idx) && !/Sample fixtures/.test(idx) && /fx\.loadFail/.test(md));
 check("Scout's round list uses the same row", /fxRow\(\{id:f\.id/.test(fn('sgRenderFixtures')) && !/sg-fx-row/.test(idx));
-check('rows: no box, a hairline; my clubs a navy-ink bar + bold (not colour alone)', /\.fx-row\{[^}]*border-bottom:1px solid var\(--border\)/.test(idx) && !/\.fx-row\{[^}]*border-radius/.test(idx)
-  && /\.fx-row\.mine\{box-shadow:inset 3px 0 0 var\(--navy-ink\);font-weight:700;\}/.test(idx));
-check('rows: time and score in the number face', /\.fx-mid b\{[^}]*font-family:var\(--font-num\)/.test(idx));
+// The row's styles live in theme.css since 4b (community.html draws it too).
+const themeCss = read('public/theme.css');
+check('rows: no box, a hairline; my clubs a navy-ink bar + bold (not colour alone)', /\.fx-row\{[^}]*border-bottom:1px solid var\(--border\)/.test(themeCss) && !/\.fx-row\{[^}]*border-radius/.test(themeCss)
+  && /\.fx-row\.mine\{box-shadow:inset 3px 0 0 var\(--navy-ink\);font-weight:700;\}/.test(themeCss) && !/\n\.fx-row\{/.test(idx));
+check('rows: time and score in the number face', /\.fx-mid b\{[^}]*font-family:var\(--font-num\)/.test(themeCss));
 
-// fxRow, run.
+// fxRow, run: the page's wrapper over FxRow.render() (public/fx-row.js, 4b).
 const ctx = {
-  I18N: { en: { 'mo.st.PST': 'Postponed' } },
-  t: (k, v) => ({ 'mo.live': 'Live', 'mo.ht': 'Half time', 'fx.ft': 'FT', 'mo.aet': 'AET', 'mo.pens': 'Pens', 'mo.st.PST': 'Postponed' }[k] || k),
+  t: (k, v) => ({ 'mo.live': 'Live', 'mo.ht': 'Half time', 'fx.ft': 'FT', 'mo.aet': 'AET', 'mo.pens': 'Pens', 'mo.st.PST': 'Postponed' }[k] || ''),
   // The page's own sanitize(), copied.
   sanitize: (s) => { if (!s) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;'); },
   smLocale: () => 'en-GB',
   clubLabel: (id) => ({ 7: 'Flamengo', 9: 'Palmeiras' }[id] || ''),
   clubCrestById: (id) => '<i data-crest="' + id + '"></i>',
 };
+ctx.window = ctx;
 vm.createContext(ctx);
+vm.runInContext(read('public/fx-row.js'), ctx);
 vm.runInContext(fn('fxRow'), ctx);
 const row = (o) => ctx.fxRow(Object.assign({ id: 5, homeId: 7, awayId: 9 }, o));
 const up = row({ status: 'upcoming', kickoff: new Date(2026, 10, 19, 21, 30) });
@@ -74,7 +77,7 @@ check('my five: position, photo, name, opponent line, tier chip', /sg-slot-pos[\
 check('played picks: the locked tier chip and points in the number face', /sgTierChip\(p\.locked_tier,p\.locked_multiplier\)/.test(fn('sgFiveRows')) && /\.sg-pick-pts\{font-family:var\(--font-num\)/.test(idx));
 check('no "average" anywhere in the Scout Game', !/average/i.test(fn('sgRenderSlots') + fn('sgRenderList') + fn('sgRenderMine') + fn('sgFiveRows')));
 check('captain: a navy disc with a gold C', /\.sg-cap-disc\{[^}]*background:var\(--navy\);color:var\(--gold\)/.test(idx) && /sgCapDisc\(\)/.test(fn('sgRenderSlots')) && /sgCapDisc\(\)/.test(fn('sgFiveRows')));
-check('league names without flag emoji', /function sgLeagueName\(r\)\{ const l=r&&r\.leagues; return l\?l\.name:''; \}/.test(idx) && /function glComp\(x\)\{ return x\.competition\|\|''; \}/.test(idx));
+check('league names without flag emoji, with the country code (4b)', /function sgLeagueName\(r\)\{ const l=r&&r\.leagues; return l\?LeagueNames\.label\(l\):''; \}/.test(idx) && /function glComp\(x\)\{ return LeagueNames\.label\(x\.competition\); \}/.test(idx));
 
 // ── Matches in this round, while picking (follow-up to 4a) ──
 const pick = fn('sgRenderPick');
@@ -91,7 +94,7 @@ check('tap again clears the filter', /SG\.filter\.fx=SG\.filter\.fx===id\?null:i
 check('the list keeps only the two clubs, and says so with a way back', /\(!fxc\|\|fxc\.indexOf\(p\.team_id\)>=0\)/.test(fn('sgRenderList')) && /sg\.rfx\.only[\s\S]*?sg\.rfx\.clear/.test(fn('sgRenderList')));
 check('a new round starts with no match filter', /SG\.filter=\{q:'',pos:'',club:'',fx:null\};/.test(pick));
 check('the chosen row: --tint with ink text (muted never on --tint), announced as pressed',
-  /\.fx-row\.sel small,\.fx-row\.sel \.fx-mid b\{color:var\(--ink\);\}/.test(idx) && /aria-pressed="'\+\(o\.selected\?'true':'false'\)\+'"/.test(fn('fxRow')));
+  /\.fx-row\.sel small,\.fx-row\.sel \.fx-mid b\{color:var\(--ink\);\}/.test(themeCss) && /aria-pressed="' \+ \(o\.selected \? 'true' : 'false'\) \+ '"/.test(read('public/fx-row.js')));
 const sel = ctx.fxRow({ id: 5, homeId: 7, awayId: 9, status: 'upcoming', kickoff: Date.now(), onTap: 'sgFilterFx(5)', selected: true });
 check('fxRow: onTap replaces opening the match; selected adds sel + aria-pressed', /class="fx-row sel"/.test(sel) && /onclick="sgFilterFx\(5\)"/.test(sel) && /aria-pressed="true"/.test(sel) && !/openMatch/.test(sel));
 

@@ -46,7 +46,7 @@
   };
 })();
 </script>
-<link rel="stylesheet" href="/theme.css?v=5ba9b60d1c">
+<link rel="stylesheet" href="/theme.css?v=e5b6bfc46d">
 <!-- Installable app (Day 6): manifest, iOS home-screen tags, service worker + install hint. -->
 <link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -78,6 +78,11 @@
 <script src="/home-band.js?v=d008ee2323"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
 <script src="/news-card.js?v=b8aff44b00"></script>
+<!-- 4b shared pieces: league names with the country code, the one fixture
+     row (also on community.html), line icons. -->
+<script src="/league-names.js?v=cdddf511b0"></script>
+<script src="/fx-row.js?v=2a5a74a713"></script>
+<script src="/icons.js?v=6051370d31"></script>
 <style>
 /* The pre-Sequence-2 names, kept as aliases of the v1.2 tokens in /theme.css
    so every existing rule keeps working in light and dark. Removed in commit
@@ -703,17 +708,7 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-cap:not(.on) .sg-cap-disc{background:transparent;color:var(--muted);border:1.5px dashed var(--border-strong);}
 .sg-photo-wrap{position:relative;flex-shrink:0;display:inline-flex;}
 .sg-photo-wrap .sg-cap-disc{position:absolute;right:-6px;bottom:-6px;width:18px;height:18px;font-size:11px;border:1.5px solid var(--card);}
-/* One fixture row for the Scout round list and the Matches tab: crests,
-   names, time or score in the number face; no box. My clubs: a navy-ink bar
-   and bold names (not colour alone). */
-.fx-list{display:flex;flex-direction:column;}
-.fx-row{display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);align-items:center;gap:8px;min-height:48px;padding:6px 8px;border-bottom:1px solid var(--border);font-size:13px;color:var(--ink);cursor:pointer;}
-.fx-row:hover{background:var(--field);}
-.fx-row.mine{box-shadow:inset 3px 0 0 var(--navy-ink);font-weight:700;}
-/* A match chosen as the player filter (pick screen): --tint, every text ink
-   (muted never sits on --tint). */
-.fx-row.sel,.fx-row.sel:hover{background:var(--tint);}
-.fx-row.sel small,.fx-row.sel .fx-mid b{color:var(--ink);}
+/* The fixture row (.fx-*) lives in theme.css since 4b: community.html draws it too. */
 /* "Matches in this round" on the pick screen: collapsible; open on a laptop,
    one summary line on a phone. */
 .sg-rfx{margin:14px 0 4px;border:1px solid var(--border);border-radius:12px;background:var(--card);}
@@ -727,13 +722,6 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-rfx-hint{font-size:11px;color:var(--muted);padding:0 14px 6px;}
 .sg-fxnote{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--ink);margin:8px 0 4px;}
 .sg-fxnote button{background:none;border:none;color:var(--navy-ink);font:inherit;font-weight:700;cursor:pointer;min-height:44px;padding:0 4px;}
-.fx-team{display:flex;align-items:center;gap:8px;min-width:0;}
-.fx-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.fx-team.r{justify-content:flex-end;text-align:right;}
-.fx-mid{text-align:center;line-height:1.1;}
-.fx-mid b{display:block;font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:17px;font-weight:700;color:var(--ink);white-space:nowrap;}
-.fx-mid small{display:block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-top:2px;}
-.fx-mid small.live{color:var(--loss-ink);}
 .md-league{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:18px 0 4px;padding:0 8px;display:flex;align-items:center;gap:6px;}
 .md-league:first-child{margin-top:4px;}
 /* The Matches page: one 760px column, centred; rows stay readable. */
@@ -3302,39 +3290,13 @@ function setMatchLeague(name){
 }
 
 /**
- * One fixture as a compact row (4a): home crest + name, the kick-off time or
- * the score in the number face, away name + crest. Used by the Matches tab and
- * by Scout's "Matches in this round", so the two can never drift apart.
- * o: { id, homeId, awayId, home?, away?, status ('live'|'finished'|'upcoming'),
- *      statusShort?, minute?, homeGoals?, awayGoals?, kickoff (Date|ms|iso),
- *      showDay?, mine?, onTap? (JS run on tap instead of opening the match),
- *      selected? (a toggle: true / false, shown and announced) }
+ * One fixture as a compact row: FxRow.render() in public/fx-row.js (4a, moved
+ * out in 4b so community.html draws the same row). This page lends it its
+ * crests, club names and escaping. Used by the Matches tab and Scout's
+ * "Matches in this round".
  */
 function fxRow(o){
-  const OFF=['PST','CANC','ABD','SUSP','AWD','WO'];
-  const sc=o.homeGoals!=null&&o.awayGoals!=null?o.homeGoals+'–'+o.awayGoals:'–';
-  const k=o.kickoff?new Date(o.kickoff):null;
-  let big, small='', live=false;
-  if(o.statusShort&&OFF.indexOf(o.statusShort)>=0){
-    big='—'; small=I18N.en['mo.st.'+o.statusShort]?t('mo.st.'+o.statusShort):o.statusShort;
-  }else if(o.status==='live'){
-    big=sc; live=true;
-    small=o.statusShort==='HT'?t('mo.ht'):t('mo.live')+(o.minute?' '+o.minute+'\'':'');
-  }else if(o.status==='finished'){
-    big=sc; small=o.statusShort==='AET'?t('mo.aet'):o.statusShort==='PEN'?t('mo.pens'):t('fx.ft');
-  }else{
-    big=k?k.toLocaleTimeString(smLocale()||[],{hour:'2-digit',minute:'2-digit'}):'—';
-    small=o.showDay&&k?k.toLocaleDateString(smLocale()||[],{weekday:'short',day:'numeric'}):'';
-  }
-  const name=(id,fallback)=>clubLabel(id)||fallback||'—';
-  const act=o.onTap||(o.id?'openMatch('+Number(o.id)+')':'');
-  const tap=act?' role="button" tabindex="0" onclick="'+act+'" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();'+act+'}"'
-    +(o.selected!=null?' aria-pressed="'+(o.selected?'true':'false')+'"':''):'';
-  return '<div class="fx-row'+(o.mine?' mine':'')+(o.selected?' sel':'')+'"'+tap+'>'
-    +'<span class="fx-team">'+clubCrestById(o.homeId,20)+'<span>'+sanitize(name(o.homeId,o.home))+'</span></span>'
-    +'<span class="fx-mid"><b>'+sanitize(big)+'</b>'+(small?'<small'+(live?' class="live"':'')+'>'+sanitize(small)+'</small>':'')+'</span>'
-    +'<span class="fx-team r"><span>'+sanitize(name(o.awayId,o.away))+'</span>'+clubCrestById(o.awayId,20)+'</span>'
-    +'</div>';
+  return FxRow.render(o,{crest:clubCrestById,name:clubLabel,esc:sanitize});
 }
 
 // ── NEWS FEED ──
@@ -3467,8 +3429,8 @@ function ordinal(n){
   return n+(s[(v-20)%10]||s[v]||s[0]);
 }
 
-const LEAGUE_LABEL={serie_a:'Série A',premier_league:'Premier League',la_liga:'La Liga',
-  bundesliga:'Bundesliga',serie_a_it:'Serie A',ligue_1:'Ligue 1',argentina:'Liga Profesional'};
+// League slug -> "Série A · BRA" (4b: the country code everywhere, league-names.js).
+const LEAGUE_LABEL=Object.fromEntries(LeagueNames.LEAGUES.map(l=>[l.slug,LeagueNames.label(l)]));
 
 function renderMyClubCard(){
   const el=document.getElementById('clubs-my-card');
@@ -5656,7 +5618,7 @@ function sgTierFor(p){
 function sgCapDisc(){ return '<span class="sg-cap-disc" aria-hidden="true">C</span>'; }
 function sgRoundName(r){ return r? (r.round_no?t('sg.round',{n:r.round_no}):String(r.round_label||t('sg.roundGeneric'))) : ''; }
 // The league's name only: flags were emoji (spec §8, 4a).
-function sgLeagueName(r){ const l=r&&r.leagues; return l?l.name:''; }
+function sgLeagueName(r){ const l=r&&r.leagues; return l?LeagueNames.label(l):''; }   // "Série A · BRA" (4b)
 // Every account has a name (handle_new_user sets one), so a missing name is a
 // deleted account whose scores were kept under an anonymous id (024).
 function sgFan(name){ return name?sanitize(name):t('sg.deletedUser'); }
@@ -6640,11 +6602,11 @@ async function sgRenderHistory(){
   let html='<div class="sg-total sg-history-head">'
     +cell(sgPts(s.season_total),t('sg.h.seasonPts'))
     +cell(sanitize(sgCount(s.rounds_played)),t('sg.h.roundsPlayed'))
-    +cell(best?sgPts(best.total):'—',best?sanitize(sgHistRoundName(best)+' · '+best.league):t('sg.h.bestRound'))
+    +cell(best?sgPts(best.total):'—',best?sanitize(sgHistRoundName(best)+' · '+LeagueNames.label(best.league)):t('sg.h.bestRound'))
     +cell(sanitize(sgCount(s.current_streak)),t('sg.h.streak'))
     +'</div><div class="sg-section">'+t('sg.h.every')+'</div>';
   html+=rounds.map(x=>{
-    const name=(x.flag?x.flag+' ':'')+(x.league||'')+' · '+sgHistRoundName(x);
+    const name=LeagueNames.label(x.league)+' · '+sgHistRoundName(x);   // no flag emoji (4b)
     const pts=x.status==='open'?'—':sgPts(x.total);
     const bp=x.best_pick?t('sg.h.bestPick',{name:sanitize(x.best_pick.name),pts:sgPts(x.best_pick.points)}):'';
     const badges=(x.badges||[]).map(b=>'<span class="sg-badge" title="'+sanitize(sgBadgeDesc(b.id,''))+'">'+sanitize(sgBadgeName(b.id,b.name))+'</span>').join('');
@@ -6699,7 +6661,7 @@ async function renderProfileGame(){
       return;
     }
     const roundRows=rounds.map(x=>{
-      const name=(x.flag?x.flag+' ':'')+(x.league||'')+' · '+sgHistRoundName(x);
+      const name=LeagueNames.label(x.league)+' · '+sgHistRoundName(x);   // no flag emoji (4b)
       return '<div class="profile-row"><div class="profile-row-label">'+sanitize(name)+'</div>'
         +'<div class="profile-row-value">'+(x.status==='open'?'':t('pg.pts',{pts:sgPts(x.total)})+' · ')+sgHistoryState(x)+'</div></div>';
     }).join('');
@@ -6786,7 +6748,7 @@ function renderMatchDetail(d){
   // The band (spec v1.2 §7): crests on white discs, the score in the 44px
   // number face, the status line. The league by name (no flag emoji).
   let html='<div class="mo-inner"><div class="mo-band">'
-    +'<div class="mo-meta">'+sanitize(f.league||'')
+    +'<div class="mo-meta">'+sanitize(LeagueNames.label(f.league))
     +(roundNo?' · '+t('sg.round',{n:roundNo[1]}):'')+'<br>'+sanitize(when)+(f.venue?' · '+sanitize(f.venue):'')+'</div>';
 
   const status=done?t(f.status==='FT'?'sg.st.ft':f.status==='AET'?'mo.aet':'mo.pens')
@@ -6889,7 +6851,7 @@ async function glCall(fn,args){
   catch(e){ toast(tServer(friendlyDbError(e.message)),'error'); throw e; }
 }
 function glLink(code){ return location.origin+'/?league='+encodeURIComponent(code); }
-function glComp(x){ return x.competition||''; }   // no flag emoji (4a)
+function glComp(x){ return LeagueNames.label(x.competition); }   // no flag emoji (4a); with the country (4b)
 /** "3rd of 12", or "12 members" before I have a scored round. */
 function glRankText(x){
   return x.my_rank?t('gl.rankOf',{ord:tOrd(x.my_rank),n:sgCount(x.members)}):tn('sg.members',x.members||0);
@@ -7326,7 +7288,7 @@ function renderHomeBand(){
     const now=Date.now();
     const s1=club?HomeBand.tableSlot(HBD.form):null;
     const s2=club?HomeBand.matchSlot(clubId,HBD.fixtures,now):null;
-    const lgName=HBD.round&&HBD.round.leagues?HBD.round.leagues.name:(HBD.league&&HBD.league.name)||'';
+    const lgName=LeagueNames.label(HBD.round&&HBD.round.leagues?HBD.round.leagues:HBD.league);
     const s3=HomeBand.roundSlot(HBD.round,HBD.me,lgName);
     // Before the first load there is nothing true to say yet: no slots at all.
     slotsEl.innerHTML=HBD.loadedAt?(hbSlot(s1,'showPage(\'communities\')')
@@ -7345,7 +7307,7 @@ function renderHomeBand(){
         +(p.is_captain?'<span class="hb-cap">C</span>':'')+'</span>').join('')+'</div>':'';
       const go='hbOpenRound('+Number(row.roundId)+')';
       // With no club the round could be any competition's: name it.
-      const rName=sgRoundName(HBD.round)+(club?'':(HBD.round.leagues&&HBD.round.leagues.name?' · '+HBD.round.leagues.name:''));
+      const rName=sgRoundName(HBD.round)+(club?'':(HBD.round.leagues&&HBD.round.leagues.name?' · '+LeagueNames.label(HBD.round.leagues):''));
       if(row.state==='in'){
         picksEl.innerHTML='<div class="hb-card">'+avs+'<div class="hb-card-body"><div class="hb-card-t">'+sanitize(t('hb.picksIn'))+'</div>'
           +(row.captain?'<div class="hb-card-s wrap">'+sanitize(t('hb.captain',{name:row.captain}))+'</div>':'')+'</div>'
@@ -7504,7 +7466,7 @@ function renderHomeTable(){
   const group=rows.filter(r=>(r.group_label||null)===(me.group_label||null)&&r.rank!=null).sort((a,b)=>a.rank-b.rank);
   const i=group.indexOf(me), from=Math.max(0,Math.min(i-2,group.length-5));
   const slice=group.slice(from,from+5);
-  el.innerHTML='<div class="feed-side-title">'+sanitize(t('hb.tableOf',{league:(HBD.league&&HBD.league.name)||''}))+'</div>'
+  el.innerHTML='<div class="feed-side-title">'+sanitize(t('hb.tableOf',{league:LeagueNames.label(HBD.league)}))+'</div>'
     +slice.map(r=>{
       const c=CLUB_DATA.get(r.team_id);
       return '<div class="ht-row'+(r.team_id===clubId?' me':'')+'"><span class="ht-rank num">'+Number(r.rank)+'</span>'
