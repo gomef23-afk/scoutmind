@@ -1,4 +1,5 @@
-/* Home band — the three slot rules of design spec v1.2 §4, as pure functions.
+/* Home band — the three slot rules of design spec v1.2 §4, as pure functions,
+ * and (since the landing page) the band's HTML, shared by Home and welcome.html.
  *
  * No DOM, no network, no clock of its own: index.html gathers the data and
  * paints; tests/home-band.test.js runs every state in the spec's table. Every
@@ -186,8 +187,64 @@
       .map(function (x) { return { r: x.result, score: x.score || '', opponent: x.opponent || '', home: !!x.home }; });
   }
 
+  // ── Drawing (landing page commit): the band's HTML, shared by Home
+  // (index.html) and the logged-out landing (welcome.html), so they can never
+  // drift apart. Still no DOM and no network: each function returns a string
+  // from what it is given. ctx is what the page knows:
+  //   { t(key, vars), tOrd(n), esc(s), pts(n), locale, now }
+  // The styles are .hb-* in theme.css.
+
+  /** A slot's big text, from the kind the slot rules gave it. */
+  function bigText(b, ctx) {
+    if (!b || b.kind === 'dash') return '—';
+    if (b.kind === 'ord') return ctx.tOrd(b.n);
+    if (b.kind === 'score') return b.home + '–' + b.away;
+    if (b.kind === 'points') return ctx.pts(b.n);
+    if (b.kind === 'countdown') return countdownText(b.at, ctx.now);
+    if (b.kind === 'time') { try { return new Date(b.at).toLocaleTimeString(ctx.locale || [], { hour: '2-digit', minute: '2-digit' }); } catch (e) { return '—'; } }
+    return '—';
+  }
+  /** A label or line: the key and values, with the day and ordinal filled in. */
+  function lineText(x, ctx) {
+    if (!x) return '';
+    var v = {}, k;
+    for (k in (x.vars || {})) v[k] = x.vars[k];
+    if (x.key === 'hb.dayVs') {
+      v.day = sameLocalDay(v.at, ctx.now) ? ctx.t('hb.today') : new Date(v.at).toLocaleDateString(ctx.locale || [], { weekday: 'short' });
+    }
+    if (x.key === 'hb.rankIn') v.ord = ctx.tOrd(v.n);
+    if (x.key === 'hb.live' && v.m == null) return ctx.t('hb.liveNow');
+    return ctx.t(x.key, v);
+  }
+  /** One slot. act: the onclick JS, or '' for a slot that does not open anything. */
+  function slotHtml(s, act, ctx) {
+    if (!s) return '';
+    var live = s.tone === 'live', gold = s.tone === 'gold', esc = ctx.esc;
+    return '<div class="hb-slot"' + (act ? ' role="button" tabindex="0" onclick="' + act + '" onkeydown="if(event.key===\'Enter\'){this.click();}"' : '') + '>'
+      + '<div class="hb-lab' + (live ? ' live' : '') + '">' + esc(lineText(s.label, ctx)) + '</div>'
+      + '<div class="hb-big' + (gold ? ' gold' : '') + '"' + (s.big && s.big.kind === 'countdown' ? ' data-at="' + s.big.at + '"' : '') + '>' + esc(bigText(s.big, ctx)) + '</div>'
+      + (s.line ? '<div class="hb-line">' + esc(lineText(s.line, ctx)) + '</div>' : '')
+      + '</div>';
+  }
+  /** The club row: crest (or its initial), name, the last five as W/D/L chips. club: { label, logo_url }. */
+  function clubHtml(club, form, ctx) {
+    if (!club) return '';
+    var esc = ctx.esc, ini = esc(String(club.label || '?').slice(0, 1));
+    var chips = formChips(form);
+    return '<div class="hb-crest">' + (club.logo_url
+        ? '<img src="' + esc(club.logo_url) + '" alt="" crossorigin="anonymous" referrerpolicy="no-referrer" onerror="this.outerHTML=\'<b>' + ini + '</b>\'">'
+        : '<b>' + ini + '</b>') + '</div>'
+      + '<div style="min-width:0;"><div class="hb-name">' + esc(club.label) + '</div>'
+      + (chips.length ? '<div class="hb-form" role="list" aria-label="' + esc(ctx.t('hb.form')) + '">'
+        + chips.map(function (c) {
+          return '<span class="hb-chip ' + c.r + '" role="listitem" title="' + esc((c.home ? '' : '@ ') + c.opponent + ' ' + c.score) + '">' + esc(ctx.t('mo.res.' + c.r)) + '</span>';
+        }).join('') + '</div>' : '')
+      + '</div>';
+  }
+
   var api = { tableSlot: tableSlot, matchSlot: matchSlot, pickRound: pickRound, roundSlot: roundSlot,
-    picksRow: picksRow, countdownText: countdownText, formChips: formChips };
+    picksRow: picksRow, countdownText: countdownText, formChips: formChips,
+    bigText: bigText, lineText: lineText, slotHtml: slotHtml, clubHtml: clubHtml };
   root.HomeBand = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

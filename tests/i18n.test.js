@@ -49,7 +49,7 @@ const ph = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().
 const phDiff = enKeys.filter((k) => k in pt && ph(en[k]) !== ph(pt[k]));
 check('the same {placeholders} in both languages', phDiff.length === 0, phDiff.map((k) => `${k}: en {${ph(en[k])}} pt {${ph(pt[k])}}`).join('; '));
 const untranslated = enKeys.filter((k) => en[k] === pt[k] && /[a-z]{4,}/i.test(en[k])
-  && !/^(sg\.title|sg\.tab\.rankings|badge\.top_ten_percent\.name|auth\.ph\.email|sg\.base|pg\.pts|mo\.rankPts|sg\.dur\.dh|cm\.deletedUser|nav\.scout|cmt\.r\.spam)$/.test(k));
+  && !/^(sg\.title|sg\.tab\.rankings|badge\.top_ten_percent\.name|auth\.ph\.email|sg\.base|pg\.pts|mo\.rankPts|sg\.dur\.dh|cm\.deletedUser|nav\.scout|cmt\.r\.spam|land\.install\.ios|land\.install\.android)$/.test(k));   // device names
 check('nothing left in English in pt-BR (beyond names that stay)', untranslated.length === 0, untranslated.join(', '));
 // A key written twice in one dictionary: the later silently wins (4b-5 found three).
 {
@@ -63,12 +63,16 @@ check('nothing left in English in pt-BR (beyond names that stay)', untranslated.
 // ── Money words (CLAUDE.md: no betting language anywhere) ──
 const MONEY_EN = /\b(odds|bets?|betting|wager|stake|win money|cash|prize money|jackpot)\b/i;
 const MONEY_PT = /\b(apostas?|apostar|aposte|cota[cç](ão|ões)|ganhar dinheiro|ganhe dinheiro|pr[eê]mio em dinheiro|bolão)\b/i;
-const moneyHits = [...enKeys.filter((k) => MONEY_EN.test(en[k])).map((k) => 'en ' + k), ...ptKeys.filter((k) => MONEY_PT.test(pt[k]) || MONEY_EN.test(pt[k])).map((k) => 'pt ' + k)];
+// The one exception is the landing page's disclaimer, which says there is NO
+// betting ("Free. No prizes, no betting, no ads."): a denial, asked for by name.
+const MONEY_OK = new Set(['land.free']);
+const moneyHits = [...enKeys.filter((k) => !MONEY_OK.has(k) && MONEY_EN.test(en[k])).map((k) => 'en ' + k), ...ptKeys.filter((k) => !MONEY_OK.has(k) && (MONEY_PT.test(pt[k]) || MONEY_EN.test(pt[k]))).map((k) => 'pt ' + k)];
+check('the money-word exception is only the "no betting" denial', /^Free\. No prizes, no betting/.test(en['land.free']) && /^Grátis\. Sem prêmios, sem apostas/.test(pt['land.free']));
 check('no money words in either language', moneyHits.length === 0, moneyHits.join(', '));
 
 // ── Every key the pages use exists ──
 const pages = { 'public/index.html': read('public/index.html'), 'public/auth.html': read('public/auth.html'),
-  'public/community.html': read('public/community.html') };
+  'public/community.html': read('public/community.html'), 'public/welcome.html': read('public/welcome.html') };
 const missing = [];
 let used = 0;
 for (const [file, html] of Object.entries(pages)) {

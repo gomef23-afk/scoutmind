@@ -88,7 +88,7 @@ for (const [fg, bg, use] of PAIRS) {
 
 // ── Pages: the no-flash script, then theme.css, then the page's own CSS ──
 // Every page since 4b-7 (the static pages joined then; app.html is a redirect).
-const CONVERTED = ['public/index.html', 'public/community.html', 'public/about.html', 'public/auth.html', 'public/terms.html', 'public/privacy.html', 'public/offline.html'];
+const CONVERTED = ['public/index.html', 'public/community.html', 'public/about.html', 'public/auth.html', 'public/terms.html', 'public/privacy.html', 'public/offline.html', 'public/welcome.html'];
 for (const page of CONVERTED) {
   const html = read(page);
   const s = html.indexOf("localStorage.getItem('sm_theme')");

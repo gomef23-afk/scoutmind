@@ -122,7 +122,7 @@ function scan(file) {
   return { js, text };
 }
 
-for (const file of ['public/index.html', 'public/auth.html', 'public/community.html']) {
+for (const file of ['public/index.html', 'public/auth.html', 'public/community.html', 'public/welcome.html']) {
   const r = scan(file);
   check(`${file}: every visible HTML text and attribute is marked for translation`, r.text.length === 0, r.text.join('\n      '));
   check(`${file}: no English string literal outside t()`, r.js.length === 0, r.js.join('\n      '));

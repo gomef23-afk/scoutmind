@@ -137,3 +137,31 @@
 .fx-mid b{display:block;font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:17px;font-weight:700;color:var(--ink);white-space:nowrap;}
 .fx-mid small{display:block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-top:2px;}
 .fx-mid small.live{color:var(--loss-ink);}
+
+/* The Home band (spec v1.2 §4), drawn by home-band.js on Home and on the
+   landing page (welcome.html). Mobile first; each page adds its own padding
+   and wide-screen layout. Text on the band is --on-navy, the countdown
+   --gold, LIVE --live-on-band: the three pairs tests/theme.test.js measures
+   on --navy. Hairlines are --navy-hover. */
+.hb{background:var(--navy);color:var(--on-navy);}
+.hb-club{display:flex;align-items:center;gap:12px;margin-top:8px;}
+.hb-club:empty{display:none;}
+.hb-crest{width:46px;height:46px;border-radius:50%;background:var(--on-navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hb-crest img{width:32px;height:32px;object-fit:contain;}
+.hb-crest b{color:var(--navy);font-family:var(--font-num);font-size:18px;}
+.hb-name{font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:1.15;color:var(--on-navy);overflow-wrap:anywhere;}
+.hb-form{display:flex;gap:4px;margin-top:5px;}
+.hb-chip{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--on-chip);}
+.hb-chip.W{background:var(--chip-win);} .hb-chip.D{background:var(--chip-draw);} .hb-chip.L{background:var(--chip-loss);}
+.hb-guest{font-size:13px;line-height:1.5;color:var(--on-navy);margin-top:8px;}
+.hb-slots{display:flex;margin-top:14px;border-top:1px solid var(--navy-hover);}
+.hb-slots:empty{display:none;}
+.hb-slot{flex:1 1 0;min-width:0;padding:10px 8px 0 10px;border-left:1px solid var(--navy-hover);}
+.hb-slot:first-child{border-left:none;padding-left:0;}
+.hb-slot[role=button]{cursor:pointer;}
+/* Two label lines reserved, so the numbers line up when a label wraps (pt-BR). */
+.hb-lab{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;line-height:12px;min-height:24px;color:var(--on-navy);}
+.hb-lab.live{color:var(--live-on-band);}
+.hb-big{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;font-weight:700;font-size:26px;line-height:1.1;margin-top:3px;color:var(--on-navy);white-space:nowrap;}
+.hb-big.gold{color:var(--gold);}
+.hb-line{font-size:11px;line-height:1.35;margin-top:2px;color:var(--on-navy);overflow-wrap:anywhere;}

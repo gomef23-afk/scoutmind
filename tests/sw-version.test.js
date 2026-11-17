@@ -46,7 +46,7 @@ check('manifest: maskable icons are their own files (safe-zone monogram), not th
 check('manifest icons exist', mf.icons.every((i) => existsSync(new URL(i.src.slice(1), pub))));
 
 // Every page that carries the nav links the manifest and pwa.js.
-for (const page of ['index.html', 'about.html', 'community.html', 'auth.html', 'terms.html', 'privacy.html']) {
+for (const page of ['index.html', 'about.html', 'community.html', 'auth.html', 'terms.html', 'privacy.html', 'welcome.html']) {
   const html = readFileSync(new URL(page, pub), 'utf8');
   check(`${page}: manifest + pwa.js + apple tags`,
     html.includes('<link rel="manifest" href="/manifest.json">') && /<script src="\/pwa\.js(\?v=[0-9a-f]+)?" defer><\/script>/.test(html)

@@ -2,6 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- LANDING GATE (landing page commit): the first script on the page, before
+     the theme, any stylesheet and <body>, so nothing has painted when it
+     decides. Signed in = the Supabase session (supabase-js's default key) or
+     sm_current_user in localStorage. A stranger on the bare / goes to the
+     landing page (replace: Back does not loop). Through to the app: signed
+     in, any query (?page= ?room= ?match= ?league= ?deleted=: app links and
+     join links), or "Browse as guest" chosen on this device (sm_browse, a UI
+     preference, cleared at sign-in). welcome.html runs the mirror check.
+     tests/landing.test.js pins both. -->
+<script>
+(function(){
+  try{
+    var ls=window.localStorage;
+    var signedIn=!!(ls.getItem('sb-kdhbpzooyjxcglbxbuya-auth-token')||ls.getItem('sm_current_user'));
+    if(signedIn){ ls.removeItem('sm_browse'); return; }
+    if(location.search||ls.getItem('sm_browse')==='1') return;
+    location.replace('/welcome.html');
+  }catch(e){}   // no storage (a locked-down browser): the app, as before
+})();
+</script>
 <!-- viewport-fit=cover: the page runs under the iPhone status bar and home
      indicator, so env(safe-area-inset-*) has real values. The sticky nav, the
      Home band, the full-screen overlays and the bottom tab bar pad themselves
@@ -46,7 +66,7 @@
   };
 })();
 </script>
-<link rel="stylesheet" href="/theme.css?v=8463eb220a">
+<link rel="stylesheet" href="/theme.css?v=3994ef967c">
 <!-- Installable app (Day 6): manifest, iOS home-screen tags, service worker + install hint. -->
 <link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -73,16 +93,16 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=42a5ce9f0b"></script>
+<script src="/i18n.js?v=44a314714c"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
-<script src="/home-band.js?v=d008ee2323"></script>
+<script src="/home-band.js?v=9e053cf892"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
 <script src="/news-card.js?v=b8aff44b00"></script>
 <!-- 4b shared pieces: league names with the country code, the one fixture
      row (also on community.html), line icons. -->
 <script src="/league-names.js?v=cdddf511b0"></script>
 <script src="/fx-row.js?v=2a5a74a713"></script>
-<script src="/icons.js?v=9b84b2e441"></script>
+<script src="/icons.js?v=012882672d"></script>
 <style>
 /* The v1.2 tokens (/theme.css) by their own names; the pre-Sequence-2 aliases
    (--bg, --accent, --text…) were renamed and removed in 4b-8. Navy as TEXT or
@@ -867,11 +887,11 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 /* "Pick your club" nudge on Home (Day 7) */
 .club-nudge{align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--border);border-left:3px solid var(--navy-ink);border-radius:10px;padding:6px 6px 6px 14px;margin:0 0 12px;font-size:13px;line-height:1.4;color:var(--ink);}
 .club-nudge-btn{flex-shrink:0;min-height:44px;padding:0 18px;border-radius:22px;border:none;background:var(--navy);color:var(--on-navy);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
-/* ── HOME BAND (2a, spec v1.2 §4) ── mobile first. Text on the band is
-   --on-navy, the countdown --gold, LIVE --live-on-band: the three pairs
-   tests/theme.test.js measures on --navy. Hairlines are --navy-hover. */
-/* padding-top: the band runs under the iPhone status bar (viewport-fit=cover). */
-.hb{background:var(--navy);color:var(--on-navy);padding:calc(6px + env(safe-area-inset-top)) 16px 34px;}
+/* ── HOME BAND (2a, spec v1.2 §4) ── The band itself (navy ground, club row,
+   form chips, the three slots) is in theme.css since the landing page, which
+   draws the same band; here: Home's top row, the light sheet and the laptop
+   layout. padding-top: the band runs under the iPhone status bar. */
+.hb{padding:calc(6px + env(safe-area-inset-top)) 16px 34px;}
 .hb-inner{max-width:1440px;margin:0 auto;}
 .hb-side{display:none;}
 .feed-title{font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--ink);margin-bottom:6px;}
@@ -886,28 +906,7 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
    it fits 375px with the wordmark and search. */
 #hb-me{display:flex;align-items:center;gap:4px;}
 .hb .lang-switch-b{min-width:34px;padding:0 6px;}
-.hb-club{display:flex;align-items:center;gap:12px;margin-top:8px;}
-.hb-club:empty{display:none;}
-.hb-crest{width:46px;height:46px;border-radius:50%;background:var(--on-navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.hb-crest img{width:32px;height:32px;object-fit:contain;}
-.hb-crest b{color:var(--navy);font-family:var(--font-num);font-size:18px;}
-.hb-name{font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:1.15;color:var(--on-navy);overflow-wrap:anywhere;}
-.hb-form{display:flex;gap:4px;margin-top:5px;}
-.hb-chip{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--on-chip);}
-.hb-chip.W{background:var(--chip-win);} .hb-chip.D{background:var(--chip-draw);} .hb-chip.L{background:var(--chip-loss);}
 .hb .club-nudge{background:var(--card);margin:10px 0 0;}
-.hb-guest{font-size:13px;line-height:1.5;color:var(--on-navy);margin-top:8px;}
-.hb-slots{display:flex;margin-top:14px;border-top:1px solid var(--navy-hover);}
-.hb-slots:empty{display:none;}
-.hb-slot{flex:1 1 0;min-width:0;padding:10px 8px 0 10px;border-left:1px solid var(--navy-hover);}
-.hb-slot:first-child{border-left:none;padding-left:0;}
-.hb-slot[role=button]{cursor:pointer;}
-/* Two label lines reserved, so the numbers line up when a label wraps (pt-BR). */
-.hb-lab{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;line-height:12px;min-height:24px;color:var(--on-navy);}
-.hb-lab.live{color:var(--live-on-band);}
-.hb-big{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;font-weight:700;font-size:26px;line-height:1.1;margin-top:3px;color:var(--on-navy);white-space:nowrap;}
-.hb-big.gold{color:var(--gold);}
-.hb-line{font-size:11px;line-height:1.35;margin-top:2px;color:var(--on-navy);overflow-wrap:anywhere;}
 /* The light sheet: rounded top, overlapping the band by 22px. */
 .hb-sheet{position:relative;background:var(--ground);border-radius:18px 18px 0 0;margin-top:-22px;padding:14px 16px 0;}
 .hb-sheet:empty,.hb-sheet.empty{display:none;}
@@ -7689,36 +7688,12 @@ async function loadHomeBand(force){
   return HBD.loading;
 }
 
-/** A slot's big text, from the kind HomeBand gave it. */
-function hbBig(b){
-  if(!b||b.kind==='dash') return '—';
-  if(b.kind==='ord') return tOrd(b.n);
-  if(b.kind==='score') return b.home+'–'+b.away;
-  if(b.kind==='points') return sgPts(b.n);
-  if(b.kind==='countdown') return HomeBand.countdownText(b.at,Date.now());
-  if(b.kind==='time'){ try{ return new Date(b.at).toLocaleTimeString(smLocale()||[],{hour:'2-digit',minute:'2-digit'}); }catch(e){ return '—'; } }
-  return '—';
-}
-function hbText(x){
-  if(!x) return '';
-  const v=Object.assign({},x.vars||{});
-  if(x.key==='hb.dayVs'){
-    const d=new Date(v.at), today=localDayKey(new Date())===localDayKey(d);
-    v.day=today?t('hb.today'):d.toLocaleDateString(smLocale()||[],{weekday:'short'});
-  }
-  if(x.key==='hb.rankIn') v.ord=tOrd(v.n);
-  if(x.key==='hb.live'&&v.m==null) return t('hb.liveNow');
-  return t(x.key,v);
-}
-function hbSlot(s,act){
-  if(!s) return '';
-  const live=s.tone==='live', gold=s.tone==='gold';
-  return '<div class="hb-slot"'+(act?' role="button" tabindex="0" onclick="'+act+'" onkeydown="if(event.key===\'Enter\'){this.click();}"':'')+'>'
-    +'<div class="hb-lab'+(live?' live':'')+'">'+sanitize(hbText(s.label))+'</div>'
-    +'<div class="hb-big'+(gold?' gold':'')+'"'+(s.big&&s.big.kind==='countdown'?' data-at="'+s.big.at+'"':'')+'>'+sanitize(hbBig(s.big))+'</div>'
-    +(s.line?'<div class="hb-line">'+sanitize(hbText(s.line))+'</div>':'')
-    +'</div>';
-}
+/** What the shared band drawing (HomeBand in home-band.js) needs from this page. */
+function hbCtx(){ return {t:t,tOrd:tOrd,esc:sanitize,pts:sgPts,locale:smLocale(),now:Date.now()}; }
+/** A slot's big text / a label or line / one slot: drawn by home-band.js since the landing page. */
+function hbBig(b){ return HomeBand.bigText(b,hbCtx()); }
+function hbText(x){ return HomeBand.lineText(x,hbCtx()); }
+function hbSlot(s,act){ return HomeBand.slotHtml(s,act,hbCtx()); }
 
 function renderHomeBand(){
   const band=document.getElementById('home-band');
@@ -7737,14 +7712,7 @@ function renderHomeBand(){
   const clubEl=document.getElementById('hb-club');
   if(clubEl){
     if(club){
-      const chips=HomeBand.formChips(HBD.form);
-      clubEl.innerHTML='<div class="hb-crest">'+(club.logo_url
-          ?'<img src="'+sanitize(club.logo_url)+'" alt="" crossorigin="anonymous" referrerpolicy="no-referrer" onerror="this.outerHTML=\'<b>'+sanitize((club.label||'?').slice(0,1))+'</b>\'">'
-          :'<b>'+sanitize((club.label||'?').slice(0,1))+'</b>')+'</div>'
-        +'<div style="min-width:0;"><div class="hb-name">'+sanitize(club.label)+'</div>'
-        +(chips.length?'<div class="hb-form" role="list" aria-label="'+sanitize(t('hb.form'))+'">'
-          +chips.map(c=>'<span class="hb-chip '+c.r+'" role="listitem" title="'+sanitize((c.home?'':'@ ')+c.opponent+' '+c.score)+'">'+sanitize(t('mo.res.'+c.r))+'</span>').join('')+'</div>':'')
-        +'</div>';
+      clubEl.innerHTML=HomeBand.clubHtml(club,HBD.form,hbCtx());
     }else if(isGuestNow()){
       clubEl.innerHTML='<div class="hb-guest">'+sanitize(t('hb.guest'))+'</div>';
     }else{

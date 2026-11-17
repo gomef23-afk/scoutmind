@@ -47,7 +47,7 @@ export function computeVersion(list = precacheList()) {
 // EXACT cache match, else the network: the page and its scripts update
 // together. This script writes the hashes; tests/sw-version.test.js checks them.
 export const VERSIONED = ['theme.css', 'pwa.js', 'club_names.js', 'i18n.js', 'home-band.js', 'news-card.js', 'sm_auth.js', 'leagues_data.js', 'league-names.js', 'fx-row.js', 'icons.js'];
-const PAGES = ['index.html', 'about.html', 'community.html', 'auth.html', 'privacy.html', 'terms.html', 'offline.html'];
+const PAGES = ['index.html', 'about.html', 'community.html', 'auth.html', 'privacy.html', 'terms.html', 'offline.html', 'welcome.html'];
 
 /** The first 10 hex of a SHA-256 over the file, line endings normalised. */
 export function assetHash(name) {

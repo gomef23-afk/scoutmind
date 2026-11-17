@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!-- MIRROR GATE (landing page): the same "signed in" test as index.html's
+     gate, first on the page. Signed in → the app, keeping any query. -->
+<script>
+(function(){
+  try{
+    var ls=window.localStorage;
+    var signedIn=!!(ls.getItem('sb-kdhbpzooyjxcglbxbuya-auth-token')||ls.getItem('sm_current_user'));
+    if(signedIn) location.replace('/'+(location.search||''));
+  }catch(e){}
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title data-i18n="land.docTitle">ScoutMind — Your club. Everything around it.</title>
+<meta name="description" content="The free football social network: your club's news, club rooms, matches and the Scout Game. Free, no prizes, no betting.">
+<!-- Icons and link previews: the same block on every page (scripts/make-icons.ps1 makes the files). -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0F141B">
+<!-- Theme (design spec v1.2), BEFORE any stylesheet: the same script as index.html. -->
+<script>
+(function(){
+  var DEFAULT='system';                                 // 4b-8: no saved choice follows the device
+  var root=document.documentElement, mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+  function pref(){ try{ var s=localStorage.getItem('sm_theme'); return s==='light'||s==='dark'||s==='system'?s:DEFAULT; }catch(e){ return DEFAULT; } }
+  function resolve(p){ return p==='system'?(mq&&mq.matches?'dark':'light'):p; }
+  function apply(){
+    var t=resolve(pref());
+    root.setAttribute('data-theme',t);
+    var m=document.querySelector('meta[name="theme-color"]');
+    if(m) m.setAttribute('content',t==='dark'?'#0F141B':'#F6F7F9');
+  }
+  apply();
+  if(mq&&mq.addEventListener) mq.addEventListener('change',function(){ if(pref()==='system') apply(); });
+})();
+</script>
+<link rel="stylesheet" href="/theme.css?v=3994ef967c">
+<!-- Installable app (Day 6): manifest, iOS home-screen tags, service worker. -->
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="ScoutMind">
+<script src="/pwa.js?v=4801f83526" defer></script>
+<meta property="og:site_name" content="ScoutMind">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ScoutMind — Your club. Everything around it.">
+<meta property="og:description" content="The free football social network: your club's news, club rooms, matches and the Scout Game.">
+<meta property="og:url" content="https://scoutmind.app/">
+<meta property="og:image" content="https://scoutmind.app/og.png?v=5">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ScoutMind — Your club. Everything around it.">
+<meta name="twitter:card" content="summary_large_image">
+<link href="/vendor/fonts/fonts.css" rel="stylesheet">
+<script src="/i18n.js?v=44a314714c"></script>
+<script src="/club_names.js?v=25627f760c"></script>
+<script src="/league-names.js?v=cdddf511b0"></script>
+<script src="/home-band.js?v=9e053cf892"></script>
+<script src="/icons.js?v=012882672d"></script>
+<style>
+/* The landing page (design spec v1.2, "Scoreboard"): tokens from theme.css by
+   name, no literal colour, no gradient, line icons only. Mobile first (390),
+   two columns from 900, content capped at 1120. The phone mock is the real
+   Home band (.hb-* in theme.css, drawn by home-band.js). */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--ground);color:var(--ink);font-family:var(--font-sans);min-height:100vh;padding-bottom:env(safe-area-inset-bottom);}
+a{color:var(--navy-ink);}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px;}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:700;}
+[hidden]{display:none !important;}
+
+/* Header: wordmark, EN / PT, Sign in. No tab bar. */
+.lh{position:sticky;top:0;z-index:50;background:var(--card);border-bottom:1px solid var(--border);padding-top:env(safe-area-inset-top);}
+.lh .wrap{display:flex;align-items:center;gap:8px;min-height:56px;}
+.lh-word{font-family:var(--font-num);font-weight:700;font-size:24px;letter-spacing:0.5px;color:var(--navy-ink);text-decoration:none;margin-right:auto;display:flex;align-items:center;min-height:44px;}
+.lh-word span{color:var(--ink);}
+.lh-signin{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:8px;background:var(--navy);color:var(--on-navy);font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;}
+.lh-signin:hover{background:var(--navy-hover);}
+
+/* Hero */
+.hero{padding:36px 0 40px;}
+.hero .wrap{display:grid;grid-template-columns:1fr;gap:32px;align-items:center;}
+.h-word{font-family:var(--font-num);font-weight:700;font-size:64px;line-height:0.95;letter-spacing:-0.5px;color:var(--navy-ink);}
+.h-word span{color:var(--ink);}
+.h-line{font-size:24px;font-weight:700;line-height:1.25;margin-top:14px;}
+.h-sub{font-size:16px;line-height:1.6;color:var(--muted);margin-top:10px;max-width:480px;}
+.h-cta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:24px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border-radius:8px;background:var(--navy);color:var(--on-navy);font-size:15px;font-weight:700;text-decoration:none;}
+.btn:hover{background:var(--navy-hover);}
+.tlink{display:inline-flex;align-items:center;min-height:44px;font-size:15px;font-weight:700;color:var(--navy-ink);text-decoration:none;}
+.tlink:hover{text-decoration:underline;}
+.guest{display:inline-flex;align-items:center;min-height:44px;margin-top:6px;font-size:13px;color:var(--muted);}
+.guest:hover{color:var(--ink);}
+
+/* The phone mock: the real band in a phone outline. */
+.mock{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.phone{width:min(340px,100%);border:1px solid var(--border-strong);border-radius:34px;background:var(--card);padding:10px;}
+.phone .hb{border-radius:26px;padding:14px 16px 20px;min-height:208px;}
+.m-top{display:flex;align-items:center;min-height:32px;}
+.m-word{font-family:var(--font-num);font-weight:700;font-size:20px;letter-spacing:0.5px;color:var(--on-navy);}
+.m-pick{display:flex;flex-direction:column;gap:6px;width:min(340px,100%);}
+.m-pick label{font-size:12px;font-weight:700;color:var(--muted);}
+.m-pick select{min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--border-strong);background:var(--card);color:var(--ink);font:inherit;font-size:15px;}
+.m-note{font-size:12px;color:var(--muted);width:min(340px,100%);}
+
+/* Sections */
+.sec{padding:44px 0;border-top:1px solid var(--border);}
+.sec h2{font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:32px;letter-spacing:0.5px;line-height:1;margin-bottom:22px;}
+.sec h3{font-size:14px;font-weight:700;margin:26px 0 10px;}
+.steps{list-style:none;display:grid;grid-template-columns:1fr;gap:12px;}
+.step{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.step-ic{display:flex;width:40px;height:40px;border-radius:50%;background:var(--tint);color:var(--navy-ink);align-items:center;justify-content:center;margin-bottom:10px;}
+.step-t{font-size:15px;font-weight:700;}
+.step-d{font-size:14px;line-height:1.55;color:var(--muted);margin-top:4px;}
+
+/* The real example: the last finished round's top five. */
+.ex{margin-top:16px;background:var(--navy);color:var(--on-navy);border-radius:14px;padding:16px;}
+.ex-h{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;}
+.ex-meta{font-size:13px;margin-top:4px;}
+.ex-top{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin-top:10px;}
+.ex-name{font-size:18px;font-weight:700;overflow-wrap:anywhere;}
+.ex-total{font-size:34px;color:var(--gold);line-height:1;}
+.ex-unit{font-size:13px;}
+.ex-five{list-style:none;margin-top:12px;border-top:1px solid var(--navy-hover);}
+.ex-five li{display:flex;align-items:center;gap:10px;min-height:40px;border-bottom:1px solid var(--navy-hover);font-size:14px;}
+.ex-five li:last-child{border-bottom:none;}
+.ex-p{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ex-pts{font-size:18px;}
+.ex-cap{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--on-navy);color:var(--navy);font-family:var(--font-num);font-size:12px;font-weight:700;align-items:center;justify-content:center;flex-shrink:0;}
+.ex-nocap{width:20px;flex-shrink:0;}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+.gets{list-style:none;display:grid;grid-template-columns:1fr;gap:12px;}
+.get{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.get-ic{display:flex;color:var(--navy-ink);flex-shrink:0;margin-top:1px;}
+.get-t{font-size:15px;font-weight:700;}
+.get-d{font-size:14px;line-height:1.5;color:var(--muted);margin-top:2px;}
+.comps{list-style:none;display:flex;flex-wrap:wrap;gap:8px;}
+.comps li{font-size:13px;font-weight:600;padding:7px 12px;border:1px solid var(--border);border-radius:20px;background:var(--card);}
+
+.free{padding:36px 0;border-top:1px solid var(--border);text-align:center;}
+.free p{font-size:18px;font-weight:700;}
+.free nav{margin-top:8px;}
+.free nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;font-size:14px;}
+
+.inst{list-style:none;display:grid;grid-template-columns:1fr;gap:12px;}
+.inst-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.inst-card h3{margin:0 0 10px;font-size:15px;}
+.inst-card ol{padding-left:20px;font-size:14px;line-height:1.6;}
+.inst-card li{margin-bottom:6px;}
+.inst-card .ic{color:var(--navy-ink);margin-left:4px;}
+
+.lf{border-top:1px solid var(--border);padding:22px 0 30px;}
+.lf .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;}
+.lf a{display:inline-flex;align-items:center;min-height:44px;padding:0 8px;font-size:13px;color:var(--muted);text-decoration:none;}
+.lf a:hover{color:var(--ink);}
+
+@media(min-width:900px){
+  .hero{padding:72px 0 64px;}
+  .hero .wrap{grid-template-columns:minmax(0,1fr) 380px;gap:56px;}
+  .h-word{font-size:96px;}
+  .h-line{font-size:30px;}
+  .h-sub{font-size:17px;}
+  .sec{padding:64px 0;}
+  .sec h2{font-size:44px;}
+  .steps{grid-template-columns:repeat(3,1fr);gap:16px;}
+  .gets{grid-template-columns:repeat(2,1fr);gap:16px;}
+  .inst{grid-template-columns:repeat(2,1fr);gap:16px;}
+  .ex{max-width:560px;}
+}
+@media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+
+<header class="lh">
+  <div class="wrap">
+    <a class="lh-word" href="/welcome.html">Scout<span>Mind</span></a>
+    <span data-lang-switch></span>
+    <a class="lh-signin" href="/auth.html" data-i18n="land.signin">Sign in</a>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <h1 class="h-word">Scout<span>Mind</span></h1>
+      <p class="h-line" data-i18n="land.line">Your club. Everything around it.</p>
+      <p class="h-sub" data-i18n="land.sub">Play the Scout Game: pick five players and a captain each round, scored from real match stats.</p>
+      <div class="h-cta">
+        <a class="btn" href="/auth.html?tab=signup" data-i18n="land.create">Create account</a>
+        <a class="tlink" href="/auth.html" data-i18n="land.signin">Sign in</a>
+      </div>
+      <!-- Into the app as a guest, remembered on this device until sign-in
+           (sm_browse). The ?page= keeps working even without storage. -->
+      <a class="guest" href="/?page=feed" onclick="browseAsGuest()" data-i18n="land.guest">Browse as guest</a>
+    </div>
+    <!-- The real Home band for one club, from the database. Hidden until it has data. -->
+    <div class="mock" id="mock" hidden>
+      <div class="phone" role="group" aria-label="The Home screen, live for this club" data-i18n-aria="land.mockLabel">
+        <div class="hb">
+          <div class="m-top"><span class="m-word">Scout<span>Mind</span></span></div>
+          <div id="m-club" class="hb-club"></div>
+          <div id="m-slots" class="hb-slots"></div>
+        </div>
+      </div>
+      <div class="m-pick">
+        <label for="m-pick" data-i18n="land.pickClub">See another club</label>
+        <select id="m-pick" onchange="mockPick(this.value)"></select>
+      </div>
+      <p class="m-note" id="m-note" hidden data-i18n="land.mostFollowed">Opens on the most-followed club on ScoutMind.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="game">
+  <div class="wrap">
+    <h2 data-i18n="land.game.h">The Scout Game</h2>
+    <ol class="steps">
+      <li class="step"><span class="step-ic" data-icon="target"></span><div class="step-t" data-i18n="land.game.s1t">Pick five and a captain</div><p class="step-d" data-i18n="land.game.s1d">Before each round's deadline, choose five players from the competitions we cover and name one captain.</p></li>
+      <li class="step"><span class="step-ic" data-icon="ball"></span><div class="step-t" data-i18n="land.game.s2t">Real match stats score</div><p class="step-d" data-i18n="land.game.s2d">Goals, assists, saves and the rest, from the real matches. Your captain earns extra.</p></li>
+      <li class="step"><span class="step-ic" data-icon="users"></span><div class="step-t" data-i18n="land.game.s3t">Private leagues with friends</div><p class="step-d" data-i18n="land.game.s3d">Start a league, share the join link, and see who reads the game best each round.</p></li>
+    </ol>
+    <!-- The last finished round's top score and five, from the database. Hidden without one. -->
+    <div class="ex" id="ex" hidden></div>
+  </div>
+</section>
+
+<section class="sec" id="get">
+  <div class="wrap">
+    <h2 data-i18n="land.get.h">What you get</h2>
+    <ul class="gets">
+      <li class="get"><span class="get-ic" data-icon="home"></span><div><div class="get-t" data-i18n="land.get.home">Your club's Home</div><p class="get-d" data-i18n="land.get.homeD">Its table position, next match and the open Scout Game round at a glance.</p></div></li>
+      <li class="get"><span class="get-ic" data-icon="message"></span><div><div class="get-t" data-i18n="land.get.rooms">Club rooms</div><p class="get-d" data-i18n="land.get.roomsD">One official room per club, for the people who follow it.</p></div></li>
+      <li class="get"><span class="get-ic" data-icon="news"></span><div><div class="get-t" data-i18n="land.get.news">News with reactions</div><p class="get-d" data-i18n="land.get.newsD">Headlines from the outlets that cover your club, with a link to every story.</p></div></li>
+      <li class="get"><span class="get-ic" data-icon="table"></span><div><div class="get-t" data-i18n="land.get.tables">Tables and matches</div><p class="get-d" data-i18n="land.get.tablesD">League tables, fixtures and results in your own time zone.</p></div></li>
+    </ul>
+    <div id="comps-box" hidden>
+      <h3 data-i18n="land.get.comps">Every competition we hold</h3>
+      <ul class="comps" id="comps"></ul>
+    </div>
+  </div>
+</section>
+
+<section class="free">
+  <div class="wrap">
+    <p data-i18n="land.free">Free. No prizes, no betting, no ads.</p>
+    <nav><a href="/privacy.html" data-i18n="foot.privacy">Privacy</a><a href="/terms.html" data-i18n="foot.terms">Terms</a></nav>
+  </div>
+</section>
+
+<section class="sec" id="install">
+  <div class="wrap">
+    <h2 data-i18n="land.install.h">Put it on your home screen</h2>
+    <ul class="inst">
+      <li class="inst-card" data-platform="ios">
+        <h3 data-i18n="land.install.ios">iPhone</h3>
+        <ol><li><span data-i18n="land.install.ios1">Open scoutmind.app in Safari and tap Share.</span><span data-icon="share"></span></li><li data-i18n="land.install.ios2">Choose “Add to Home Screen”.</li></ol>
+      </li>
+      <li class="inst-card" data-platform="android">
+        <h3 data-i18n="land.install.android">Android</h3>
+        <ol><li><span data-i18n="land.install.and1">Open scoutmind.app in Chrome and tap the menu.</span><span data-icon="dotsVertical"></span></li><li data-i18n="land.install.and2">Choose “Install app”.</li></ol>
+      </li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<footer class="lf">
+  <div class="wrap">
+    <a href="/about.html" data-i18n="land.foot.about">About</a>
+    <a href="/privacy.html" data-i18n="foot.privacy">Privacy</a>
+    <a href="/terms.html" data-i18n="foot.terms">Terms</a>
+    <a href="mailto:hello@scoutmind.app" data-i18n="foot.contact">Contact</a>
+    <span data-lang-switch></span>
+  </div>
+</footer>
+
+<script>
+// ── LANDING PAGE ─────────────────────────────────────────────────────────
+// Every number and example on this page comes from the database, read with
+// the public (anon) key; a section with nothing real to show stays hidden.
+// No account token is ever sent: this page is for visitors who are not
+// signed in (the gate above sends anyone else to the app).
+var SB_REST='https://kdhbpzooyjxcglbxbuya.supabase.co/rest/v1/';
+var SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
+function landGet(path){
+  return fetch(SB_REST+path,{headers:{apikey:SB_ANON,Authorization:'Bearer '+SB_ANON}}).then(function(r){
+    if(!r.ok) return r.text().then(function(b){ throw new Error(path.split('?')[0]+' '+r.status+' '+b.slice(0,200)); });
+    return r.json();
+  });
+}
+function landRpc(fn,args){
+  return fetch(SB_REST+'rpc/'+fn,{method:'POST',headers:{apikey:SB_ANON,Authorization:'Bearer '+SB_ANON,'Content-Type':'application/json'},body:JSON.stringify(args||{})})
+    .then(function(r){ if(!r.ok) return r.text().then(function(b){ throw new Error('rpc/'+fn+' '+r.status+' '+b.slice(0,200)); }); return r.json(); });
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function landPts(v){ var n=Number(v); return v==null||isNaN(n)?'—':(Math.round(n*100)/100).toLocaleString(smLocale()); }
+function landCtx(){ return {t:t,tOrd:tOrd,esc:esc,pts:landPts,locale:smLocale(),now:Date.now()}; }
+function clubName(row){ return (typeof clubDisplayName==='function'?clubDisplayName(row):'')||row.name||''; }
+
+/** "Browse as guest": remembered on this device until sign-in (index.html's gate clears it). */
+function browseAsGuest(){ try{ localStorage.setItem('sm_browse','1'); }catch(e){} }
+
+var LAND={leagues:[],teams:{},order:[],clubId:null,mostFollowed:null,band:null,example:null};
+
+// ── The phone mock: the real Home band for one club ──
+function renderMock(){
+  var b=LAND.band, box=document.getElementById('mock');
+  if(!b||!box) return;
+  var ctx=landCtx(), club=LAND.teams[b.clubId];
+  document.getElementById('m-club').innerHTML=HomeBand.clubHtml({label:club.label,logo_url:club.logo_url},b.form,ctx);
+  var lg=LAND.leagues.filter(function(l){ return l.id===club.league_id; })[0]||null;
+  var s1=HomeBand.tableSlot(b.form), s2=HomeBand.matchSlot(b.clubId,b.fixtures,ctx.now);
+  var s3=HomeBand.roundSlot(b.round,{},LeagueNames.label(b.round&&b.round.leagues?b.round.leagues:lg));
+  document.getElementById('m-slots').innerHTML=HomeBand.slotHtml(s1,'',ctx)+HomeBand.slotHtml(s2,'',ctx)+HomeBand.slotHtml(s3,'',ctx);
+  document.getElementById('m-note').hidden=!(LAND.mostFollowed&&b.clubId===LAND.mostFollowed);
+  box.hidden=false;
+}
+async function loadBand(clubId){
+  var club=LAND.teams[clubId];
+  if(!club) return;
+  var lg=LAND.leagues.filter(function(l){ return l.id===club.league_id; })[0];
+  var now=Date.now(), since=new Date(now-14*86400000).toISOString();
+  var from=new Date(now-36*3600000).toISOString(), to=new Date(now+30*86400000).toISOString();
+  var res=await Promise.all([
+    lg?landRpc('match_form',{p_team_id:clubId,p_league_id:lg.id,p_season:lg.current_season,p_before:new Date(now).toISOString()}).catch(function(){ return null; }):null,
+    landGet('fixtures?select=id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id'
+      +'&or=(home_team_id.eq.'+clubId+',away_team_id.eq.'+clubId+')&kickoff_utc=gte.'+from+'&kickoff_utc=lte.'+to+'&order=kickoff_utc.asc&limit=12').catch(function(){ return []; }),
+    lg?landGet('game_rounds?select=id,league_id,season,round_label,round_no,deadline_utc,closes_utc,status,leagues(slug,name,country)'
+      +'&league_id=eq.'+lg.id+'&or=(status.in.(open,locked),and(status.eq.final,closes_utc.gte.'+since+'))&order=deadline_utc.asc&limit=50').catch(function(){ return []; }):[]
+  ]);
+  if(LAND.clubId!==clubId) return;      // another club was picked meanwhile
+  var fixtures=(res[1]||[]).map(function(f){
+    var opp=LAND.teams[f.home_team_id===clubId?f.away_team_id:f.home_team_id];
+    return {id:f.id,kickoff:new Date(f.kickoff_utc).getTime(),status_short:f.status_short,elapsed:f.elapsed,home_id:f.home_team_id,away_id:f.away_team_id,
+      home_goals:f.home_goals,away_goals:f.away_goals,opponent:opp?opp.label:'—'};
+  });
+  var rounds=(res[2]||[]).map(function(r){ var x={},k; for(k in r) x[k]=r[k]; x.league_slug=r.leagues&&r.leagues.slug; return x; });
+  LAND.band={clubId:clubId,form:res[0]||null,fixtures:fixtures,round:HomeBand.pickRound(rounds,lg?lg.slug:null,new Set(),null,now)};
+  renderMock();
+}
+function mockPick(id){ LAND.clubId=Number(id); loadBand(LAND.clubId).catch(function(e){ console.warn('landing band:',e.message); }); }
+function renderPicker(){
+  var sel=document.getElementById('m-pick');
+  if(!sel) return;
+  sel.innerHTML=LAND.leagues.map(function(l){
+    var clubs=LAND.order.filter(function(id){ return LAND.teams[id].league_id===l.id; });
+    if(!clubs.length) return '';
+    return '<optgroup label="'+esc(LeagueNames.label(l))+'">'+clubs.map(function(id){
+      return '<option value="'+id+'"'+(id===LAND.clubId?' selected':'')+'>'+esc(LAND.teams[id].label)+'</option>';
+    }).join('')+'</optgroup>';
+  }).join('');
+}
+
+// ── Competitions ──
+function renderComps(){
+  var ul=document.getElementById('comps');
+  if(!ul) return;
+  ul.innerHTML=LAND.leagues.map(function(l){ return '<li>'+esc(LeagueNames.label(l))+'</li>'; }).join('');
+  document.getElementById('comps-box').hidden=!LAND.leagues.length;
+}
+
+// ── The Scout Game example: the last finished round's top score and five ──
+function renderExample(){
+  var x=LAND.example, el=document.getElementById('ex');
+  if(!el) return;
+  if(!x){ el.hidden=true; return; }
+  var r=x.round, lname=r.leagues?LeagueNames.label(r.leagues):'';
+  var rname=r.round_no?t('sg.round',{n:r.round_no}):String(r.round_label||t('sg.roundGeneric'));
+  el.innerHTML='<div class="ex-h">'+esc(t('land.ex.h'))+'</div>'
+    +'<div class="ex-meta">'+esc((lname?lname+' · ':'')+rname)+'</div>'
+    +'<div class="ex-top"><span class="ex-name">'+esc(x.name||t('sg.deletedUser'))+'</span>'
+    +'<span class="ex-total num">'+esc(landPts(x.total))+'</span><span class="ex-unit">'+esc(t('land.ex.total'))+'</span></div>'
+    +'<ul class="ex-five">'+x.picks.map(function(p){
+      return '<li>'+(p.is_captain?'<span class="ex-cap" aria-hidden="true">C</span><span class="sr">'+esc(t('land.ex.cap'))+'</span>':'<span class="ex-nocap"></span>')
+        +'<span class="ex-p">'+esc(p.name)+'</span><span class="ex-pts num">'+esc(landPts(p.points))+'</span></li>';
+    }).join('')+'</ul>';
+  el.hidden=false;
+}
+// "The last finished round" = the newest FINAL round that anyone played: a
+// finished round with no entries has no top score to show (17 Nov: 118 final
+// rounds, none with entries yet; the section stays hidden until one has).
+async function loadExample(){
+  var rounds=await landGet('game_rounds?select=id,league_id,season,round_label,round_no,deadline_utc,status,leagues(slug,name,country)&status=eq.final&order=deadline_utc.desc&limit=60');
+  if(!rounds||!rounds.length) return null;
+  var tops=await landGet('game_round_rankings?select=round_id,user_id,name,total,rank&rank=eq.1&status=eq.final&round_id=in.('+rounds.map(function(x){ return Number(x.id); }).join(',')+')');
+  var byRound={}; (tops||[]).forEach(function(x){ byRound[x.round_id]=x; });
+  var r=rounds.filter(function(x){ var tp=byRound[x.id]; return tp&&tp.user_id&&tp.total!=null; })[0];
+  if(!r) return null;
+  var top=byRound[r.id];
+  var entry=(await landGet('game_entries?select=id,game_picks(slot,player_id,is_captain,players(name))&round_id=eq.'+Number(r.id)
+    +'&user_id=eq.'+encodeURIComponent(top.user_id)+'&limit=1'))[0];
+  if(!entry||!entry.game_picks||!entry.game_picks.length) return null;
+  var scores=await landGet('game_pick_scores?select=slot,total&entry_id=eq.'+Number(entry.id)).catch(function(){ return []; });
+  var bySlot={};
+  (scores||[]).forEach(function(s){ if(s.total!=null) bySlot[s.slot]=(bySlot[s.slot]||0)+Number(s.total); });
+  var picks=entry.game_picks.slice().sort(function(a,b){ return a.slot-b.slot; }).map(function(p){
+    return {name:(p.players&&p.players.name)||'—',is_captain:!!p.is_captain,points:bySlot[p.slot]!=null?bySlot[p.slot]:null};
+  });
+  return {round:r,name:top.name,total:top.total,picks:picks};
+}
+
+// ── Install hint: the visitor's platform only; both on a desktop ──
+function renderInstall(){
+  var ua=navigator.userAgent||'';
+  var ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1), android=/Android/.test(ua);
+  var standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+  document.getElementById('install').hidden=standalone;
+  document.querySelectorAll('[data-platform]').forEach(function(c){
+    var p=c.getAttribute('data-platform');
+    c.hidden=ios?p!=='ios':android?p!=='android':false;
+  });
+}
+
+function paintIcons(){
+  document.querySelectorAll('[data-icon]').forEach(function(el){ el.innerHTML=Icons.svg(el.getAttribute('data-icon'),20); });
+}
+function renderAll(){
+  try{ applyI18n(); }catch(e){}
+  renderPicker(); renderComps(); renderExample(); renderMock();
+}
+
+async function landStart(){
+  paintIcons(); renderInstall();
+  try{ applyI18n(); }catch(e){}
+  // Competitions and clubs (rule 20: the teams→leagues embed is not needed here).
+  try{
+    var res=await Promise.all([
+      landGet('leagues?select=id,slug,name,country,current_season&active=is.true&order=id.asc'),
+      landGet('teams?select=id,api_team_id,name,logo_url,league_id&limit=1000')
+    ]);
+    LAND.leagues=res[0]||[];
+    var active={}; LAND.leagues.forEach(function(l){ active[l.id]=true; });
+    (res[1]||[]).forEach(function(row){ if(active[row.league_id]) LAND.teams[row.id]={id:row.id,label:clubName(row),logo_url:row.logo_url||null,league_id:row.league_id}; });
+    LAND.order=Object.keys(LAND.teams).map(Number).sort(function(a,b){ return LAND.teams[a].label.localeCompare(LAND.teams[b].label); });
+  }catch(e){ console.warn('landing clubs:',e.message); }
+  renderComps();
+  // The most-followed club (034), else the room overview's identical count
+  // (rule 21); if neither answers, the first club, and no "most followed" line.
+  if(LAND.order.length){
+    var top=null;
+    try{ var c=await landGet('club_follow_counts?select=club_id,followers&order=followers.desc&limit=1'); if(c[0]&&c[0].followers>0) top=c[0].club_id; }
+    catch(e){
+      try{ var o=await landGet('club_chat_overview?select=club_id,member_count&order=member_count.desc&limit=1'); if(o[0]&&o[0].member_count>0) top=o[0].club_id; }
+      catch(e2){ console.warn('landing counts:',e2.message); }
+    }
+    LAND.mostFollowed=top&&LAND.teams[top]?top:null;
+    LAND.clubId=LAND.mostFollowed||LAND.order[0];
+    renderPicker();
+    loadBand(LAND.clubId).catch(function(e){ console.warn('landing band:',e.message); });
+  }
+  loadExample().then(function(x){ LAND.example=x; renderExample(); }).catch(function(e){ console.warn('landing example:',e.message); });
+}
+
+window.addEventListener('sm-lang',renderAll);
+setInterval(function(){ if(LAND.band&&!document.hidden) renderMock(); },30000);   // the countdown
+landStart();
+</script>
+</body>
+</html>
