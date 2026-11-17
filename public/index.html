@@ -9,7 +9,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-<title>ScoutMind — Your club. Everything around it.</title>
+<title data-i18n="app.docTitle">ScoutMind — Your club. Everything around it.</title>
 <meta name="description" content="The free football social network: news about your club, club rooms, matches and the Scout Game.">
 <!-- Icons and link previews: the same block on every page (scripts/make-icons.ps1 makes the files). -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -73,7 +73,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=80a097adb2"></script>
+<script src="/i18n.js?v=7c379f3d0c"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=d008ee2323"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -273,10 +273,34 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .league-filter-btn{font-size:11px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .league-filter-btn.active,.league-filter-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--accent);}
 /* Mobile first: two columns fit 375px. Three was cutting the last one off. */
-.clubs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+/* Clubs (4b-5): light header, my club card, all clubs as tiles. Tokens only. */
+.clubs-col{max-width:1100px;margin:0 auto;padding:24px 16px;}
+.cl-section{margin:22px 0 10px;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);}
+.cl-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.cl-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px;font-size:14px;color:var(--muted);text-align:center;}
+.cl-head{display:flex;align-items:center;gap:14px;min-height:64px;padding:14px 16px;color:var(--ink);text-decoration:none;}
+.cl-head:hover{background:var(--field);}
+.cl-name-wrap{display:flex;flex-direction:column;flex:1;min-width:0;gap:2px;}
+.cl-name{font-size:18px;font-weight:800;}
+.cl-sub{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cl-go{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-size:13px;font-weight:700;color:var(--navy-ink);}
+.cl-stats{display:flex;border-top:1px solid var(--border);}
+.cl-stat{flex:1;min-width:0;padding:10px 3px;text-align:center;}
+.cl-stat-v{font-size:18px;color:var(--ink);}
+.cl-stat-l{margin-top:2px;font-size:10px;font-weight:600;letter-spacing:.4px;line-height:1.25;text-transform:uppercase;color:var(--muted);overflow-wrap:anywhere;}
+.cl-stat-a{margin-top:2px;font-size:10px;color:var(--muted);}
+.cl-room{display:flex;align-items:center;gap:8px;width:100%;min-height:48px;padding:0 16px;border:none;border-top:1px solid var(--border);background:transparent;color:var(--navy-ink);font:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer;}
+.cl-room:hover{background:var(--field);}
+.cl-room-n{margin-left:auto;font-size:12px;font-weight:500;color:var(--muted);}
+#clubs-chips{margin-bottom:12px;}
+.clubs-grid{display:grid;grid-template-columns:1fr;gap:8px;}
+@media (min-width: 600px){ .clubs-grid{grid-template-columns:repeat(2,1fr);} }
 @media (min-width: 900px){ .clubs-grid{grid-template-columns:repeat(3,1fr);} }
-.club-explore-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;}
-.club-explore-card:hover{border-color:var(--border-strong);transform:translateY(-2px);}
+.cl-tile{display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--ink);text-decoration:none;}
+.cl-tile:hover{background:var(--field);}
+.cl-tile.mine{box-shadow:inset 3px 0 0 var(--navy-ink);}
+.cl-tile-name{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cl-tile .sg-tag{align-self:flex-start;}
 .club-explore-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .club-explore-crest{width:36px;height:36px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;}
 .club-explore-name{font-size:12px;font-weight:600;color:var(--text);}
@@ -285,7 +309,22 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .club-explore-stat{font-size:10px;color:var(--muted);}
 .club-explore-stat span{color:var(--text);font-family:'DM Mono',monospace;}
 /* ── PROFILE PAGE ── */
-.profile-page{max-width:680px;margin:0 auto;padding:32px 24px;}
+.profile-page{max-width:680px;margin:0 auto;padding:24px 16px;}
+.sheet-ic{display:flex;justify-content:center;color:var(--navy-ink);margin-bottom:10px;}
+/* Profile (4b-5): light header, real member-since, guests see language + theme. */
+.prof-guest{text-align:center;padding:24px 8px 28px;}
+.prof-guest-ic{display:flex;justify-content:center;color:var(--muted);margin-bottom:12px;}
+.prof-guest-title{font-size:20px;font-weight:800;color:var(--ink);margin-bottom:8px;}
+.prof-guest-text{font-size:14px;color:var(--muted);line-height:1.6;max-width:340px;margin:0 auto 20px;}
+.prof-me{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+.prof-av{width:60px;height:60px;border-radius:50%;background:var(--tint);border:2px solid var(--navy-ink);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;font-weight:700;color:var(--navy-ink);}
+.prof-name{font-size:22px;font-weight:800;color:var(--ink);overflow-wrap:anywhere;}
+.prof-email{font-size:13px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere;}
+.prof-input{width:170px;min-height:40px;padding:0 10px;background:var(--field);border:1px solid var(--border-strong);border-radius:8px;color:var(--ink);font:inherit;font-size:14px;outline:none;}
+.prof-save{min-height:40px;padding:0 14px;background:var(--navy);color:var(--on-navy);border:none;border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+.prof-cancel{display:flex;align-items:center;justify-content:center;width:40px;height:40px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;}
+.club-manage-btn{margin-top:10px;min-height:40px;padding:0 16px;background:transparent;border:1px solid var(--border);color:var(--navy-ink);border-radius:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.club-manage-btn:hover{background:var(--field);}
 .profile-section{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
 .profile-section-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;}
 .profile-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
@@ -1101,10 +1140,10 @@ if(!_cu){
      phone it carries the wordmark, search and avatar (the global nav is hidden
      on Home below 900px), then the club, its last five and three slots. The
      slot rules are public/home-band.js; renderHomeBand() paints them. -->
-<section class="hb" id="home-band" aria-label="Your club">
+<section class="hb" id="home-band" aria-label="Your club" data-i18n-aria="home.band">
  <div class="hb-inner">
   <div class="hb-top">
-    <a class="hb-word" href="/" aria-label="ScoutMind">Scout<span>Mind</span></a>
+    <a class="hb-word" href="/">Scout<span>Mind</span></a>
     <button class="hb-icon" type="button" onclick="homeSearch()" data-i18n-aria="hb.search" aria-label="Search">
       <!-- Tabler icon "search" (MIT) -->
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
@@ -1139,40 +1178,35 @@ if(!_cu){
      centre + right, with the left column's leagues as a row above them; a
      phone, one column. -->
 <div class="feed-page">
-  <aside class="feed-left" id="home-left" aria-label="Your game">
+  <aside class="feed-left" id="home-left" aria-label="Your game" data-i18n-aria="home.left">
     <div class="feed-side-card hl-card" id="hl-leagues" hidden></div>
     <div class="feed-side-card hl-card hl-picks" id="hl-picks" hidden></div>
   </aside>
   <div class="feed-main">
     <div class="feed-tabs-bar">
-      <button class="ftab active" onclick="showFeedTab('trending',this)">Trending</button>
-      <button class="ftab" onclick="showFeedTab('transfers',this)">News</button>
-      <button class="ftab" onclick="showFeedTab('foryou',this)">For you</button>
-      <!-- SM Weekly is hidden until it is generated from real data in R9. The tab,
-           #feedtab-weekly and renderWeeklyReport() are all intentionally kept. -->
-      <button class="ftab" style="display:none;" onclick="showFeedTab('weekly',this)">SM Weekly</button>
+      <button class="ftab active" onclick="showFeedTab('trending',this)" data-i18n="home.tab.trending">Trending</button>
+      <button class="ftab" onclick="showFeedTab('transfers',this)" data-i18n="home.tab.news">News</button>
+      <button class="ftab" onclick="showFeedTab('foryou',this)" data-i18n="home.tab.foryou">For you</button>
     </div>
 
     <!-- TRENDING TAB — first and default. Ranked by engagement decayed by age,
          with coverage breadth as the fallback signal. No cron: scored here. -->
     <div id="feedtab-trending">
-      <div class="feed-title">Trending</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px;">
-        What people are reacting to, and the stories the most outlets are covering right now.
-      </div>
+      <div class="feed-title" data-i18n="home.tab.trending">Trending</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px;" data-i18n="home.trending.sub">What people are reacting to, and the stories the most outlets are covering right now.</div>
       <div id="trending-content"></div>
     </div>
 
     <!-- NEWS TAB. Real headlines from news_items. -->
     <div id="feedtab-transfers" style="display:none;">
-      <div class="feed-title" style="margin-bottom:14px;">News</div>
+      <div class="feed-title" style="margin-bottom:14px;" data-i18n="home.tab.news">News</div>
       <div class="search-wrap">
         <!-- Tabler icon "search" (MIT): no emoji (spec §8). -->
         <span class="search-icon" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span>
         <input id="feed-search" class="search-box" type="search" inputmode="search"
-               placeholder="Search headlines…" autocomplete="off"
+               placeholder="Search headlines…" data-i18n-ph="home.search.ph" autocomplete="off"
                oninput="onSearchInput(this.value)">
-        <button class="search-clear" onclick="clearSearch()" title="Clear">✕</button>
+        <button class="search-clear" onclick="clearSearch()" title="Clear" data-i18n-title="home.search.clear" aria-label="Clear" data-i18n-aria="home.search.clear"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
       </div>
       <!-- One row that scrolls sideways: the reader's languages (rendered by
            renderLangChips(), only when there is more than one), then the
@@ -1198,10 +1232,6 @@ if(!_cu){
       <div id="foryou-content"></div>
     </div>
 
-    <!-- SCOUTMIND WEEKLY TAB -->
-    <div id="feedtab-weekly" style="display:none;">
-      <div id="weekly-report-section"></div>
-    </div>
 </div><!-- /feed-main -->
   <div class="feed-side">
     <!-- Right column (commit 3): the room (last 3 messages + a composer, its
@@ -1213,12 +1243,12 @@ if(!_cu){
       <!-- Was three hardcoded rows (Botafogo-Fluminense 21:00, Arsenal-Chelsea,
            Real Madrid-Sevilla). Now real fixtures for today in the viewer's
            timezone, falling back to the next matchday. -->
-      <div class="feed-side-title" id="sidebar-matches-title">Today's matches</div>
+      <div class="feed-side-title" id="sidebar-matches-title" data-i18n="home.side.today">Today's matches</div>
       <div id="sidebar-matches"></div>
     </div>
     <div class="feed-side-card hr-table" id="hr-table" hidden></div>
     <div class="feed-side-card">
-      <div class="feed-side-title">My clubs</div>
+      <div class="feed-side-title" data-i18n="home.side.myClubs">My clubs</div>
       <!-- Rendered by renderSidebarClubs(). Used to hardcode "Botafogo" for
            everyone, including signed-out visitors. -->
       <div id="sidebar-clubs"></div>
@@ -1254,18 +1284,19 @@ if(!_cu){
 
 <!-- COMMUNITIES PAGE -->
 <div class="page" id="page-communities">
-<div style="max-width:1100px;margin:0 auto;padding:24px 28px;">
-
-  <!-- Your club and the club grid are rendered from Supabase by
-       renderMyClubCard() / renderClubsGrid(). Everything here used to be
-       hardcoded: a Botafogo banner with "42.8k followers", invented style
-       badges and made-up per-game numbers. -->
-  <div style="margin-bottom:22px;">
-    <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Your club</div>
-    <div id="clubs-my-card"></div>
+<!-- CLUBS (4b-5): a light header, my club, then every club we carry with the
+     league chips. Rendered from Supabase by renderMyClubCard() /
+     renderClubsGrid(); a club opens its page (community.html?club=), its room
+     is one tap from there and from the Rooms tab. -->
+<div class="clubs-col">
+  <div class="mx-head">
+    <div class="feed-title" data-i18n="clubs.title">Clubs</div>
+    <div class="mx-sub" data-i18n="clubs.sub">Every club we carry. Open one for its page: table, season numbers, polls and its room.</div>
   </div>
-
-  <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;">Explore communities</div>
+  <div class="cl-section" data-i18n="clubs.yours">Your club</div>
+  <div id="clubs-my-card"></div>
+  <div class="cl-section" data-i18n="clubs.all">All clubs</div>
+  <div id="clubs-chips" class="chip-scroll" role="group" aria-label="League" data-i18n-aria="fx.leagueFilter"></div>
   <div class="clubs-grid" id="clubs-grid"></div>
 </div>
 </div>
@@ -1286,68 +1317,73 @@ if(!_cu){
 <!-- PROFILE PAGE -->
 <div class="page" id="page-profile">
 <div class="profile-page">
-  <button class="back-btn" onclick="showPage('feed')">← Back to Feed</button>
+  <!-- 4b-5: a light header like Clubs and Rooms; every word through i18n. -->
+  <div class="mx-head">
+    <div class="feed-title" data-i18n="prof.title">Profile</div>
+  </div>
 
-  <!-- Guest state: shown instead of the account sections when signed out. -->
-  <div id="profile-guest" style="display:none;text-align:center;padding:40px 20px;">
-    <div style="font-size:44px;margin-bottom:14px;">👤</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:8px;">Your profile</div>
-    <div style="font-size:13px;color:var(--muted);line-height:1.7;max-width:340px;margin:0 auto 22px;">Create a free account to pick your club, follow analysts, and keep your scouting history in one place.</div>
-    <button class="signin-sheet-primary" style="max-width:260px;margin:0 auto 9px;display:block;width:100%;" onclick="window.location.href='/auth.html?tab=signup'">Create a free account</button>
-    <button class="signin-sheet-secondary" style="max-width:260px;margin:0 auto;display:block;width:100%;" onclick="window.location.href='/auth.html'">I already have an account</button>
+  <!-- Guest state: shown instead of the account sections when signed out.
+       Language and theme are below, for guests too. -->
+  <div id="profile-guest" class="prof-guest" style="display:none;">
+    <div class="prof-guest-ic" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg></div>
+    <div class="prof-guest-title" data-i18n="prof.guest.title">Your profile</div>
+    <div class="prof-guest-text" data-i18n="prof.guest.text">Create a free account to pick your clubs, play the Scout Game and chat in your clubs' rooms.</div>
+    <button class="signin-sheet-primary" style="max-width:260px;margin:0 auto 9px;display:block;width:100%;" onclick="window.location.href='/auth.html?tab=signup'" data-i18n="prof.guest.create">Create a free account</button>
+    <button class="signin-sheet-secondary" style="max-width:260px;margin:0 auto;display:block;width:100%;" onclick="window.location.href='/auth.html'" data-i18n="prof.guest.have">I already have an account</button>
   </div>
 
   <div id="profile-signedin">
-  <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
-    <div id="profile-avatar-big" style="width:60px;height:60px;border-radius:50%;background:var(--tint);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--accent);flex-shrink:0;">?</div>
-    <div>
-      <div id="profile-name-big" style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;"></div>
-      <div id="profile-email-big" style="font-size:12px;color:var(--muted);margin-top:2px;"></div>
+  <div class="prof-me">
+    <div id="profile-avatar-big" class="prof-av">?</div>
+    <div style="min-width:0;">
+      <div id="profile-name-big" class="prof-name"></div>
+      <div id="profile-email-big" class="prof-email"></div>
     </div>
   </div>
 
   <!-- Account Info -->
   <div class="profile-section">
-    <div class="profile-section-title">Account</div>
+    <div class="profile-section-title" data-i18n="prof.account">Account</div>
     <div class="profile-row">
-      <div class="profile-row-label">Name</div>
+      <div class="profile-row-label" data-i18n="prof.name">Name</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="profile-row-value" id="profile-name-val">—</div>
-        <div id="profile-name-edit" style="display:none;align-items:center;gap:6px;"><input type="text" id="profile-name-input" placeholder="Enter name..." onkeydown="if(event.key==='Enter')saveName();if(event.key==='Escape')cancelEditName();" style="background:var(--bg3);border:1px solid var(--accent);color:var(--text);padding:5px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:160px;"><button onclick="saveName()" style="font-size:11px;font-weight:700;padding:5px 12px;background:var(--navy);color:var(--on-navy);border:none;border-radius:6px;cursor:pointer;font-family:inherit;">Save</button><button onclick="cancelEditName()" style="font-size:11px;padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-family:inherit;">&#x2715;</button></div><button class="profile-edit-btn" id="profile-edit-btn" onclick="editName()">Edit</button>
+        <div id="profile-name-edit" style="display:none;align-items:center;gap:6px;"><input type="text" id="profile-name-input" placeholder="Your name" data-i18n-ph="prof.namePh" aria-label="Name" data-i18n-aria="prof.name" onkeydown="if(event.key==='Enter')saveName();if(event.key==='Escape')cancelEditName();" class="prof-input"><button onclick="saveName()" class="prof-save" data-i18n="prof.save">Save</button><button onclick="cancelEditName()" class="prof-cancel" aria-label="Cancel" data-i18n-aria="cmt.cancel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button></div><button class="profile-edit-btn" id="profile-edit-btn" onclick="editName()" data-i18n="prof.edit">Edit</button>
       </div>
     </div>
     <div class="profile-row">
-      <div class="profile-row-label">Email</div>
+      <div class="profile-row-label" data-i18n="prof.email">Email</div>
       <div class="profile-row-value" id="profile-email-val">—</div>
     </div>
-    <div class="profile-row">
-      <div class="profile-row-label">Member since</div>
-      <div class="profile-row-value">May 2026</div>
+    <!-- 4b-5: was a hard-coded "May 2026" for everyone. The account's own
+         creation date, or no row at all (renderMemberSince). -->
+    <div class="profile-row" id="profile-since-row" style="display:none;">
+      <div class="profile-row-label" data-i18n="prof.since">Member since</div>
+      <div class="profile-row-value" id="profile-since-val"></div>
     </div>
   </div>
 
   <!-- My Clubs -->
   <div class="profile-section">
-    <div class="profile-section-title">My clubs</div>
+    <div class="profile-section-title" data-i18n="home.side.myClubs">My clubs</div>
     <div id="profile-clubs-list">
-      <div style="font-size:12px;color:var(--muted);padding:8px 0;">No club selected yet.</div>
+      <div style="font-size:12px;color:var(--muted);padding:8px 0;" data-i18n="prof.noClub">No club selected yet.</div>
     </div>
-    <button class="club-manage-btn" onclick="openTeamModal()" style="margin-top:10px;font-size:11px;font-weight:600;padding:7px 16px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ Change / manage clubs</button>
+    <button class="club-manage-btn" onclick="openTeamModal()" data-i18n="prof.manage">Change or manage clubs</button>
   </div>
+  </div><!-- /profile-signedin (account and clubs) -->
 
-  <!-- Preferences -->
+  <!-- Preferences: for guests too (language, theme). -->
   <div class="profile-section">
-    <div class="profile-section-title">Content languages</div>
-    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 10px;">
-      Which languages your feed shows. News about a club you follow always appears, whatever language it is in.
-    </div>
+    <div class="profile-section-title" data-i18n="prof.contentLang">Content languages</div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 10px;" data-i18n="prof.contentLangNote">Which languages your feed shows. News about a club you follow always appears, whatever language it is in.</div>
     <div id="profile-lang-prefs" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
     <div id="profile-club-lang" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"></div>
     <!-- App language (Day 6, beta): what the interface is written in, not the
          feed. Labelled with its scope so nobody expects the whole app in PT. -->
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
       <div style="font-size:12px;font-weight:600;margin-bottom:4px;" data-i18n="pref.lang.title">App language</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 10px;" data-i18n="pref.lang.note">Beta: so far only sign-in, choosing your clubs and the Scout Game are translated.</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 10px;" data-i18n="pref.lang.note">The words of the app. Your device's language until you choose.</div>
       <div id="profile-app-lang" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
     </div>
     <!-- Theme (design spec v1.2): System / Light / Dark, kept on this device
@@ -1360,9 +1396,11 @@ if(!_cu){
          signed out, or before 027 runs (rule 21). -->
     <div id="profile-remind" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"></div>
   </div>
+  <!-- Signed in only, like #profile-signedin above (renderAuthUi toggles both). -->
+  <div id="profile-signedin-more">
   <!-- Admins only. RLS is the real guard: a non-admin who unhid this reads nothing. -->
   <div class="profile-section" id="profile-reports" style="display:none;">
-    <div class="profile-section-title">Open reports</div>
+    <div class="profile-section-title" data-i18n="prof.reports">Open reports</div>
     <div id="reports-list"></div>
   </div>
 
@@ -1374,22 +1412,22 @@ if(!_cu){
 
   <!-- Danger Zone -->
   <div class="profile-section" style="border-color:var(--loss-ink);">
-    <div class="profile-section-title" style="color:var(--loss-ink);">Account actions</div>
+    <div class="profile-section-title" style="color:var(--loss-ink);" data-i18n="prof.actions">Account actions</div>
     <div class="profile-row">
-      <div class="profile-row-label">Sign out of ScoutMind</div>
-      <button class="danger-btn" onclick="logout()">Sign out</button>
+      <div class="profile-row-label" data-i18n="prof.signoutLabel">Sign out of ScoutMind</div>
+      <button class="danger-btn" onclick="logout()" data-i18n="nav.signout">Sign out</button>
     </div>
     <!-- LGPD art. 18: a copy of your data, and erasing your account. -->
     <div class="profile-row">
-      <div class="profile-row-label">Download my data (JSON)</div>
-      <button class="profile-edit-btn" id="export-btn" onclick="downloadMyData()">Download</button>
+      <div class="profile-row-label" data-i18n="prof.exportLabel">Download my data (JSON)</div>
+      <button class="profile-edit-btn" id="export-btn" onclick="downloadMyData()" data-i18n="prof.download">Download</button>
     </div>
     <div class="profile-row">
-      <div class="profile-row-label">Delete my account</div>
-      <button class="danger-btn" onclick="openDeleteAccount()">Delete account</button>
+      <div class="profile-row-label" data-i18n="prof.deleteLabel">Delete my account</div>
+      <button class="danger-btn" onclick="openDeleteAccount()" data-i18n="prof.deleteBtn">Delete account</button>
     </div>
   </div>
-  </div><!-- close profile-signedin -->
+  </div><!-- close profile-signedin-more -->
 </div>
 </div>
 
@@ -1452,13 +1490,17 @@ function renderAuthUi(){
   if(langSlot)langSlot.style.display=guest?'flex':'none';
   if(!guest){
     const nameEl=document.getElementById('nav-name');
-    if(nameEl)nameEl.textContent=currentUser.name||'User';
+    if(nameEl)nameEl.textContent=currentUser.name||t('prof.user');
   }
   // Profile page: guest pitch vs the real account sections.
   const pGuest=document.getElementById('profile-guest');
-  const pSignedIn=document.getElementById('profile-signedin');
   if(pGuest)pGuest.style.display=guest?'block':'none';
-  if(pSignedIn)pSignedIn.style.display=guest?'none':'block';
+  // Account + clubs above the preferences, Scout Game + account actions under
+  // them; the preferences (language, theme) are for guests too (4b-5).
+  ['profile-signedin','profile-signedin-more'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(el)el.style.display=guest?'none':'block';
+  });
 }
 renderAuthUi();
 
@@ -1468,8 +1510,7 @@ renderAuthUi();
 // the session belongs to.
 SMAuth.onAccountMismatch(function(email){
   try{
-    alert('You are signed in as '+email+', not the account this page was showing.\n\n'
-      +'Reloading so nothing is saved to the wrong account.');
+    alert(t('auth.mismatch',{email:email}));
   }catch(e){}
   window.location.reload();
 });
@@ -1480,7 +1521,7 @@ SMAuth.onSignedOut(function(){
   sessionLapsed=true;
   try{ renderAuthUi(); }catch(e){}
   try{ stopChatPolling(); }catch(e){}
-  openSigninSheet('Your session expired. Sign in again to pick up where you left off.');
+  openSigninSheet(t('auth.expired'));
 });
 
 // ── GUEST WRITE GATE ──
@@ -1488,16 +1529,14 @@ SMAuth.onSignedOut(function(){
 // Gating at function entry (not on the button) so programmatic callers are covered too.
 function requireAuth(message){
   if(!isGuestNow())return true;
-  openSigninSheet(sessionLapsed
-    ?'Your session expired. Sign in again to pick up where you left off.'
-    :message);
+  openSigninSheet(sessionLapsed?t('auth.expired'):message);
   return false;
 }
 function openSigninSheet(message){
   const sheet=document.getElementById('signin-sheet');
   if(!sheet){window.location.href='/auth.html';return;}
   const sub=document.getElementById('signin-sheet-sub');
-  if(sub)sub.textContent=message||'Create a free account to join the conversation.';
+  if(sub)sub.textContent=message||t('cmt.gate');
   sheet.style.display='flex';
   document.body.style.overflow='hidden';
 }
@@ -1540,14 +1579,14 @@ async function logout(){
 
 /** Download everything we hold about you, from rpc export_my_data (024). */
 async function downloadMyData(){
-  if(!requireAuth('Sign in to download your data.'))return;
+  if(!requireAuth(t('data.gate')))return;
   const btn=document.getElementById('export-btn');
-  if(btn){ btn.disabled=true; btn.textContent='Preparing…'; }
+  if(btn){ btn.disabled=true; btn.textContent=t('data.preparing'); }
   try{
     const res=await SMAuth.rest('rpc/export_my_data',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
     if(!res.ok) throw new Error('rpc/export_my_data HTTP '+res.status+' — '+(await res.text()).slice(0,200));
     const data=await res.json();
-    if(!data) throw new Error('Sign in again to download your data.');
+    if(!data) throw new Error(t('data.again'));
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
     const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
@@ -1557,14 +1596,14 @@ async function downloadMyData(){
   }catch(e){
     console.error('downloadMyData:',e);
     // Before 024 runs there is no export_my_data to call.
-    toast(/HTTP 404/.test(e.message)?'Data download is not available yet. Write to hello@scoutmind.app.':friendlyDbError(e.message),'error');
+    toast(/HTTP 404/.test(e.message)?t('data.notYet'):friendlyDbError(e.message),'error');
   }finally{
-    if(btn){ btn.disabled=false; btn.textContent='Download'; }
+    if(btn){ btn.disabled=false; btn.textContent=t('prof.download'); }
   }
 }
 
 function openDeleteAccount(){
-  if(!requireAuth('Sign in to manage your account.'))return;
+  if(!requireAuth(t('data.gateManage')))return;
   const m=document.getElementById('delete-modal');
   if(!m)return;
   ['del-password','del-confirm'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
@@ -1601,11 +1640,11 @@ async function confirmDeleteAccount(){
   const btn=document.getElementById('del-go'), err=document.getElementById('del-error');
   const password=(document.getElementById('del-password')||{}).value||'';
   const confirm=((document.getElementById('del-confirm')||{}).value||'').trim();
-  const say=(t)=>{ if(err){ err.textContent=t; err.style.display='block'; } };
-  if(!password){ say('Enter your password.'); return; }
+  const say=(msg)=>{ if(err){ err.textContent=msg; err.style.display='block'; } };
+  if(!password){ say(t('del.needPassword')); return; }
   const tok=await SMAuth.token(false);
-  if(!tok){ say('Your session has expired. Sign in again, then delete your account.'); return; }
-  if(btn){ btn.disabled=true; btn.textContent='Deleting…'; }
+  if(!tok){ say(t('del.expired')); return; }
+  if(btn){ btn.disabled=true; btn.textContent=t('del.deleting'); }
   try{
     const res=await fetch('/api/account/delete',{
       method:'POST',
@@ -1613,16 +1652,16 @@ async function confirmDeleteAccount(){
       body:JSON.stringify({confirm:confirm,password:password})
     });
     const body=await res.json().catch(()=>({}));
-    if(!res.ok||!body.ok){ say(body.error||('Could not delete the account (HTTP '+res.status+'). Try again in a minute.')); return; }
+    if(!res.ok||!body.ok){ say(body.error?tServer(body.error):t('del.failed',{status:res.status})); return; }
     try{ await _supa.auth.signOut({scope:'local'}); }catch(e){}
     try{ SMAuth.clearAccountCaches(); }catch(e){}
     try{ localStorage.removeItem('sm_current_user'); }catch(e){}
     window.location.href='/?deleted=1';
   }catch(e){
     console.error('confirmDeleteAccount:',e);
-    say('Could not reach ScoutMind. Check your connection and try again.');
+    say(t('del.unreachable'));
   }finally{
-    if(btn){ btn.textContent='Delete my account'; deleteAccountReady(); }
+    if(btn){ btn.textContent=t('prof.deleteLabel'); deleteAccountReady(); }
   }
 }
 </script>
@@ -1632,39 +1671,39 @@ async function confirmDeleteAccount(){
      the typed word and the password before anything happens. -->
 <div id="delete-modal" class="signin-sheet" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="del-title">
   <div class="signin-sheet-card" style="text-align:left;max-width:420px;">
-    <div class="signin-sheet-title" id="del-title" style="color:var(--red);">Delete my account</div>
+    <div class="signin-sheet-title" id="del-title" style="color:var(--loss-ink);" data-i18n="prof.deleteLabel">Delete my account</div>
     <div class="del-copy">
-      <p><strong>Erased now:</strong> your login, email, name, profile, clubs and languages, follows, reactions, likes and badges.</p>
-      <p><strong>Kept without your name:</strong> your comments and room messages stay in their threads as "[deleted user]"; your Scout Game scores move to an anonymous id so other players' rankings do not change; reports you filed stay as a moderation record.</p>
-      <p>This cannot be undone. Want a copy first? <a role="button" tabindex="0" onclick="downloadMyData()">Download my data</a>. Details: <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy, section 8</a>.</p>
+      <p data-i18n-html="del.erased"><strong>Erased now:</strong> your login, email, name, profile, clubs and languages, follows, reactions, likes and badges.</p>
+      <p data-i18n-html="del.kept"><strong>Kept without your name:</strong> your comments and room messages stay in their threads as "[deleted user]"; your Scout Game scores move to an anonymous id so other players' rankings do not change; reports you filed stay as a moderation record.</p>
+      <p data-i18n-html="del.final">This cannot be undone. Want a copy first? <a role="button" tabindex="0" onclick="downloadMyData()">Download my data</a>. Details: <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy, section 8</a>.</p>
     </div>
-    <label class="del-label" for="del-password">Your password</label>
+    <label class="del-label" for="del-password" data-i18n="del.password">Your password</label>
     <input type="password" id="del-password" class="club-search" autocomplete="current-password">
-    <label class="del-label" for="del-confirm">Type DELETE to confirm</label>
+    <label class="del-label" for="del-confirm" data-i18n="del.type">Type DELETE to confirm</label>
     <input type="text" id="del-confirm" class="club-search" autocomplete="off" autocapitalize="characters" oninput="deleteAccountReady()">
     <div class="comment-error" id="del-error" style="display:none;"></div>
     <div class="signin-sheet-actions" style="margin-top:16px;">
-      <button class="danger-btn del-go" id="del-go" onclick="confirmDeleteAccount()" disabled>Delete my account</button>
-      <button class="signin-sheet-dismiss" onclick="closeDeleteAccount()">Keep my account</button>
+      <button class="danger-btn del-go" id="del-go" onclick="confirmDeleteAccount()" disabled data-i18n="prof.deleteLabel">Delete my account</button>
+      <button class="signin-sheet-dismiss" onclick="closeDeleteAccount()" data-i18n="del.keep">Keep my account</button>
     </div>
   </div>
 </div>
 
 <!-- Footer: Privacy · Terms · Contact under every tab, as on every other page. -->
 <footer class="sm-foot">
-  <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:hello@scoutmind.app">Contact</a>
+  <a href="/privacy.html" data-i18n="foot.privacy">Privacy</a> · <a href="/terms.html" data-i18n="foot.terms">Terms</a> · <a href="mailto:hello@scoutmind.app" data-i18n="foot.contact">Contact</a>
 </footer>
 
 <!-- ── SIGN-IN SHEET (guest write gate) ── -->
 <div id="signin-sheet" class="signin-sheet">
   <div class="signin-sheet-card">
-    <div style="font-size:34px;margin-bottom:10px;">⚽</div>
-    <div class="signin-sheet-title">Join the conversation</div>
-    <div class="signin-sheet-sub" id="signin-sheet-sub">Create a free account to join the conversation.</div>
+    <div class="sheet-ic" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg></div>
+    <div class="signin-sheet-title" data-i18n="sheet.title">Join the conversation</div>
+    <div class="signin-sheet-sub" id="signin-sheet-sub" data-i18n="cmt.gate">Create a free account to join the conversation.</div>
     <div class="signin-sheet-actions">
-      <button class="signin-sheet-primary" onclick="window.location.href='/auth.html?tab=signup'">Create a free account</button>
-      <button class="signin-sheet-secondary" onclick="window.location.href='/auth.html'">I already have an account</button>
-      <button class="signin-sheet-dismiss" onclick="closeSigninSheet()">Keep browsing</button>
+      <button class="signin-sheet-primary" onclick="window.location.href='/auth.html?tab=signup'" data-i18n="prof.guest.create">Create a free account</button>
+      <button class="signin-sheet-secondary" onclick="window.location.href='/auth.html'" data-i18n="prof.guest.have">I already have an account</button>
+      <button class="signin-sheet-dismiss" onclick="closeSigninSheet()" data-i18n="sheet.keep">Keep browsing</button>
     </div>
   </div>
 </div>
@@ -1724,10 +1763,10 @@ async function confirmDeleteAccount(){
      composer stays reachable when the iOS keyboard opens. -->
 <div id="chat-overlay" style="display:none;position:fixed;inset:0;z-index:520;background:var(--bg);flex-direction:column;">
   <div class="chat-head">
-    <button class="chat-back" onclick="closeChat()" aria-label="Close chat">←</button>
+    <button class="chat-back" onclick="closeChat()" aria-label="Close the room" data-i18n-aria="chat.close">←</button>
     <div id="chat-crest" class="chat-head-crest"></div>
     <div style="flex:1;min-width:0;">
-      <div class="chat-title" id="chat-title">Community</div>
+      <div class="chat-title" id="chat-title" data-i18n="rooms.title">Room</div>
       <div class="chat-sub" id="chat-sub"></div>
     </div>
   </div>
@@ -1740,7 +1779,7 @@ async function confirmDeleteAccount(){
 <div id="match-overlay" style="display:none;position:fixed;inset:0;z-index:530;background:var(--bg);flex-direction:column;">
   <div class="chat-head">
     <button class="chat-back" onclick="closeMatch()" aria-label="Close match" data-i18n-aria="mo.close">←</button>
-    <div class="chat-title" id="mo-title" style="flex:1;min-width:0;">Match</div>
+    <div class="chat-title" id="mo-title" style="flex:1;min-width:0;" data-i18n="mo.title">Match</div>
   </div>
   <div class="mo-body" id="mo-body"></div>
 </div>
@@ -1750,7 +1789,7 @@ async function confirmDeleteAccount(){
 <div id="five-overlay" style="display:none;position:fixed;inset:0;z-index:531;background:var(--bg);flex-direction:column;">
   <div class="chat-head">
     <button class="chat-back" onclick="closeFive()" aria-label="Close" data-i18n-aria="sg.five.close">←</button>
-    <div class="chat-title" id="five-title" style="flex:1;min-width:0;">Five</div>
+    <div class="chat-title" id="five-title" style="flex:1;min-width:0;" data-i18n="sg.yourFive">Five</div>
   </div>
   <div class="mo-body" id="five-body"></div>
 </div>
@@ -1874,7 +1913,7 @@ async function softDelete(table,id){
   const rows=await apiSend('PATCH',table+'?id=eq.'+encodeURIComponent(id),
     {deleted_at:new Date().toISOString(),deleted_by:myUserId()},
     'return=representation');
-  if(!rows||!rows.length)throw new Error('Nothing was deleted. It may already be gone.');
+  if(!rows||!rows.length)throw new Error(t('err.nothingDeleted'));
 }
 
 // ── VISIBLE FAILURE ──────────────────────────────────────────────────────
@@ -1936,7 +1975,7 @@ async function loadMyAccount(){
     // must not be invisible either. If this fails, the account's clubs never
     // arrive and the cached ones are all the reader has.
     console.error('loadMyAccount:',e.message);
-    toast('Could not load your account. Showing your saved clubs for now.','error');
+    toast(t('err.account'),'error');
   }
 }
 
@@ -2085,15 +2124,16 @@ async function loadMessageLikes(messageIds){
   }
 }
 
-/** The 👍 button. `kind` is 'comment' or 'message'. */
+/** The like button (a thumb line icon since 4b-5, never the emoji). `kind` is 'comment' or 'message'. */
 function likeButtonHtml(kind,id){
   const s=kind==='comment'?commentLikes(id):messageLikes(id);
   const fn=kind==='comment'?'toggleCommentLike':'toggleMessageLike';
+  const label=t(s.mine?'cmt.liked':'cmt.like');
   return '<button class="like-btn'+(s.mine?' liked':'')+'" id="like-'+kind+'-'+id+'"'
     +' onclick="'+fn+'(\''+id+'\')"'
     +' aria-pressed="'+(s.mine?'true':'false')+'"'
-    +' title="'+(s.mine?'You liked this':'Like')+'">'
-    +'<span class="like-thumb">👍</span>'
+    +' title="'+sanitize(label)+'" aria-label="'+sanitize(label)+'">'
+    +'<span class="like-thumb">'+Icons.svg('thumb',14)+'</span>'
     +'<span class="like-count">'+(s.count||'')+'</span></button>';
 }
 
@@ -2104,7 +2144,8 @@ function paintLike(kind,id){
   const s=kind==='comment'?commentLikes(id):messageLikes(id);
   el.classList.toggle('liked',s.mine);
   el.setAttribute('aria-pressed',s.mine?'true':'false');
-  el.title=s.mine?'You liked this':'Like';
+  el.title=t(s.mine?'cmt.liked':'cmt.like');
+  el.setAttribute('aria-label',el.title);
   const c=el.querySelector('.like-count');
   if(c)c.textContent=s.count||'';
 }
@@ -2117,7 +2158,7 @@ function paintLike(kind,id){
  * because the end state the user asked for is exactly what the database holds.
  */
 async function toggleLike(kind,id){
-  if(!requireAuth('Create a free account to like this.'))return;
+  if(!requireAuth(t('cmt.gateLike')))return;
   // The session's id, not the localStorage copy — and re-read here rather than
   // trusted from boot, so a session that changed under us is caught before we
   // write somebody else's user_id.
@@ -2126,8 +2167,8 @@ async function toggleLike(kind,id){
   // ending a session is for a refresh that actually failed, and SMAuth does
   // that itself.
   if(!me){
-    toast('You are signed out. Sign in again to like this.','error');
-    openSigninSheet('Sign in again to like this.');
+    toast(t('cmt.signedOutLike'),'error');
+    openSigninSheet(t('cmt.againLike'));
     return;
   }
 
@@ -2213,7 +2254,7 @@ async function loadSocialCounts(ids){
 
 /** Toggle a reaction. Optimistic, and reverts on failure. */
 async function toggleReaction(itemId,type){
-  if(!requireAuth('Create a free account to join the conversation.'))return;
+  if(!requireAuth(t('cmt.gate')))return;
   const s=reactionState(itemId);
   const had=s.mine.has(type);
   // Apply immediately so the tap feels instant.
@@ -2346,14 +2387,14 @@ function cleanComment(raw){
 }
 
 async function postComment(itemId){
-  if(!requireAuth('Create a free account to join the conversation.'))return;
+  if(!requireAuth(t('cmt.gate')))return;
   const input=document.getElementById('ci-'+itemId);
   if(!input)return;
   const text=cleanComment(input.value);
   if(text.length<2)return;
 
   const btn=document.getElementById('cpost-'+itemId);
-  if(btn){ btn.disabled=true; btn.textContent='Posting…'; }
+  if(btn){ btn.disabled=true; btn.textContent=t('cmt.posting'); }
   setCommentError(itemId,'');
   try{
     await apiSend('POST','comments',
@@ -2368,19 +2409,19 @@ async function postComment(itemId){
     // The trigger's message is the useful part: rate limit, blocklist, length.
     setCommentError(itemId,friendlyDbError(e.message));
   }finally{
-    if(btn){ btn.disabled=false; btn.textContent='Post'; }
+    if(btn){ btn.disabled=false; btn.textContent=t('cmt.post'); }
   }
 }
 
-/** Surface the database's own message rather than a generic failure. */
+/** Surface the database's own message (translated when we know it) rather than a generic failure. */
 function friendlyDbError(msg){
   const m=/"message":"([^"]+)"/.exec(msg||'');
   const raw=m?m[1]:'';
-  if(raw)return raw;
-  if(/40[13]/.test(msg||''))return 'You need to be signed in to do that.';
+  if(raw)return tServer(raw);
+  if(/40[13]/.test(msg||''))return t('err.signedIn');
   // Our own errors, which carry no HTTP status, are already written for people.
   if(msg&&!/HTTP \d{3}/.test(msg))return msg;
-  return 'Could not post that. Try again in a moment.';
+  return t('err.post');
 }
 
 function setCommentError(itemId,text){
@@ -2401,8 +2442,8 @@ function updateCommentCounter(itemId){
 
 /** Soft delete. The row stays; it just stops being visible to anyone. */
 async function deleteComment(itemId,commentId){
-  if(!requireAuth('Create a free account to do that.'))return;
-  if(!confirm('Delete this comment? This cannot be undone.'))return;
+  if(!requireAuth(t('cmt.gateDo')))return;
+  if(!confirm(t('cmt.confirmDelete')))return;
   try{
     await softDelete('comments',commentId);
     const s=commentState(itemId);
@@ -2414,25 +2455,26 @@ async function deleteComment(itemId,commentId){
   }
 }
 
+// `value` is what the database stores; the words come from i18n (4b-5).
 const REPORT_REASONS=[
-  {value:'abuse',    label:'Abuse or harassment'},
-  {value:'hate',     label:'Hate speech'},
-  {value:'spam',     label:'Spam'},
-  {value:'off_topic',label:'Off topic'},
-  {value:'other',    label:'Something else'},
+  {value:'abuse',    key:'cmt.r.abuse'},
+  {value:'hate',     key:'cmt.r.hate'},
+  {value:'spam',     key:'cmt.r.spam'},
+  {value:'off_topic',key:'cmt.r.offTopic'},
+  {value:'other',    key:'cmt.r.other'},
 ];
 
 function openReport(itemId,commentId){
-  if(!requireAuth('Create a free account to report a comment.'))return;
+  if(!requireAuth(t('cmt.gateReport')))return;
   const box=document.getElementById('crep-'+commentId);
   if(!box)return;
   const open=box.style.display==='block';
   document.querySelectorAll('.comment-report').forEach(b=>b.style.display='none');
   if(open)return;
-  box.innerHTML='<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Why are you reporting this?</div>'
+  box.innerHTML='<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">'+sanitize(t('cmt.why'))+'</div>'
     +REPORT_REASONS.map(r=>'<button class="report-reason" onclick="sendReport('+itemId+','+commentId+',\''+r.value+'\')">'
-      +sanitize(r.label)+'</button>').join('')
-    +'<button class="report-reason" style="opacity:.6" onclick="document.getElementById(\'crep-'+commentId+'\').style.display=\'none\'">Cancel</button>';
+      +sanitize(t(r.key))+'</button>').join('')
+    +'<button class="report-reason" onclick="document.getElementById(\'crep-'+commentId+'\').style.display=\'none\'">'+sanitize(t('cmt.cancel'))+'</button>';
   box.style.display='block';
 }
 
@@ -2442,12 +2484,12 @@ async function sendReport(itemId,commentId,reason){
     await apiSend('POST','reports',
       [{target_type:'comment',target_id:commentId,reporter_id:myUserId(),reason:reason}]);
     logEvent('report','comment',commentId);
-    if(box)box.innerHTML='<div style="font-size:11px;color:var(--accent);">Thanks — we will take a look.</div>';
+    if(box)box.innerHTML='<div style="font-size:11px;color:var(--accent);">'+sanitize(t('cmt.reported'))+'</div>';
   }catch(e){
     const msg=friendlyDbError(e.message);
     // The partial unique index means a second open report is a duplicate.
     if(box)box.innerHTML='<div style="font-size:11px;color:var(--muted);">'
-      +sanitize(/duplicate|unique/i.test(e.message)?'You have already reported this.':msg)+'</div>';
+      +sanitize(/duplicate|unique/i.test(e.message)?t('cmt.reportedAlready'):msg)+'</div>';
   }
 }
 
@@ -2465,8 +2507,8 @@ async function saveMyClubsToAccount(){
   // `profiles?id=eq.null`, which quietly matches nothing).
   const me=await SMAuth.resolveUser();
   if(!me){
-    toast('You are signed out. Sign in again to save your clubs.','error');
-    openSigninSheet('Sign in again to save your clubs.');
+    toast(t('clubs.signedOutSave'),'error');
+    openSigninSheet(t('clubs.againSave'));
     return false;
   }
   const main=mainClubId();
@@ -2498,7 +2540,7 @@ async function saveMyClubsToAccount(){
     return true;
   }catch(e){
     console.error('saveMyClubsToAccount:',e.message);
-    toast('Could not save your clubs: '+friendlyDbError(e.message),'error');
+    toast(t('clubs.saveFail',{why:friendlyDbError(e.message)}),'error');
     return false;
   }
 }
@@ -2577,7 +2619,7 @@ function renderFollowingChips(){
   const chips = (mainClubId() ? [chip(mainClubId(),true)] : [])
     .concat(followedClubIds().map(id=>chip(id,false)));
   document.getElementById('modal-following-list').innerHTML =
-    chips.join('') || `<div style="font-size:11px;color:var(--muted);padding:6px 0;">Click clubs above to follow them too</div>`;
+    chips.join('') || '<div style="font-size:11px;color:var(--muted);padding:6px 0;">'+sanitize(t('clubs.tapToFollow'))+'</div>';
 }
 
 /**
@@ -2623,9 +2665,9 @@ function unfollowClub(id){
 function _getModalKey(){return SMAuth.key('sm_club_selected');}
 
 async function saveTeamSelection(){
-  if(!requireAuth('Create a free account to follow your club.'))return;
+  if(!requireAuth(t('clubs.gateFollow')))return;
   if(!mainClubId()){
-    toast('Pick your main club first.','error');
+    toast(t('clubs.mainFirst'),'error');
     return;
   }
   const before=new Set(followedClubIds());
@@ -2650,7 +2692,7 @@ async function saveTeamSelection(){
   localStorage.setItem(_getModalKey(), '1');
   closeTeamModal();
   applyClubSelection();
-  toast('Saved.');
+  toast(t('clubs.saved'));
   // Telemetry only — never blocks the save, and can never end the session.
   if(mainClubId()!==beforeMain)logEvent('club_set','team',mainClubId());
   for(const id of followedClubIds())if(!before.has(id))logEvent('follow','team',id);
@@ -2744,8 +2786,7 @@ function popularClubs(){
     if(found&&rows.indexOf(found)<0)rows.push(found);
     else if(!found)misses.push(entry.name);
   }
-  if(misses.length)console.warn('picker: no club matched '+misses.join(', ')
-    +' — they are omitted from Popular rather than guessed at.');
+  if(misses.length)console.warn('picker: no club matched (omitted from Popular, not guessed): '+misses.join(', '));
   _popularResolved={size:CLUB_DATA.size,rows:rows};
   return rows;
 }
@@ -3042,7 +3083,7 @@ function applyClubSelection(){
 }
 
 function openTeamModal(){
-  if(!requireAuth('Create a free account to pick your club.'))return;
+  if(!requireAuth(t('clubs.gatePick')))return;
   selectedMainClub = mainClubId();
   followingClubs = followedClubIds();
   document.getElementById('club-search').value = '';
@@ -3093,7 +3134,7 @@ function showPage(id){
 
 // ── FEED TABS ──
 function showFeedTab(id,btn){
-  ['trending','transfers','foryou','weekly'].forEach(t=>{
+  ['trending','transfers','foryou'].forEach(t=>{
     const el=document.getElementById('feedtab-'+t);
     if(el)el.style.display='none';
   });
@@ -3103,7 +3144,6 @@ function showFeedTab(id,btn){
   if(btn)btn.classList.add('active');
   // Trending is scored from whatever is loaded, so re-rank on every visit.
   if(id==='trending') try{renderTrending();}catch(e){}
-  if(id==='weekly') try{renderWeeklyReport();}catch(e){}
 }
 
 // ── MATCH DAY ──
@@ -3220,15 +3260,15 @@ function localDayKey(d){
   return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
 }
 
-/** "Today" / "Tomorrow" / "Yesterday" / "Saturday, 4 Oct". */
+/** "Today" / "Tomorrow" / "Yesterday" / "Saturday, 4 Oct", in the reader's language (4b-5). */
 function dayHeading(key){
   const today=localDayKey(new Date());
   const d=new Date(key+'T12:00:00');
   const diff=Math.round((d-new Date(today+'T12:00:00'))/86400000);
-  if(diff===0)return 'Today';
-  if(diff===1)return 'Tomorrow';
-  if(diff===-1)return 'Yesterday';
-  return d.toLocaleDateString([], {weekday:'long',day:'numeric',month:'short'});
+  if(diff===0)return t('fx.today');
+  if(diff===1)return t('fx.tomorrow');
+  if(diff===-1)return t('fx.yesterday');
+  return d.toLocaleDateString(smLocale()||[], {weekday:'long',day:'numeric',month:'short'});
 }
 
 // ── MATCHES TAB (Sequence 2 commit 4b-2) ──
@@ -3809,17 +3849,13 @@ async function loadClubData(){
  * would still be a claim that the number exists. `avg` is the league average
  * for the same stat, shown only when there is one.
  */
-function statCell(label,value,colour,avg){
+function statCell(label,value,avg){
   if(value==null||value==='')return '';
-  // min-width:0 and side padding: five of these share 375px, and the "lg avg"
-  // lines used to run into each other with nowhere to wrap.
-  return '<div style="padding:8px 3px;text-align:center;flex:1;min-width:0;">'
-    +'<div style="font-size:14px;font-weight:700;font-family:\'DM Mono\',monospace;'
-    +(colour?'color:'+colour+';':'')+'">'+sanitize(String(value))+'</div>'
-    +'<div style="font-size:8px;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:1px;">'
-    +sanitize(label)+'</div>'
-    +(avg!=null?'<div style="font-size:9px;color:var(--muted);margin-top:2px;font-family:\'DM Mono\',monospace;line-height:1.3;">'
-      +'<span style="white-space:nowrap;">lg avg</span> <span style="white-space:nowrap;">'+sanitize(String(avg))+'</span></div>':'')
+  // min-width:0: five of these share 375px. The number in the number face;
+  // the league average for the same stat under it, only when there is one.
+  return '<div class="cl-stat"><div class="cl-stat-v num">'+sanitize(String(value))+'</div>'
+    +'<div class="cl-stat-l">'+sanitize(label)+'</div>'
+    +(avg!=null?'<div class="cl-stat-a">'+sanitize(t('clubs.lgAvg',{v:avg}))+'</div>':'')
     +'</div>';
 }
 
@@ -3832,76 +3868,81 @@ function ordinal(n){
 // League slug -> "Série A · BRA" (4b: the country code everywhere, league-names.js).
 const LEAGUE_LABEL=Object.fromEntries(LeagueNames.LEAGUES.map(l=>[l.slug,LeagueNames.label(l)]));
 
+/** My main club (4b-5): crest, name, league · matches played, its page and its room, then five real numbers. */
 function renderMyClubCard(){
   const el=document.getElementById('clubs-my-card');
   if(!el)return;
   const id=mainClubId();
   if(!id){
-    el.innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">'
-      +'<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">You have not picked a club yet.</div>'
-      +'<button class="filter-btn" onclick="openTeamModal()">Choose your club</button></div>';
+    el.innerHTML='<div class="cl-card cl-empty"><div>'+sanitize(t('clubs.none'))+'</div>'
+      +'<button class="filter-btn" onclick="openTeamModal()">'+sanitize(t('clubs.choose'))+'</button></div>';
     return;
   }
   const s=clubStats(id)||{};
   const d=CLUB_DATA.get(id);
-  const sub=[LEAGUE_LABEL[d&&d.league]||null,(s.played!=null?s.played+' played':null)]
-    .filter(Boolean).join(' · ');
-  const cells=statCell('Position',ordinal(s.rank),'var(--accent)')
-    +statCell('Points',s.points)
-    +statCell('Goals/g',s.goalsFor,null,s.lgGoalsFor)
-    +statCell('Conceded/g',s.goalsAgainst,null,s.lgGoalsAgainst)
-    +statCell('Pass',s.passPct,null,s.lgPassPct);
+  const sub=[LEAGUE_LABEL[d&&d.league]||null,(s.played!=null?tn('clubs.played',s.played):null)].filter(Boolean).join(' · ');
+  const cells=statCell(t('clubs.stat.pos'),s.rank!=null?tOrd(s.rank):null)
+    +statCell(t('clubs.stat.pts'),s.points)
+    +statCell(t('clubs.stat.gf'),s.goalsFor,s.lgGoalsFor)
+    +statCell(t('clubs.stat.ga'),s.goalsAgainst,s.lgGoalsAgainst)
+    +statCell(t('clubs.stat.pass'),s.passPct,s.lgPassPct);
+  const o=chatOverview(id);
   // The club goes in the URL: community.html opens it without relying on a
   // cached main club (it used to land on "Choose Your Club").
-  el.innerHTML='<div onclick="window.location.href=\'/community.html?club='+Number(id)+'\'" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;">'
-    +'<div style="padding:14px 16px;display:flex;align-items:center;gap:14px;">'
-    +clubCrestById(id,44)
-    +'<div style="flex:1;min-width:0;">'
-    +'<div id="clubs-main-name" style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;letter-spacing:2px;">'+sanitize(clubLabel(id).toUpperCase())+'</div>'
-    +(sub?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+sanitize(sub)+'</div>':'')
-    +'</div><div style="font-size:11px;color:var(--accent);flex-shrink:0;">Open →</div></div>'
-    +(cells?'<div style="display:flex;border-top:1px solid var(--border);background:var(--bg3);">'+cells+'</div>':'')
-    +chatBlockHtml(id)
+  el.innerHTML='<div class="cl-card">'
+    +'<a class="cl-head" href="/community.html?club='+Number(id)+'">'+clubCrestById(id,44)
+    +'<span class="cl-name-wrap"><span class="cl-name">'+sanitize(clubLabel(id))+'</span>'
+    +(sub?'<span class="cl-sub">'+sanitize(sub)+'</span>':'')+'</span>'
+    +'<span class="cl-go">'+sanitize(t('clubs.page'))+Icons.svg('chevronRight',16)+'</span></a>'
+    +(cells?'<div class="cl-stats">'+cells+'</div>':'')
+    +(o?'<button type="button" class="cl-room" onclick="openChat('+Number(id)+')">'+Icons.svg('message',18)
+      +'<span>'+sanitize(t('hb.roomName',{club:clubLabel(id)}))+'</span>'
+      +'<span class="cl-room-n">'+sanitize(tn('hb.followers',o.member_count||0))+'</span></button>':'')
     +'</div>';
 }
 
+// The league chosen over "All clubs" (in memory, rule 10): a slug, or null for all.
+let CLUBS_LEAGUE=null;
+function setClubsLeague(i){
+  const order=clubsLeagueOrder();
+  CLUBS_LEAGUE=i<0?null:(order[i]||null);
+  renderClubsGrid();
+}
+/** The leagues we carry: my clubs' first, then the usual order. */
+function clubsLeagueOrder(){
+  const mine=new Set(myClubIds().map(id=>(CLUB_DATA.get(id)||{}).league).filter(Boolean));
+  const slugs=[...new Set([...CLUB_DATA.values()].map(c=>c.league).filter(Boolean))];
+  return slugs.sort((a,b)=>(mine.has(b)-mine.has(a))
+    ||((COMP_TIER[LeagueNames.name(a)]||8)-(COMP_TIER[LeagueNames.name(b)]||8))||a.localeCompare(b));
+}
+/** Every club we carry (4b-5): chips by league, my clubs first, a card opens the club page. */
 function renderClubsGrid(){
   const el=document.getElementById('clubs-grid');
   if(!el)return;
-  // Your clubs first, then the rest by league.
-  const mine=myClubIds();
-  const all=[...CLUB_DATA.values()].sort((a,b)=>{
+  const order=clubsLeagueOrder();
+  if(CLUBS_LEAGUE&&order.indexOf(CLUBS_LEAGUE)<0) CLUBS_LEAGUE=null;
+  const chipsEl=document.getElementById('clubs-chips');
+  if(chipsEl){
+    // By index into the order: a league never goes inside an onclick string.
+    const chip=(i,label,on)=>'<button class="filter-btn'+(on?' active':'')+'" aria-pressed="'+on+'" onclick="setClubsLeague('+i+')">'+sanitize(label)+'</button>';
+    chipsEl.innerHTML=chip(-1,t('fx.all'),!CLUBS_LEAGUE)+order.map((s,i)=>chip(i,LeagueNames.label(s),CLUBS_LEAGUE===s)).join('');
+  }
+  const mine=myClubIds(), main=mainClubId();
+  const all=[...CLUB_DATA.values()].filter(c=>!CLUBS_LEAGUE||c.league===CLUBS_LEAGUE).sort((a,b)=>{
     const am=mine.indexOf(a.id)>-1, bm=mine.indexOf(b.id)>-1;
     if(am!==bm)return am?-1:1;
-    return (a.league||'').localeCompare(b.league||'')||a.label.localeCompare(b.label);
+    return (order.indexOf(a.league)-order.indexOf(b.league))||a.label.localeCompare(b.label);
   });
-  const cards=all.map(function(c){
+  el.innerHTML=all.map(function(c){
     const s=clubStats(c.id)||{};
-    const sub=[LEAGUE_LABEL[c.league]||null,(s.rank!=null?ordinal(s.rank)+' place':null)]
-      .filter(Boolean).join(' · ');
-    const num=(v)=>'<span style="color:var(--text);font-family:\'DM Mono\',monospace;">'+v+'</span>';
-    const lg=(v)=>v!=null?' · lg avg '+v:'';
-    const bits=[
-      s.goalsFor!=null?'Goals/g '+num(s.goalsFor)+lg(s.lgGoalsFor):null,
-      s.goalsAgainst!=null?'Conc/g '+num(s.goalsAgainst)+lg(s.lgGoalsAgainst):null,
-      s.passPct!=null?'Pass '+num(s.passPct)+lg(s.lgPassPct):null,
-    ].filter(Boolean);
-    // The card used to send every club to /community.html, which had no idea
-    // which club had been clicked. It opens that club's own room now.
-    const o=chatOverview(c.id);
-    return '<div class="club-explore-card" onclick="openChat('+c.id+')">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
-      +clubCrestById(c.id,34)
-      +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:600;">'+sanitize(c.label)+'</div>'
-      +(sub?'<div style="font-size:10px;color:var(--muted);">'+sanitize(sub)+'</div>':'')
-      +'</div></div>'
-      +(bits.length?'<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--muted);">'
-        +bits.map(b=>'<div>'+b+'</div>').join('')+'</div>':'')
-      +(o?'<div style="font-size:10px;color:var(--accent);margin-top:8px;">💬 '
-        +sanitize(memberLabel(o.member_count))+'</div>':'')
-      +'</div>';
+    const sub=[CLUBS_LEAGUE?null:(LEAGUE_LABEL[c.league]||null),(s.rank!=null?t('clubs.place',{rank:tOrd(s.rank)}):null)].filter(Boolean).join(' · ');
+    const tag=c.id===main?t('clubs.main'):mine.indexOf(c.id)>-1?t('clubs.following'):'';
+    return '<a class="cl-tile'+(tag?' mine':'')+'" href="/community.html?club='+Number(c.id)+'">'
+      +clubCrestById(c.id,32)
+      +'<span class="cl-name-wrap"><span class="cl-tile-name">'+sanitize(c.label)+'</span>'
+      +(sub?'<span class="cl-sub">'+sanitize(sub)+'</span>':'')
+      +(tag?'<span class="sg-tag">'+sanitize(tag)+'</span>':'')+'</span></a>';
   }).join('');
-  el.innerHTML=cards;
 }
 
 /**
@@ -3916,13 +3957,13 @@ function renderSidebarMatches(){
 
   if(LIVE_MATCHES===null){
     // loadSidebarFixtures() owns the fetch; just wait for it.
-    el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0;">Loading fixtures…</div>';
+    el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0;">'+sanitize(t('fx.loading'))+'</div>';
     return;
   }
   const dated=(LIVE_MATCHES||[]).filter(m=>m.kickoff);
   if(!dated.length){
-    if(title)title.textContent="Today's matches";
-    el.innerHTML='<div style="font-size:11px;color:var(--muted);line-height:1.6;padding:4px 0;">No fixtures in the next three weeks.</div>';
+    if(title)title.textContent=t('home.side.today');
+    el.innerHTML='<div style="font-size:11px;color:var(--muted);line-height:1.6;padding:4px 0;">'+sanitize(t('fx.none'))+'</div>';
     return;
   }
   const today=localDayKey(new Date());
@@ -3931,27 +3972,27 @@ function renderSidebarMatches(){
   if(!list.length){
     const next=dated.filter(m=>m.dayKey>today).sort((a,b)=>a.kickoff-b.kickoff)[0];
     if(!next){
-      if(title)title.textContent="Today's matches";
-      el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0;">Nothing scheduled.</div>';
+      if(title)title.textContent=t('home.side.today');
+      el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0;">'+sanitize(t('home.side.nothing'))+'</div>';
       return;
     }
     key=next.dayKey;
     list=dated.filter(m=>m.dayKey===key);
   }
-  if(title)title.textContent=(key===today)?"Today's matches":('Next matchday · '+dayHeading(key));
+  if(title)title.textContent=(key===today)?t('home.side.today'):t('home.side.next',{day:dayHeading(key)});
 
   const mine=new Set(myClubIds());
   list.sort((a,b)=>{
-    const am=a.teamIds&&a.teamIds.some(t=>mine.has(t)), bm=b.teamIds&&b.teamIds.some(t=>mine.has(t));
+    const am=a.teamIds&&a.teamIds.some(id=>mine.has(id)), bm=b.teamIds&&b.teamIds.some(id=>mine.has(id));
     if(am!==bm)return am?-1:1;
     return (a.compTier-b.compTier)||(a.kickoff-b.kickoff);
   });
   el.innerHTML=list.slice(0,6).map(function(m){
-    const score=m.score?('<span style="font-family:\'DM Mono\',monospace;color:var(--text);">'+sanitize(m.score)+'</span>')
-      :('<span style="color:var(--muted);font-size:10px;">vs</span>');
-    const when=(m.status==='live')?'LIVE':(m.status==='finished'?'FT':m.time);
+    const score=m.score?('<span class="num" style="color:var(--ink);">'+sanitize(m.score)+'</span>')
+      :('<span style="color:var(--muted);font-size:10px;">'+sanitize(t('mo.vs'))+'</span>');
+    const when=(m.status==='live')?t('mo.live'):(m.status==='finished'?t('fx.ft'):m.kickoff.toLocaleTimeString(smLocale()||[],{hour:'2-digit',minute:'2-digit'}));
     const tap=m.id?' match-tap" role="button" tabindex="0" onclick="openMatch('+Number(m.id)+')':'';
-    return '<div class="match-row-sm'+tap+'"><div><div class="match-comp-sm">'+sanitize(m.comp)+' · '+sanitize(when)+'</div>'
+    return '<div class="match-row-sm'+tap+'"><div><div class="match-comp-sm">'+sanitize(LeagueNames.label(m.league))+' · '+sanitize(when)+'</div>'
       +'<div class="match-teams-sm">'+sanitize(m.home)+' '+score+' '+sanitize(m.away)+'</div></div></div>';
   }).join('');
 }
@@ -3966,23 +4007,23 @@ function renderSidebarClubs(){
   const ids=myClubIds();
   const main=mainClubId();
   const button='<div style="padding:8px 0;text-align:center;">'
-    +'<button class="club-manage-btn" onclick="openTeamModal()" style="font-size:10px;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:\'DM Sans\',sans-serif;">'
-    +(ids.length?'Change my clubs':'Choose your club')+'</button></div>';
+    +'<button class="club-manage-btn" onclick="openTeamModal()">'
+    +sanitize(t(ids.length?'clubs.change':'clubs.choose'))+'</button></div>';
 
   if(!ids.length){
     el.innerHTML='<div style="font-size:11px;color:var(--muted);line-height:1.6;padding:2px 0 6px;">'
-      +(currentUser?'Pick a club to make this feed yours.':'Sign in to follow your club.')
+      +sanitize(t(currentUser?'clubs.makeYours':'clubs.signinFollow'))
       +'</div>'+button;
     return;
   }
   el.innerHTML=ids.map(function(id){
     const c=CLUB_DATA.get(id);
     if(!c)return '';
-    return '<div style="display:flex;align-items:center;gap:8px;min-height:44px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="window.location.href=\'/community.html?club='+Number(id)+'\'">'
+    return '<a style="display:flex;align-items:center;gap:8px;min-height:44px;padding:5px 0;border-bottom:1px solid var(--border);color:inherit;text-decoration:none;" href="/community.html?club='+Number(id)+'">'
       +clubCrestById(id,24)
-      +'<div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;color:var(--text);">'+sanitize(c.label)+'</div>'
-      +'<div style="font-size:9px;color:var(--muted);">'+(id===main?'My club':'Following')+'</div></div>'
-      +'<div style="font-size:9px;color:var(--accent);">Open →</div></div>';
+      +'<div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;color:var(--ink);">'+sanitize(c.label)+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);">'+sanitize(t(id===main?'clubs.main':'clubs.following'))+'</div></div>'
+      +'<span style="color:var(--muted);">'+Icons.svg('chevronRight',16)+'</span></a>';
   }).join('')+button;
 }
 
@@ -4112,7 +4153,7 @@ async function setMyLangs(langs){
     try{ await apiSend('PATCH','profiles?id=eq.'+myUserId(),{content_langs:clean}); }
     catch(e){
       console.error('setMyLangs:',e.message);
-      toast('Language saved on this device only: '+friendlyDbError(e.message),'error');
+      toast(t('pref.langLocal',{why:friendlyDbError(e.message)}),'error');
     }
   }
   renderLangChips();
@@ -4129,13 +4170,14 @@ function renderLangPrefs(){
     const active=on.indexOf(l.code)>-1;
     // Never let the reader switch off the last one and empty their feed.
     const last=active&&on.length===1;
-    return '<button class="lang-pref" onclick="toggleLang(\''+l.code+'\')"'
-      +(last?' title="Keep at least one language"':'')
-      +' style="font-size:11px;padding:5px 12px;border-radius:20px;cursor:'+(last?'not-allowed':'pointer')
-      +';font-family:\'DM Sans\',sans-serif;border:1px solid '+(active?'var(--accent)':'var(--border)')
+    // The language's own name (Português, English…): it stays as it is in every UI language.
+    return '<button class="lang-pref" onclick="toggleLang(\''+l.code+'\')" aria-pressed="'+active+'" lang="'+l.code+'"'
+      +(last?' title="'+sanitize(t('pref.keepOne'))+'"':'')
+      +' style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:5px 12px;border-radius:20px;cursor:'+(last?'not-allowed':'pointer')
+      +';font-family:var(--font-sans);border:1px solid '+(active?'var(--navy-ink)':'var(--border)')
       +';background:'+(active?'var(--tint)':'transparent')
-      +';color:'+(active?'var(--accent)':'var(--muted)')+';opacity:'+(last?'0.7':'1')+';">'
-      +(active?'✓ ':'')+sanitize(l.label)+'</button>';
+      +';color:'+(active?'var(--ink)':'var(--muted)')+';">'
+      +(active?Icons.svg('check',12):'')+sanitize(l.label)+'</button>';
   }).join('');
 }
 
@@ -4145,18 +4187,18 @@ function renderClubLangToggle(){
   if(!el)return;
   if(!currentUser){
     el.innerHTML='<div style="font-size:11px;color:var(--muted);line-height:1.6;">'
-      +'Sign in to show news about your clubs in other languages.</div>';
+      +sanitize(t('pref.clubLangSignin'))+'</div>';
     return;
   }
   const on=showClubNewsAllLangs();
-  el.innerHTML='<button onclick="toggleClubLangs()" style="display:flex;align-items:center;gap:9px;min-height:44px;'
+  el.innerHTML='<button onclick="toggleClubLangs()" role="switch" aria-checked="'+on+'" style="display:flex;align-items:center;gap:9px;min-height:44px;'
     +'background:transparent;border:none;padding:0;cursor:pointer;font-family:\'DM Sans\',sans-serif;text-align:left;">'
     +'<span style="width:34px;height:19px;border-radius:12px;flex-shrink:0;position:relative;transition:background .2s;'
     +'background:'+(on?'var(--navy)':'var(--bg3)')+';border:1px solid '+(on?'var(--navy)':'var(--border-strong)')+';">'
     +'<span style="position:absolute;top:2px;left:'+(on?'17px':'2px')+';width:13px;height:13px;border-radius:50%;'
     +'background:'+(on?'var(--on-navy)':'var(--muted)')+';transition:left .2s;"></span></span>'
     +'<span style="font-size:12px;color:'+(on?'var(--text)':'var(--muted)')+';line-height:1.5;">'
-    +'Also show news about my clubs in other languages</span></button>';
+    +sanitize(t('pref.clubLang'))+'</span></button>';
 }
 
 // ── ROUND REMINDER EMAILS (027) ──
@@ -4203,7 +4245,7 @@ async function toggleRemind(){
 }
 
 async function toggleClubLangs(){
-  if(!requireAuth('Create a free account to change this.'))return;
+  if(!requireAuth(t('pref.gate')))return;
   if(!MY_PROFILE)MY_PROFILE={};
   MY_PROFILE.show_club_news_all_langs=!MY_PROFILE.show_club_news_all_langs;
   renderClubLangToggle();
@@ -4213,7 +4255,7 @@ async function toggleClubLangs(){
       {show_club_news_all_langs:MY_PROFILE.show_club_news_all_langs});
   }catch(e){
     console.error('toggleClubLangs:',e.message);
-    toast('Could not save that setting: '+friendlyDbError(e.message),'error');
+    toast(t('pref.saveFail',{why:friendlyDbError(e.message)}),'error');
   }
 }
 
@@ -4372,7 +4414,7 @@ async function loadNews(append){
 async function loadMoreNews(){
   if(feedLoading||feedExhausted)return;
   document.querySelectorAll('.feed-more-btn').forEach(function(b){
-    b.disabled=true; b.textContent='Loading…';
+    b.disabled=true; b.textContent=t('sg.loading');
   });
   await loadNews(true);
   // The new items need their counts, or they render as zero for everyone.
@@ -4387,11 +4429,10 @@ async function loadMoreNews(){
  */
 function feedMoreHtml(scope){
   if(feedExhausted){
-    return '<div class="feed-end">That is the last seven days. '
-      +'Older stories are still in the archive and searchable.</div>';
+    return '<div class="feed-end">'+sanitize(t('feed.end'))+'</div>';
   }
   return '<div class="feed-more">'
-    +'<button class="feed-more-btn" id="feed-more-btn-'+(scope||'news')+'" onclick="loadMoreNews()">Load more</button>'
+    +'<button class="feed-more-btn" id="feed-more-btn-'+(scope||'news')+'" onclick="loadMoreNews()">'+sanitize(t('feed.more'))+'</button>'
     +'</div>';
 }
 
@@ -4418,16 +4459,17 @@ function armFeedObserver(){
   els.forEach(el=>feedObserver.observe(el));
 }
 
+/** A compact age: "32m ago" / "há 32 min" (4b-5: translated), a date after a week. */
 function timeAgo(iso){
   const then=new Date(iso).getTime();
   if(!then)return '';
   const mins=Math.max(0,Math.round((Date.now()-then)/60000));
-  if(mins<60)return mins+'m ago';
+  if(mins<60)return t('time.m',{n:mins});
   const hrs=Math.round(mins/60);
-  if(hrs<24)return hrs+'h ago';
+  if(hrs<24)return t('time.h',{n:hrs});
   const days=Math.round(hrs/24);
-  if(days<7)return days+'d ago';
-  return new Date(iso).toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  if(days<7)return t('time.d',{n:days});
+  return new Date(iso).toLocaleDateString(smLocale()||undefined,{day:'numeric',month:'short'});
 }
 
 let currentFeedFilter='all';
@@ -4632,22 +4674,22 @@ function paintComments(itemId){
     box.style.display='block';
     let html='';
     if(!s.loaded){
-      html='<div class="comment-empty">Loading…</div>';
+      html='<div class="comment-empty">'+sanitize(t('sg.loading'))+'</div>';
     }else if(!s.items.length){
-      html='<div class="comment-empty">No comments yet. Say the first thing.</div>';
+      html='<div class="comment-empty">'+sanitize(t('cmt.empty'))+'</div>';
     }else{
       // The sort row only earns its space once there is something to sort.
       if(s.items.length>1){
         html+='<div class="csort">'
           +'<button class="csort-btn'+(s.sort==='top'?' active':'')
-          +'" onclick="setCommentSort('+itemId+',\'top\')">Top</button>'
+          +'" onclick="setCommentSort('+itemId+',\'top\')">'+sanitize(t('cmt.top'))+'</button>'
           +'<button class="csort-btn'+(s.sort==='newest'?' active':'')
-          +'" onclick="setCommentSort('+itemId+',\'newest\')">Newest</button>'
+          +'" onclick="setCommentSort('+itemId+',\'newest\')">'+sanitize(t('cmt.newest'))+'</button>'
           +'</div>';
       }
       if(s.total>s.items.length){
         html+='<button class="comment-showall" onclick="showAllComments('+itemId+')">'
-          +'Show all '+s.total+' comments</button>';
+          +sanitize(t('cmt.showAll',{n:s.total}))+'</button>';
       }
       html+=sortedComments(itemId).map(c=>commentRow(itemId,c)).join('');
     }
@@ -4663,7 +4705,7 @@ function commentRow(itemId,c){
   // Merged client-side from the AUTHORS cache, not from an embed.
   const p=AUTHORS.get(c.user_id)||{};
   // No author: the account was deleted (024) and the comment kept anonymised.
-  const name=c.user_id?(p.name||'Someone'):'[deleted user]';
+  const name=c.user_id?(p.name||t('chat.someone')):t('cm.deletedUser');
   const mine=currentUser&&c.user_id===myUserId();
   const canDelete=mine||isAdmin();
   const crest=p.main_club_id?clubCrestById(p.main_club_id,18)
@@ -4675,8 +4717,8 @@ function commentRow(itemId,c){
     +'<div class="comment-text">'+sanitize(c.content)+'</div>'
     +'<div class="comment-meta">'
     +likeButtonHtml('comment',c.id)
-    +(currentUser&&!mine?'<button class="comment-link" onclick="openReport('+itemId+','+c.id+')">Report</button>':'')
-    +(canDelete?'<button class="comment-link" onclick="deleteComment('+itemId+','+c.id+')">Delete</button>':'')
+    +(currentUser&&!mine?'<button class="comment-link" onclick="openReport('+itemId+','+c.id+')">'+sanitize(t('cmt.report'))+'</button>':'')
+    +(canDelete?'<button class="comment-link" onclick="deleteComment('+itemId+','+c.id+')">'+sanitize(t('cmt.delete'))+'</button>':'')
     +'</div>'
     +'<div class="comment-report" id="crep-'+c.id+'" style="display:none;"></div>'
     +'</div></div>';
@@ -4690,7 +4732,7 @@ function myInitials(){
 function composerHtml(itemId){
   if(!currentUser){
     return '<div class="comment-signin">'
-      +'<button class="comment-post-btn" onclick="requireAuth(\'Create a free account to join the conversation.\')">Sign in to comment</button>'
+      +'<button class="comment-post-btn" onclick="requireAuth(t(\'cmt.gate\'))">'+sanitize(t('cmt.signin'))+'</button>'
       +'</div>';
   }
   // A message box with the reader's own initials beside it, so the composer
@@ -4699,14 +4741,14 @@ function composerHtml(itemId){
     +'<span class="compose-av">'+sanitize(myInitials())+'</span>'
     +'<div class="compose-box">'
     +'<textarea class="comment-input" id="ci-'+itemId+'" rows="1" maxlength="500"'
-    +' placeholder="Add a comment…"'
+    +' placeholder="'+sanitize(t('cmt.ph'))+'" aria-label="'+sanitize(t('cmt.ph'))+'"'
     +' oninput="updateCommentCounter('+itemId+');autoGrow(this)"'
     +' onfocus="this.scrollIntoView({block:\'center\',behavior:\'smooth\'})"'
     +' onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();postComment('+itemId+');}"></textarea>'
     +'<div class="comment-compose-foot">'
     +'<span class="comment-counter" id="ccount-'+itemId+'">0/500</span>'
-    +'<span class="comment-hint">Ctrl + Enter to post</span>'
-    +'<button class="comment-post-btn" id="cpost-'+itemId+'" onclick="postComment('+itemId+')">Post</button>'
+    +'<span class="comment-hint">'+sanitize(t('cmt.hint'))+'</span>'
+    +'<button class="comment-post-btn" id="cpost-'+itemId+'" onclick="postComment('+itemId+')">'+sanitize(t('cmt.post'))+'</button>'
     +'</div>'
     +'<div class="comment-error" id="cerr-'+itemId+'" style="display:none;"></div>'
     +'</div></div>';
@@ -4823,32 +4865,8 @@ function renderRooms(){
   el.innerHTML=(rows||'<div class="rooms-empty">'+sanitize(t('rooms.unavailable'))+'</div>')+more;
 }
 
-function memberLabel(n){
-  const v=Number(n||0);
-  return v===1?'1 member':v.toLocaleString()+' members';
-}
-
-/** The "Community chat" block under the club card. */
-function chatBlockHtml(clubId){
-  const o=chatOverview(clubId);
-  if(!o)return '';
-  const last=o.last_message_preview
-    ? (o.last_message_is_system?'ScoutMind: ':'')+o.last_message_preview
-    : 'No messages yet — say something.';
-  return '<div style="padding:12px 14px;border-top:1px solid var(--border);">'
-    +'<button class="chat-card" onclick="event.stopPropagation();openChat('+clubId+')">'
-    +clubCrestById(clubId,30)
-    +'<div style="flex:1;min-width:0;">'
-    +'<div style="font-size:12px;font-weight:600;">Community chat</div>'
-    +'<div class="chat-card-last">'+sanitize(last)+'</div>'
-    +'</div>'
-    +'<div style="font-size:10px;color:var(--accent);flex-shrink:0;">Open →</div>'
-    +'</button>'
-    +'<div style="font-size:10px;color:var(--muted);margin-top:6px;">'
-    +sanitize(memberLabel(o.member_count))
-    +(o.last_message_at?' · active '+sanitize(timeAgo(o.last_message_at)):'')
-    +'</div></div>';
-}
+// memberLabel() and the "Community chat" block (chatBlockHtml) went in 4b-5:
+// the club card shows "<club> room · N followers" (tn('hb.followers')).
 
 /**
  * Home's right column (commit 3, spec v1.2 §5): the room card and the table
@@ -4906,15 +4924,15 @@ async function openChat(clubId){
   const title=document.getElementById('chat-title');
   const sub=document.getElementById('chat-sub');
   if(crest)crest.innerHTML=clubCrestById(clubId,32);
-  if(title)title.textContent=clubLabel(clubId)+' Community';
-  if(sub)sub.textContent=memberLabel(o.member_count);
+  if(title)title.textContent=t('hb.roomName',{club:clubLabel(clubId)});   // "Flamengo room" (4b-5)
+  if(sub)sub.textContent=tn('hb.followers',o.member_count||0);
   if(ov)ov.style.display='flex';          // rule 6
   document.body.style.overflow='hidden';
 
   paintChatFoot();
   fitOverlayToViewport();
   document.getElementById('chat-body').innerHTML=
-    '<div class="chat-empty">Loading…</div>';
+    '<div class="chat-empty">'+sanitize(t('sg.loading'))+'</div>';
   await loadChatMessages(true);
   startChatPolling();
 }
@@ -4965,8 +4983,7 @@ async function loadChatMessages(scroll){
     console.warn('loadChatMessages:',e.message);
     if(!chatMessages.length){
       const body=document.getElementById('chat-body');
-      if(body)body.innerHTML='<div class="chat-empty">Could not load this room. '
-        +'Check your connection and try again.</div>';
+      if(body)body.innerHTML='<div class="chat-empty">'+sanitize(t('chat.loadFail'))+'</div>';
     }
   }
 }
@@ -4975,7 +4992,7 @@ function chatMsgRow(m){
   const system=Boolean(m.is_system);
   const p=system?{}:(AUTHORS.get(m.user_id)||{});
   // Not a system post and no author: the account was deleted (024).
-  const name=system?'ScoutMind':!m.user_id?'[deleted user]':(p.name||'Someone');
+  const name=system?'ScoutMind':!m.user_id?t('cm.deletedUser'):(p.name||t('chat.someone'));
   const mine=Boolean(currentUser&&m.user_id&&m.user_id===myUserId());
   const canDelete=!system&&(mine||isAdmin());
   const av=system
@@ -4989,8 +5006,8 @@ function chatMsgRow(m){
     +'<div class="chat-msg-text">'+sanitize(m.content)+'</div>'
     +(system?'':'<div class="comment-meta">'
       +likeButtonHtml('message',m.id)
-      +(currentUser&&!mine?'<button class="comment-link" onclick="openChatReport(\''+m.id+'\')">Report</button>':'')
-      +(canDelete?'<button class="comment-link" onclick="deleteChatMessage(\''+m.id+'\')">Delete</button>':'')
+      +(currentUser&&!mine?'<button class="comment-link" onclick="openChatReport(\''+m.id+'\')">'+sanitize(t('cmt.report'))+'</button>':'')
+      +(canDelete?'<button class="comment-link" onclick="deleteChatMessage(\''+m.id+'\')">'+sanitize(t('cmt.delete'))+'</button>':'')
       +'</div>'
       +'<div class="comment-report" id="grep-'+m.id+'" style="display:none;"></div>')
     +'</div></div>';
@@ -5006,7 +5023,7 @@ function paintChat(scroll){
   const nearBottom=body.scrollHeight-body.scrollTop-body.clientHeight<120;
   body.innerHTML=pinned.map(chatMsgRow).join('')
     +(rest.length?rest.map(chatMsgRow).join('')
-      :'<div class="chat-empty">Nobody has said anything yet.<br>Go on.</div>');
+      :'<div class="chat-empty">'+sanitize(t('chat.empty'))+'</div>');
   // Only follow the conversation if the reader was already at the bottom —
   // yanking them down while they are reading back is the classic chat sin.
   if(scroll||nearBottom)body.scrollTop=body.scrollHeight;
@@ -5020,7 +5037,7 @@ function isRoomMember(clubId){ return myClubIds().indexOf(Number(clubId))>=0; }
 
 /** One tap from the room: add the club to your follows, the same save as the picker. */
 async function followFromRoom(){
-  if(!requireAuth('Create a free account to join your club\'s chat.'))return;
+  if(!requireAuth(t('chat.gate')))return;
   if(!chatRoom)return;
   const id=Number(chatRoom.clubId);
   const btn=document.getElementById('chat-follow');
@@ -5040,7 +5057,7 @@ function paintChatFoot(){
   if(!foot)return;
   if(!currentUser){
     foot.innerHTML='<div class="comment-signin" style="margin:0;">'
-      +'<button class="comment-post-btn" onclick="requireAuth(\'Create a free account to join your club\\\'s chat.\')">Sign in to join the conversation</button>'
+      +'<button class="comment-post-btn" onclick="requireAuth(t(\'chat.gate\'))">'+sanitize(t('chat.signin'))+'</button>'
       +'</div>';
     return;
   }
@@ -5056,13 +5073,13 @@ function paintChatFoot(){
     +'<span class="compose-av">'+sanitize(myInitials())+'</span>'
     +'<div class="compose-box">'
     +'<textarea class="comment-input" id="chat-input" rows="1" maxlength="500"'
-    +' placeholder="Message the community…"'
+    +' placeholder="'+sanitize(t('chat.ph'))+'" aria-label="'+sanitize(t('chat.ph'))+'"'
     +' oninput="updateChatCounter();autoGrow(this)"'
     +' onkeydown="if(event.key===\'Enter\'&&(event.ctrlKey||event.metaKey)){event.preventDefault();sendChatMessage();}"></textarea>'
     +'<div class="comment-compose-foot">'
     +'<span class="comment-counter" id="chat-counter">0/500</span>'
-    +'<span class="comment-hint">Ctrl + Enter to send</span>'
-    +'<button class="comment-post-btn" id="chat-send" onclick="sendChatMessage()">Send</button>'
+    +'<span class="comment-hint">'+sanitize(t('chat.hint'))+'</span>'
+    +'<button class="comment-post-btn" id="chat-send" onclick="sendChatMessage()">'+sanitize(t('chat.send'))+'</button>'
     +'</div>'
     +'<div class="comment-error" id="chat-error" style="display:none;"></div>'
     +'</div></div>';
@@ -5085,7 +5102,7 @@ function setChatError(text){
 }
 
 async function sendChatMessage(){
-  if(!requireAuth('Create a free account to join your club\'s chat.'))return;
+  if(!requireAuth(t('chat.gate')))return;
   if(!chatRoom)return;
   const input=document.getElementById('chat-input');
   if(!input)return;
@@ -5093,7 +5110,7 @@ async function sendChatMessage(){
   if(text.length<2)return;
 
   const btn=document.getElementById('chat-send');
-  if(btn){ btn.disabled=true; btn.textContent='Sending…'; }
+  if(btn){ btn.disabled=true; btn.textContent=t('chat.sending'); }
   setChatError('');
   try{
     await apiSend('POST','group_messages',
@@ -5107,14 +5124,14 @@ async function sendChatMessage(){
     // The trigger writes the useful message: rate limit, blocklist, closed room.
     setChatError(friendlyDbError(e.message));
   }finally{
-    if(btn){ btn.disabled=false; btn.textContent='Send'; }
+    if(btn){ btn.disabled=false; btn.textContent=t('chat.send'); }
   }
 }
 
 /** Soft delete, same as comments. The row stays (rule 13). */
 async function deleteChatMessage(messageId){
-  if(!requireAuth('Create a free account to do that.'))return;
-  if(!confirm('Delete this message? This cannot be undone.'))return;
+  if(!requireAuth(t('cmt.gateDo')))return;
+  if(!confirm(t('chat.confirmDelete')))return;
   try{
     await softDelete('group_messages',messageId);
     chatMessages=chatMessages.filter(m=>String(m.id)!==String(messageId));
@@ -5125,16 +5142,16 @@ async function deleteChatMessage(messageId){
 }
 
 function openChatReport(messageId){
-  if(!requireAuth('Create a free account to report a message.'))return;
+  if(!requireAuth(t('chat.gateReport')))return;
   const box=document.getElementById('grep-'+messageId);
   if(!box)return;
   const open=box.style.display==='block';
   document.querySelectorAll('.comment-report').forEach(b=>b.style.display='none');
   if(open)return;
-  box.innerHTML='<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Why are you reporting this?</div>'
+  box.innerHTML='<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">'+sanitize(t('cmt.why'))+'</div>'
     +REPORT_REASONS.map(r=>'<button class="report-reason" onclick="sendChatReport(\''+messageId+'\',\''+r.value+'\')">'
-      +sanitize(r.label)+'</button>').join('')
-    +'<button class="report-reason" style="opacity:.6" onclick="document.getElementById(\'grep-'+messageId+'\').style.display=\'none\'">Cancel</button>';
+      +sanitize(t(r.key))+'</button>').join('')
+    +'<button class="report-reason" onclick="document.getElementById(\'grep-'+messageId+'\').style.display=\'none\'">'+sanitize(t('cmt.cancel'))+'</button>';
   box.style.display='block';
 }
 
@@ -5159,11 +5176,11 @@ async function sendChatReport(messageId,reason){
       [{target_type:'group_message',target_id:messageId,
         reporter_id:myUserId(),reason:reason}]);
     logEvent('report','group_message',null);
-    if(box)box.innerHTML='<div style="font-size:11px;color:var(--accent);">Thanks — we will take a look.</div>';
+    if(box)box.innerHTML='<div style="font-size:11px;color:var(--accent);">'+sanitize(t('cmt.reported'))+'</div>';
   }catch(e){
     const msg=friendlyDbError(e.message);
     if(box)box.innerHTML='<div style="font-size:11px;color:var(--muted);">'
-      +sanitize(/duplicate|unique/i.test(e.message)?'You have already reported this.':msg)+'</div>';
+      +sanitize(/duplicate|unique/i.test(e.message)?t('cmt.reportedAlready'):msg)+'</div>';
   }
 }
 
@@ -5178,7 +5195,7 @@ async function renderReports(){
   if(!isAdmin()){ wrap.style.display='none'; return; }
   wrap.style.display='block';
   const list=document.getElementById('reports-list');
-  list.innerHTML='<div class="comment-empty">Loading…</div>';
+  list.innerHTML='<div class="comment-empty">'+sanitize(t('sg.loading'))+'</div>';
   try{
     // No FK exists between reports.target_id and anything: target_type makes it
     // polymorphic. So the reports come first, then one lookup PER TYPE.
@@ -5188,10 +5205,10 @@ async function renderReports(){
     // with no sign anything was wrong.
     const reports=await apiGet('reports?select=id,target_type,target_id,reason,detail,created_at'
       +'&status=eq.open&order=created_at.desc&limit=50');
-    if(!reports.length){ list.innerHTML='<div class="comment-empty">Nothing reported. </div>'; return; }
+    if(!reports.length){ list.innerHTML='<div class="comment-empty">'+sanitize(t('rep.none'))+'</div>'; return; }
 
     const byKey={};
-    const idsFor=t=>[...new Set(reports.filter(r=>r.target_type===t).map(r=>r.target_id))];
+    const idsFor=typ=>[...new Set(reports.filter(r=>r.target_type===typ).map(r=>r.target_id))];
     const commentIds=idsFor('comment');
     const messageIds=idsFor('group_message');
     if(commentIds.length){
@@ -5208,26 +5225,27 @@ async function renderReports(){
       }
     }
 
-    const LABEL={comment:'comment',group_message:'message'};
+    const KIND={comment:'rep.comment',group_message:'rep.message'};
     list.innerHTML=reports.map(function(r){
-      const kind=LABEL[r.target_type]||'item';
+      const kind=t(KIND[r.target_type]||'rep.item');
+      const reason=(REPORT_REASONS.find(x=>x.value===r.reason)||{}).key;
       const c=byKey[r.target_type+':'+r.target_id];
       const gone=!c||c.deleted_at;
       return '<div class="report-card">'
-        +'<div class="report-head">'+sanitize(r.reason.replace('_',' '))+' · '+sanitize(kind)
+        +'<div class="report-head">'+sanitize(reason?t(reason):String(r.reason||'').replace('_',' '))+' · '+sanitize(kind)
         +'<span class="comment-time">'+timeAgo(r.created_at)+'</span></div>'
         +'<div class="report-quote">'+(gone
-            ? '<em style="color:var(--muted)">This '+sanitize(kind)+' is already removed, or could not be read.</em>'
+            ? '<em style="color:var(--muted)">'+sanitize(t('rep.gone'))+'</em>'
             : sanitize(c.content))+'</div>'
         +(r.detail?'<div class="report-detail">'+sanitize(r.detail)+'</div>':'')
         +'<div class="report-actions">'
         +(gone?'':'<button class="report-btn danger" onclick="adminDelete('+r.id+',\''
-            +sanitize(r.target_type)+'\',\''+sanitize(String(r.target_id))+'\')">Delete '+sanitize(kind)+'</button>')
-        +'<button class="report-btn" onclick="adminResolve('+r.id+',\'dismissed\')">Dismiss</button>'
+            +sanitize(r.target_type)+'\',\''+sanitize(String(r.target_id))+'\')">'+sanitize(t('cmt.delete'))+'</button>')
+        +'<button class="report-btn" onclick="adminResolve('+r.id+',\'dismissed\')">'+sanitize(t('rep.dismiss'))+'</button>'
         +'</div></div>';
     }).join('');
   }catch(e){
-    list.innerHTML='<div class="comment-empty">Could not load reports: '+sanitize(friendlyDbError(e.message))+'</div>';
+    list.innerHTML='<div class="comment-empty">'+sanitize(t('rep.fail',{why:friendlyDbError(e.message)}))+'</div>';
   }
 }
 
@@ -5241,8 +5259,7 @@ async function adminResolve(reportId,status){
 
 /** Soft delete from the moderation queue. Works for either target type. */
 async function adminDelete(reportId,targetType,targetId){
-  const kind=targetType==='group_message'?'message':'comment';
-  if(!confirm('Delete this '+kind+'? It stays in the database but nobody will see it.'))return;
+  if(!confirm(t('rep.confirm')))return;
   const table=targetType==='group_message'?'group_messages':'comments';
   try{
     // Throws if nothing was deleted, so a report is never marked actioned while
@@ -5485,17 +5502,15 @@ function renderTrending(){
   const items=trendingItems();
   const toggle='<div class="csort" style="margin-bottom:12px;">'
     +'<button class="csort-btn'+(trendWindow==='today'?' active':'')
-    +'" onclick="setTrendWindow(\'today\')">Today</button>'
+    +'" onclick="setTrendWindow(\'today\')">'+sanitize(t('fx.today'))+'</button>'
     +'<button class="csort-btn'+(trendWindow==='week'?' active':'')
-    +'" onclick="setTrendWindow(\'week\')">This week</button>'
+    +'" onclick="setTrendWindow(\'week\')">'+sanitize(t('feed.week'))+'</button>'
     +'</div>';
   el.innerHTML=toggle+(items.length
     ? items.map(renderFeedItem).join('')
     : isOffline()?offlineHtml()
     : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
-      +(trendWindow==='today'
-        ? 'Nothing from today yet. Try This week.'
-        : 'Nothing trending right now.')
+      +sanitize(t(trendWindow==='today'?'feed.trend.noneToday':'feed.trend.none'))
       +'</div>');
   // How the feed is fed is for whoever is debugging, not for the reader.
   if(!items.length&&!isOffline()) console.info('trending: empty — news arrives through /api/cron/news, every 15 minutes');
@@ -5560,9 +5575,7 @@ function renderFeedNews(){
         ? filtered.map(renderFeedItem).join('')
         : isOffline()?offlineHtml()
         : '<div style="text-align:center;padding:40px;color:var(--muted)">'
-          +(feedExhausted
-            ? 'Nothing here in the last seven days. Try another language or category.'
-            : 'No stories right now.')
+          +sanitize(t(feedExhausted?'feed.noneWeek':'feed.none'))
           +'</div>')
         +(!filtered.length&&isOffline()?'':feedMoreHtml('news'));
     }
@@ -5577,7 +5590,7 @@ function renderFeedNews(){
 function searchResultsHtml(){
   if(SEARCH_RESULTS.unavailable){
     return '<div style="text-align:center;padding:36px 20px;color:var(--muted);font-size:13px;line-height:1.7;">'
-      +'Search needs migration 009. Until it is applied, the filters above still work.</div>';
+      +sanitize(t('feed.searchOff'))+'</div>';
   }
   const langs=myLangs();
   const mine=myClubApiIds();
@@ -5596,14 +5609,13 @@ function searchResultsHtml(){
     return true;
   });
   const head='<div class="search-summary">'
-    +(rows.length?rows.length+(rows.length===1?' result':' results'):'No results')
-    +' for &ldquo;'+sanitize(SEARCH_QUERY)+'&rdquo;'
-    +' <button class="comment-link" onclick="clearSearch()">Clear</button></div>';
+    +sanitize(rows.length?tn('feed.results',rows.length,{q:SEARCH_QUERY}):t('feed.noResults',{q:SEARCH_QUERY}))
+    +' <button class="comment-link" onclick="clearSearch()">'+sanitize(t('home.search.clear'))+'</button></div>';
   // Results are a list of rows: no lead card (pos 1 for every one).
   return head+(rows.length
     ? rows.map(n=>renderFeedItem(n,1)).join('')
     : '<div style="text-align:center;padding:30px 20px;color:var(--muted);font-size:13px;">'
-      +'Try a club name, a player, or a shorter phrase.</div>');
+      +sanitize(t('feed.tryOther'))+'</div>');
 }
 
 /** Load reaction and comment counts once, then repaint with the real numbers. */
@@ -5639,10 +5651,8 @@ function renderForYou(){
   if(!mine.length){
     el.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--muted);">'
       +'<div style="font-size:13px;line-height:1.7;max-width:360px;margin:0 auto 16px;">'
-      +(currentUser
-        ? 'Follow a club and its news lands here.'
-        : 'Sign in and pick your clubs to get a feed of your own.')
-      +'</div><button class="filter-btn" onclick="openTeamModal()">Choose your clubs</button></div>';
+      +sanitize(t(currentUser?'feed.fy.follow':'feed.fy.signin'))
+      +'</div><button class="filter-btn" onclick="openTeamModal()">'+sanitize(t('feed.fy.choose'))+'</button></div>';
     return;
   }
   const langs=myLangs();
@@ -5665,9 +5675,7 @@ function renderForYou(){
     ? items.map(renderFeedItem).join('')
     : isOffline()?offlineHtml()
     : '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
-      +(feedExhausted
-        ? 'Nothing about your clubs in the last seven days.'
-        : 'Nothing about your clubs yet. Load more to look further back.')
+      +sanitize(t(feedExhausted?'feed.fy.noneWeek':'feed.fy.none'))
       +'</div>')
     +(!items.length&&isOffline()?'':feedMoreHtml('foryou'));
 }
@@ -5682,193 +5690,9 @@ document.querySelectorAll('.league-filter-btn').forEach(btn=>{
 });
 
 // ── INIT ──
-// ── SCOUTMIND WEEKLY REPORT ──
-const WEEKLY_REPORTS = [
-  {
-    league:'Série A', flag:'🇧🇷', week:'May 3, 2026',
-    mover:{team:'Palmeiras', direction:'up', change:'+8pts vs avg', note:'Estêvão now starting every game — creative output up 34% in 3 weeks.'},
-    alert:{team:'Corinthians', weakness:'Aerial vulnerability', stat:'41% aerial duels won vs 54% league avg', note:'3 of last 4 goals conceded from set pieces. A dominant CB is urgent.'},
-    transfer:{position:'CB', demand:'High', leagues:['Série A','La Liga'], note:'12 Série A clubs showing aerial weakness. Tall CBs under €10M are the most searched profile this week.', players:[{name:'Lautaro Mosquera',club:'Nacional (URU)',score:84},{name:'Matías Galarza',club:'Genoa (loan)',score:79}]},
-    deepDive:{team:'Flamengo', coach:'Filipe Luís', summary:'Flamengo lead Série A in possession (61%) and key passes per game (14.2) but their conversion rate (8.3%) is the 7th worst in the league. The data points to one clear fix: a clinical striker. Pedro\'s injury has exposed a finishing gap that no current squad member can solve. Arrascaeta is creating at an elite level — he needs a finisher.', signings:[{name:'Julián Álvarez',club:'Atlético Madrid',fit:88,note:'Perfect press fit, goals per game 0.50'},{name:'Borja Iglesias',club:'Betis',fit:74,note:'Clinical, cheaper alternative at ~€12M'}]}
-  },
-  {
-    league:'Premier League', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', week:'May 3, 2026',
-    mover:{team:'Arsenal', direction:'up', change:'+12% pressing intensity', note:'Arteta\'s new 4-2-3-1 is generating 3.2 more high turnovers per game than last month.'},
-    alert:{team:'Manchester United', weakness:'Low passing accuracy under pressure', stat:'71% pass acc vs 84% league avg', note:'Ball is being surrendered cheaply in midfield. A technical CM is the priority.'},
-    transfer:{position:'CM', demand:'Very High', leagues:['Premier League','Bundesliga'], note:'9 Premier League clubs showing midfield creativity weakness. Ball-playing CMs under £40M dominate search this week.', players:[{name:'Florian Wirtz',club:'Bayer Leverkusen',score:91},{name:'Kieran Tierney',club:'Real Sociedad',score:72}]},
-    deepDive:{team:'Chelsea', coach:'Enzo Maresca', summary:'Chelsea\'s £250M budget is confirmed and the data gives a clear priority order. Their xG per shot (0.11) is the 4th lowest in the league despite high shot volume — they need a clinical striker above all. Their pressing numbers (8.1 PPDA) are elite but fatigue in the 70th+ minute window is real, suggesting a rotation CM is also needed.', signings:[{name:'Florian Wirtz',club:'Bayer Leverkusen',fit:88,note:'Would solve the creativity + finishing link-up'},{name:'Viktor Gyökeres',club:'Real Madrid',fit:82,note:'Already confirmed at Madrid — window has closed'}]}
-  },
-  {
-    league:'La Liga', flag:'🇪🇸', week:'May 3, 2026',
-    mover:{team:'Barcelona', direction:'up', change:'Yamal contract extended', note:'Lamine Yamal signed until 2031. His 0.45 assists per game leads all U21 players in Europe.'},
-    alert:{team:'Sevilla', weakness:'Goalscoring output', stat:'0.9 goals/game vs 1.6 league avg', note:'Lowest attack output in top half. A proven striker is existential for their top-4 hopes.'},
-    transfer:{position:'ST', demand:'High', leagues:['La Liga','Serie A IT'], note:'7 La Liga clubs flagging attacking output weakness. Clinical strikers available under €25M are the most tracked profile.', players:[{name:'Che Adams',club:'Southampton',score:77},{name:'Donyell Malen',club:'Dortmund',score:81}]},
-    deepDive:{team:'Atlético Madrid', coach:'Diego Simeone', summary:'Atlético\'s defensive record (0.8 goals conceded/game) remains elite — best in La Liga. But their attacking transition has slowed since Álvarez\'s form dipped. Their counter-attack speed is 18% slower than last season. Simeone needs a pacey wide forward to restore the threat on the break.', signings:[{name:'Alejandro Garnacho',club:'Man Utd',fit:86,note:'Pace, directness, young — perfect Simeone profile'},{name:'Adama Traoré',club:'Free agent',fit:68,note:'Cheaper but declining physically'}]}
-  },
-  {
-    league:'Bundesliga', flag:'🇩🇪', week:'May 3, 2026',
-    mover:{team:'Bayer Leverkusen', direction:'down', change:'-15% key passes/game', note:'Wirtz transfer speculation affecting form. 3 straight draws signal squad depth problem.'},
-    alert:{team:'Borussia Dortmund', weakness:'Defensive errors', stat:'2.1 goals conceded/game vs 1.3 avg', note:'Worst defensive record in top 6. Losing aerial duels at 44% — a commanding CB is essential.'},
-    transfer:{position:'CB', demand:'High', leagues:['Bundesliga','Ligue 1'], note:'Defensive frailty across 6 Bundesliga clubs. Aerial CBs under €20M heavily tracked this week.', players:[{name:'Castello Lukeba',club:'RB Leipzig',score:86},{name:'Jakub Kiwior',club:'Arsenal',score:78}]},
-    deepDive:{team:'Bayern Munich', coach:'Vincent Kompany', summary:'Bayern lead the Bundesliga in possession (68%) and xG (2.8/game) but their pressing has dropped 14% from last season. Harry Kane\'s 28 goals are exceptional but the midfield isn\'t consistently capitalising on the space he creates. A high-energy box-to-box CM would turn good into dominant.', signings:[{name:'Xavi Simons',club:'PSG',fit:84,note:'Energy, technique, Bundesliga-proven'},{name:'Granit Xhaka',club:'Leverkusen',fit:71,note:'Leadership but pace declining'}]}
-  },
-  {
-    league:'Serie A Italy', flag:'🇮🇹', week:'May 3, 2026',
-    mover:{team:'Inter Milan', direction:'up', change:'3 clean sheets in a row', note:'Inzaghi\'s back 3 is suffocating opponents — conceding just 0.4 goals/game in May.'},
-    alert:{team:'Juventus', weakness:'Creative output', stat:'8.1 key passes/game vs 12.4 avg', note:'Worst creativity in Serie A top 8. A playmaker is essential — they\'re grinding results without fluid football.'},
-    transfer:{position:'CAM', demand:'Very High', leagues:['Serie A IT','Premier League'], note:'Creative midfielder the most searched position in Serie A this week. 8 clubs flagging key pass weakness.', players:[{name:'Nico González',club:'Porto',score:82},{name:'Luis Alberto',club:'Lazio',score:76}]},
-    deepDive:{team:'Napoli', coach:'Antonio Conte', summary:'Conte has restored defensive solidity (1.1 goals conceded/game, up from 1.8 last season) but Napoli\'s attack is still finding its identity post-Osimhen. Their pressing intensity (9.2 PPDA) is top 3 in Italy but they lack a striker who can lead that press. A mobile CF who presses from the front is the clear missing piece.', signings:[{name:'Viktor Gyökeres',club:'Real Madrid',fit:79,note:'Would fit Conte\'s system perfectly — too expensive'},{name:'Boulaye Dia',club:'Lazio',fit:83,note:'Pressing, goals, Serie A proven — realistic target'}]}
-  },
-  {
-    league:'Ligue 1', flag:'🇫🇷', week:'May 3, 2026',
-    mover:{team:'Monaco', direction:'up', change:'+22% shot accuracy', note:'Ben Seghir running the league\'s most efficient attack — 0.43 goals/shot, best in France.'},
-    alert:{team:'Lyon', weakness:'Defensive errors', stat:'1.9 goals conceded/game vs 1.2 avg', note:'Leaking goals from open play and set pieces. Defensive rebuild needed this summer.'},
-    transfer:{position:'CB', demand:'High', leagues:['Ligue 1'], note:'Lyon and 4 other Ligue 1 clubs flagging defensive weakness simultaneously — creating rare market opportunity for strong CBs.', players:[{name:'Maxime Estève',club:'Burnley',score:80},{name:'Facundo Medina',club:'RC Lens',score:77}]},
-    deepDive:{team:'PSG', coach:'Luis Enrique', summary:'PSG\'s 4-0 win over Lyon showed what Luis Enrique is building — high press, fluid rotations, no reliance on one superstar. Their pass accuracy (92%) and pressing recovery time (6.2 sec) are elite. The squad depth question is the only concern: one injury to Dembélé or Asensio and the system strains. A versatile winger with similar profile is the priority.', signings:[{name:'Noni Madueke',club:'Chelsea',fit:81,note:'Direct, pacy, works in high-press system'},{name:'Leroy Sané',club:'Bayern (expiring)',fit:77,note:'Free transfer — elite quality if fit'}]}
-  },
-  {
-    league:'Argentina', flag:'🇦🇷', week:'May 3, 2026',
-    mover:{team:'River Plate', direction:'up', change:'Top of Apertura', note:'Gallardo 2.0 — pressing metrics up 28% since his return. League\'s best attack (2.4 goals/game).'},
-    alert:{team:'Independiente', weakness:'All metrics below average', stat:'Bottom 3 in goals, possession, passing', note:'Structural rebuild needed. Wrong coach, wrong system — squad has talent but no identity.'},
-    transfer:{position:'Winger', demand:'High', leagues:['Argentina','Brazil'], note:'South American wingers being heavily tracked by European clubs — 14 scouted in Argentina this week alone.', players:[{name:'Valentín Carboni',club:'Inter Milan (loan)',score:86},{name:'Thiago Almada',club:'Atlanta United',score:81}]},
-    deepDive:{team:'Boca Juniors', coach:'Fernando Gago', summary:'Boca\'s identity crisis continues. Under Gago they\'ve tried three different systems in 8 games. Their underlying numbers are actually reasonable (1.6 goals/game, 78% pass acc) but they\'re conceding from individual errors (67% of goals from defensive mistakes vs 41% league avg). Leadership and defensive organisation — not talent — is the problem.', signings:[{name:'Marcos Rojo',club:'Estudiantes',fit:72,note:'Experience and leadership, knows the pressure'},{name:'Lisandro Martínez',club:'Man Utd',fit:89,note:'Dream signing — back to Boca? 5% chance but tracked'}]}
-  }
-];
+// SM Weekly (hand-written reports dated May 2026, with invented numbers) was
+// deleted on 17 Nov 2026 (4b-5, decision 4). R9 rebuilds it from real data.
 
-function renderWeeklyReport() {
-  const el = document.getElementById('weekly-report-section');
-  if (!el) return;
-
-  // Get user's main league preference
-  const mainClub = SMAuth.getJSON('sm_main_club', null);
-  const userLeagueMap = {
-    serie_a:'Série A', premier_league:'Premier League', la_liga:'La Liga',
-    bundesliga:'Bundesliga', serie_a_it:'Serie A Italy', ligue_1:'Ligue 1', argentina:'Argentina'
-  };
-
-  // Sort reports: user's league first, then rest
-  let reports = [...WEEKLY_REPORTS];
-  if (mainClub?.league) {
-    const userLeague = Object.values(userLeagueMap).find(l =>
-      mainClub.league.toLowerCase().includes(l.toLowerCase().split(' ')[0].toLowerCase())
-    ) || 'Série A';
-    reports.sort((a, b) => a.league === userLeague ? -1 : b.league === userLeague ? 1 : 0);
-  }
-
-  let html = '<div style="margin-bottom:24px;">';
-  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">';
-  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;letter-spacing:2px;">ScoutMind Weekly</div>';
-  html += '<div style="display:inline-flex;align-items:center;gap:5px;background:var(--tint);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--accent);">📊 Every Monday</div>';
-  html += '</div>';
-  html += '<div style="font-size:13px;color:var(--muted);">Deep tactical analysis across all major leagues — who\'s rising, who\'s struggling, and which signings the data recommends.</div>';
-  html += '</div>';
-
-  // League filter tabs
-  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">';
-  html += '<button class="filter-btn active" onclick="filterWeekly(\'all\',this)">All Leagues</button>';
-  reports.forEach(r => {
-    html += '<button class="filter-btn" onclick="filterWeekly(\'' + r.league.replace(/\s/g,'_') + '\',this)">' + r.flag + ' ' + r.league + '</button>';
-  });
-  html += '</div>';
-
-  html += '<div id="weekly-reports-list">';
-  reports.forEach(r => {
-    html += weeklyReportCard(r);
-  });
-
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-function weeklyReportCard(r) {
-  const scoreClr = s => s >= 75 ? 'var(--green)' : s >= 50 ? 'var(--yellow)' : 'var(--red)';
-  const dirIcon = r.mover.direction === 'up' ? '↑' : '↓';
-  const dirClr = r.mover.direction === 'up' ? 'var(--green)' : 'var(--red)';
-
-  let html = '<div class="weekly-card" data-league="' + r.league.replace(/\s/g,'_') + '" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">';
-
-  // Header
-  html += '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">';
-  html += '<div style="display:flex;align-items:center;gap:10px;">';
-  html += '<div style="font-size:24px;">' + r.flag + '</div>';
-  html += '<div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;letter-spacing:1px;">' + r.league + '</div>';
-  html += '<div style="font-size:11px;color:var(--muted);">Week of ' + r.week + '</div></div></div>';
-  html += '<div style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--tint);color:var(--accent);border:1px solid var(--border);">WEEKLY REPORT</div>';
-  html += '</div>';
-
-  html += '<div style="padding:18px 20px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">';
-
-  // Biggest mover
-  html += '<div style="background:var(--bg3);border-radius:10px;padding:14px;">';
-  html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">📈 Biggest Mover</div>';
-  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
-  html += '<div style="font-size:15px;font-weight:700;">' + r.mover.team + '</div>';
-  html += '<div style="font-size:13px;font-weight:700;color:' + dirClr + '">' + dirIcon + ' ' + r.mover.change + '</div></div>';
-  html += '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + r.mover.note + '</div>';
-  html += '</div>';
-
-  // Weakness alert
-  html += '<div style="background:var(--tint);border:1px solid var(--border);border-radius:10px;padding:14px;">';
-  html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--warn);text-transform:uppercase;margin-bottom:8px;">⚠️ Weakness Alert</div>';
-  html += '<div style="font-size:15px;font-weight:700;margin-bottom:3px;">' + r.alert.team + '</div>';
-  html += '<div style="font-size:11px;font-weight:600;color:var(--warn);margin-bottom:6px;">' + r.alert.weakness + '</div>';
-  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-family:\'DM Mono\',monospace;">' + r.alert.stat + '</div>';
-  html += '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + r.alert.note + '</div>';
-  html += '</div>';
-
-  html += '</div>';
-
-  // Transfer intelligence
-  html += '<div style="padding:0 20px 18px;">';
-  html += '<div style="background:var(--bg3);border-radius:10px;padding:14px;">';
-  html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent2);text-transform:uppercase;margin-bottom:8px;">🔄 Most Needed Position This Week</div>';
-  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">';
-  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:var(--text)">' + r.transfer.position + '</div>';
-  html += '<div style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--tint);color:var(--warn)">Demand: ' + r.transfer.demand + '</div></div>';
-  html += '<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px">' + r.transfer.note + '</div>';
-  html += r.transfer.players.map(p =>
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
-    + '<div><div style="font-size:13px;font-weight:600">' + p.name + '</div><div style="font-size:11px;color:var(--muted)">' + p.club + '</div></div>'
-    + '<div style="display:flex;align-items:center;gap:8px;">'
-    + '<div style="width:60px;height:4px;background:var(--border);border-radius:2px;"><div style="width:' + p.score + '%;height:100%;border-radius:2px;background:' + scoreClr(p.score) + '"></div></div>'
-    + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:' + scoreClr(p.score) + '">' + p.score + '%</div>'
-    + '</div></div>'
-  ).join('');
-  html += '</div></div>';
-
-  // Deep dive
-  html += '<div style="margin:0 20px 20px;">';
-  html += '<div style="background:var(--tint);border:1px solid var(--border);border-radius:10px;padding:16px;">';
-  html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;animation:blink 2s infinite"></span>Deep Dive — ' + r.deepDive.team + '</div>';
-  html += '<div style="font-size:13px;font-weight:600;margin-bottom:4px;">' + r.deepDive.team + ' <span style="font-size:11px;color:var(--muted);font-weight:400">· Coach: ' + r.deepDive.coach + '</span></div>';
-  html += '<div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px">' + r.deepDive.summary + '</div>';
-  html += '<div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:8px">Recommended Signings</div>';
-  html += r.deepDive.signings.map(s =>
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;background:var(--bg3);border-radius:8px;padding:10px 12px;">'
-    + '<div style="flex:1"><div style="font-size:13px;font-weight:600">' + s.name + '</div>'
-    + '<div style="font-size:11px;color:var(--muted)">' + s.club + '</div>'
-    + '<div style="font-size:11px;color:var(--accent);margin-top:2px">' + s.note + '</div></div>'
-    + '<div style="display:flex;align-items:center;gap:8px;margin-left:12px;">'
-    + '<div style="width:50px;height:4px;background:var(--border);border-radius:2px;"><div style="width:' + s.fit + '%;height:100%;border-radius:2px;background:' + scoreClr(s.fit) + '"></div></div>'
-    + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:' + scoreClr(s.fit) + '">' + s.fit + '%</div>'
-    + '</div></div>'
-  ).join('');
-  html += '</div></div>';
-
-  html += '</div>'; // close weekly-card
-  return html;
-}
-
-function filterWeekly(league, btn) {
-  document.querySelectorAll('.weekly-card').forEach(card => {
-    card.style.display = (league === 'all' || card.dataset.league === league) ? 'block' : 'none';
-  });
-  document.querySelectorAll('#weekly-reports-list').forEach(() => {});
-  // Update filter buttons
-  const allBtns = btn.parentElement.querySelectorAll('.filter-btn');
-  allBtns.forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
 // Club data first: crests and real numbers should be in hand before the feed
 // and the pickers paint. A failure here is logged and everything still renders.
 (async function(){
@@ -5931,7 +5755,6 @@ function filterWeekly(league, btn) {
   if(typeof loadHomeBand==='function') loadHomeBand(true).catch(e=>console.error('loadHomeBand:',e));
 })();
 try{initProfile();}catch(e){console.error('initProfile:',e);}
-try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
 
 
 // Handle ?page= URL parameter (e.g. from the nav on community.html / about.html)
@@ -5943,14 +5766,14 @@ try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
   try{showPage(page);}catch(e){console.error('showPage:',e);}
   // Arriving from confirmDeleteAccount().
   if(new URLSearchParams(window.location.search).get('deleted')==='1'){
-    try{ toast('Your account has been deleted.'); }catch(e){}
+    try{ toast(t('prof.deleted')); }catch(e){}
     try{ history.replaceState(null,'','/'); }catch(e){}
   }
 })();
 
 function initProfile(){
   if(!currentUser) return;
-  const name = currentUser.name || currentUser.email?.split('@')[0] || 'User';
+  const name = currentUser.name || currentUser.email?.split('@')[0] || t('prof.user');
   const email = currentUser.email || '—';
   const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
 
@@ -5961,10 +5784,32 @@ function initProfile(){
   // Profile page
   const setBig = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
   setBig('profile-avatar-big', initials);
-  setBig('profile-name-big', name.toUpperCase());
+  setBig('profile-name-big', name);
   setBig('profile-email-big', email);
   setBig('profile-name-val', name);
   setBig('profile-email-val', email);
+  renderMemberSince().catch(()=>{});
+}
+
+/**
+ * "Member since": the account's own creation date (public_profiles.created_at),
+ * in the reader's language. It used to say "May 2026" for everyone (4b-5).
+ * No date, no row.
+ */
+let MEMBER_SINCE=null;
+async function renderMemberSince(){
+  const row=document.getElementById('profile-since-row'), val=document.getElementById('profile-since-val');
+  if(!row||!val) return;
+  const me=myUserId();
+  if(!me||isGuestNow()){ row.style.display='none'; return; }
+  if(MEMBER_SINCE===null){
+    try{ const r=await apiGet('public_profiles?select=created_at&id=eq.'+encodeURIComponent(me)); MEMBER_SINCE=(r&&r[0]&&r[0].created_at)||''; }
+    catch(e){ MEMBER_SINCE=''; }
+  }
+  const d=MEMBER_SINCE?new Date(MEMBER_SINCE):null;
+  if(!d||isNaN(d)){ row.style.display='none'; return; }
+  val.textContent=d.toLocaleDateString(smLocale()||undefined,{month:'long',year:'numeric'});
+  row.style.display='';
 }
 
 function renderProfileClubs(){
@@ -5974,7 +5819,7 @@ function renderProfileClubs(){
   const main = mainClubId();
   if(!ids.length){
     el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0;">'
-      + 'No club selected yet. <span style="color:var(--accent);cursor:pointer;" onclick="openTeamModal()">Choose your club</span></div>';
+      + sanitize(t('prof.noClub'))+' <button type="button" class="comment-link" onclick="openTeamModal()">'+sanitize(t('clubs.choose'))+'</button></div>';
     return;
   }
   el.innerHTML = ids.map(function(id){
@@ -5984,19 +5829,43 @@ function renderProfileClubs(){
     return '<div class="club-chip">'
       + clubCrestById(id,20)
       + '<span class="club-chip-name">' + sanitize(c.label) + '</span>'
-      + '<span class="club-chip-badge ' + (isMain?'c-pill-g':'c-pill-b') + '">'
-      + (isMain?'Main club':'Following') + '</span></div>';
+      + '<span class="sg-tag">' + sanitize(t(isMain?'clubs.main':'clubs.following')) + '</span></div>';
   }).join('');
 }
 
-function editName(){if(!requireAuth('Create a free account to set up your profile.'))return;var nameVal=document.getElementById("profile-name-val");var nameEdit=document.getElementById("profile-name-edit");var nameInput=document.getElementById("profile-name-input");var editBtn=document.getElementById("profile-edit-btn");if(nameVal)nameVal.style.display="none";if(nameEdit)nameEdit.style.display="flex";if(nameInput){nameInput.value=currentUser&&currentUser.name?currentUser.name:"";nameInput.focus();nameInput.select();}if(editBtn)editBtn.style.display="none";}function cancelEditName(){var nameVal=document.getElementById("profile-name-val");var nameEdit=document.getElementById("profile-name-edit");var editBtn=document.getElementById("profile-edit-btn");if(nameVal)nameVal.style.display="";if(nameEdit)nameEdit.style.display="none";if(editBtn)editBtn.style.display="";}function saveName(){if(!requireAuth('Create a free account to set up your profile.'))return;var input=document.getElementById("profile-name-input");var newName=input&&input.value.trim().slice(0,60);if(!newName){alert("Please enter a name.");return;}/* The account is the truth (LGPD correction right): this used to write localStorage only, so a rename never left the device. profiles.name is UPDATE-granted to authenticated by 013. */apiSend('PATCH','profiles?id=eq.'+encodeURIComponent(myUserId()),{name:newName}).catch(function(e){console.error('saveName:',e);toast('Your new name could not be saved: '+friendlyDbError(e.message),'error');});if(currentUser){currentUser.name=newName;localStorage.setItem("sm_current_user",JSON.stringify(currentUser));}var initials=newName.split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);var ids={"profile-name-val":newName,"profile-name-big":newName.toUpperCase(),"nav-name":newName,"nav-avatar":initials,"profile-avatar-big":initials};Object.keys(ids).forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=ids[id];});cancelEditName();}function highlightCurrPref(c){
-  ['EUR','USD','BRL','GBP'].forEach(x=>{
-    const btn=document.getElementById('pref-'+x);
-    if(!btn) return;
-    if(x===c){btn.style.borderColor='var(--accent)';btn.style.background='var(--tint)';btn.style.color='var(--accent)';}
-    else{btn.style.borderColor='var(--border)';btn.style.background='transparent';btn.style.color='var(--muted)';}
-  });
+function editName(){
+  if(!requireAuth(t('prof.gate')))return;
+  const nameVal=document.getElementById('profile-name-val'), nameEdit=document.getElementById('profile-name-edit');
+  const nameInput=document.getElementById('profile-name-input'), editBtn=document.getElementById('profile-edit-btn');
+  if(nameVal)nameVal.style.display='none';
+  if(nameEdit)nameEdit.style.display='flex';
+  if(nameInput){ nameInput.value=currentUser&&currentUser.name?currentUser.name:''; nameInput.focus(); nameInput.select(); }
+  if(editBtn)editBtn.style.display='none';
 }
+function cancelEditName(){
+  const nameVal=document.getElementById('profile-name-val'), nameEdit=document.getElementById('profile-name-edit'), editBtn=document.getElementById('profile-edit-btn');
+  if(nameVal)nameVal.style.display='';
+  if(nameEdit)nameEdit.style.display='none';
+  if(editBtn)editBtn.style.display='';
+}
+function saveName(){
+  if(!requireAuth(t('prof.gate')))return;
+  const input=document.getElementById('profile-name-input');
+  const newName=input&&input.value.trim().slice(0,60);
+  if(!newName){ alert(t('prof.nameEmpty')); return; }
+  // The account is the truth (LGPD correction right): this used to write
+  // localStorage only, so a rename never left the device. profiles.name is
+  // UPDATE-granted to authenticated by 013.
+  apiSend('PATCH','profiles?id=eq.'+encodeURIComponent(myUserId()),{name:newName})
+    .catch(function(e){ console.error('saveName:',e); toast(t('prof.nameFail',{why:friendlyDbError(e.message)}),'error'); });
+  if(currentUser){ currentUser.name=newName; localStorage.setItem('sm_current_user',JSON.stringify(currentUser)); }
+  const initials=newName.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+  const ids={'profile-name-val':newName,'profile-name-big':newName,'nav-name':newName,'nav-avatar':initials,'profile-avatar-big':initials};
+  Object.keys(ids).forEach(function(id){ const el=document.getElementById(id); if(el)el.textContent=ids[id]; });
+  cancelEditName();
+}
+// highlightCurrPref() (the EUR / USD / BRL / GBP switch of the pricing era) was
+// dead code and went in 4b-5: there are no prices anywhere.
 
 // The old "first login per account" team-modal trigger lived here. It keyed on
 // a localStorage flag and targeted the same moment as onboarding — signed in,
@@ -7574,10 +7443,11 @@ function renderAppLangPref(){
   const cur=smLang();
   el.innerHTML=[['en','English'],['pt-BR','Português (Brasil)']].map(function(l){
     const on=l[0]===cur;
-    return '<button class="lang-pref" onclick="setLang(\''+l[0]+'\')" aria-pressed="'+on+'"'
-      +' style="font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:\'DM Sans\',sans-serif;'
-      +'border:1px solid '+(on?'var(--accent)':'var(--border)')+';background:'+(on?'var(--tint)':'transparent')
-      +';color:'+(on?'var(--accent)':'var(--muted)')+';">'+(on?'✓ ':'')+l[1]+'</button>';
+    // Each language named in itself, as everywhere (English, Português).
+    return '<button class="lang-pref" onclick="setLang(\''+l[0]+'\')" aria-pressed="'+on+'" lang="'+l[0]+'"'
+      +' style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:var(--font-sans);'
+      +'border:1px solid '+(on?'var(--navy-ink)':'var(--border)')+';background:'+(on?'var(--tint)':'transparent')
+      +';color:'+(on?'var(--ink)':'var(--muted)')+';">'+(on?Icons.svg('check',12):'')+l[1]+'</button>';
   }).join('');
 }
 /** Profile -> Preferences -> Theme. The choice lives in sm_theme (the head
@@ -7589,9 +7459,9 @@ function renderThemePref(){
   el.innerHTML=['system','light','dark'].map(function(p){
     const on=p===cur;
     return '<button class="lang-pref" onclick="window.smTheme.set(\''+p+'\');renderThemePref();" aria-pressed="'+on+'"'
-      +' style="font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:\'DM Sans\',sans-serif;'
-      +'border:1px solid '+(on?'var(--accent)':'var(--border)')+';background:'+(on?'var(--tint)':'transparent')
-      +';color:'+(on?'var(--accent)':'var(--muted)')+';">'+(on?'✓ ':'')+t('pref.theme.'+p)+'</button>';
+      +' style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:var(--font-sans);'
+      +'border:1px solid '+(on?'var(--navy-ink)':'var(--border)')+';background:'+(on?'var(--tint)':'transparent')
+      +';color:'+(on?'var(--ink)':'var(--muted)')+';">'+(on?Icons.svg('check',12):'')+t('pref.theme.'+p)+'</button>';
   }).join('');
 }
 
@@ -7908,7 +7778,7 @@ function renderHomeRoom(){
 
 /** Post from the right column. Members only (028b): your main club always is. */
 async function sendHomeRoom(){
-  if(!requireAuth('Create a free account to join your club\'s chat.'))return;
+  if(!requireAuth(t('chat.gate')))return;
   const input=document.getElementById('hr-input'), btn=document.getElementById('hr-send'), err=document.getElementById('hr-err');
   const room=HBD.room; if(!input||!room) return;
   const text=cleanComment(input.value);
@@ -7983,6 +7853,21 @@ window.addEventListener('sm-lang',function(){
   const tm=document.getElementById('team-modal');
   if(tm&&tm.style.display==='flex') renderModalClubs();
   if(MO_OPEN&&MO_DATA&&MO_DATA.id===MO_OPEN) renderMatchDetail(MO_DATA.d);
+  // 4b-5: everything else drawn from script, from what is already loaded.
+  try{ renderMyClubCard(); renderClubsGrid(); }catch(e){}
+  try{ renderRooms(); }catch(e){}
+  try{ renderSidebarClubs(); renderSidebarMatches(); renderSidebarYourClub(); }catch(e){}
+  try{ renderProfileClubs(); renderLangPrefs(); renderClubLangToggle(); renderMemberSince(); }catch(e){}
+  try{ mxRefresh(); if(MX.view==='table') mxLoadTable(); }catch(e){}
+  try{ for(const id of COMMENT_STATE.keys()) paintComments(id); }catch(e){}
+  if(chatRoom){
+    try{
+      const o=chatOverview(chatRoom.clubId);
+      document.getElementById('chat-title').textContent=t('hb.roomName',{club:clubLabel(chatRoom.clubId)});
+      if(o) document.getElementById('chat-sub').textContent=tn('hb.followers',o.member_count||0);
+      paintChat(false); paintChatFoot();
+    }catch(e){}
+  }
 });
 applyI18n();
 renderAppLangPref();

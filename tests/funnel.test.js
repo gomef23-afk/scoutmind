@@ -74,7 +74,9 @@ check('the nudge shows for any signed-in reader without a main club — "later" 
 check('the nudge hides while the onboarding sheet is open', !!nudge && /ob\.style\.display==='flex'/.test(nudge[1]));
 const shown = [...idx.matchAll(/'([^'\n]*(?:job runs|every 15 minutes)[^'\n]*)'/g)].map((m) => m[1]).filter((s) => !/^trending: empty/.test(s));
 check('no ingest-job detail in on-screen copy', shown.length === 0, shown.join(' | '));
-check('Trending says "Nothing trending right now."', /'Nothing trending right now\.'/.test(idx));
+// Since 4b-5 the words live in i18n.js (feed.trend.none), in both languages.
+check('Trending says "Nothing trending right now."', /t\(trendWindow==='today'\?'feed\.trend\.noneToday':'feed\.trend\.none'\)/.test(idx)
+  && /'feed\.trend\.none': 'Nothing trending right now\.'/.test(readFileSync(new URL('../public/i18n.js', import.meta.url), 'utf8')));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);

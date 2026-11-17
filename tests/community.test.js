@@ -64,7 +64,8 @@ check('names and places from the database are escaped before innerHTML', /functi
 
 // ── 7. index.html: links pass the club; ?room= opens it ──
 const idx = read('public/index.html');
-check("the Clubs-tab 'Open' passes the club", /window\.location\.href=\\'\/community\.html\?club='\+Number\(id\)\+'\\'/.test(idx));
+check("the Clubs tab links pass the club (my club and every tile, 4b-5)", /<a class="cl-head" href="\/community\.html\?club='\+Number\(id\)\+'">/.test(idx)
+  && /<a class="cl-tile'\+\(tag\?' mine':''\)\+'" href="\/community\.html\?club='\+Number\(c\.id\)\+'">/.test(idx));
 check('no link to community.html without a club', !/href=\\'\/community\.html\\'|location\.href='\/community\.html';/.test(idx), (idx.match(/\/community\.html[^?][^'"]{0,20}/g) || []).join(' | '));
 check('?room=<teams.id> opens that room after the overview loads', /await loadChatOverview\(\); \}catch\(e\)\{\}\s*\/\/ \/\?room=/.test(idx) && /if\(CLUB_DATA\.get\(room\)\)\{ showPage\('communities'\); openChat\(room\); \}/.test(idx));
 
