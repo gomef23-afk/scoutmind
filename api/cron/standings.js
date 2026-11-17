@@ -43,8 +43,10 @@ export default withCron('standings', async () => {
     const bestByTeam = new Map();   // api_team_id -> row
     let seen = 0;
     let collapsed = 0;
+    // Every table whole, for standings_groups (032): one row per (group, club).
+    const groupRows = new Map();    // `${label}|${team_id}` -> row
 
-    for (const group of groups) {
+    for (const [order, group] of groups.entries()) {
       for (const s of group || []) {
         seen++;
         const apiTeamId = s.team?.id;
@@ -72,6 +74,12 @@ export default withCron('standings', async () => {
           updated_at: new Date().toISOString(),
         };
 
+        // A table with no name of its own is named after the league; the same
+        // club twice in one table (never seen) keeps its first row.
+        const label = s.group || lg.name || lg.slug;
+        const gk = `${label}|${teamId}`;
+        if (!groupRows.has(gk)) groupRows.set(gk, { ...candidate, group_label: label, group_order: order });
+
         const prev = bestByTeam.get(apiTeamId);
         if (!prev) {
           bestByTeam.set(apiTeamId, candidate);
@@ -88,6 +96,17 @@ export default withCron('standings', async () => {
     const standingRows = [...bestByTeam.values()];
     const written = await upsert('standings', standingRows, 'league_id,season,team_id');
     rows += written;
+
+    // Every group whole (032). Its own write: before 032 runs the table does
+    // not exist, and that must not cost the league its table or its snapshot
+    // (rule 21). Whole rows, so the upsert's INSERT passes NOT NULL (rule 25).
+    let groupsWritten = 0, groupsError = null;
+    try {
+      groupsWritten = await upsert('standings_groups', [...groupRows.values()], 'league_id,season,group_label,team_id');
+    } catch (e) {
+      groupsError = e.message.slice(0, 200);
+      console.warn('[standings] groups (before 032?)', lg.slug, groupsError);
+    }
 
     // History cannot be back-filled, so write it league by league: a failure
     // here must not cost the remaining leagues their table or their snapshot.
@@ -126,6 +145,8 @@ export default withCron('standings', async () => {
       unique_teams: standingRows.length,
       duplicates_collapsed: collapsed,
       written,
+      group_rows: groupsWritten,
+      ...(groupsError ? { groups_error: groupsError } : {}),
       snapshotted,
     };
     byLeague.push(diag);
