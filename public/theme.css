@@ -52,6 +52,10 @@
   --cat-match:#1A8548;
   /* Modal scrim: dark in both modes */
   --scrim:rgba(7,12,20,0.72);
+  /* News crest tile (spec §6, 2b): every crest sits on a white disc, in both
+     modes; a one-club tile carries the club's colour at this strength. */
+  --crest-disc:#FFFFFF;
+  --club-tint-a:.15;
   /* Type */
   --font-sans:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --font-num:'Barlow Condensed','DM Sans',system-ui,sans-serif;
@@ -87,8 +91,16 @@
   --cat-interview:#419997;
   --cat-match:#489D6D;
   --scrim:rgba(0,0,0,0.72);
+  --crest-disc:#FFFFFF;
+  --club-tint-a:.25;
   color-scheme:dark;
 }
+
+/* The one place a club's own colour appears (spec v1.2 §1, §6): a one-club
+   news tile. The page sets --club-rgb ("r g b", read from the crest in the
+   browser) on the tile; nothing else may use this class. Only crests on white
+   discs sit on it, never text. */
+.club-tint{background:rgb(var(--club-rgb) / var(--club-tint-a));}
 
 /* The scoreboard number face: kick-off times, countdowns, scores, points,
    positions, ranks. Tabular figures so columns line up. */

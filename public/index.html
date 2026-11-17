@@ -64,6 +64,8 @@
 <script src="/i18n.js"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js"></script>
+<!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
+<script src="/news-card.js"></script>
 <style>
 /* The pre-Sequence-2 names, kept as aliases of the v1.2 tokens in /theme.css
    so every existing rule keeps working in light and dark. Removed in commit
@@ -435,6 +437,45 @@ body{padding-bottom:64px;}
 .tag-match{background:transparent;color:var(--cat-match);}
 .tag-injury{background:transparent;color:var(--cat-injury);}
 .tag-general{background:transparent;color:var(--muted);}
+/* ── NEWS CARD (2b, spec v1.2 §4, §6) ── */
+.nc{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;}
+.nc-vis{display:block;flex-shrink:0;text-decoration:none;}
+.nc-body{padding:12px 14px 10px;min-width:0;flex:1;}
+.nc-row{display:flex;gap:12px;align-items:flex-start;padding:12px 14px 0;}
+.nc-row .nc-body{padding:0 0 10px;}
+.nc-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-bottom:4px;line-height:1.4;}
+.nc-cat{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;}
+.nc-src{font-weight:600;}
+.nc-hint{font-size:10px;padding:1px 7px;border-radius:10px;background:var(--field);border:1px solid var(--border);color:var(--muted);}
+.nc-h{display:block;min-height:44px;color:var(--ink);text-decoration:none;font-size:14px;font-weight:600;line-height:1.4;overflow-wrap:anywhere;}
+.nc-lead .nc-h{font-size:17px;font-weight:700;letter-spacing:-0.02em;line-height:1.3;}
+.nc-h:hover{text-decoration:underline;}
+/* The crest tile. Lead: 132px tall, full width, navy. Row: 56px square. */
+.nt{display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.nt-lead{height:132px;}
+.nt-thumb{width:56px;height:56px;border-radius:8px;}
+.nt-navy{background:var(--navy);}
+.nt-tint{background:var(--tint);}
+.nt-crests{display:flex;align-items:center;}
+.nt-disc{display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--crest-disc);border:1px solid var(--border-strong);flex-shrink:0;}
+.nt-disc b{font-family:var(--font-num);font-weight:700;color:var(--navy);}
+.nt-lead .nt-disc{width:68px;height:68px;}
+.nt-lead .nt-disc img{width:46px;height:46px;object-fit:contain;}
+.nt-lead .nt-disc b{font-size:26px;}
+.nt-lead .nt-disc+.nt-disc{margin-left:-16px;}
+.nt-thumb .nt-disc{width:36px;height:36px;}
+.nt-thumb .nt-disc img{width:24px;height:24px;object-fit:contain;}
+.nt-thumb .nt-disc b{font-size:15px;}
+.nt-thumb .nt-disc+.nt-disc{margin-left:-14px;}
+.nt-thumb .nt-crests:has(.nt-disc+.nt-disc) .nt-disc{width:30px;height:30px;}
+.nt-thumb .nt-crests:has(.nt-disc+.nt-disc) .nt-disc img{width:20px;height:20px;}
+.nt-more{align-self:flex-end;margin-left:-6px;min-width:22px;height:20px;padding:0 5px;border-radius:10px;background:var(--card);color:var(--ink);font-size:12px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-strong);}
+.nt-thumb .nt-more{font-size:10px;min-width:18px;height:16px;padding:0 3px;margin-left:-10px;}
+/* No club: the source's name in the number face. */
+.nt-src{font-family:var(--font-num);font-weight:700;text-align:center;color:var(--ink);line-height:1.05;padding:0 6px;overflow-wrap:anywhere;}
+.nt-navy .nt-src{color:var(--on-navy);font-size:30px;}
+.nt-thumb .nt-src{font-size:12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.comment-toggle svg{flex-shrink:0;}
 @media(max-width:768px){
   nav{padding:12px 16px;flex-wrap:wrap;gap:8px;}
   nav>div:first-child{order:1;}
@@ -872,7 +913,8 @@ if(!_cu){
         <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">News</div>
       </div>
       <div class="search-wrap">
-        <span class="search-icon">🔍</span>
+        <!-- Tabler icon "search" (MIT): no emoji (spec §8). -->
+        <span class="search-icon" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span>
         <input id="feed-search" class="search-box" type="search" inputmode="search"
                placeholder="Search headlines…" autocomplete="off"
                oninput="onSearchInput(this.value)">
@@ -883,11 +925,12 @@ if(!_cu){
            categories. It used to wrap into up to three rows on a phone. -->
       <div class="chip-scroll">
         <div id="feed-lang-chips" class="chip-group"></div>
-        <button class="filter-btn active" onclick="filterFeed('all',this)">All News</button>
-        <button class="filter-btn" onclick="filterFeed('transfers',this)">🔄 Transfers</button>
-        <button class="filter-btn" onclick="filterFeed('match',this)">⚽ Match</button>
-        <button class="filter-btn" onclick="filterFeed('brazil',this)">🇧🇷 Brazil</button>
-        <button class="filter-btn" onclick="filterFeed('europe',this)">🏆 Europe</button>
+        <!-- Words only (spec §8: no emoji, flags become names). -->
+        <button class="filter-btn active" onclick="filterFeed('all',this)" data-i18n="news.chip.all">All news</button>
+        <button class="filter-btn" onclick="filterFeed('transfers',this)" data-i18n="news.chip.transfers">Transfers</button>
+        <button class="filter-btn" onclick="filterFeed('match',this)" data-i18n="news.chip.match">Match</button>
+        <button class="filter-btn" onclick="filterFeed('brazil',this)" data-i18n="news.chip.brazil">Brazil</button>
+        <button class="filter-btn" onclick="filterFeed('europe',this)" data-i18n="news.chip.europe">Europe</button>
       </div>
       <div id="feed-news-main"></div>
     </div>
@@ -3102,13 +3145,9 @@ const LEAGUE_REGION={
 };
 const COUNTRY_REGION={BR:'brazil',GB:'europe',ES:'europe',IT:'europe',DE:'europe',FR:'europe'};
 
-const CATEGORY_LABEL={
-  transfer:{label:'Transfer',cls:'tag-transfer'},
-  rumor:{label:'Rumor',cls:'tag-rumor'},
-  contract:{label:'Contract',cls:'tag-contract'},
-  match:{label:'Match',cls:'tag-match'},
-  general:{label:'News',cls:'tag-general'},
-};
+// Category labels on cards: NewsCard.category() in public/news-card.js
+// (spec v1.2 §6: transfer + contract → Transfer, rumour → Rumour, match →
+// Match, general → no label).
 
 let FEED_ITEMS=[];
 
@@ -3837,67 +3876,145 @@ function rateLimit(key,max){const now=Date.now();if(!_rl[key])_rl[key]=[];_rl[ke
 // (.comment-section, .comment-toggle, .comments-body, .comment-item …) are left
 // in place for Phase C to render against, backed by Supabase.
 /**
- * Every feed item renders through here, switching on item.type.
+ * Every feed item renders through here, switching on item.type (rule 12).
  * Today that is 'news'; analyst posts, polls and match cards join it later.
+ * `pos` is the item's place in its list: 0 is the list's lead card (2b).
+ * Lists call items.map(renderFeedItem), so pos is the map index.
  */
-function renderFeedItem(item){
+function renderFeedItem(item,pos){
   switch(item.type){
-    case 'news': return renderNewsCard(item);
+    case 'news': return renderNewsCard(item,pos===0);
     default:
       console.warn('renderFeedItem: unknown type',item.type);
       return '';
   }
 }
 
-function renderNewsCard(n){
-  const cat=CATEGORY_LABEL[n.category]||CATEGORY_LABEL.general;
-  const clubs=(n.teams||[]).slice(0,3).map(t=>
-    '<span title="'+sanitize(t.name)+'" style="display:inline-flex;">'+clubCrest(t,16)+'</span>'
-  ).join('');
+// ── NEWS CARD (Sequence 2 commit 2b, spec v1.2 §4 and §6) ──────────────────
+// The visual slot is the crest tile on every card (sources A and B arrive in
+// commits 6 and 7). The rules are public/news-card.js (NewsCard).
+
+/** A club's colour read from its crest, by logo URL: [r,g,b], null, or absent (not read yet). */
+const CREST_RGB=new Map();
+const CREST_PENDING=new Set();
+function crestColour(url){
+  if(!url||CREST_RGB.has(url)||CREST_PENDING.has(url)) return;
+  CREST_PENDING.add(url);
+  const img=new Image();
+  img.crossOrigin='anonymous';      // media.api-sports.io sends ACAO *
+  img.onload=function(){
+    try{
+      const c=document.createElement('canvas'); c.width=32; c.height=32;
+      const g=c.getContext('2d',{willReadFrequently:true});
+      g.drawImage(img,0,0,32,32);
+      CREST_RGB.set(url,NewsCard.pickColour(g.getImageData(0,0,32,32).data));
+    }catch(e){ CREST_RGB.set(url,null); }   // a tainted canvas: the tile stays --tint
+    CREST_PENDING.delete(url);
+    paintClubTints();
+  };
+  img.onerror=function(){ CREST_RGB.set(url,null); CREST_PENDING.delete(url); };
+  img.src=url;
+}
+/** Give every one-club tile on screen its club's colour once the crest has been read. */
+function paintClubTints(){
+  document.querySelectorAll('.nt[data-tint]').forEach(function(el){
+    const url=el.getAttribute('data-tint');
+    if(!CREST_RGB.has(url)){ crestColour(url); return; }
+    const rgb=CREST_RGB.get(url);
+    el.removeAttribute('data-tint');
+    if(rgb){ el.style.setProperty('--club-rgb',rgb.join(' ')); el.classList.add('club-tint'); }
+  });
+}
+
+/** One crest on its white disc. A crest that fails to load shows the club's initial. */
+function ntDisc(team){
+  const name=(team&&(team.label||team.name))||'';
+  const ini=sanitize(name.slice(0,1).toUpperCase()||'?');
+  return '<span class="nt-disc" title="'+sanitize(name)+'">'
+    +(team&&team.logo_url
+      ?'<img src="'+sanitize(team.logo_url)+'" alt="" loading="lazy" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer"'
+        +' onerror="this.outerHTML=\'<b>'+ini+'</b>\'">'
+      :'<b>'+ini+'</b>')
+    +'</span>';
+}
+
+/** The crest tile for a card: navy (lead), the club's tint, or --tint (spec §6). */
+function newsTile(n,lead){
+  const tl=NewsCard.tile(n,lead);
+  const one=tl.bg==='club'&&tl.crests[0]&&tl.crests[0].logo_url?tl.crests[0].logo_url:null;
+  const rgb=one&&CREST_RGB.get(one);
+  const cls='nt '+(lead?'nt-lead ':'nt-thumb ')+(tl.bg==='navy'?'nt-navy':'nt-tint')+(rgb?' club-tint':'');
+  const attr=(rgb?' style="--club-rgb:'+rgb.join(' ')+'"':'')+(one&&!CREST_RGB.has(one)?' data-tint="'+sanitize(one)+'"':'');
+  let inner;
+  if(tl.crests.length){
+    inner='<span class="nt-crests">'+tl.crests.map(ntDisc).join('')
+      +(tl.more?'<span class="nt-more num">+'+tl.more+'</span>':'')+'</span>';
+  }else{
+    inner='<span class="nt-src">'+sanitize(tl.text||'')+'</span>';
+  }
+  return '<span class="'+cls+'"'+attr+' aria-hidden="true">'+inner+'</span>';
+}
+
+/** "12m ago", in the reader's language; older than a week, the date. */
+function newsAgo(iso){
+  const then=new Date(iso).getTime();
+  if(!then) return '';
+  const mins=Math.max(0,Math.round((Date.now()-then)/60000));
+  if(mins<1) return t('cm.ago.now');
+  if(mins<60) return t('cm.ago.m',{n:mins});
+  const hrs=Math.round(mins/60);
+  if(hrs<24) return t('cm.ago.h',{n:hrs});
+  const days=Math.round(hrs/24);
+  if(days<7) return t('cm.ago.d',{n:days});
+  return new Date(iso).toLocaleDateString(smLocale()||undefined,{day:'numeric',month:'short'});
+}
+
+function renderNewsCard(n,lead){
+  const cat=NewsCard.category(n.category);
   // An item can only reach a reader in a language they did not choose via the
   // opt-in club exception, so the hint is pointless unless that is on. When it
   // is, say so and let the browser's own translator do the work — we never
   // translate anything ourselves.
   const foreign=showClubNewsAllLangs()&&myLangs().indexOf(n.lang)<0;
-  const meta=CONTENT_LANGS.find(l=>l.code===n.lang);
-  const hint=foreign
-    ? '<span title="Use your browser\'s translate option" style="font-size:9px;padding:2px 7px;border-radius:10px;background:var(--field);color:var(--muted);border:1px solid var(--border);">'
-      +sanitize((meta&&meta.short)||n.lang)+' · Translate</span>'
-    : '';
+  const lm=CONTENT_LANGS.find(l=>l.code===n.lang);
+  const hint=foreign?'<span class="nc-hint">'+sanitize((lm&&lm.short)||n.lang)+' · '+sanitize(t('news.translate'))+'</span>':'';
+  // One line: category label (only when the tagger gave one) · source · age.
+  const meta='<div class="nc-meta">'
+    +(cat?'<span class="nc-cat '+(cat.tone==='match'?'tag-match':'tag-transfer')+'">'+sanitize(t(cat.key))+'</span><span aria-hidden="true">·</span>':'')
+    +'<span class="nc-src">'+sanitize(n.source)+'</span><span aria-hidden="true">·</span>'
+    +'<span>'+sanitize(newsAgo(n.publishedAt))+'</span>'+hint+'</div>';
+  const url=sanitize(n.url);
+  const head='<a class="nc-h" href="'+url+'" target="_blank" rel="noopener noreferrer">'+sanitize(n.title)+'</a>';
   // lang on the card itself, so per-item browser translation targets the
   // right text instead of guessing from the page language.
-  // ONE line of metadata: category, source and age, the clubs as crests (their
-  // names are the crest's title), then the translate hint. It used to wrap into
-  // up to three lines of pills on a phone before the headline.
-  let html='<div lang="'+sanitize(n.lang||'')+'" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;transition:all .2s;">'
-    +'<div style="padding:14px 16px 12px;">'
-    +'<div class="news-meta">'
-    +'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;flex:0 0 auto;" class="'+cat.cls+'">'+cat.label+'</span>'
-    +'<span class="nm-text">'+sanitize(n.source)+' · '+timeAgo(n.publishedAt)+'</span>'
-    +(clubs?'<span class="nm-crests">'+clubs+'</span>':'')
-    +hint+'</div>'
-    +'<a href="'+sanitize(n.url)+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;">'
-    +'<div style="font-size:14px;font-weight:600;line-height:1.4;margin-bottom:6px;">'+sanitize(n.title)+'</div></a>';
-  if(n.excerpt){
-    html+='<div class="line-clamp-2" style="font-size:12px;color:var(--muted);line-height:1.55;">'+sanitize(n.excerpt)+'</div>';
+  let html='<article class="nc'+(lead?' nc-lead':'')+'" lang="'+sanitize(n.lang||'')+'">';
+  if(lead){
+    // Lead: the visual on top, then the label line, then the headline under it.
+    html+='<a class="nc-vis" href="'+url+'" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">'+newsTile(n,true)+'</a>'
+      +'<div class="nc-body">'+meta+head+'</div>';
+  }else{
+    // Following: the 56px visual left, the label line and headline right.
+    html+='<div class="nc-row"><a class="nc-vis" href="'+url+'" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">'+newsTile(n,false)+'</a>'
+      +'<div class="nc-body">'+meta+head+'</div></div>';
   }
   // ONE action row: react, comment, and read the story at its source.
-  html+='</div>'
-    +'<div class="social-bar">'
+  html+='<div class="social-bar">'
     +'<div class="reaction-row" id="rx-'+n.id+'">'+reactionButtons(n.id)+'</div>'
     +'<button class="comment-toggle'+(commentState(n.id).expanded?' open':'')+'" id="ct-'+n.id+'" onclick="toggleComments('+n.id+')">'
     +commentToggleLabel(n.id)+'</button>'
-    +'<a class="read-link" href="'+sanitize(n.url)+'" target="_blank" rel="noopener noreferrer" title="Read on '+sanitize(n.source)+'">Read &#x2197;</a>'
+    +'<a class="read-link" href="'+url+'" target="_blank" rel="noopener noreferrer" title="'+sanitize(t('news.readOn',{source:n.source}))+'">'+sanitize(t('news.read'))+' &#x2197;</a>'
     +'</div>'
     +'<div class="comments-body" id="cb-'+n.id+'"></div>'
-    +'</div>';
+    +'</article>';
   return html;
 }
 
+// Tabler icon "message" (MIT), 14px, for the comment toggle (no emoji, spec §8).
+const ICON_MSG='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg>';
 function commentToggleLabel(itemId){
-  const t=commentState(itemId).total;
+  const total=commentState(itemId).total;
   // A count when there is one, an invitation when there is not.
-  return '&#x1F4AC; '+(t===0?'Comment':(t+(t===1?' comment':' comments')));
+  return ICON_MSG+' '+sanitize(total===0?t('news.comment'):tn('news.comments',total));
 }
 
 function reactionButtons(itemId){
@@ -4573,7 +4690,10 @@ async function adminDelete(reportId,targetType,targetId){
  * so a field added in one place cannot go missing in the other.
  */
 function mapNewsRow(r){
-  const teams=(r.news_item_teams||[]).map(t=>t.teams).filter(Boolean);
+  // `label` is the display name (club_names.js): the crest tile orders crests
+  // by where the headline names each club, and shows it as the disc's title.
+  const teams=(r.news_item_teams||[]).map(t=>t.teams).filter(Boolean)
+    .map(t=>Object.assign({},t,{label:(typeof clubDisplayName==='function')?clubDisplayName({api_team_id:t.api_team_id,name:t.name}):t.name}));
   const leagues=teams.map(t=>t.leagues&&t.leagues.slug).filter(Boolean);
   // A tagged item takes its region from the club; only an untagged one falls
   // back to where the publisher is.
@@ -4800,6 +4920,9 @@ function renderTrending(){
       +'</div>');
   // How the feed is fed is for whoever is debugging, not for the reader.
   if(!items.length&&!isOffline()) console.info('trending: empty — news arrives through /api/cron/news, every 15 minutes');
+  // One-club tiles take their club's colour once the crest has been read (2b).
+  // Trending renders last of the three lists, so this covers News and For you.
+  paintClubTints();
 }
 
 function visibleFeedItems(opts){
@@ -4897,8 +5020,9 @@ function searchResultsHtml(){
     +(rows.length?rows.length+(rows.length===1?' result':' results'):'No results')
     +' for &ldquo;'+sanitize(SEARCH_QUERY)+'&rdquo;'
     +' <button class="comment-link" onclick="clearSearch()">Clear</button></div>';
+  // Results are a list of rows: no lead card (pos 1 for every one).
   return head+(rows.length
-    ? rows.map(renderFeedItem).join('')
+    ? rows.map(n=>renderFeedItem(n,1)).join('')
     : '<div style="text-align:center;padding:30px 20px;color:var(--muted);font-size:13px;">'
       +'Try a club name, a player, or a shorter phrase.</div>');
 }
@@ -6826,6 +6950,7 @@ window.addEventListener('sm-lang',function(){
   if(REMIND_ON!==null) renderRemindPref();
   renderClubNudge();
   if(typeof renderHomeBand==='function') renderHomeBand();
+  try{ renderFeedNews(); }catch(e){}     // card labels, ages, Comment / Read (2b)
   const page=document.getElementById('page-scout');
   if(page&&page.classList.contains('active')&&SG.loadedAt){ sgTabs(); sgRender(); }
   const gls=document.getElementById('gl-sheet');
