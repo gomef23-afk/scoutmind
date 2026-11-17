@@ -6225,14 +6225,50 @@ async function sgRenderPlayed(r){
       +'&round_id=eq.'+r.id+'&counts=is.true').catch(()=>[]),
     apiGet('game_round_rankings?select=rank,name,main_club_id,total,user_id&round_id=eq.'+r.id+'&order=rank.asc&limit=10').catch(()=>[])
   ]);
+  // Labels from each player's real position, not the slot number (pre-023 entries).
+  const pos=e?await sgPositions(r,(e.game_picks||[]).map(p=>p.player_id)):new Map();
   if(SG.roundId!==r.id) return;
   const myRank=(rank||[])[0];
-  const mineTotal=sgRenderMine(r,e,scores||[],myRank);
+  const mineTotal=sgRenderMine(r,e,scores||[],myRank,pos);
   const pb=document.getElementById('sg-played-band');
   if(pb) pb.innerHTML=sgPlayedBand(r,status,mineTotal,myRank);
   sgRenderFixtures(fixtures||[]);
   const rr=document.getElementById('sg-round-rank');
   if(rr) rr.innerHTML='<div class="sg-section">'+t('sg.topRound')+'</div>'+sgTable(top||[],(rank||[])[0]&&me?Object.assign({user_id:me,name:t('sg.you')},rank[0]):null,'total');
+}
+
+/**
+ * Each player's position for a round, by the rule submit_picks uses (023):
+ * his main position by minutes in that competition and season (ties by
+ * letter). Entries saved before 023 keep their slots in the order picked, so
+ * a pick is labelled by this, never by its slot number (17 Nov 2026).
+ * Returns Map player_id -> 'G'|'D'|'M'|'F'; cached per competition/season.
+ */
+SG.posCache=new Map();
+async function sgPositions(r,playerIds){
+  const key=id=>id+':'+r.league_id+':'+r.season;
+  const missing=[...new Set(playerIds)].filter(id=>id!=null&&!SG.posCache.has(key(id)));
+  if(missing.length){
+    try{
+      const rows=await apiGet('player_fixture_stats?select=player_id,position,minutes,fixtures!inner(league_id,season)'
+        +'&fixtures.league_id=eq.'+r.league_id+'&fixtures.season=eq.'+r.season
+        +'&position=not.is.null&player_id=in.('+missing.join(',')+')&limit=5000');
+      const mins=new Map();
+      for(const s of rows||[]){ const m=mins.get(s.player_id)||{}; m[s.position]=(m[s.position]||0)+(Number(s.minutes)||0); mins.set(s.player_id,m); }
+      for(const id of missing){
+        const m=mins.get(id);
+        SG.posCache.set(key(id),m?Object.keys(m).sort((a,b)=>(m[b]-m[a])||a.localeCompare(b))[0]:null);
+      }
+    }catch(e){ console.warn('positions:',e.message); }
+  }
+  const out=new Map();
+  for(const id of playerIds) out.set(id,SG.posCache.get(key(id))||null);
+  return out;
+}
+/** Picks in formation order by their real position (GK, DEF, MID/FWD), then slot. */
+function sgFormationOrder(picks,pos){
+  const rank=p=>{ const g=sgGroup(pos.get(p.player_id)); return g==='G'?0:g==='D'?1:g==='X'?2:3; };
+  return picks.slice().sort((a,b)=>rank(a)-rank(b)||a.slot-b.slot);
 }
 
 /** The played round's band: round · my points · my rank (dashes when not in). */
@@ -6246,7 +6282,8 @@ function sgPlayedBand(r,status,total,rank){
 }
 
 /** My five in a played round. Returns my total, or null when nothing is scored yet. */
-function sgRenderMine(r,e,scores,rank){
+function sgRenderMine(r,e,scores,rank,pos){
+  pos=pos||new Map();
   const el=document.getElementById('sg-mine');
   if(!el) return null;
   if(!e){
@@ -6258,14 +6295,18 @@ function sgRenderMine(r,e,scores,rank){
     const k=s.slot; if(!bySlot.has(k)) bySlot.set(k,[]); bySlot.get(k).push(s);
   }
   let sum=0, any=false;
-  const rows=(e.game_picks||[]).slice().sort((a,b)=>a.slot-b.slot).map(p=>{
+  // Rows in formation order by each player's real position; scores stay keyed
+  // by slot (game_pick_scores), so nothing is re-slotted.
+  const rows=sgFormationOrder(e.game_picks||[],pos).map(p=>{
     const list=bySlot.get(p.slot)||[];
     const tot=list.reduce((a,s)=>a+Number(s.total||0),0);
     if(list.length){ any=true; sum+=tot; }
     const brk=sgBreakdown(list);
     const pl=p.players||{name:t('sg.player')};
-    // Slots are stored in formation order (023): the slot number is the position.
-    const g=SG_SLOT_GROUP[p.slot-1];
+    // The label is the player's real position (the 023 rule); the slot number
+    // only when his position is unknown. Entries saved before 023 have their
+    // slots in the order picked.
+    const g=sgGroup(pos.get(p.player_id))||SG_SLOT_GROUP[p.slot-1];
     // Spec v1.2 §7: position, photo (the captain's gold C on it), name, the
     // locked tier chip, and the points once scored, in the number face.
     return '<div class="sg-pick'+(p.is_captain?' is-captain':'')+'" onclick="this.classList.toggle(\'open\')">'

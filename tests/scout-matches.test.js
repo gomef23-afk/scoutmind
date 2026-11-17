@@ -95,6 +95,21 @@ check('the chosen row: --tint with ink text (muted never on --tint), announced a
 const sel = ctx.fxRow({ id: 5, homeId: 7, awayId: 9, status: 'upcoming', kickoff: Date.now(), onTap: 'sgFilterFx(5)', selected: true });
 check('fxRow: onTap replaces opening the match; selected adds sel + aria-pressed', /class="fx-row sel"/.test(sel) && /onclick="sgFilterFx\(5\)"/.test(sel) && /aria-pressed="true"/.test(sel) && !/openMatch/.test(sel));
 
+// ── Pick labels by real position (17 Nov, option A) ──
+check('played picks are labelled by the player\'s real position (the 023 rule), not the slot number',
+  /const g=sgGroup\(pos\.get\(p\.player_id\)\)\|\|SG_SLOT_GROUP\[p\.slot-1\];/.test(fn('sgRenderMine')) && /sgFormationOrder\(e\.game_picks\|\|\[\],pos\)/.test(fn('sgRenderMine')));
+check('positions: main position by minutes in that competition and season, ties by letter',
+  /fixtures\.league_id=eq\.'\+r\.league_id\+'&fixtures\.season=eq\.'\+r\.season/.test(fn('sgPositions')) && /\(m\[b\]-m\[a\]\)\|\|a\.localeCompare\(b\)/.test(fn('sgPositions')));
+check('nothing is re-slotted: scores stay keyed by slot', /bySlot\.get\(p\.slot\)/.test(fn('sgRenderMine')) && !/game_picks[^;]*PATCH|update.*game_picks/i.test(idx));
+{
+  // The production case: Round 35, saved before 023, slots in the order picked.
+  const c2 = { sgGroup: (p) => p === 'G' ? 'G' : p === 'D' ? 'D' : (p === 'M' || p === 'F') ? 'X' : null };
+  vm.createContext(c2); vm.runInContext(fn('sgFormationOrder'), c2);
+  const picks = [{ slot: 1, player_id: 1 }, { slot: 2, player_id: 2 }, { slot: 3, player_id: 3 }, { slot: 4, player_id: 4 }, { slot: 5, player_id: 5 }];
+  const pos = new Map([[1, 'F'], [2, 'G'], [3, 'D'], [4, 'D'], [5, 'F']]);   // Pedro, Rossi, Renan, Capixaba, López
+  check('the Round 35 entry reads GK Rossi, DEF, DEF, then the two forwards', c2.sgFormationOrder(picks, pos).map((p) => p.player_id).join() === '2,3,4,1,5');
+}
+
 // ── The match panel ──
 const mo = fn('renderMatchDetail');
 check('match band: navy, crests on white discs, the status line', /<div class="mo-band">/.test(mo) && /moDisc\(home\)/.test(mo) && /moDisc\(away\)/.test(mo) && /\.mo-disc\{[^}]*background:var\(--crest-disc\)/.test(idx));
