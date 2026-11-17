@@ -19,13 +19,9 @@ const idx = read('public/index.html');
 const fn = (name) => (new RegExp('(?:async )?function ' + name + '\\([^)]*\\)\\s*\\{[\\s\\S]*?\\n\\}').exec(idx) || [''])[0];
 const css = (sel) => (new RegExp('\\n' + sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{[^}]*\\}').exec(idx) || [''])[0];
 
-// ── The Matches tab ──
-const md = fn('renderMatchDay');
-check('Matches: compact rows from fxRow, one list per competition', /fxRow\(\{/.test(md) && /<div class="md-league">/.test(md) && /'<div class="fx-list">'/.test(md));
-check('Matches: competitions with my clubs first, my rows marked in place', /some\(isMine\)/.test(md) && /mine: isMine\(m\)/.test(md) && !/Your clubs/.test(md));
-check('Matches: the competition by name, no flag emoji', /sanitize\(ms\[0\]\.compName \|\| comp\)/.test(md) && !/\.flag/.test(md));
+// ── The Matches tab (the continuous list of 4b-2: tests/matches-list.test.js) ──
 check('Matches: the one-card-per-fixture layout is gone', !/function matchCard\(/.test(idx) && !/matchCard\(/.test(idx));
-check('Matches: no fake "sample fixtures" fallback', !/ALL_MATCHES\s*=/.test(idx) && !/Sample fixtures/.test(idx) && /fx\.loadFail/.test(md));
+check('Matches: no fake "sample fixtures" fallback', !/ALL_MATCHES\s*=/.test(idx) && !/Sample fixtures/.test(idx));
 check("Scout's round list uses the same row", /fxRow\(\{id:f\.id/.test(fn('sgRenderFixtures')) && !/sg-fx-row/.test(idx));
 // The row's styles live in theme.css since 4b (community.html draws it too).
 const themeCss = read('public/theme.css');
@@ -69,9 +65,6 @@ const i18 = read('public/i18n.js');
 check('five tier words + "few minutes", in both languages', ['sg.tier.1', 'sg.tier.2', 'sg.tier.3', 'sg.tier.4', 'sg.tier.5', 'sg.tier.none', 'sg.tierExplain']
   .every((k) => (i18.match(new RegExp(`'${k.replace(/\./g, '\\.')}':`, 'g')) || []).length === 2));
 check('one line above the player list explains the words, with the real multipliers', /sgTierExplain\(\)/.test(fn('sgRenderFilters')) && /lad\['5'\][\s\S]*?lad\['1'\]/.test(fn('sgTierExplain')));
-check('Matches: league chips (All + the competitions) above the day picker, remembered on this device',
-  /<div id="matches-league-chips"[\s\S]*?<div id="matches-date-strip"/.test(idx) && /localStorage\.setItem\('sm_matches_league'/.test(fn('setMatchLeague'))
-  && /MATCH_LEAGUE_NAMES\['\s*\+\s*i\s*\+\s*'\]/.test(fn('renderMatchDay')) && /dated = dated\.filter\(m => \(m\.compName \|\| m\.comp\) === pickedLeague\)/.test(fn('renderMatchDay')));
 check('Matches: one 760px column, centred', /\.matches-col\{max-width:760px;margin:0 auto;/.test(idx) && /<div class="matches-col">/.test(idx));
 check('my five: position, photo, name, opponent line, tier chip', /sg-slot-pos[\s\S]*?sgPhoto\(p,30\)[\s\S]*?sgFixtureLine\(p\)[\s\S]*?sgTierFor\(p\)/.test(fn('sgRenderSlots')));
 check('played picks: the locked tier chip and points in the number face', /sgTierChip\(p\.locked_tier,p\.locked_multiplier\)/.test(fn('sgFiveRows')) && /\.sg-pick-pts\{font-family:var\(--font-num\)/.test(idx));

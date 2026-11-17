@@ -73,7 +73,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=653820ec3a"></script>
+<script src="/i18n.js?v=d777a04f74"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=d008ee2323"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -82,7 +82,7 @@
      row (also on community.html), line icons. -->
 <script src="/league-names.js?v=cdddf511b0"></script>
 <script src="/fx-row.js?v=2a5a74a713"></script>
-<script src="/icons.js?v=6051370d31"></script>
+<script src="/icons.js?v=23521045ee"></script>
 <style>
 /* The pre-Sequence-2 names, kept as aliases of the v1.2 tokens in /theme.css
    so every existing rule keeps working in light and dark. Removed in commit
@@ -238,14 +238,6 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .news-meta .nm-crests{display:inline-flex;gap:3px;flex:0 0 auto;}
 .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .read-link{flex:0 0 auto;font-size:11px;font-weight:600;color:var(--accent);text-decoration:none;white-space:nowrap;padding:3px 2px;}
-.date-strip{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 18px;padding:0 16px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-.date-strip::-webkit-scrollbar{display:none;}
-@media (min-width: 900px){ .date-strip{margin:0 0 18px;padding:0;} }
-.date-chip{flex:0 0 auto;min-width:72px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;text-align:center;line-height:1.3;}
-.date-chip .dc-n{display:block;font-size:9px;font-weight:500;margin-top:2px;}
-.date-chip.active{border-color:var(--accent);color:var(--accent);background:var(--tint);}
-/* A day with no matches reads quieter, but stays legible (no opacity fade). */
-.date-chip.empty{color:var(--muted);}
 .md-league{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);margin:16px 0 8px;display:flex;align-items:center;gap:6px;}
 .md-section{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:4px 0 10px;display:flex;align-items:center;gap:6px;color:var(--accent);}
 .match-row-sm{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
@@ -574,7 +566,7 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .comment-meta{gap:18px;}
 /* 16px or iOS Safari zooms the page when the field takes focus; 44px tall. */
 select,input[type=text],input[type=number],input[type=password],input[type=email],input[type=search]{font-size:16px;min-height:44px;}
-.picker-row,.date-chip,.signin-sheet-primary,.signin-sheet-secondary,.signin-sheet-dismiss,.club-search{min-height:44px;}
+.picker-row,.signin-sheet-primary,.signin-sheet-secondary,.signin-sheet-dismiss,.club-search{min-height:44px;}
 .chat-back{min-width:44px;min-height:44px;}
 .match-row-sm{min-height:44px;align-items:center;}
 /* The keyboard shortcut means nothing on a phone (the ≥900px rule shows it). */
@@ -726,7 +718,29 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .md-league:first-child{margin-top:4px;}
 /* The Matches page: one 760px column, centred; rows stay readable. */
 .matches-col{max-width:760px;margin:0 auto;padding:24px 16px;}
-#matches-league-chips{margin-bottom:12px;}
+/* Matches (4b-2): the title scrolls away; the league bar sticks under the
+   nav, each day's heading under the bar (--mx-nav / --mx-top, measured in JS). */
+.mx-head{margin-bottom:10px;}
+.mx-sub{font-size:13px;color:var(--muted);}
+.mx-bar{position:sticky;top:var(--mx-nav,0px);z-index:6;background:var(--ground);margin:0 -16px;padding:6px 16px 8px;}
+@media (min-width:900px){ .mx-bar{margin:0;padding:6px 0 8px;} }
+.mx-list{padding-bottom:24px;}
+.mx-day-h{position:sticky;top:var(--mx-top,0px);z-index:5;background:var(--ground);display:flex;align-items:baseline;gap:8px;margin:0;padding:12px 8px 8px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;color:var(--ink);}
+.mx-day-h .mx-word{font-weight:800;}
+.mx-day-h .mx-date{font-weight:600;color:var(--muted);font-size:13px;}
+.mx-day.today .mx-day-h{box-shadow:inset 3px 0 0 var(--navy-ink);}
+.mx-day.today .mx-word{color:var(--navy-ink);}
+.mx-day .md-league:first-of-type{margin-top:10px;}
+.mx-empty{padding:16px 8px;font-size:13px;color:var(--muted);}
+.mx-edge{min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted);text-align:center;}
+.mx-end{min-height:44px;margin-bottom:40vh;}
+.mx-retry{background:none;border:none;color:var(--navy-ink);font:inherit;font-weight:700;cursor:pointer;min-height:44px;padding:0 6px;}
+/* "Today": a navy pill above the tab bar (and the home indicator) on a
+   phone, near the bottom edge on a laptop. Shown while today is out of view. */
+.mx-today{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:110;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px;border:none;border-radius:22px;background:var(--navy);color:var(--on-navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+.mx-today:hover{background:var(--navy-hover);}
+.mx-today[hidden]{display:none;}
+@media (min-width:900px){ .mx-today{bottom:calc(24px + env(safe-area-inset-bottom));} }
 /* The match panel's band (spec v1.2 §7): crests on white discs, the score in
    the 44px number face, the status line. LIVE in --live-on-band. */
 .mo-band{background:var(--navy);color:var(--on-navy);border-radius:12px;padding:14px 12px 16px;}
@@ -1158,21 +1172,22 @@ if(!_cu){
 
 <!-- MATCHES PAGE — promoted from the old "Match day" feed tab in B2 -->
 <div class="page" id="page-matches">
-<!-- 760px and centred (17 Nov): the title, the league chips, the day picker
-     and the rows share one column in the middle of a laptop screen. -->
+<!-- 760px and centred (17 Nov). 4b-2: ONE continuous list grouped by day
+     (MATCHES TAB in the script): today anchored at the top, earlier days
+     above, later days below, a week loaded at a time. -->
 <div class="matches-col">
-  <div style="margin-bottom:14px;">
+  <div class="mx-head">
     <div class="feed-title" data-i18n="fx.title">Matches</div>
-    <div style="font-size:13px;color:var(--muted);" data-i18n="fx.sub">Pick a day. Your clubs come first, then every league. Times are your local time.</div>
+    <div class="mx-sub" data-i18n="fx.sub">Scroll up for results, down for what is coming. Times are your local time.</div>
   </div>
-  <!-- League filter (17 Nov): All + our seven leagues, above the day picker,
-       remembered on this device (localStorage sm_matches_league, a UI
-       preference, rule 10). -->
-  <div id="matches-league-chips" class="chip-scroll" role="group" aria-label="League"></div>
-  <!-- Yesterday, today, tomorrow and the next four days. Rendered by
-       renderMatchDay() from the fixtures it already loads. -->
-  <div id="matches-date-strip" class="date-strip"></div>
-  <div id="matchday-content"></div>
+  <!-- League filter: All + our seven leagues, sticky under the nav, filters
+       the whole list; remembered on this device (localStorage
+       sm_matches_league = the slug, a UI preference, rule 10). -->
+  <div class="mx-bar" id="mx-bar">
+    <div id="matches-league-chips" class="chip-scroll" role="group" aria-label="League" data-i18n-aria="fx.leagueFilter"></div>
+  </div>
+  <div id="matches-list" class="mx-list"></div>
+  <button type="button" id="mx-today" class="mx-today" onclick="mxJumpToday()" hidden></button>
 </div>
 </div>
 
@@ -2935,7 +2950,7 @@ function applyClubSelection(){
   try{ renderClubsGrid(); }catch(e){}
   try{ renderProfileClubs(); }catch(e){}
   try{ renderFeedNews(); }catch(e){}
-  try{ renderMatchDay(); }catch(e){}
+  try{ mxRefresh(); }catch(e){}
   try{ renderSidebarYourClub(); }catch(e){}
   // Changing your clubs changes the member counts, so re-read them and paint
   // the club cards again once they land.
@@ -3030,21 +3045,29 @@ const COMP_TIER = {
   'Bundesliga': 4, 'Serie A': 5, 'Ligue 1': 5, 'Série A': 6, 'Liga Profesional': 7
 };
 
+// The fixture columns every list reads. `id` opens the match panel
+// (match_detail takes fixtures.id); the league's slug and country give its
+// label ("Série A · BRA", league-names.js).
+const FX_SELECT = 'id,api_fixture_id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id,venue_name,'
+  + 'home_team:teams!fixtures_home_team_id_fkey(name,api_team_id),'
+  + 'away_team:teams!fixtures_away_team_id_fkey(name,api_team_id),'
+  + 'league:leagues!fixtures_league_id_fkey(name,slug,country)';
+
+/**
+ * The Home sidebar's fixtures (today or the next matchday, my club's next
+ * match). Since 4b-2 the Matches tab loads its own days (MATCHES TAB below).
+ * Matches the ingest window (/api/cron/fixtures defaults to -8/+21 days): it
+ * has to be this wide, an international break has no club football for over
+ * two weeks.
+ */
 async function loadFixtures(){
-  // Matches the ingest window (/api/cron/fixtures defaults to -8/+21 days).
-  // It has to be this wide: during a FIFA international break there is no club
-  // football for over two weeks, and a narrow window renders an empty page.
   const from = new Date(Date.now() - 7*24*3600*1000).toISOString();
   const to   = new Date(Date.now() + 21*24*3600*1000).toISOString();
   const q = new URLSearchParams({
-    // `id` opens the match panel (match_detail takes fixtures.id).
-    select: 'id,api_fixture_id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id,venue_name,'
-          + 'home_team:teams!fixtures_home_team_id_fkey(name,api_team_id),'
-          + 'away_team:teams!fixtures_away_team_id_fkey(name,api_team_id),'
-          + 'league:leagues!fixtures_league_id_fkey(name,flag)',
+    select: FX_SELECT,
     kickoff_utc: `gte.${from}`,
     order: 'kickoff_utc.asc',
-    limit: '300'
+    limit: '500'
   });
   q.append('kickoff_utc', `lte.${to}`);
 
@@ -3054,22 +3077,26 @@ async function loadFixtures(){
   if(!res.ok) throw new Error('fixtures '+res.status);
   const rows = await res.json();
   if(!rows.length) throw new Error('no fixtures ingested yet');
+  return rows.map(fixtureFromRow);
+}
 
-  const FINISHED = ['FT','AET','PEN'];
-  const LIVE = ['1H','HT','2H','ET','BT','P','LIVE'];
-  return rows.map(r=>{
+/** One fixtures row (FX_SELECT) as the lists use it. */
+function fixtureFromRow(r){
+    const FINISHED = ['FT','AET','PEN'];
+    const LIVE = ['1H','HT','2H','ET','BT','P','LIVE'];
     const comp = r.league?.name || '';
     const st = FINISHED.includes(r.status_short) ? 'finished'
              : LIVE.includes(r.status_short) ? 'live' : 'upcoming';
     // Keep the instant, not just a formatted time: grouping by day and telling
-      // "today" from "next Tuesday" both need the date, in the viewer's zone.
+    // "today" from "next Tuesday" both need the date, in the viewer's zone.
     const kickoff = new Date(r.kickoff_utc);
     return {
       id: r.id,
       venue: r.venue_name || null,
       comp: comp.toUpperCase(),
       compTier: COMP_TIER[comp] || 8,
-      flag: r.league?.flag || '⚽',
+      // The league as league-names.js takes it: "Série A · BRA" (4b).
+      league: {name: comp, slug: r.league?.slug || null, country: r.league?.country || null},
       kickoff,
       dayKey: localDayKey(kickoff),
       time: kickoff.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
@@ -3088,7 +3115,20 @@ async function loadFixtures(){
       awayGoals: r.away_goals,
       teamIds: [r.home_team_id, r.away_team_id]
     };
-  });
+}
+
+/** Start the sidebar's load once (Home); it repaints the two sidebar cards. */
+function loadSidebarFixtures(force){
+  if(LIVE_MATCHES!==null&&!force) return;
+  if(isOffline()) return;
+  LIVE_MATCHES=[];
+  loadFixtures()
+    .then(m=>{ LIVE_MATCHES=m; })
+    .catch(e=>{ console.warn('fixtures:',e.message); if(isOffline()) LIVE_MATCHES=null; })
+    .then(()=>{
+      try{ renderSidebarMatches(); }catch(e){}
+      try{ renderSidebarYourClub(); }catch(e){}
+    });
 }
 
 // slugFor() is gone: fixtures now carry teams.id directly, so club identity
@@ -3111,183 +3151,293 @@ function dayHeading(key){
   return d.toLocaleDateString([], {weekday:'long',day:'numeric',month:'short'});
 }
 
-// The day the Matches page shows, as a localDayKey. Null until the reader
-// picks one: then it is today, or the first day in the strip with fixtures.
-// UI state only, kept in memory (rule 10).
-let MATCH_DAY = null;
+// ── MATCHES TAB (Sequence 2 commit 4b-2) ──
+// ONE continuous list grouped by day. Today is anchored at the top whenever
+// the tab opens; scrolling up loads earlier days with their results,
+// scrolling down later days, a week at a time, until the first / last
+// fixture we hold. A "Today" button jumps back. The league chips filter in
+// the query itself, so every loaded day is complete for that league. The
+// Home sidebar keeps its own small load (loadSidebarFixtures). UI state only,
+// in memory (rule 10); the chosen league is a device preference
+// (localStorage sm_matches_league = the league's slug).
+const MX_WEEK = 7;      // one more load = a week
+const MX_BACK = 3;      // the first load: three days back ...
+const MX_AHEAD = 7;     // ... to a week ahead
+const MX = { leagues:null, chips:[], league:null, days:new Map(), ids:new Set(), from:null, to:null,
+  first:null, last:null, started:false, err:false, busy:{past:false,future:false}, failed:{past:false,future:false},
+  gen:0, todayKey:null };
 
-/** Yesterday, today, tomorrow and the next four days, in the viewer's zone. */
-function stripDays() {
-  const now = new Date();
-  const out = [];
-  for (let i = -1; i <= 5; i++) {
-    out.push(localDayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12)));
+function mxMidnight(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+function mxAddDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+
+/** { word: 'Today' | 'Tomorrow' | 'Yesterday' | '', date: 'Mon 17 Nov' / 'Saturday 22 Nov' }. */
+function mxDayTitle(key){
+  const d=new Date(key+'T12:00:00');
+  const diff=Math.round((d-new Date(localDayKey(new Date())+'T12:00:00'))/86400000);
+  const near=diff>=-1&&diff<=1;
+  return {
+    word: diff===0?t('fx.today'):diff===1?t('fx.tomorrow'):diff===-1?t('fx.yesterday'):'',
+    date: d.toLocaleDateString(smLocale()||[],{weekday:near?'short':'long',day:'numeric',month:'short'})
+  };
+}
+
+function mxPref(){ try{ return localStorage.getItem('sm_matches_league')||null; }catch(e){ return null; } }
+function mxSavePref(slug){ try{ if(slug) localStorage.setItem('sm_matches_league',slug); else localStorage.removeItem('sm_matches_league'); }catch(e){} }
+
+/** My clubs' leagues first, then the usual order (COMP_TIER). */
+function mxChipOrder(){
+  const mine=new Set(myClubIds().map(id=>(CLUB_DATA.get(id)||{}).league).filter(Boolean));
+  return (MX.leagues||[]).slice().sort((a,b)=>(mine.has(b.slug)-mine.has(a.slug))
+    ||((COMP_TIER[a.name]||8)-(COMP_TIER[b.name]||8))||String(a.name).localeCompare(String(b.name)));
+}
+function mxRenderChips(){
+  const el=document.getElementById('matches-league-chips');
+  if(!el) return;
+  MX.chips=mxChipOrder();
+  // By index into MX.chips: a name never goes inside an onclick string.
+  const chip=(i,label,on)=>'<button class="filter-btn'+(on?' active':'')+'" aria-pressed="'+on+'" onclick="mxSetLeague('+i+')">'+sanitize(label)+'</button>';
+  el.innerHTML=chip(-1,t('fx.all'),!MX.league)
+    +MX.chips.map((l,i)=>chip(i,LeagueNames.label(l),!!MX.league&&MX.league.id===l.id)).join('');
+}
+function mxSetLeague(i){
+  const l=i<0?null:(MX.chips[i]||null);
+  if((l&&l.id)===(MX.league&&MX.league.id)) return;
+  MX.league=l;
+  mxSavePref(l?l.slug:null);
+  mxRenderChips();
+  mxStart();
+}
+
+/** The first and last kick-off we hold (for this league): where loading stops. */
+async function mxBounds(){
+  const f=MX.league?'&league_id=eq.'+Number(MX.league.id):'';
+  const [a,b]=await Promise.all([
+    apiGet('fixtures?select=kickoff_utc&kickoff_utc=not.is.null&order=kickoff_utc.asc&limit=1'+f),
+    apiGet('fixtures?select=kickoff_utc&kickoff_utc=not.is.null&order=kickoff_utc.desc&limit=1'+f)
+  ]);
+  MX.first=a&&a[0]?mxMidnight(a[0].kickoff_utc):null;
+  MX.last=b&&b[0]?mxAddDays(mxMidnight(b[0].kickoff_utc),1):null;
+}
+/** Fixtures kicking off in [from, to), for the chosen league or all. */
+async function mxFetch(from,to){
+  const q=new URLSearchParams({select:FX_SELECT,order:'kickoff_utc.asc',limit:'500'});
+  q.append('kickoff_utc','gte.'+from.toISOString());
+  q.append('kickoff_utc','lt.'+to.toISOString());
+  if(MX.league) q.append('league_id','eq.'+Number(MX.league.id));
+  return ((await apiGet('fixtures?'+q))||[]).map(fixtureFromRow);
+}
+function mxAdd(list){
+  for(const m of list){
+    if(!m.kickoff||MX.ids.has(m.id)) continue;
+    MX.ids.add(m.id);
+    if(!MX.days.has(m.dayKey)) MX.days.set(m.dayKey,[]);
+    MX.days.get(m.dayKey).push(m);
   }
-  return out;
 }
 
-/** "Yesterday" / "Today" / "Tomorrow", then "Thu 13". Short, for a chip. */
-function stripLabel(key) {
-  const h = dayHeading(key);
-  if (h === 'Today' || h === 'Tomorrow' || h === 'Yesterday') return h;
-  return new Date(key + 'T12:00:00').toLocaleDateString([], {weekday: 'short', day: 'numeric'});
+function mxIsMine(m){ const mine=new Set(myClubIds()); return !!(m.teamIds&&m.teamIds.some(id=>mine.has(id))); }
+function mxRow(m){
+  return fxRow({id:m.id,homeId:m.homeId,awayId:m.awayId,home:m.home,away:m.away,status:m.status,statusShort:m.statusShort,
+    minute:m.minute,homeGoals:m.homeGoals,awayGoals:m.awayGoals,kickoff:m.kickoff,mine:mxIsMine(m)});
+}
+/** One day: its heading, then (All) one group per competition, my clubs' first. */
+function mxDayHtml(key){
+  const ms=(MX.days.get(key)||[]).slice().sort((a,b)=>a.kickoff-b.kickoff);
+  const today=key===MX.todayKey;
+  const h=mxDayTitle(key);
+  let body='';
+  if(!ms.length){
+    body='<div class="mx-empty">'+sanitize(t('fx.noneToday'))+'</div>';
+  }else if(MX.league){
+    body='<div class="fx-list">'+ms.map(mxRow).join('')+'</div>';
+  }else{
+    const by=new Map();
+    for(const m of ms){ if(!by.has(m.comp)) by.set(m.comp,[]); by.get(m.comp).push(m); }
+    const comps=[...by.keys()].sort((a,b)=>(by.get(b).some(mxIsMine)-by.get(a).some(mxIsMine))
+      ||(by.get(a)[0].compTier-by.get(b)[0].compTier)||a.localeCompare(b));
+    body=comps.map(c=>{ const g=by.get(c);
+      return '<div class="md-league">'+sanitize(LeagueNames.label(g[0].league))
+        +'<span style="font-weight:500;letter-spacing:0;" class="num">· '+g.length+'</span></div>'
+        +'<div class="fx-list">'+g.map(mxRow).join('')+'</div>'; }).join('');
+  }
+  return '<section class="mx-day'+(today?' today':'')+'" data-day="'+sanitize(key)+'"'+(today?' id="mx-today-day"':'')+'>'
+    +'<h2 class="mx-day-h">'+(h.word?'<span class="mx-word">'+sanitize(h.word)+'</span>':'')
+    +'<span class="mx-date">'+sanitize(h.date)+'</span></h2>'+body+'</section>';
+}
+/** The days in [from, to) that have fixtures, plus today when it falls inside. */
+function mxDaysHtml(from,to){
+  const a=localDayKey(from), b=localDayKey(to);
+  const keys=[...MX.days.keys()].filter(k=>k>=a&&k<b);
+  if(MX.todayKey>=a&&MX.todayKey<b&&keys.indexOf(MX.todayKey)<0) keys.push(MX.todayKey);
+  return keys.sort().map(mxDayHtml).join('');
+}
+function mxAtEdge(dir){
+  return dir==='past'?(!MX.first||MX.from<=MX.first):(!MX.last||MX.to>=MX.last);
+}
+/** The strip above / below the days: loading, the end, or a retry. Fixed height: no jump. */
+function mxEdge(dir){
+  const el=document.getElementById(dir==='past'?'mx-top':'mx-bottom');
+  if(!el) return;
+  el.innerHTML=MX.busy[dir]?sanitize(t(dir==='past'?'fx.loadingEarlier':'fx.loadingLater'))
+    :MX.failed[dir]?sanitize(t('fx.loadFail'))+' <button class="mx-retry" onclick="mxMore(\''+dir+'\')">'+sanitize(t('fx.retry'))+'</button>'
+    :mxAtEdge(dir)?sanitize(t(dir==='past'?'fx.start':'fx.end')):'';
 }
 
-function selectMatchDay(key) {
-  MATCH_DAY = key;
-  renderMatchDay();
+/** Nav + league bar height: where a day heading sticks and where "today" is anchored. */
+function mxMeasure(){
+  const page=document.getElementById('page-matches');
+  const nav=document.querySelector('.sm-nav'), bar=document.getElementById('mx-bar');
+  const n=nav&&nav.offsetParent!==null&&getComputedStyle(nav).position==='sticky'?nav.offsetHeight:0;
+  const b=bar?bar.offsetHeight:0;
+  if(page){ page.style.setProperty('--mx-nav',n+'px'); page.style.setProperty('--mx-top',(n+b)+'px'); }
+  return n+b;
+}
+function mxAnchorToday(smooth){
+  const el=document.getElementById('mx-today-day');
+  if(!el) return;
+  const top=el.getBoundingClientRect().top+window.scrollY-mxMeasure();
+  window.scrollTo({top:Math.max(0,top),behavior:smooth?'smooth':'auto'});
+}
+function mxJumpToday(){ mxAnchorToday(true); }
+/** The "Today" button shows while today's day is out of view, pointing at it. */
+function mxWatchToday(){
+  const btn=document.getElementById('mx-today'), el=document.getElementById('mx-today-day');
+  if(!btn) return;
+  if(!el){ btn.hidden=true; return; }
+  const r=el.getBoundingClientRect(), top=mxMeasure(), vh=window.innerHeight||800;
+  const away=r.bottom<=top||r.top>=vh;
+  const dir=r.bottom<=top?'up':'down';
+  if(away&&(btn.hidden||btn.dataset.dir!==dir)){
+    btn.dataset.dir=dir;
+    btn.innerHTML=Icons.svg(dir==='up'?'arrowUp':'arrowDown',16)+'<span>'+sanitize(t('fx.todayBtn'))+'</span>';
+  }
+  btn.hidden=!away;
+}
+/**
+ * Load the next week when the top or bottom edge comes within 600px, and
+ * keep the Today button right. Run after every load (an empty week, an
+ * international break, leaves the edge in reach: it goes on) and on scroll.
+ */
+function mxCheckEdges(){
+  const page=document.getElementById('page-matches');
+  if(!page||!page.classList.contains('active')) return;
+  mxWatchToday();
+  const vh=window.innerHeight||800;
+  for(const [id,dir] of [['mx-top','past'],['mx-bottom','future']]){
+    const el=document.getElementById(id);
+    if(!el) continue;
+    const r=el.getBoundingClientRect();
+    if(r.bottom>-600&&r.top<vh+600) mxMore(dir);
+  }
+}
+/** On scroll, at most every 120 ms; only the Matches tab listens (mxCheckEdges returns elsewhere). */
+let MX_SCROLL_T=null;
+window.addEventListener('scroll',function(){
+  if(MX_SCROLL_T||!MX.started) return;
+  MX_SCROLL_T=setTimeout(function(){ MX_SCROLL_T=null; mxCheckEdges(); },120);
+},{passive:true});
+function mxObserve(){ setTimeout(mxCheckEdges,0); }
+
+async function mxStart(){
+  const gen=++MX.gen;
+  const list=document.getElementById('matches-list');
+  if(!list) return;
+  MX.days=new Map(); MX.ids=new Set(); MX.err=false; MX.started=true;
+  MX.busy={past:false,future:false}; MX.failed={past:false,future:false};
+  MX.todayKey=localDayKey(new Date());
+  if(isOffline()){ list.innerHTML=offlineHtml(); MX.started=false; return; }
+  list.innerHTML='<div class="mx-edge">'+sanitize(t('fx.loading'))+'</div>';
+  try{
+    if(!MX.leagues){
+      MX.leagues=(await apiGet('leagues?select=id,slug,name,country&active=is.true&order=id.asc'))||[];
+      // A choice saved before 4b-2 is the league's name; now it is its slug.
+      const p=mxPref(), known=p&&LeagueNames.find(p);
+      MX.league=p?(MX.leagues.find(l=>l.slug===p||(known&&l.slug===known.slug))||null):null;
+    }
+    if(gen!==MX.gen) return;
+    mxRenderChips();
+    const today=mxMidnight(new Date());
+    MX.from=mxAddDays(today,-MX_BACK);
+    MX.to=mxAddDays(today,MX_AHEAD+1);
+    const [,rows]=await Promise.all([mxBounds(),mxFetch(MX.from,MX.to)]);
+    if(gen!==MX.gen) return;
+    mxAdd(rows);
+    list.innerHTML='<div id="mx-top" class="mx-edge"></div><div id="mx-days">'+mxDaysHtml(MX.from,MX.to)+'</div>'
+      +'<div id="mx-bottom" class="mx-edge mx-end"></div>';
+    mxEdge('past'); mxEdge('future');
+    mxAnchorToday(false);
+    mxObserve();
+  }catch(e){
+    console.error('matches:',e);
+    if(gen!==MX.gen) return;
+    MX.err=true; MX.started=false;
+    list.innerHTML=isOffline()?offlineHtml()
+      :'<div class="mx-edge">'+sanitize(t('fx.loadFail'))+' <button class="mx-retry" onclick="mxStart()">'+sanitize(t('fx.retry'))+'</button></div>';
+  }
 }
 
-function renderMatchDay() {
-  const el = document.getElementById('matchday-content');
-  const strip = document.getElementById('matches-date-strip');
-  if (!el) return;
-
-  // No fixtures loaded and no network: say so, not "no fixtures this week".
-  // Checked BEFORE the load below, so offline never starts a request (and the
-  // catch's re-render below cannot loop).
-  if (isOffline() && !(LIVE_MATCHES && LIVE_MATCHES.length)) {
-    if (strip) strip.innerHTML = '';
-    el.innerHTML = offlineHtml();
+/** One more week, above (past) or below (future). Content added above keeps the reader's place. */
+async function mxMore(dir){
+  if(!MX.started||MX.err||MX.busy[dir]||mxAtEdge(dir)||!document.getElementById('mx-days')) return;
+  const gen=MX.gen;
+  MX.busy[dir]=true; MX.failed[dir]=false; mxEdge(dir);
+  const from=dir==='past'?mxAddDays(MX.from,-MX_WEEK):MX.to;
+  const to=dir==='past'?MX.from:mxAddDays(MX.to,MX_WEEK);
+  let rows;
+  try{ rows=await mxFetch(from,to); }
+  catch(e){
+    console.warn('matches '+dir+':',e.message);
+    if(gen!==MX.gen) return;
+    MX.busy[dir]=false; MX.failed[dir]=true; mxEdge(dir);
     return;
   }
-
-  // Kick off the Supabase load once; re-render when it lands.
-  if (LIVE_MATCHES === null) {
-    LIVE_MATCHES = [];
-    loadFixtures()
-      .then(m => {
-        LIVE_MATCHES = m;
-        renderMatchDay();
-        try{ renderSidebarMatches(); }catch(e){}
-        try{ renderSidebarYourClub(); }catch(e){}
-      })
-      .catch(e => {
-        console.warn('fixtures:', e.message);
-        MATCHES_ERR = !isOffline();
-        // Offline: forget the failed load, so the next render (or coming back
-        // online) asks again instead of keeping an empty list for good.
-        if (isOffline()) { LIVE_MATCHES = null; }
-        renderMatchDay();
-      });
+  if(gen!==MX.gen) return;
+  mxAdd(rows);
+  const days=document.getElementById('mx-days');
+  if(dir==='past'){
+    MX.from=from;
+    // The browser's own scroll anchoring is off for this one insert (Safari
+    // has none, Chrome would add its own shift): we keep the place ourselves.
+    const root=document.documentElement, before=root.scrollHeight, prev=root.style.overflowAnchor;
+    root.style.overflowAnchor='none';
+    days.insertAdjacentHTML('afterbegin',mxDaysHtml(from,to));
+    window.scrollBy(0,root.scrollHeight-before);
+    root.style.overflowAnchor=prev;
+  }else{
+    MX.to=to;
+    days.insertAdjacentHTML('beforeend',mxDaysHtml(from,to));
   }
-
-  let dated = (LIVE_MATCHES || []).filter(m => m.kickoff);
-  const chipsEl = document.getElementById('matches-league-chips');
-  if (!dated.length) {
-    if (chipsEl) chipsEl.innerHTML = '';
-    if (strip) strip.innerHTML = '';
-    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">'
-      + (LIVE_MATCHES && !LIVE_MATCHES.length && !MATCHES_ERR ? sanitize(t('fx.loading'))
-        : MATCHES_ERR ? sanitize(t('fx.loadFail')) : sanitize(t('fx.none'))) + '</div>';
-    return;
-  }
-
-  // ── the league chips (17 Nov): All + every competition we hold fixtures for,
-  // in the page's usual order. The choice is remembered on this device. ──
-  // My clubs' competitions first (as the rows below), then the usual order.
-  const tierOf = new Map(), withMine = new Set(), myIds = new Set(myClubIds());
-  for (const m of dated) {
-    const k = m.compName || m.comp;
-    if (!tierOf.has(k)) tierOf.set(k, m.compTier);
-    if (m.teamIds && m.teamIds.some(id => myIds.has(id))) withMine.add(k);
-  }
-  const leagueNames = [...tierOf.keys()].sort((a, b) => (withMine.has(b) - withMine.has(a))
-    || (tierOf.get(a) - tierOf.get(b)) || a.localeCompare(b));
-  const pickedLeague = MATCH_LEAGUE && leagueNames.indexOf(MATCH_LEAGUE) >= 0 ? MATCH_LEAGUE : null;
-  MATCH_LEAGUE_NAMES = leagueNames;
-  if (chipsEl) {
-    // By index into MATCH_LEAGUE_NAMES: a name never goes inside an onclick string.
-    const chip = (i, label) => { const name = i < 0 ? null : leagueNames[i];
-      return '<button class="filter-btn' + (name === pickedLeague ? ' active' : '') + '"'
-        + ' aria-pressed="' + (name === pickedLeague) + '" onclick="setMatchLeague(' + (i < 0 ? 'null' : 'MATCH_LEAGUE_NAMES[' + i + ']') + ')">'
-        + sanitize(label) + '</button>'; };
-    chipsEl.innerHTML = chip(-1, t('fx.all')) + leagueNames.map((n, i) => chip(i, n)).join('');
-  }
-  if (pickedLeague) dated = dated.filter(m => (m.compName || m.comp) === pickedLeague);
-
-  // ── the strip ──
-  const days = stripDays();
-  const count = new Map(days.map(k => [k, 0]));
-  for (const m of dated) if (count.has(m.dayKey)) count.set(m.dayKey, count.get(m.dayKey) + 1);
-  const today = localDayKey(new Date());
-  // Today, else the next day ahead with fixtures, else yesterday: an empty
-  // today should open on what is coming, not on last night's results.
-  if (!MATCH_DAY || days.indexOf(MATCH_DAY) < 0) {
-    MATCH_DAY = days.slice(1).find(k => count.get(k)) || (count.get(days[0]) ? days[0] : today);
-  }
-  if (strip) {
-    strip.innerHTML = days.map(k => {
-      const n = count.get(k);
-      return '<button class="date-chip' + (k === MATCH_DAY ? ' active' : '') + (n ? '' : ' empty') + '"'
-        + ' onclick="selectMatchDay(\'' + sanitize(k) + '\')">' + sanitize(stripLabel(k))
-        + '<span class="dc-n">' + (n ? n + (n === 1 ? ' match' : ' matches') : 'none') + '</span></button>';
-    }).join('');
-    // Bring the selected day into view: at 375px it can be off the right edge,
-    // and the strip then never shows which day you are looking at. scrollLeft,
-    // not scrollIntoView, so the page itself never jumps.
-    const on = strip.querySelector('.date-chip.active');
-    if (on) strip.scrollLeft = Math.max(0, on.offsetLeft - strip.offsetLeft - (strip.clientWidth - on.offsetWidth) / 2);
-  }
-
-  // ── a week with nothing in it (an international break) ──
-  const weekTotal = [...count.values()].reduce((a, b) => a + b, 0);
-  if (!weekTotal) {
-    const last = days[days.length - 1];
-    const next = dated.filter(m => m.dayKey > last).sort((a, b) => a.kickoff - b.kickoff)[0];
-    el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.7;">'
-      + 'No matches this week'
-      + (next ? ' · next matchday <span style="color:var(--text);">' + sanitize(dayHeading(next.dayKey)) + '</span>' : '')
-      + '</div>';
-    return;
-  }
-
-  // ── the selected day ──
-  const list = dated.filter(m => m.dayKey === MATCH_DAY).sort((a, b) => a.kickoff - b.kickoff);
-  if (!list.length) {
-    el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;">'
-      + 'No matches ' + sanitize(dayHeading(MATCH_DAY) === 'Today' ? 'today' : 'on ' + dayHeading(MATCH_DAY)) + '.</div>';
-    return;
-  }
-
-  // 4a: compact rows, as in Scout's "Matches in this round", one group per
-  // competition. Competitions with one of my clubs come first; my clubs' rows
-  // are marked in place, not pulled out into a block of their own.
-  const myClubs = new Set(myClubIds());
-  const isMine = m => m.teamIds && m.teamIds.some(id => myClubs.has(id));
-  const byLeague = new Map();
-  for (const m of list) {
-    if (!byLeague.has(m.comp)) byLeague.set(m.comp, []);
-    byLeague.get(m.comp).push(m);
-  }
-  const leagues = [...byLeague.keys()].sort((a, b) =>
-    (byLeague.get(b).some(isMine) - byLeague.get(a).some(isMine))
-    || (byLeague.get(a)[0].compTier - byLeague.get(b)[0].compTier) || a.localeCompare(b));
-  let html = '';
-  for (const comp of leagues) {
-    const ms = byLeague.get(comp);
-    html += '<div class="md-league">' + sanitize(ms[0].compName || comp)
-      + '<span style="font-weight:500;letter-spacing:0;" class="num">· ' + ms.length + '</span></div>'
-      + '<div class="fx-list">' + ms.map(m => fxRow({
-          id: m.id, homeId: m.homeId, awayId: m.awayId, home: m.home, away: m.away,
-          status: m.status, statusShort: m.statusShort, minute: m.minute,
-          homeGoals: m.homeGoals, awayGoals: m.awayGoals, kickoff: m.kickoff, mine: isMine(m)
-        })).join('') + '</div>';
-  }
-  el.innerHTML = html;
+  MX.busy[dir]=false; mxEdge(dir);
+  setTimeout(mxCheckEdges,0);
 }
 
-let MATCHES_ERR = false;
-
-// The Matches tab's league filter: a UI preference on this device (rule 10).
-let MATCH_LEAGUE = null, MATCH_LEAGUE_NAMES = [];
-try { MATCH_LEAGUE = localStorage.getItem('sm_matches_league') || null; } catch (e) {}
-function setMatchLeague(name){
-  MATCH_LEAGUE = name || null;
-  try { if (MATCH_LEAGUE) localStorage.setItem('sm_matches_league', MATCH_LEAGUE); else localStorage.removeItem('sm_matches_league'); } catch (e) {}
-  MATCH_DAY = null;      // open on the first day this league plays
-  renderMatchDay();
+/** Re-draw the loaded days (my clubs changed, say), keeping the reader's place. */
+function mxRefresh(){
+  const days=document.getElementById('mx-days');
+  if(!MX.started||MX.err||!days) return;
+  const top=mxMeasure();
+  const first=[...days.querySelectorAll('.mx-day')].find(s=>s.getBoundingClientRect().bottom>top);
+  const key=first&&first.dataset.day, off=first?first.getBoundingClientRect().top:0;
+  mxRenderChips();
+  days.innerHTML=mxDaysHtml(MX.from,MX.to);
+  const again=key&&days.querySelector('.mx-day[data-day="'+key+'"]');
+  const page=document.getElementById('page-matches');
+  if(again&&page&&page.classList.contains('active')) window.scrollBy(0,again.getBoundingClientRect().top-off);
+  mxWatchToday();
 }
+
+/**
+ * The Matches tab opened (showPage) or needs drawing: load it the first time
+ * (or after a failure, or when the day has changed), else anchor on today.
+ * After showPage's scrollTo(0,0), hence the timeout.
+ */
+function renderMatchDay(){
+  const page=document.getElementById('page-matches');
+  if(!page||!page.classList.contains('active')) return;
+  if(!MX.started||MX.err||MX.todayKey!==localDayKey(new Date())){ mxStart(); return; }
+  setTimeout(()=>{ mxAnchorToday(false); mxCheckEdges(); },0);
+}
+
 
 /**
  * One fixture as a compact row: FxRow.render() in public/fx-row.js (4a, moved
@@ -3515,7 +3665,7 @@ function renderSidebarMatches(){
   if(!el)return;
 
   if(LIVE_MATCHES===null){
-    // renderMatchDay() owns the fetch; just wait for it.
+    // loadSidebarFixtures() owns the fetch; just wait for it.
     el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0;">Loading fixtures…</div>';
     return;
   }
@@ -5451,8 +5601,12 @@ function filterWeekly(league, btn) {
   try{ renderMyClubCard(); renderClubsGrid(); }catch(e){}
   try{ await loadNews(false); }catch(e){ console.error('loadNews:',e); }
   try{ loadSocialForFeed(); }catch(e){}
-  try{ renderMatchDay(); }catch(e){}
+  try{ loadSidebarFixtures(); }catch(e){}
   try{ renderSidebarMatches(); }catch(e){}
+  // A ?page=matches load drew the tab before my clubs were known: their
+  // league chips first and their rows marked, now.
+  try{ mxRefresh(); }catch(e){}
+  try{ renderMatchDay(); }catch(e){}   // a ?page=matches load: the tab is already active
   try{ logSessionOnce(); }catch(e){}
   try{ logInstallOnce(); }catch(e){}
   try{ maybeStartOnboarding(); }catch(e){ console.error('onboarding:',e); }
@@ -7519,11 +7673,13 @@ renderThemePref();
 // back loads what never arrived, without a reload (drafts and scroll stay).
 window.addEventListener('offline',function(){
   try{ if(!FEED_ITEMS.length) renderFeedNews(); }catch(e){}
-  try{ if(!(LIVE_MATCHES&&LIVE_MATCHES.length)) renderMatchDay(); }catch(e){}
+  try{ if(!(LIVE_MATCHES&&LIVE_MATCHES.length)) renderSidebarMatches(); }catch(e){}
+  try{ if(!MX.days.size) renderMatchDay(); }catch(e){}
 });
 window.addEventListener('online',function(){
   try{ if(!FEED_ITEMS.length) loadNews(false); }catch(e){ console.error('online: news',e); }
-  try{ if(!(LIVE_MATCHES&&LIVE_MATCHES.length)){ LIVE_MATCHES=null; renderMatchDay(); } }catch(e){ console.error('online: fixtures',e); }
+  try{ if(!(LIVE_MATCHES&&LIVE_MATCHES.length)) loadSidebarFixtures(true); }catch(e){ console.error('online: fixtures',e); }
+  try{ if(MX.err||!MX.started||!MX.days.size){ MX.started=false; renderMatchDay(); } }catch(e){ console.error('online: matches',e); }
   const sp=document.getElementById('page-scout');
   if(sp&&sp.classList.contains('active')) renderScout(true).catch(e=>console.error('online: scout',e));
 });

@@ -55,9 +55,13 @@ for (const page of ['index.html', 'about.html', 'community.html', 'news.html', '
 // Offline empty states (Day 6, commit 5): Matches checks the network before
 // it starts a fixtures request, so a failed load offline cannot loop.
 const idx = readFileSync(new URL('index.html', pub), 'utf8');
-const md = idx.slice(idx.indexOf('function renderMatchDay()'));
+// Since 4b-2 the Matches tab loads in mxStart() (fixtures by week, mxFetch).
+const md = idx.slice(idx.indexOf('async function mxStart()'));
 check('Matches: the offline check comes before the fixtures load',
-  md.indexOf('isOffline()') > -1 && md.indexOf('isOffline()') < md.indexOf('loadFixtures()'));
+  md.indexOf('isOffline()') > -1 && md.indexOf('isOffline()') < md.indexOf('mxFetch('));
+const sb = idx.slice(idx.indexOf('function loadSidebarFixtures('));
+check('Home sidebar: the offline check comes before its fixtures load',
+  sb.indexOf('isOffline()') > -1 && sb.indexOf('isOffline()') < sb.indexOf('loadFixtures()'));
 check('Home and Scout use the offline empty state',
   (idx.match(/isOffline\(\)\?offlineHtml\(\)/g) || []).length >= 6);
 check('offline strings exist in both languages', /'off\.title':/.test(readFileSync(new URL('i18n.js', pub), 'utf8')));
