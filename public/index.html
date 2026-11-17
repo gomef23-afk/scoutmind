@@ -18,11 +18,11 @@
 <meta name="theme-color" content="#0F141B">
 <!-- Theme (design spec v1.2), BEFORE any stylesheet so the first paint is
      already right: data-theme on <html> from localStorage sm_theme
-     (system | light | dark). No saved choice = DARK until Sequence 2 commit
-     4b, then it follows the device. window.smTheme is the Profile switch. -->
+     (system | light | dark). No saved choice follows the device (since 4b-8;
+     it was dark before). window.smTheme is the Profile switch. -->
 <script>
 (function(){
-  var DEFAULT='dark';                                   // 4b: 'system'
+  var DEFAULT='system';                                 // 4b-8: no saved choice follows the device
   var root=document.documentElement, mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
   function pref(){ try{ var s=localStorage.getItem('sm_theme'); return s==='light'||s==='dark'||s==='system'?s:DEFAULT; }catch(e){ return DEFAULT; } }
   function resolve(p){ return p==='system'?(mq&&mq.matches?'dark':'light'):p; }
@@ -55,7 +55,7 @@
      bar (the Home band's navy runs to the top edge; other tabs pad the nav). -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ScoutMind">
-<script src="/pwa.js?v=2693c9caba" defer></script>
+<script src="/pwa.js?v=4801f83526" defer></script>
 <meta property="og:site_name" content="ScoutMind">
 <meta property="og:type" content="website">
 <meta property="og:title" content="ScoutMind — Your club. Everything around it.">
@@ -73,7 +73,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=094fac0911"></script>
+<script src="/i18n.js?v=7fc74546ac"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=d008ee2323"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -84,39 +84,36 @@
 <script src="/fx-row.js?v=2a5a74a713"></script>
 <script src="/icons.js?v=9b84b2e441"></script>
 <style>
-/* The pre-Sequence-2 names, kept as aliases of the v1.2 tokens in /theme.css
-   so every existing rule keeps working in light and dark. Removed in commit
-   4b once nothing uses them. --accent is navy used as TEXT or a line (light
-   in dark mode); a FILL uses var(--navy) with var(--on-navy) text. There is
-   no second accent: the old cyan, yellow and orange fold into these. */
-:root{--bg:var(--ground);--bg2:var(--card);--bg3:var(--field);--accent:var(--navy-ink);--accent2:var(--navy-ink);--warn:var(--loss-ink);--text:var(--ink);--red:var(--loss-ink);--yellow:var(--ink);--green:var(--win);}
+/* The v1.2 tokens (/theme.css) by their own names; the pre-Sequence-2 aliases
+   (--bg, --accent, --text…) were renamed and removed in 4b-8. Navy as TEXT or
+   a line is var(--navy-ink); a FILL is var(--navy) with var(--on-navy) text. */
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;}
+body{background:var(--ground);color:var(--ink);font-family:var(--font-sans);min-height:100vh;}
 nav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100;}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--accent);}
-.logo span{color:var(--text);}
+.logo{font-family:var(--font-num);font-weight:700;font-size:24px;letter-spacing:0.5px;color:var(--navy-ink);}
+.logo span{color:var(--ink);}
 .nav-right{display:flex;align-items:center;gap:10px;}
 .user-badge{display:flex;align-items:center;gap:8px;background:var(--field);border:1px solid var(--border);border-radius:8px;padding:6px 14px;}
 .logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .2s;}
-.logout-btn:hover{border-color:var(--accent);color:var(--text);}
+.logout-btn:hover{border-color:var(--navy-ink);color:var(--ink);}
 /* ── GUEST MODE ── */
 .nav-about-link{font-size:12px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px;transition:color .2s;}
-.nav-about-link:hover{color:var(--text);}
+.nav-about-link:hover{color:var(--ink);}
 .signin-btn{background:var(--navy);color:var(--on-navy);border:none;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
 .signin-btn:hover{background:var(--navy-hover);}
 .signin-sheet{position:fixed;inset:0;background:var(--scrim);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);}
-.signin-sheet-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:360px;width:100%;text-align:center;}
-.signin-sheet-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:8px;}
+.signin-sheet-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:360px;width:100%;text-align:center;}
+.signin-sheet-title{font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:24px;letter-spacing:0.5px;margin-bottom:8px;}
 .signin-sheet-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
 .signin-sheet-actions{display:flex;flex-direction:column;gap:9px;}
 .signin-sheet-primary{background:var(--navy);color:var(--on-navy);border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.signin-sheet-secondary{background:transparent;color:var(--text);border:1px solid var(--border);padding:12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.signin-sheet-secondary{background:transparent;color:var(--ink);border:1px solid var(--border);padding:12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .signin-sheet-dismiss{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;padding:6px;margin-top:2px;}
-select,input[type=text],input[type=number]{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;}
-select:focus,input:focus{border-color:var(--accent);}
-select option{background:var(--bg3);}
+select,input[type=text],input[type=number]{width:100%;background:var(--field);border:1px solid var(--border);color:var(--ink);padding:7px 10px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s;}
+select:focus,input:focus{border-color:var(--navy-ink);}
+select option{background:var(--field);}
 hr{border:none;border-top:1px solid var(--border);}
-.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:middle;animation:blink 2s infinite;}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--win);margin-right:4px;vertical-align:middle;animation:blink 2s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 /* ── B2: FIVE-TAB NAV — mobile-first (base = 375px, desktop at 900px) ──
    Shared verbatim by index.html, community.html and about.html (rule #5).
@@ -124,13 +121,13 @@ hr{border:none;border-top:1px solid var(--border);}
    for the fixed mobile bar. Tabs are keyed by data-tab, never by id, so the
    duplication cannot produce duplicate element ids. */
 .sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100;}
-.sm-logo{font-family:var(--font-num);font-weight:700;font-size:22px;letter-spacing:0.5px;color:var(--accent);text-decoration:none;flex-shrink:0;}
-.sm-logo span{color:var(--text);}
+.sm-logo{font-family:var(--font-num);font-weight:700;font-size:22px;letter-spacing:0.5px;color:var(--navy-ink);text-decoration:none;flex-shrink:0;}
+.sm-logo span{color:var(--ink);}
 .sm-nav-right{display:flex;align-items:center;gap:4px;margin-left:auto;}
 /* Placeholder for the B4 language switcher. Empty until then. */
 .sm-lang-slot{display:flex;align-items:center;}
 .sm-about{font-size:12px;color:var(--muted);text-decoration:none;padding:0 8px;min-height:44px;display:flex;align-items:center;}
-.sm-about:hover{color:var(--text);}
+.sm-about:hover{color:var(--ink);}
 /* Currency switcher is desktop-only — it does not fit at 375px.
    Mobile currency control is part of the Phase F Scout Mode audit. */
 .sm-curr{display:none;}
@@ -139,8 +136,8 @@ hr{border:none;border-top:1px solid var(--border);}
 .sm-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;line-height:1.2;cursor:pointer;text-decoration:none;transition:color .2s;}
 .sm-tab-icon{display:flex;line-height:1;}
 .sm-tab-icon svg{width:22px;height:22px;}
-.sm-tab:hover{color:var(--text);}
-.sm-tab.active{color:var(--accent);}
+.sm-tab:hover{color:var(--ink);}
+.sm-tab.active{color:var(--navy-ink);}
 /* Spec v1.2 §3: the active tab is a navy icon with a 3px navy bar above it. */
 .sm-tabs-bottom .sm-tab.active{box-shadow:inset 0 3px 0 var(--navy-ink);}
 .nav-prefs{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:none;border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;}
@@ -162,8 +159,8 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
   .sm-tabs-top{display:flex;gap:2px;margin-left:18px;}
   .sm-tabs-top .sm-tab{flex:0 0 auto;flex-direction:row;gap:7px;min-height:38px;font-size:12px;font-weight:500;padding:0 14px;border-bottom:2px solid transparent;}
   .sm-tabs-top .sm-tab-icon svg{width:18px;height:18px;}
-  .sm-tabs-top .sm-tab.active{border-bottom-color:var(--accent);}
-  .sm-curr{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px;}
+  .sm-tabs-top .sm-tab.active{border-bottom-color:var(--navy-ink);}
+  .sm-curr{display:flex;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:3px;}
 }
 /* ── PAGES ── */
 .page{display:none;}
@@ -203,33 +200,33 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 /* ── FEED PAGE ── */
 .feed-tabs-bar{display:flex;gap:2px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:0;}
 .ftab{background:transparent;border:none;color:var(--muted);padding:8px 14px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px;}
-.ftab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.feed-post{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;transition:border-color .2s;}
+.ftab.active{color:var(--navy-ink);border-bottom-color:var(--navy-ink);}
+.feed-post{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;transition:border-color .2s;}
 .feed-post:hover{border-color:var(--border-strong);}
 .feed-post-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .feed-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
-.feed-author{font-size:12px;font-weight:600;color:var(--text);}
+.feed-author{font-size:12px;font-weight:600;color:var(--ink);}
 .feed-submeta{font-size:10px;color:var(--muted);margin-top:1px;}
 .feed-vbadge{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;margin-left:auto;}
 .feed-body{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px;}
-.feed-insight-box{background:var(--bg3);border-left:2px solid var(--accent);padding:8px 12px;border-radius:0 8px 8px 0;margin-bottom:10px;}
-.feed-insight-label{font-size:9px;color:var(--accent);font-weight:700;letter-spacing:1px;margin-bottom:3px;}
-.feed-insight-body{font-size:11px;color:var(--text);line-height:1.5;}
+.feed-insight-box{background:var(--field);border-left:2px solid var(--navy-ink);padding:8px 12px;border-radius:0 8px 8px 0;margin-bottom:10px;}
+.feed-insight-label{font-size:9px;color:var(--navy-ink);font-weight:700;letter-spacing:1px;margin-bottom:3px;}
+.feed-insight-body{font-size:11px;color:var(--ink);line-height:1.5;}
 .feed-actions{display:flex;gap:16px;}
 .feed-action-btn{background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;transition:color .2s;}
-.feed-action-btn:hover{color:var(--accent);}
+.feed-action-btn:hover{color:var(--navy-ink);}
 /* The pre-package-3 comment CSS lived here (.comment-section, .comment-input-row,
    .comment-like and an earlier .comment-toggle/.comments-body/.comment-item set).
    It is superseded by the SOCIAL block below. It was left in place when the old
    UI was removed, and its `.comment-toggle{width:100%}` then fought the new
    count button, stretching it across the whole card. */
-.feed-side-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;}
+.feed-side-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;}
 .feed-side-title{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
 .trending-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);}
 .trending-row:last-child{border-bottom:none;}
-.trending-name{font-size:11px;color:var(--text);font-weight:500;}
+.trending-name{font-size:11px;color:var(--ink);font-weight:500;}
 .trending-sub{font-size:9px;color:var(--muted);}
-.trending-up{font-size:10px;color:var(--accent);}
+.trending-up{font-size:10px;color:var(--navy-ink);}
 /* ── LAYOUT PASS A ── one scrolling chip row, compact cards, the date strip.
    Mobile first: the rows scroll sideways at 375px instead of wrapping into
    three lines of buttons above the first headline. */
@@ -243,35 +240,35 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .news-meta .nm-text{min-width:0;overflow:hidden;text-overflow:ellipsis;}
 .news-meta .nm-crests{display:inline-flex;gap:3px;flex:0 0 auto;}
 .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.read-link{flex:0 0 auto;font-size:11px;font-weight:600;color:var(--accent);text-decoration:none;white-space:nowrap;padding:3px 2px;}
+.read-link{flex:0 0 auto;font-size:11px;font-weight:600;color:var(--navy-ink);text-decoration:none;white-space:nowrap;padding:3px 2px;}
 .md-league{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);margin:16px 0 8px;display:flex;align-items:center;gap:6px;}
-.md-section{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:4px 0 10px;display:flex;align-items:center;gap:6px;color:var(--accent);}
+.md-section{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:4px 0 10px;display:flex;align-items:center;gap:6px;color:var(--navy-ink);}
 .match-row-sm{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
 .match-row-sm:last-child{border-bottom:none;}
 .match-comp-sm{font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:3px;}
-.match-teams-sm{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);}
+.match-teams-sm{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink);}
 /* ── CLUBS PAGE ── */
 .clubs-page{min-height:calc(100vh - 53px);padding:20px 28px;}
-.my-club-body{background:var(--bg2);padding:14px 16px;display:flex;align-items:center;gap:14px;}
-.my-club-crest{width:52px;height:52px;border-radius:10px;background:var(--bg3);border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:24px;margin-top:-28px;flex-shrink:0;}
-.my-club-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text);}
+.my-club-body{background:var(--card);padding:14px 16px;display:flex;align-items:center;gap:14px;}
+.my-club-crest{width:52px;height:52px;border-radius:10px;background:var(--field);border:2px solid var(--ground);display:flex;align-items:center;justify-content:center;font-size:24px;margin-top:-28px;flex-shrink:0;}
+.my-club-name{font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:20px;letter-spacing:0.5px;color:var(--ink);}
 .my-club-sub{font-size:10px;color:var(--muted);margin-top:2px;}
 .my-club-badges{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
 .c-pill{font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;}
-.c-pill-g{background:var(--tint);color:var(--accent);border:1px solid var(--border);}
-.c-pill-b{background:var(--tint);color:var(--accent2);border:1px solid var(--border);}
-.c-pill-y{background:var(--tint);color:var(--yellow);border:1px solid var(--border);}
-.c-pill-r{background:var(--loss-tint);color:var(--red);border:1px solid var(--loss-ink);}
-.c-pill-o{background:var(--tint);color:var(--warn);border:1px solid var(--border);}
-.my-club-stats-row{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg3);border-top:1px solid var(--border);}
+.c-pill-g{background:var(--tint);color:var(--navy-ink);border:1px solid var(--border);}
+.c-pill-b{background:var(--tint);color:var(--navy-ink);border:1px solid var(--border);}
+.c-pill-y{background:var(--tint);color:var(--ink);border:1px solid var(--border);}
+.c-pill-r{background:var(--loss-tint);color:var(--loss-ink);border:1px solid var(--loss-ink);}
+.c-pill-o{background:var(--tint);color:var(--loss-ink);border:1px solid var(--border);}
+.my-club-stats-row{display:grid;grid-template-columns:repeat(4,1fr);background:var(--field);border-top:1px solid var(--border);}
 .my-club-stat{padding:10px 0;text-align:center;border-right:1px solid var(--border);}
 .my-club-stat:last-child{border-right:none;}
-.my-club-stat-val{font-size:16px;font-weight:700;font-family:'DM Mono',monospace;}
+.my-club-stat-val{font-size:18px;font-weight:700;font-family:var(--font-num);font-variant-numeric:tabular-nums;}
 .my-club-stat-lbl{font-size:8px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:1px;}
 .explore-section-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;}
 .league-filter-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
 .league-filter-btn{font-size:11px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
-.league-filter-btn.active,.league-filter-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--accent);}
+.league-filter-btn.active,.league-filter-btn:hover{background:var(--field);color:var(--ink);border-color:var(--navy-ink);}
 /* Mobile first: two columns fit 375px. Three was cutting the last one off. */
 /* Clubs (4b-5): light header, my club card, all clubs as tiles. Tokens only. */
 .clubs-col{max-width:1100px;margin:0 auto;padding:24px 16px;}
@@ -302,12 +299,12 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .cl-tile-name{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .cl-tile .sg-tag{align-self:flex-start;}
 .club-explore-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.club-explore-crest{width:36px;height:36px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;}
-.club-explore-name{font-size:12px;font-weight:600;color:var(--text);}
+.club-explore-crest{width:36px;height:36px;border-radius:8px;background:var(--field);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.club-explore-name{font-size:12px;font-weight:600;color:var(--ink);}
 .club-explore-league{font-size:10px;color:var(--muted);margin-top:1px;}
 .club-explore-stats{display:flex;gap:10px;margin-top:8px;}
 .club-explore-stat{font-size:10px;color:var(--muted);}
-.club-explore-stat span{color:var(--text);font-family:'DM Mono',monospace;}
+.club-explore-stat span{color:var(--ink);font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:700;}
 /* ── PROFILE PAGE ── */
 .profile-page{max-width:680px;margin:0 auto;padding:24px 16px;}
 .sheet-ic{display:flex;justify-content:center;color:var(--navy-ink);margin-bottom:10px;}
@@ -325,85 +322,85 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .prof-cancel{display:flex;align-items:center;justify-content:center;width:40px;height:40px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;}
 .club-manage-btn{margin-top:10px;min-height:40px;padding:0 16px;background:transparent;border:1px solid var(--border);color:var(--navy-ink);border-radius:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
 .club-manage-btn:hover{background:var(--field);}
-.profile-section{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
+.profile-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
 .profile-section-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;}
 .profile-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
 .profile-row:last-child{border-bottom:none;}
 .profile-row-label{font-size:12px;color:var(--muted);}
-.profile-row-value{font-size:12px;font-weight:500;color:var(--text);}
+.profile-row-value{font-size:12px;font-weight:500;color:var(--ink);}
 .profile-edit-btn{font-size:10px;padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
-.profile-edit-btn:hover{border-color:var(--accent);color:var(--accent);}
-.club-chip{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:7px;}
+.profile-edit-btn:hover{border-color:var(--navy-ink);color:var(--navy-ink);}
+.club-chip{display:flex;align-items:center;gap:8px;background:var(--field);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:7px;}
 .club-chip-emoji{font-size:18px;}
-.club-chip-name{flex:1;font-size:12px;font-weight:500;color:var(--text);}
+.club-chip-name{flex:1;font-size:12px;font-weight:500;color:var(--ink);}
 .club-chip-badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;}
-.danger-btn{font-size:11px;padding:7px 16px;background:transparent;border:1px solid var(--loss-ink);color:var(--red);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.danger-btn{font-size:11px;padding:7px 16px;background:transparent;border:1px solid var(--loss-ink);color:var(--loss-ink);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .danger-btn:hover{background:var(--loss-tint);}
 .back-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:20px;background:transparent;border:none;font-family:'DM Sans',sans-serif;transition:color .2s;}
-.back-btn:hover{color:var(--accent);}
-.filter-btn{background:var(--bg2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
-.filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--tint);}
+.back-btn:hover{color:var(--navy-ink);}
+.filter-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.filter-btn:hover,.filter-btn.active{border-color:var(--navy-ink);color:var(--navy-ink);background:var(--tint);}
 .lang-chip{background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.5px;}
-.lang-chip:hover,.lang-chip.active{border-color:var(--accent2);color:var(--accent2);background:var(--tint);}
+.lang-chip:hover,.lang-chip.active{border-color:var(--navy-ink);color:var(--navy-ink);background:var(--tint);}
 /* ── SEARCH ── */
 .search-wrap{position:relative;display:flex;align-items:center;margin-bottom:12px;}
 .search-icon{position:absolute;left:12px;font-size:13px;opacity:.6;pointer-events:none;}
-.search-box{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:10px 34px 10px 34px;border-radius:22px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;}
-.search-box:focus{border-color:var(--accent);}
+.search-box{width:100%;background:var(--card);border:1px solid var(--border);color:var(--ink);padding:10px 34px 10px 34px;border-radius:22px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;}
+.search-box:focus{border-color:var(--navy-ink);}
 .search-box::-webkit-search-cancel-button{display:none;}
 .search-clear{position:absolute;right:10px;background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 6px;line-height:1;}
-.search-clear:hover{color:var(--text);}
+.search-clear:hover{color:var(--ink);}
 .search-summary{font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}/* ── SOCIAL: reactions + comments (mobile-first, rule 11) ── */
 .reaction-row{display:flex;gap:6px;flex:0 1 auto;min-width:0;}
 .reaction{display:inline-flex;align-items:center;gap:4px;background:transparent;border:1px solid var(--border);border-radius:16px;padding:3px 9px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);transition:border-color .15s,background .15s;min-height:28px;}
-.reaction:hover{border-color:var(--accent2);}
-.reaction.on{border-color:var(--accent);background:var(--tint);color:var(--accent);}
-.reaction-n{font-family:'DM Mono',monospace;font-size:11px;}
+.reaction:hover{border-color:var(--navy-ink);}
+.reaction.on{border-color:var(--navy-ink);background:var(--tint);color:var(--navy-ink);}
+.reaction-n{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:700;font-size:12px;}
 /* Pushed to the right, and never stretched: it is a button, not a bar. */
-.comment-toggle{margin-left:auto;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:3px 11px;white-space:nowrap;min-height:28px;}
-.comment-toggle:hover{color:var(--accent);border-color:var(--accent);}
-.comment-toggle.open{color:var(--accent);border-color:var(--accent);background:var(--tint);}
-.comments-body{display:none;border-top:1px solid var(--border);padding:12px 14px 14px;background:var(--bg2);}
+.comment-toggle{margin-left:auto;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;background:var(--field);border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:3px 11px;white-space:nowrap;min-height:28px;}
+.comment-toggle:hover{color:var(--navy-ink);border-color:var(--navy-ink);}
+.comment-toggle.open{color:var(--navy-ink);border-color:var(--navy-ink);background:var(--tint);}
+.comments-body{display:none;border-top:1px solid var(--border);padding:12px 14px 14px;background:var(--card);}
 .comment-empty{font-size:12px;color:var(--muted);text-align:center;padding:10px 0 14px;}
 .comment-showall{display:block;width:100%;background:transparent;border:1px dashed var(--border);color:var(--muted);font-size:11px;padding:7px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:10px;}
-.comment-showall:hover{color:var(--accent);border-color:var(--accent);}
+.comment-showall:hover{color:var(--navy-ink);border-color:var(--navy-ink);}
 .comment-item{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);}
 .comment-item:last-of-type{border-bottom:none;}
-.comment-av{width:18px;height:18px;border-radius:5px;background:var(--bg3);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);flex-shrink:0;}
+.comment-av{width:18px;height:18px;border-radius:5px;background:var(--field);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);flex-shrink:0;}
 .comment-body-wrap{flex:1;min-width:0;}
-.comment-author{font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;}
+.comment-author{font-size:12px;font-weight:600;color:var(--ink);display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;}
 .comment-time{font-size:10px;color:var(--muted);font-weight:400;}
-.comment-text{font-size:13px;line-height:1.55;color:var(--text);margin-top:2px;overflow-wrap:anywhere;}
+.comment-text{font-size:13px;line-height:1.55;color:var(--ink);margin-top:2px;overflow-wrap:anywhere;}
 .comment-meta{display:flex;gap:12px;margin-top:4px;}
 .comment-link{background:transparent;border:none;padding:0;font-size:10px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;}
-.comment-link:hover{color:var(--red);}
+.comment-link:hover{color:var(--loss-ink);}
 .comment-report{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px;}
-.report-reason{font-size:10px;padding:4px 9px;border-radius:14px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;}
-.report-reason:hover{border-color:var(--accent);color:var(--accent);}
+.report-reason{font-size:10px;padding:4px 9px;border-radius:14px;border:1px solid var(--border);background:var(--field);color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.report-reason:hover{border-color:var(--navy-ink);color:var(--navy-ink);}
 .comment-compose{margin-top:10px;}
 /* 16px keeps iOS Safari from zooming the page when the field takes focus. */
-.comment-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:10px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;resize:none;line-height:1.5;}
-.comment-input:focus{border-color:var(--accent);}
+.comment-input{width:100%;background:var(--field);border:1px solid var(--border);color:var(--ink);padding:9px 11px;border-radius:10px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;resize:none;line-height:1.5;}
+.comment-input:focus{border-color:var(--navy-ink);}
 .comment-compose-foot{display:flex;align-items:center;gap:10px;margin-top:7px;}
-.comment-counter{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
+.comment-counter{font-size:11px;color:var(--muted);font-family:var(--font-num);font-variant-numeric:tabular-nums;}
 .comment-hint{font-size:10px;color:var(--muted);flex:1;}
 .comment-post-btn{background:var(--navy);color:var(--on-navy);border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;min-height:34px;}
 .comment-post-btn:disabled{opacity:.6;cursor:default;}
-.comment-error{font-size:11px;color:var(--red);margin-top:7px;line-height:1.5;}
+.comment-error{font-size:11px;color:var(--loss-ink);margin-top:7px;line-height:1.5;}
 .comment-signin{margin-top:10px;text-align:center;}
 @media (min-width: 900px){
   .comment-hint{display:inline;}
-}.report-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:9px;}
-.report-head{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--yellow);display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;}
-.report-quote{font-size:13px;line-height:1.55;color:var(--text);overflow-wrap:anywhere;}
+}.report-card{background:var(--field);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:9px;}
+.report-head{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink);display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;}
+.report-quote{font-size:13px;line-height:1.55;color:var(--ink);overflow-wrap:anywhere;}
 .report-detail{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5;}
 .report-actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
 .report-btn{font-size:11px;padding:6px 12px;border-radius:16px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;min-height:30px;}
-.report-btn:hover{border-color:var(--accent);color:var(--accent);}
-.report-btn.danger:hover{border-color:var(--red);color:var(--red);}.comment-compose{margin-top:12px;display:flex;gap:9px;align-items:flex-start;}
-.compose-av{width:28px;height:28px;border-radius:50%;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;}
-.compose-box{flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:8px 10px;transition:border-color .15s;}
-.compose-box:focus-within{border-color:var(--accent);}
+.report-btn:hover{border-color:var(--navy-ink);color:var(--navy-ink);}
+.report-btn.danger:hover{border-color:var(--loss-ink);color:var(--loss-ink);}.comment-compose{margin-top:12px;display:flex;gap:9px;align-items:flex-start;}
+.compose-av{width:28px;height:28px;border-radius:50%;background:var(--tint);color:var(--navy-ink);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;}
+.compose-box{flex:1;min-width:0;background:var(--field);border:1px solid var(--border);border-radius:14px;padding:8px 10px;transition:border-color .15s;}
+.compose-box:focus-within{border-color:var(--navy-ink);}
 .compose-box .comment-input{background:transparent;border:none;padding:0;border-radius:0;}
 .compose-box .comment-input:focus{border:none;}
 /* ── LIKES ──
@@ -411,35 +408,35 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
    comment thread and in the chat. 28px minimum height: it is a thumb target,
    not a text link, even though its neighbours are. */
 .like-btn{display:inline-flex;align-items:center;gap:4px;background:transparent;border:none;padding:0 2px;margin:0;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:10px;color:var(--muted);min-height:28px;line-height:1;}
-.like-btn:hover{color:var(--accent);}
-.like-btn.liked{color:var(--accent);}
+.like-btn:hover{color:var(--navy-ink);}
+.like-btn.liked{color:var(--navy-ink);}
 .like-thumb{font-size:13px;filter:grayscale(1);opacity:.55;transition:filter .15s,opacity .15s,transform .15s;}
 .like-btn.liked .like-thumb{filter:none;opacity:1;transform:scale(1.12);}
-.like-count{font-family:'DM Mono',monospace;min-width:6px;}
+.like-count{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:700;min-width:6px;}
 /* Toast. Above the bottom tab bar on mobile (z-index 120 there), and above the
    chat overlay (520) so a failure inside a room is still visible. */
-.sm-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(74px + env(safe-area-inset-bottom));z-index:900;max-width:min(440px,calc(100vw - 32px));background:var(--bg2);border:1px solid var(--border-strong);color:var(--text);padding:12px 18px;border-radius:12px;font-size:13px;line-height:1.5;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
+.sm-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(74px + env(safe-area-inset-bottom));z-index:900;max-width:min(440px,calc(100vw - 32px));background:var(--card);border:1px solid var(--border-strong);color:var(--ink);padding:12px 18px;border-radius:12px;font-size:13px;line-height:1.5;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;}
 .sm-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.sm-toast.error{border-color:var(--red);}
+.sm-toast.error{border-color:var(--loss-ink);}
 @media (min-width: 900px){
   .sm-toast{bottom:28px;}
 }
 /* Load more, and the end of the window. */
 .feed-more{display:flex;justify-content:center;padding:18px 0 28px;}
 .feed-more-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:11px 26px;border-radius:22px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;min-height:42px;transition:border-color .15s,color .15s;}
-.feed-more-btn:hover{border-color:var(--accent);color:var(--accent);}
+.feed-more-btn:hover{border-color:var(--navy-ink);color:var(--navy-ink);}
 .feed-more-btn:disabled{opacity:.6;cursor:default;}
 .feed-end{text-align:center;padding:24px 20px 32px;color:var(--muted);font-size:12px;line-height:1.7;}
 /* The two halves of the one-screen picker. */
 .picker-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
-.picker-change{background:transparent;border:none;color:var(--accent);font-size:11px;letter-spacing:0;text-transform:none;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:4px 2px;min-height:28px;}
+.picker-change{background:transparent;border:none;color:var(--navy-ink);font-size:11px;letter-spacing:0;text-transform:none;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:4px 2px;min-height:28px;}
 /* The chosen club: marked by the navy line, on the card (muted text on
    --tint is 4.26:1 in light, so the tint stays for chips without muted text). */
-.picker-current{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:10px 12px;}
+.picker-current{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--navy-ink);border-radius:10px;padding:10px 12px;}
 /* The sort row. Not shown until a thread has more than one comment. */
 .csort{display:flex;gap:6px;margin:2px 0 8px;}
 .csort-btn{font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;min-height:26px;}
-.csort-btn.active{border-color:var(--accent);color:var(--accent);background:var(--tint);}
+.csort-btn.active{border-color:var(--navy-ink);color:var(--navy-ink);background:var(--tint);}
 /* ── CLUB PICKER ──
    Two columns at 375px, three from 900px. Section headers span every column,
    so "Popular" and each league read as a band across the list rather than as a
@@ -450,25 +447,25 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 /* min-width:0 is load-bearing: a grid item defaults to min-width:auto, so
    "Manchester United" would refuse to shrink below its own width and push the
    column past the container — the whole picker scrolled sideways at 375px. */
-.picker-row{display:flex;align-items:center;gap:8px;min-width:0;min-height:40px;padding:7px 9px;border-radius:8px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);transition:border-color .15s,background .15s;}
-.picker-row:hover{border-color:var(--accent2);}
-.picker-row.is-main{background:var(--tint);border-color:var(--accent);}
-.picker-row.is-following{background:var(--tint);border-color:var(--accent2);}
+.picker-row{display:flex;align-items:center;gap:8px;min-width:0;min-height:40px;padding:7px 9px;border-radius:8px;cursor:pointer;background:var(--field);border:1px solid var(--border);transition:border-color .15s,background .15s;}
+.picker-row:hover{border-color:var(--navy-ink);}
+.picker-row.is-main{background:var(--tint);border-color:var(--navy-ink);}
+.picker-row.is-following{background:var(--tint);border-color:var(--navy-ink);}
 .picker-row.is-locked{cursor:default;}
-.picker-row.is-locked:hover{border-color:var(--accent);}
-.picker-name{flex:1;min-width:0;font-size:11px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.picker-row.is-locked:hover{border-color:var(--navy-ink);}
+.picker-name{flex:1;min-width:0;font-size:11px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .picker-badge{font-size:9px;font-weight:700;flex-shrink:0;}
-.picker-badge.g{color:var(--accent);}
-.picker-badge.b{color:var(--accent2);}
+.picker-badge.g{color:var(--navy-ink);}
+.picker-badge.b{color:var(--navy-ink);}
 .picker-empty{grid-column:1/-1;font-size:11px;color:var(--muted);padding:10px 0;}
 /* Sticky search: the list is 46vh of scrolling and the box must not leave with
    it, or filtering 146 clubs means scrolling back up to retype. */
-.picker-search-wrap{position:sticky;top:0;z-index:2;background:var(--bg2);padding-bottom:8px;}
+.picker-search-wrap{position:sticky;top:0;z-index:2;background:var(--card);padding-bottom:8px;}
 /* .club-search had no rule at all — the onboarding search box was rendering as
    a browser-default input next to the modal's styled one. 16px on the font
    size: anything smaller makes iOS Safari zoom the page on focus. */
-.club-search{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
-.club-search:focus{border-color:var(--accent);}
+.club-search{width:100%;background:var(--field);border:1px solid var(--border);color:var(--ink);padding:9px 12px;border-radius:8px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+.club-search:focus{border-color:var(--navy-ink);}
 @media (min-width: 900px){
   .club-search{font-size:13px;}
 }
@@ -482,24 +479,24 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
    inset:0 rather than height:100vh, deliberately: on iOS Safari 100vh is the
    height WITHOUT the browser chrome, which hides the composer behind the
    address bar. Mobile-first; the room is capped and centred on desktop. */
-.chat-head{display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;}
-.chat-back{background:transparent;border:none;color:var(--text);font-size:22px;line-height:1;cursor:pointer;padding:4px 6px;flex-shrink:0;min-width:36px;min-height:36px;}
+.chat-head{display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--card);flex-shrink:0;}
+.chat-back{background:transparent;border:none;color:var(--ink);font-size:22px;line-height:1;cursor:pointer;padding:4px 6px;flex-shrink:0;min-width:36px;min-height:36px;}
 .chat-head-crest{flex-shrink:0;display:flex;align-items:center;}
 .chat-title{font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:20px;letter-spacing:.5px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .chat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
 .chat-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 4px;}
-.chat-foot{flex-shrink:0;border-top:1px solid var(--border);background:var(--bg2);padding:9px 14px calc(9px + env(safe-area-inset-bottom));}
+.chat-foot{flex-shrink:0;border-top:1px solid var(--border);background:var(--card);padding:9px 14px calc(9px + env(safe-area-inset-bottom));}
 .chat-msg{display:flex;gap:9px;padding:7px 0;}
 .chat-msg-body{flex:1;min-width:0;}
 .chat-msg-author{font-size:12px;font-weight:600;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;}
 .chat-msg-text{font-size:14px;line-height:1.5;margin-top:2px;overflow-wrap:anywhere;}
-.chat-pinned{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px;}
+.chat-pinned{background:var(--field);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px;}
 .chat-pinned .chat-msg-text{color:var(--muted);font-size:13px;}
-.chat-system-name{color:var(--accent);}
+.chat-system-name{color:var(--navy-ink);}
 .chat-empty{text-align:center;color:var(--muted);font-size:13px;padding:30px 16px;line-height:1.6;}
 .chat-follow-gate{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
-.chat-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text);}
-.chat-card:hover{border-color:var(--accent);}
+.chat-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--field);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--ink);}
+.chat-card:hover{border-color:var(--navy-ink);}
 .chat-card-last{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 @media (min-width: 900px){
   .chat-head,.chat-foot{padding-left:calc(50vw - 380px);padding-right:calc(50vw - 380px);}
@@ -588,8 +585,8 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 }
 /* Delete-account sheet. */
 .del-copy p{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:8px;}
-.del-copy strong{color:var(--text);}
-.del-copy a{color:var(--accent);cursor:pointer;}
+.del-copy strong{color:var(--ink);}
+.del-copy a{color:var(--navy-ink);cursor:pointer;}
 .del-label{display:block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:12px 0 5px;}
 .del-go{min-height:44px;font-size:13px;font-weight:700;}
 .del-go:disabled{opacity:.45;cursor:not-allowed;}
@@ -628,7 +625,7 @@ select,input[type=text],input[type=number],input[type=password],input[type=email
 /* Footer: Privacy · Terms · Contact, on every page. */
 .sm-foot{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 26px;border-top:1px solid var(--border);}
 .sm-foot a{color:var(--muted);text-decoration:none;padding:6px;}
-.sm-foot a:hover{color:var(--text);}
+.sm-foot a:hover{color:var(--ink);}
 /* ── SCOUT GAME (Day 4) ── mobile-first; every touch target is 44px or more. */
 .sg-page{padding:18px 16px 24px;max-width:760px;margin:0 auto;}
 /* Room for the save bar under everything, the footer included: the bar sits
@@ -639,24 +636,24 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--border);margin:0 -16px 14px;padding:0 16px;scrollbar-width:none;}
 .sg-tabs::-webkit-scrollbar{display:none;}
 .sg-tab{flex:0 0 auto;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:0 12px;min-height:44px;cursor:pointer;white-space:nowrap;}
-.sg-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.sg-tab.active{color:var(--navy-ink);border-bottom-color:var(--navy-ink);}
 .sg-chips{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 14px;padding:0 16px 2px;scrollbar-width:none;}
 .sg-chips::-webkit-scrollbar{display:none;}
 .sg-chips-tight{margin:0;padding:0;flex:1;min-width:0;}
-.sg-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
-.sg-chip.active{border-color:var(--accent);color:var(--accent);background:var(--tint);}
+.sg-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.sg-chip.active{border-color:var(--navy-ink);color:var(--navy-ink);background:var(--tint);}
 .sg-chip-tag{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-.sg-saved{font-size:12px;color:var(--accent);margin-top:6px;}
+.sg-saved{font-size:12px;color:var(--navy-ink);margin-top:6px;}
 .sg-section{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:16px 0 8px;}
 .sg-note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:6px;}
 .sg-more{text-align:center;padding:12px 0;}
 .sg-empty{font-size:13px;color:var(--muted);text-align:center;padding:28px 12px;line-height:1.6;}
 .sg-slots{display:flex;flex-direction:column;gap:6px;}
-.sg-slot{display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 8px 6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;}
-.sg-slot.is-captain{border-color:var(--accent);}
+.sg-slot{display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 8px 6px 10px;background:var(--card);border:1px solid var(--border);border-radius:10px;}
+.sg-slot.is-captain{border-color:var(--navy-ink);}
 .sg-slot-empty{width:100%;justify-content:flex-start;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;border-style:dashed;cursor:pointer;text-align:left;}
-.sg-slot-empty:hover{border-color:var(--accent);color:var(--text);}
-.sg-slot-pos{flex:0 0 52px;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--accent2);text-transform:uppercase;}
+.sg-slot-empty:hover{border-color:var(--navy-ink);color:var(--ink);}
+.sg-slot-pos{flex:0 0 52px;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--navy-ink);text-transform:uppercase;}
 .sg-slot-main{flex:1;min-width:0;}
 .sg-slot-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sg-slot-meta{font-size:11px;color:var(--muted);margin-top:1px;}
@@ -664,61 +661,61 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-cap{padding:0 10px;}
 .sg-cap.on{background:var(--navy);border-color:var(--navy);color:var(--gold);}
 .sg-x{border:none;font-size:14px;}
-.sg-add{font-size:20px;color:var(--accent);border-color:var(--border-strong);}
+.sg-add{font-size:20px;color:var(--navy-ink);border-color:var(--border-strong);}
 .sg-add.on{background:var(--navy);color:var(--on-navy);border-color:var(--navy);font-size:16px;}
-.sg-photo{border-radius:50%;object-fit:cover;background:var(--bg3);flex-shrink:0;}
+.sg-photo{border-radius:50%;object-fit:cover;background:var(--field);flex-shrink:0;}
 .sg-photo-init{display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--border);}
 /* 16px: anything smaller makes iOS Safari zoom the page on focus. */
-.sg-search{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:0 14px;min-height:44px;border-radius:22px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:8px;}
-.sg-search:focus{border-color:var(--accent);}
+.sg-search{width:100%;background:var(--card);border:1px solid var(--border);color:var(--ink);padding:0 14px;min-height:44px;border-radius:22px;font-size:16px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:8px;}
+.sg-search:focus{border-color:var(--navy-ink);}
 .sg-filter-row{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
 .sg-club{min-height:44px;font-size:16px;border-radius:10px;}
 .sg-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
-.sg-row.on .sg-row-name{color:var(--accent);}
+.sg-row.on .sg-row-name{color:var(--navy-ink);}
 .sg-row-main{flex:1;min-width:0;}
 .sg-row-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sg-row-meta{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);margin-top:2px;min-width:0;white-space:nowrap;overflow:hidden;}
-.sg-pos{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--accent2);}
-.sg-row-level{font-size:11px;color:var(--text);margin-top:4px;}
+.sg-pos{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--navy-ink);}
+.sg-row-level{font-size:11px;color:var(--ink);margin-top:4px;}
 .sg-row-stats{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5;}
 .sg-lm{white-space:nowrap;}
-.sg-lm.ok{color:var(--accent);}
-.sg-lm.warn{color:var(--yellow);}
+.sg-lm.ok{color:var(--navy-ink);}
+.sg-lm.warn{color:var(--ink);}
 .sg-submit{position:fixed;left:0;right:0;bottom:calc(52px + env(safe-area-inset-bottom));z-index:110;align-items:center;gap:12px;padding:10px 16px;background:var(--card);border-top:1px solid var(--border);}
 .sg-bar-text{flex:1;min-width:0;font-size:12px;color:var(--muted);}
-.sg-bar-text b{color:var(--text);font-family:var(--font-num);font-size:15px;}
+.sg-bar-text b{color:var(--ink);font-family:var(--font-num);font-size:15px;}
 /* Wraps between groups, never inside one: "Salvar escalação" is wider than
    "Save picks", and at 375px the last group used to be cut to "MEI/ATA 0…". */
 .sg-bar-pos{font-size:11px;margin-top:3px;font-family:var(--font-num);font-variant-numeric:tabular-nums;line-height:1.5;}
 .sg-bar-pos span{white-space:nowrap;}
-.sg-bar-pos .full{color:var(--yellow);}
+.sg-bar-pos .full{color:var(--ink);}
 /* A player who cannot be added now: name muted, add button disabled; the
    text stays >= 4.5:1 (it used to be faded with opacity). */
 .sg-row.blocked .sg-row-name{color:var(--muted);}
 .sg-row.blocked .sg-photo{filter:grayscale(1);}
-.sg-row-fx{font-size:11px;color:var(--text);margin-top:3px;}
-.sg-row-fx.none,.sg-fx-none{color:var(--yellow);}
+.sg-row-fx{font-size:11px;color:var(--ink);margin-top:3px;}
+.sg-row-fx.none,.sg-fx-none{color:var(--ink);}
 .sg-add:disabled{cursor:not-allowed;color:var(--muted);border-color:var(--border);}
 .sg-save{flex:0 0 auto;min-height:44px;padding:0 20px;border-radius:22px;border:none;background:var(--navy);color:var(--on-navy);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
 .sg-save:disabled{opacity:.45;cursor:default;}
 /* Lift the toast above the save bar while the bar is on screen. */
 body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(safe-area-inset-bottom));}
-.sg-total{display:flex;gap:28px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.sg-total{display:flex;gap:28px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
 .sg-total-n{font-family:var(--font-num);font-weight:700;font-size:32px;line-height:1;}
 .sg-total-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
-.sg-pick{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 12px 8px 10px;margin-bottom:6px;cursor:pointer;}
-.sg-pick.is-captain{border-color:var(--accent);}
+.sg-pick{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 12px 8px 10px;margin-bottom:6px;cursor:pointer;}
+.sg-pick.is-captain{border-color:var(--navy-ink);}
 .sg-pick-top{display:flex;align-items:center;gap:10px;min-height:36px;}
 .sg-pick-pts{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:20px;font-weight:700;}
 .sg-brk{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
 .sg-pick.open .sg-brk{display:block;}
 .sg-brk-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:2px 0;}
-.sg-brk-row.b{color:var(--text);margin-top:3px;}
-.sg-tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--tint);color:var(--accent);vertical-align:middle;}
-.sg-tag.b{background:var(--tint);color:var(--accent2);}
+.sg-brk-row.b{color:var(--ink);margin-top:3px;}
+.sg-tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--tint);color:var(--navy-ink);vertical-align:middle;}
+.sg-tag.b{background:var(--tint);color:var(--navy-ink);}
 .sg-rank-title{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-bottom:8px;}
 .sg-rank-row{display:flex;align-items:center;gap:8px;min-height:44px;border-bottom:1px solid var(--border);font-size:13px;}
-.sg-rank-row.me{color:var(--accent);}
+.sg-rank-row.me{color:var(--navy-ink);}
 .sg-rank-row[role="button"]{cursor:pointer;}
 .sg-rank-row[role="button"]:hover{background:var(--field);}
 .sg-rank-row[role="button"]:focus-visible{outline:2px solid var(--navy-ink);outline-offset:-2px;}
@@ -868,7 +865,7 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .mo-ev svg{width:13px;height:13px;}
 .mo-card{display:inline-flex;align-items:center;justify-content:center;width:12px;height:16px;border-radius:2px;border:1.5px solid var(--ink);font-size:9px;font-weight:700;line-height:1;margin-left:5px;vertical-align:middle;color:var(--ink);}
 /* "Pick your club" nudge on Home (Day 7) */
-.club-nudge{align-items:center;justify-content:space-between;gap:12px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:6px 6px 6px 14px;margin:0 0 12px;font-size:13px;line-height:1.4;color:var(--text);}
+.club-nudge{align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--border);border-left:3px solid var(--navy-ink);border-radius:10px;padding:6px 6px 6px 14px;margin:0 0 12px;font-size:13px;line-height:1.4;color:var(--ink);}
 .club-nudge-btn{flex-shrink:0;min-height:44px;padding:0 18px;border-radius:22px;border:none;background:var(--navy);color:var(--on-navy);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
 /* ── HOME BAND (2a, spec v1.2 §4) ── mobile first. Text on the band is
    --on-navy, the countdown --gold, LIVE --live-on-band: the three pairs
@@ -991,7 +988,7 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .ht-pts{width:34px;text-align:right;}
 /* Offline empty state (Day 6) */
 .offline-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.7;}
-.offline-empty-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);margin-bottom:4px;}
+.offline-empty-t{font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:22px;letter-spacing:0.5px;color:var(--ink);margin-bottom:4px;}
 /* Private leagues (025) */
 .sg-leagues{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 12px;padding:0 16px 2px;scrollbar-width:none;}
 .sg-leagues::-webkit-scrollbar{display:none;}
@@ -999,14 +996,14 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .gl-head{margin-bottom:10px;}
 .gl-name{font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:24px;letter-spacing:.5px;line-height:1.1;overflow-wrap:anywhere;}
 .gl-meta{font-size:11px;color:var(--muted);line-height:1.6;margin-top:2px;}
-.gl-share{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:12px 0;}
-.gl-code{font-family:'DM Mono',monospace;font-size:22px;letter-spacing:3px;color:var(--accent);}
+.gl-share{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:12px 0;}
+.gl-code{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:700;font-size:24px;letter-spacing:3px;color:var(--navy-ink);}
 .gl-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
 .gl-x{flex:0 0 auto;min-width:44px;min-height:44px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;}
 .gl-x:hover{color:var(--loss-ink);}
 .gl-list-row{cursor:pointer;}
-.gl-field{display:block;width:100%;min-height:44px;font-size:16px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:0 12px;font-family:'DM Sans',sans-serif;margin-bottom:10px;outline:none;}
-.gl-field:focus{border-color:var(--accent);}
+.gl-field{display:block;width:100%;min-height:44px;font-size:16px;background:var(--field);border:1px solid var(--border);color:var(--ink);border-radius:8px;padding:0 12px;font-family:'DM Sans',sans-serif;margin-bottom:10px;outline:none;}
+.gl-field:focus{border-color:var(--navy-ink);}
 .gl-label{display:block;text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:0 0 6px;}
 .gl-msg{font-size:12px;line-height:1.6;margin:0 0 12px;color:var(--muted);}
 .gl-msg.err{color:var(--loss-ink);}
@@ -1018,12 +1015,12 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-history-head{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;}
 .sg-history-head .sg-total-n{font-size:26px;}
 .sg-history-head .sg-total-l{text-transform:none;letter-spacing:0;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.sg-history-row{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;}
+.sg-history-row{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;}
 .sg-history-top{display:flex;align-items:center;gap:10px;min-height:36px;}
-.sg-history-best{font-size:11px;color:var(--text);margin-top:4px;}
-.sg-history-cta{min-height:44px;padding:0 20px;border-radius:22px;border:1px solid var(--accent);background:var(--tint);color:var(--accent);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.sg-history-best{font-size:11px;color:var(--ink);margin-top:4px;}
+.sg-history-cta{min-height:44px;padding:0 20px;border-radius:22px;border:1px solid var(--navy-ink);background:var(--tint);color:var(--navy-ink);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
 @media (min-width: 900px){ .sg-history-head{grid-template-columns:repeat(4,1fr);} }
-.sg-badge{font-size:11px;font-weight:600;padding:5px 10px;border-radius:14px;border:1px solid var(--border);color:var(--accent);background:var(--tint);}
+.sg-badge{font-size:11px;font-weight:600;padding:5px 10px;border-radius:14px;border:1px solid var(--border);color:var(--navy-ink);background:var(--tint);}
 /* ── MATCH PANEL (Day 4) ── */
 .match-tap{cursor:pointer;}
 .match-tap:hover{border-color:var(--border-strong)!important;}
@@ -1035,7 +1032,7 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .mo-team span{overflow-wrap:anywhere;}
 .mo-goals-n{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:44px;font-weight:700;line-height:1;white-space:nowrap;color:var(--on-navy);}
 .mo-status{font-size:11px;font-weight:700;letter-spacing:1px;text-align:center;color:var(--muted);}
-.mo-status.live{color:var(--accent);}
+.mo-status.live{color:var(--navy-ink);}
 .mo-section{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:22px 0 8px;display:flex;justify-content:space-between;gap:8px;}
 .mo-section span{letter-spacing:0;text-transform:none;font-weight:500;}
 .mo-goal{display:flex;gap:8px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);}
@@ -1135,11 +1132,11 @@ if(!_cu){
     <a href="/about.html" class="sm-about" data-i18n="nav.about">About</a>
     <!-- Logged-in: name + avatar + sign out. Toggled by renderAuthUi(). -->
     <div id="nav-user" style="display:none;align-items:center;gap:10px;">
-      <div class="user-badge" onclick="showPage('profile')" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div class="user-badge" onclick="showPage('profile')" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--navy-ink)'" onmouseout="this.style.borderColor='var(--border)'">
         <span class="live-dot"></span>
         <span id="nav-name" style="font-size:12px;font-weight:500"></span>
       </div>
-      <div id="nav-avatar" onclick="showPage('profile')" style="width:32px;height:32px;border-radius:50%;background:var(--tint);border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s;flex-shrink:0;" onmouseover="this.style.borderColor='var(--navy-hover)'" onmouseout="this.style.borderColor='var(--accent)'">?</div>
+      <div id="nav-avatar" onclick="showPage('profile')" style="width:32px;height:32px;border-radius:50%;background:var(--tint);border:1.5px solid var(--navy-ink);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--navy-ink);cursor:pointer;transition:all .2s;flex-shrink:0;" onmouseover="this.style.borderColor='var(--navy-hover)'" onmouseout="this.style.borderColor='var(--navy-ink)'">?</div>
       <button class="logout-btn" onclick="logout()" data-i18n="nav.signout">Sign out</button>
     </div>
     <!-- Guest: Profile & settings (language, theme), then sign in. -->
@@ -1741,8 +1738,8 @@ async function confirmDeleteAccount(){
 <!-- ONBOARDING — shown once, to a signed-in user with no club. display:flex is
      set only in JS (rule 6). Both steps are skippable. -->
 <div id="onboard-modal" style="display:none;position:fixed;inset:0;background:var(--scrim);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:26px;width:min(560px,92vw);max-height:88vh;overflow-y:auto;">
-    <div id="onboard-title" style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:4px;" data-i18n="onb.title">Pick your clubs</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;width:min(560px,92vw);max-height:88vh;overflow-y:auto;">
+    <div id="onboard-title" style="font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:24px;letter-spacing:0.5px;margin-bottom:4px;" data-i18n="onb.title">Pick your clubs</div>
     <div id="onboard-sub" style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;"></div>
     <div id="onboard-body"></div>
     <div style="display:flex;gap:10px;align-items:center;margin-top:18px;">
@@ -1755,10 +1752,10 @@ async function confirmDeleteAccount(){
 </div>
 
 <div id="team-modal" style="display:none;position:fixed;inset:0;background:var(--scrim);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:min(520px,92vw);max-height:85vh;overflow-y:auto;">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:min(520px,92vw);max-height:85vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;" data-i18n="team.title">Your Club</div>
-      <button id="modal-close-btn" onclick="skipTeamModal()" aria-label="Close" data-i18n-aria="team.close" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:4px;">✕</button>
+      <div style="font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:24px;letter-spacing:0.5px;" data-i18n="team.title">Your Club</div>
+      <button id="modal-close-btn" onclick="skipTeamModal()" aria-label="Close" data-i18n-aria="team.close" style="display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;background:transparent;border:none;color:var(--muted);cursor:pointer;padding:0;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:20px;" data-i18n="team.sub">Pick your main club and follow others to personalise your feed.</div>
 
@@ -1775,7 +1772,7 @@ async function confirmDeleteAccount(){
     <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;" data-i18n="pick.also">Also following</div>
     <div id="modal-following-list" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;min-height:32px;"></div>
 
-    <button id="save-club-btn" onclick="saveTeamSelection()" style="width:100%;background:var(--navy);color:var(--on-navy);border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;" data-i18n="team.save">SAVE MY CLUB</button>
+    <button id="save-club-btn" onclick="saveTeamSelection()" style="width:100%;background:var(--navy);color:var(--on-navy);border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-num);text-transform:uppercase;letter-spacing:0.5px;font-size:16px;" data-i18n="team.save">SAVE MY CLUB</button>
     <button onclick="skipTeamModal()" style="width:100%;background:transparent;border:none;color:var(--muted);padding:10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;" data-i18n="team.skip">Skip for now — I'll set this later</button>
   </div>
 </div>
@@ -1784,9 +1781,9 @@ async function confirmDeleteAccount(){
      display:none here, display:flex only in JS (rule 6). The header and
      composer are fixed and the message list is the only scrolling part, so the
      composer stays reachable when the iOS keyboard opens. -->
-<div id="chat-overlay" style="display:none;position:fixed;inset:0;z-index:520;background:var(--bg);flex-direction:column;">
+<div id="chat-overlay" style="display:none;position:fixed;inset:0;z-index:520;background:var(--ground);flex-direction:column;">
   <div class="chat-head">
-    <button class="chat-back" onclick="closeChat()" aria-label="Close the room" data-i18n-aria="chat.close">←</button>
+    <button class="chat-back" onclick="closeChat()" aria-label="Close the room" data-i18n-aria="chat.close"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 6l-6 6l6 6"/></svg></button>
     <div id="chat-crest" class="chat-head-crest"></div>
     <div style="flex:1;min-width:0;">
       <div class="chat-title" id="chat-title" data-i18n="rooms.title">Room</div>
@@ -1799,9 +1796,9 @@ async function confirmDeleteAccount(){
 
 <!-- MATCH PANEL — one fixture, from rpc match_detail (019). Full screen like the
      chat. display:none here, display:flex only in JS (rule 6). -->
-<div id="match-overlay" style="display:none;position:fixed;inset:0;z-index:530;background:var(--bg);flex-direction:column;">
+<div id="match-overlay" style="display:none;position:fixed;inset:0;z-index:530;background:var(--ground);flex-direction:column;">
   <div class="chat-head">
-    <button class="chat-back" onclick="closeMatch()" aria-label="Close match" data-i18n-aria="mo.close">←</button>
+    <button class="chat-back" onclick="closeMatch()" aria-label="Close match" data-i18n-aria="mo.close"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 6l-6 6l6 6"/></svg></button>
     <div class="chat-title" id="mo-title" style="flex:1;min-width:0;" data-i18n="mo.title">Match</div>
   </div>
   <div class="mo-body" id="mo-body"></div>
@@ -1809,9 +1806,9 @@ async function confirmDeleteAccount(){
 
 <!-- ANYONE'S FIVE — a person's picks in a locked round, opened from a ranking
      name (sgOpenFive). display:none here, display:flex only in JS (rule 6). -->
-<div id="five-overlay" style="display:none;position:fixed;inset:0;z-index:531;background:var(--bg);flex-direction:column;">
+<div id="five-overlay" style="display:none;position:fixed;inset:0;z-index:531;background:var(--ground);flex-direction:column;">
   <div class="chat-head">
-    <button class="chat-back" onclick="closeFive()" aria-label="Close" data-i18n-aria="sg.five.close">←</button>
+    <button class="chat-back" onclick="closeFive()" aria-label="Close" data-i18n-aria="sg.five.close"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 6l-6 6l6 6"/></svg></button>
     <div class="chat-title" id="five-title" style="flex:1;min-width:0;" data-i18n="sg.yourFive">Five</div>
   </div>
   <div class="mo-body" id="five-body"></div>
@@ -2078,7 +2075,7 @@ function commentState(id){
 }
 
 // ── LIKES ────────────────────────────────────────────────────────────────
-// One 👍 per person, on a comment or a chat message. Separate from the news
+// One like per person, on a comment or a chat message. Separate from the news
 // reactions, which stay as they are: a reaction is how you feel about an
 // article, a like is agreement with a person.
 //
@@ -2460,7 +2457,7 @@ function updateCommentCounter(itemId){
   if(!input||!out)return;
   const n=input.value.length;
   out.textContent=n+'/500';
-  out.style.color=n>500?'var(--red)':'var(--muted)';
+  out.style.color=n>500?'var(--loss-ink)':'var(--muted)';
 }
 
 /** Soft delete. The row stays; it just stops being visible to anyone. */
@@ -2507,7 +2504,7 @@ async function sendReport(itemId,commentId,reason){
     await apiSend('POST','reports',
       [{target_type:'comment',target_id:commentId,reporter_id:myUserId(),reason:reason}]);
     logEvent('report','comment',commentId);
-    if(box)box.innerHTML='<div style="font-size:11px;color:var(--accent);">'+sanitize(t('cmt.reported'))+'</div>';
+    if(box)box.innerHTML='<div style="font-size:11px;color:var(--navy-ink);">'+sanitize(t('cmt.reported'))+'</div>';
   }catch(e){
     const msg=friendlyDbError(e.message);
     // The partial unique index means a second open report is a duplicate.
@@ -2628,16 +2625,18 @@ function renderFollowingChips(){
   const chip=(id,isMain)=>{
     const c = CLUB_DATA.get(id);
     if(!c)return '';
-    const col = isMain ? 'var(--accent)' : 'var(--accent2)';
+    const col = isMain ? 'var(--navy-ink)' : 'var(--navy-ink)';
     const bg  = isMain ? 'var(--tint)' : 'var(--tint)';
     const br  = isMain ? 'var(--border)'  : 'var(--border)';
     const clear = isMain ? 'clearMainClub()' : 'unfollowClub('+id+')';
-    return `<div style="display:flex;align-items:center;gap:5px;background:${bg};border:1px solid ${br};border-radius:20px;padding:3px 10px 3px 4px;font-size:11px;color:${col};">
-      ${clubCrestById(id,16)} ${sanitize(c.label)}${isMain?' <span style="font-size:9px;font-weight:700;">MAIN</span>':''}
-      <span onclick="event.stopPropagation();${clear}" title="Remove" style="cursor:pointer;color:var(--muted);margin-left:3px;font-size:12px;">✕</span>
+    // 4b-8: the remove control is a labelled button with a line icon (no
+    // cross glyph), in ink: muted text never sits on --tint.
+    return `<div style="display:flex;align-items:center;gap:5px;background:${bg};border:1px solid ${br};border-radius:20px;padding:3px 4px 3px 4px;font-size:11px;color:${col};">
+      ${clubCrestById(id,16)} ${sanitize(c.label)}${isMain?' <span style="font-size:9px;font-weight:700;text-transform:uppercase;">'+sanitize(t('clubs.main'))+'</span>':''}
+      <button type="button" onclick="event.stopPropagation();${clear}" aria-label="${sanitize(t('sg.remove')+' · '+c.label)}" style="display:inline-flex;align-items:center;justify-content:center;min-width:28px;min-height:28px;background:none;border:none;cursor:pointer;color:var(--ink);padding:0;">${Icons.svg('x',14)}</button>
     </div>`;
   };
-  // The main club gets an ✕ too — without it, the only club you cannot remove
+  // The main club gets a remove button too — without it, the only club you cannot remove
   // from here is the one you most likely picked by mistake.
   const chips = (mainClubId() ? [chip(mainClubId(),true)] : [])
     .concat(followedClubIds().map(id=>chip(id,false)));
@@ -2906,7 +2905,7 @@ function clubPickerHtml(opts){
     const cls='picker-row'+(isMain?' is-main':isFollowing?' is-following':'')
       +(locked?' is-locked':'');
     const badge=isMain?'<span class="picker-badge g">'+t('pick.badgeMain')+'</span>'
-      :isFollowing?'<span class="picker-badge b">✓</span>':'';
+      :isFollowing?'<span class="picker-badge b">'+Icons.svg('check',12)+'</span>':'';
     const click=locked?'':' onclick="'+handler+'('+c.id+')"';
     const title=t(locked?'pick.title.locked'
       :isMain?'pick.title.mainFollow'
@@ -4197,7 +4196,7 @@ function clubCrest(team,size){
   const px=size||24;
   const name=(team&&team.name)||'';
   const initials=name.split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,3);
-  const box='width:'+px+'px;height:'+px+'px;border-radius:6px;background:var(--bg3);'
+  const box='width:'+px+'px;height:'+px+'px;border-radius:6px;background:var(--field);'
     +'border:1px solid var(--border);flex-shrink:0;display:inline-flex;'
     +'align-items:center;justify-content:center;overflow:hidden;vertical-align:middle;';
   if(team&&team.logo_url){
@@ -4311,10 +4310,10 @@ function renderClubLangToggle(){
   el.innerHTML='<button onclick="toggleClubLangs()" role="switch" aria-checked="'+on+'" style="display:flex;align-items:center;gap:9px;min-height:44px;'
     +'background:transparent;border:none;padding:0;cursor:pointer;font-family:\'DM Sans\',sans-serif;text-align:left;">'
     +'<span style="width:34px;height:19px;border-radius:12px;flex-shrink:0;position:relative;transition:background .2s;'
-    +'background:'+(on?'var(--navy)':'var(--bg3)')+';border:1px solid '+(on?'var(--navy)':'var(--border-strong)')+';">'
+    +'background:'+(on?'var(--navy)':'var(--field)')+';border:1px solid '+(on?'var(--navy)':'var(--border-strong)')+';">'
     +'<span style="position:absolute;top:2px;left:'+(on?'17px':'2px')+';width:13px;height:13px;border-radius:50%;'
     +'background:'+(on?'var(--on-navy)':'var(--muted)')+';transition:left .2s;"></span></span>'
-    +'<span style="font-size:12px;color:'+(on?'var(--text)':'var(--muted)')+';line-height:1.5;">'
+    +'<span style="font-size:12px;color:'+(on?'var(--ink)':'var(--muted)')+';line-height:1.5;">'
     +sanitize(t('pref.clubLang'))+'</span></button>';
 }
 
@@ -4341,10 +4340,10 @@ async function renderRemindPref(){
     +'<button onclick="toggleRemind()" role="switch" aria-checked="'+on+'" style="display:flex;align-items:center;gap:10px;min-height:44px;'
     +'background:transparent;border:none;padding:0;cursor:pointer;font-family:\'DM Sans\',sans-serif;text-align:left;">'
     +'<span style="width:34px;height:19px;border-radius:12px;flex-shrink:0;position:relative;transition:background .2s;'
-    +'background:'+(on?'var(--navy)':'var(--bg3)')+';border:1px solid '+(on?'var(--navy)':'var(--border-strong)')+';">'
+    +'background:'+(on?'var(--navy)':'var(--field)')+';border:1px solid '+(on?'var(--navy)':'var(--border-strong)')+';">'
     +'<span style="position:absolute;top:2px;left:'+(on?'17px':'2px')+';width:13px;height:13px;border-radius:50%;'
     +'background:'+(on?'var(--on-navy)':'var(--muted)')+';transition:left .2s;"></span></span>'
-    +'<span style="font-size:12px;color:'+(on?'var(--text)':'var(--muted)')+';line-height:1.5;">'
+    +'<span style="font-size:12px;color:'+(on?'var(--ink)':'var(--muted)')+';line-height:1.5;">'
     +t(on?'pref.remind.on':'pref.remind.off')+'</span></button>';
   el.style.display='block';
 }
@@ -5113,7 +5112,7 @@ function chatMsgRow(m){
   const mine=Boolean(currentUser&&m.user_id&&m.user_id===myUserId());
   const canDelete=!system&&(mine||isAdmin());
   const av=system
-    ? '<span class="comment-av" style="color:var(--accent);">S</span>'
+    ? '<span class="comment-av" style="color:var(--navy-ink);">S</span>'
     : (p.main_club_id?clubCrestById(p.main_club_id,18)
       :'<span class="comment-av">'+sanitize(name.slice(0,1).toUpperCase())+'</span>');
   return '<div class="chat-msg'+(m.pinned?' chat-pinned':'')+'">'+av
@@ -5208,7 +5207,7 @@ function updateChatCounter(){
   if(!input||!out)return;
   const n=input.value.length;
   out.textContent=n+'/500';
-  out.style.color=n>500?'var(--red)':'var(--muted)';
+  out.style.color=n>500?'var(--loss-ink)':'var(--muted)';
 }
 
 function setChatError(text){
@@ -5293,7 +5292,7 @@ async function sendChatReport(messageId,reason){
       [{target_type:'group_message',target_id:messageId,
         reporter_id:myUserId(),reason:reason}]);
     logEvent('report','group_message',null);
-    if(box)box.innerHTML='<div style="font-size:11px;color:var(--accent);">'+sanitize(t('cmt.reported'))+'</div>';
+    if(box)box.innerHTML='<div style="font-size:11px;color:var(--navy-ink);">'+sanitize(t('cmt.reported'))+'</div>';
   }catch(e){
     const msg=friendlyDbError(e.message);
     if(box)box.innerHTML='<div style="font-size:11px;color:var(--muted);">'
@@ -6463,7 +6462,7 @@ function sgRenderSlots(){
       +'<div class="sg-slot-meta">'+(p.missing?t('sg.noLonger')
         :(sgFixtureLine(p)?'<span class="'+(sgNoMatch(p)?'sg-fx-none':'')+'">'+sanitize(sgFixtureLine(p))+'</span> ':'')+sgTierFor(p))+'</div></div>'
       +'<button class="sg-cap'+(cap?' on':'')+'" onclick="sgSetCaptain('+id+')" aria-pressed="'+cap+'" aria-label="'+sanitize(t(cap?'sg.captain':'sg.makeCaptain'))+'">'+sgCapDisc()+'</button>'
-      +'<button class="sg-x" onclick="sgToggle('+id+')" aria-label="'+sanitize(t('sg.remove'))+'">✕</button>'
+      +'<button class="sg-x" onclick="sgToggle('+id+')" aria-label="'+sanitize(t('sg.remove'))+'">'+Icons.svg('x',16)+'</button>'
       +'</div>');
   }
   el.innerHTML='<div class="sg-section">'+t('sg.yourFive')+'</div><div class="sg-slots">'+slots.join('')+'</div>'
@@ -6544,7 +6543,7 @@ function sgRenderList(){
       +'<div class="sg-row-stats">'+sanitize(sgStatLine(p))+' '+sgLastMatch(p)+'</div>'
       +'</div>'
       +'<button class="sg-add'+(on?' on':'')+'" onclick="sgToggle('+p.player_id+')"'
-      +(block?' disabled title="'+sanitize(block)+'" aria-label="'+sanitize(block)+'"':' aria-label="'+sanitize(t(on?'sg.remove':'sg.add'))+'"')+'>'+(on?'✓':'+')+'</button>'
+      +(block?' disabled title="'+sanitize(block)+'" aria-label="'+sanitize(block)+'"':' aria-label="'+sanitize(t(on?'sg.remove':'sg.add'))+'"')+'>'+(on?Icons.svg('check',16):'+')+'</button>'
       +'</div>';
   }).join('')
   +(list.length>shown.length?'<div class="sg-note sg-more">'+t('sg.showing',{shown:sgCount(shown.length),total:sgCount(list.length)})+'</div>':'');
@@ -7244,7 +7243,7 @@ function renderMatchDetail(d){
     if(mp.length){
       html+='<div class="mo-section">'+t('mo.myPoints')+'</div>'+mp.map(p=>
         '<div class="mo-row"><span>'+sanitize(p.name||t('sg.player'))+(p.captain?' '+sgCapDisc():'')+'</span>'
-        +'<span class="mo-pl-x">'+sgPts(p.base)+(Number(p.base)>0?' '+sgMult(p.multiplier):'')+' = <b style="color:var(--text);">'+sgPts(p.total)+'</b></span></div>').join('');
+        +'<span class="mo-pl-x">'+sgPts(p.base)+(Number(p.base)>0?' '+sgMult(p.multiplier):'')+' = <b style="color:var(--ink);">'+sgPts(p.total)+'</b></span></div>').join('');
     }
 
     // Who played, per club: starters, then the subs who came on.
@@ -7387,7 +7386,7 @@ async function glRenderLeague(out,id){
     +'<span class="sg-rank-x">'+sanitize(t('sg.rk.rd',{n:x.rounds_played||0}))+'</span>'
     +'<span class="sg-rank-pts">'+(x.total!=null?sgPts(x.total):'—')+'</span>'
     +(L.is_owner&&!closed&&x.user_id!==me
-      ?'<button class="gl-x" onclick="event.stopPropagation();glRemove(\''+sanitize(x.user_id)+'\')" aria-label="'+sanitize(t('gl.remove',{name:x.name||t('sg.deletedUser')}))+'">✕</button>':'')
+      ?'<button class="gl-x" onclick="event.stopPropagation();glRemove(\''+sanitize(x.user_id)+'\')" aria-label="'+sanitize(t('gl.remove',{name:x.name||t('sg.deletedUser')}))+'">'+Icons.svg('x',16)+'</button>':'')
     +'</div>';
   out.innerHTML='<button class="back-btn" onclick="glBack()">'+t('gl.back')+'</button>'
     +'<div class="gl-head"><div class="gl-name">'+sanitize(L.name)+'</div>'
@@ -7497,7 +7496,7 @@ function glOpenJoin(code){
   glSheet('<div class="signin-sheet-title">'+t('gl.joinTitle')+'</div>'
     +'<div class="signin-sheet-sub">'+t('gl.joinSub')+'</div>'
     +'<input id="gl-code" class="gl-field" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false"'
-    +' style="font-family:\'DM Mono\',monospace;letter-spacing:2px;text-transform:uppercase;" placeholder="'+sanitize(t('gl.codePh'))+'"'
+    +' style="font-family:var(--font-num);font-weight:700;letter-spacing:2px;text-transform:uppercase;" placeholder="'+sanitize(t('gl.codePh'))+'"'
     +' value="'+sanitize(code||'')+'" onkeydown="if(event.key===\'Enter\')glLookUp()">'
     +'<div id="gl-preview"></div>'
     +'<div class="signin-sheet-actions" id="gl-join-actions"><button class="signin-sheet-primary" onclick="glLookUp()">'+t('gl.lookUp')+'</button>'

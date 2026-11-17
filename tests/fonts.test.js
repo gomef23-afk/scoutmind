@@ -91,6 +91,14 @@ for (const w of ['600', '700']) {
 check('fonts.css declares Barlow Condensed 600 and 700',
   /font-family:'Barlow Condensed';font-style:normal;font-weight:600/.test(css) && /font-family:'Barlow Condensed';font-style:normal;font-weight:700/.test(css));
 
+// ── Bebas Neue and DM Mono are gone (4b-8): no face, no file, no precache, no use ──
+check('fonts.css declares no Bebas Neue or DM Mono face', !/font-family:'(Bebas Neue|DM Mono)'/.test(css));
+check('their files are deleted and not precached', ['bebas-neue-normal-400-latin', 'bebas-neue-normal-400-latin-ext', 'dm-mono-normal-400-latin', 'dm-mono-normal-400-latin-ext', 'dm-mono-normal-500-latin', 'dm-mono-normal-500-latin-ext']
+  .every((n) => !existsSync(new URL(`vendor/fonts/${n}.woff2`, pub)) && !sw.includes(n)));
+const pages = ['index.html', 'community.html', 'about.html', 'auth.html', 'terms.html', 'privacy.html', 'offline.html', 'theme.css', 'pwa.js', 'icons.js', 'fx-row.js'];
+const users = pages.filter((p) => /font-family:\s*\\?'?(Bebas Neue|DM Mono)/.test(readFileSync(new URL(p, pub), 'utf8')));
+check('no page sets either font', users.length === 0, users.join(', '));
+
 // ── The number face is set with tabular figures where it is used ──
 const theme = readFileSync(new URL('theme.css', pub), 'utf8');
 check("theme.css names the number face: --font-num is 'Barlow Condensed'", /--font-num:\s*'Barlow Condensed'/.test(theme));

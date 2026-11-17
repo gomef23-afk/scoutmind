@@ -10,7 +10,7 @@
 <!-- Theme (design spec v1.2), before any stylesheet: the same script as index.html. -->
 <script>
 (function(){
-  var DEFAULT='dark';                                   // 4b: 'system'
+  var DEFAULT='system';                                 // 4b-8: no saved choice follows the device
   var root=document.documentElement, mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
   function pref(){ try{ var s=localStorage.getItem('sm_theme'); return s==='light'||s==='dark'||s==='system'?s:DEFAULT; }catch(e){ return DEFAULT; } }
   function resolve(p){ return p==='system'?(mq&&mq.matches?'dark':'light'):p; }
@@ -29,7 +29,7 @@
 <!-- Shown by sw.js when a page is requested offline and no copy of it is
      cached yet. Everything it needs is in the precache, i18n.js included:
      the page speaks the reader's language (the device's until they choose). -->
-<script src="/i18n.js?v=094fac0911"></script>
+<script src="/i18n.js?v=7fc74546ac"></script>
 <style>
 /* 4b-7: on the v1.2 tokens (/theme.css). No literal colours (tests/theme.test.js). */
 *{margin:0;padding:0;box-sizing:border-box;}

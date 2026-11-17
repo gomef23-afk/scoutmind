@@ -67,11 +67,16 @@
     for (var i = 0; i < list.length; i++) if (/^pt/i.test(String(list[i] || ''))) return 'pt';
     return 'en';
   }
+  // Line icons (Tabler, MIT), never emoji (4b-8): the iOS Share symbol (a box
+  // with an arrow up) and the close cross.
+  var SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px">';
+  var SHARE = SVG + '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4l0 12"/></svg>';
+  var CROSS = SVG.replace('width="16" height="16"', 'width="20" height="20"') + '<path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>';
   var WORDS = {
     en: { label: 'Install ScoutMind', title: 'Install ScoutMind', body: 'Add it to your home screen: it opens full-screen, like an app.', go: 'Install',
-      iosTitle: 'Add ScoutMind to your Home Screen', iosBody: 'Tap <span aria-label="Share">Share ⬆</span>, then “Add to Home Screen”.', close: 'Close' },
+      iosTitle: 'Add ScoutMind to your Home Screen', iosBody: 'Tap <b style="display:inline;font-size:inherit">Share</b> ' + SHARE + ', then “Add to Home Screen”.', close: 'Close' },
     pt: { label: 'Instalar o ScoutMind', title: 'Instale o ScoutMind', body: 'Coloque na tela de início: ele abre em tela cheia, como um app.', go: 'Instalar',
-      iosTitle: 'Adicione o ScoutMind à Tela de Início', iosBody: 'Toque em <span aria-label="Compartilhar">Compartilhar ⬆</span> e depois em “Adicionar à Tela de Início”.', close: 'Fechar' }
+      iosTitle: 'Adicione o ScoutMind à Tela de Início', iosBody: 'Toque em <b style="display:inline;font-size:inherit">Compartilhar</b> ' + SHARE + ' e depois em “Adicionar à Tela de Início”.', close: 'Fechar' }
   };
 
   var shown = false;
@@ -82,8 +87,8 @@
     var css = document.createElement('style');
     css.textContent =
       '.a2hs{position:fixed;left:12px;right:12px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:600;' +
-      // Tokens from /theme.css where the page loads it; the fallbacks are the
-      // old palette, for pages not yet converted (Sequence 2, commit 4b).
+      // Tokens from /theme.css (every page loads it since 4b-7); the fallbacks
+      // only matter if theme.css ever fails to load.
       'display:flex;align-items:center;gap:12px;background:var(--card,#0d1117);border:1px solid var(--border-strong,#00e5a0);border-radius:12px;' +
       'padding:12px 12px 12px 14px;font-family:\'DM Sans\',sans-serif;color:var(--ink,#edf2f7);}' +
       '.a2hs img{width:40px;height:40px;border-radius:9px;flex-shrink:0;}' +
@@ -103,7 +108,7 @@
         ? '<div class="a2hs-text"><b>' + w.title + '</b>' + w.body + '</div>' +
           '<button class="a2hs-go" id="a2hs-go">' + w.go + '</button>'
         : '<div class="a2hs-text"><b>' + w.iosTitle + '</b>' + w.iosBody + '</div>') +
-      '<button class="a2hs-x" id="a2hs-x" aria-label="' + w.close + '">✕</button>';
+      '<button class="a2hs-x" id="a2hs-x" aria-label="' + w.close + '">' + CROSS + '</button>';
     document.body.appendChild(el);
     document.getElementById('a2hs-x').onclick = hide;
     var go = document.getElementById('a2hs-go');

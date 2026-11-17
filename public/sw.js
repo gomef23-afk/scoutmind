@@ -14,7 +14,7 @@
 // changed and VERSION did not (CLAUDE.md rule 24), so an old shell can never
 // outlive a deploy: a new VERSION is a new cache, and activate drops the old.
 
-const VERSION = 'sm-efb89a264f5e';
+const VERSION = 'sm-8618cc2a8add';
 const SHELL = 'scoutmind-shell-' + VERSION;
 const IMAGES = 'scoutmind-img-v1';
 const IMAGE_MAX = 300;
@@ -47,16 +47,10 @@ const PRECACHE = [
   '/icon-512.png',
   '/vendor/supabase-js-2.119.0.js',
   '/vendor/fonts/fonts.css',
-  '/vendor/fonts/bebas-neue-normal-400-latin.woff2',
   '/vendor/fonts/barlow-condensed-normal-600-latin.woff2',
   '/vendor/fonts/barlow-condensed-normal-600-latin-ext.woff2',
   '/vendor/fonts/barlow-condensed-normal-700-latin.woff2',
   '/vendor/fonts/barlow-condensed-normal-700-latin-ext.woff2',
-  '/vendor/fonts/bebas-neue-normal-400-latin-ext.woff2',
-  '/vendor/fonts/dm-mono-normal-400-latin.woff2',
-  '/vendor/fonts/dm-mono-normal-400-latin-ext.woff2',
-  '/vendor/fonts/dm-mono-normal-500-latin.woff2',
-  '/vendor/fonts/dm-mono-normal-500-latin-ext.woff2',
   '/vendor/fonts/dm-sans-italic-300-latin.woff2',
   '/vendor/fonts/dm-sans-italic-300-latin-ext.woff2',
   '/vendor/fonts/dm-sans-normal-300-700-latin.woff2',
