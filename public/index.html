@@ -73,7 +73,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=36c14984d0"></script>
+<script src="/i18n.js?v=653820ec3a"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=d008ee2323"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -143,7 +143,7 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 /* Under the status bar (viewport-fit=cover): the sticky nav and the
    full-screen overlays start below it. The Home band pads itself (.hb). */
 .sm-nav{padding-top:calc(10px + env(safe-area-inset-top));}
-#chat-overlay,#match-overlay{padding-top:env(safe-area-inset-top);}
+#chat-overlay,#match-overlay,#five-overlay{padding-top:env(safe-area-inset-top);}
 @media(min-width:900px){
   .sm-nav{padding:10px 28px;gap:18px;}
   .sm-tabs-bottom{display:none;}
@@ -677,6 +677,14 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .sg-rank-title{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-bottom:8px;}
 .sg-rank-row{display:flex;align-items:center;gap:8px;min-height:44px;border-bottom:1px solid var(--border);font-size:13px;}
 .sg-rank-row.me{color:var(--accent);}
+.sg-rank-row[role="button"]{cursor:pointer;}
+.sg-rank-row[role="button"]:hover{background:var(--field);}
+.sg-rank-row[role="button"]:focus-visible{outline:2px solid var(--navy-ink);outline-offset:-2px;}
+.five-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;}
+.five-nav .sg-chip{min-width:44px;min-height:44px;font-size:18px;}
+.five-nav .sg-chip:disabled{opacity:.4;cursor:default;}
+.five-nav-lab{flex:1;min-width:0;text-align:center;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.five-rows{margin-top:14px;}
 .sg-rank-row.pinned{background:var(--tint);}
 .sg-rank-n{min-width:30px;flex-shrink:0;font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:15px;font-weight:700;color:var(--muted);text-align:right;}
 .sg-rank-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1654,6 +1662,16 @@ async function confirmDeleteAccount(){
     <div class="chat-title" id="mo-title" style="flex:1;min-width:0;">Match</div>
   </div>
   <div class="mo-body" id="mo-body"></div>
+</div>
+
+<!-- ANYONE'S FIVE — a person's picks in a locked round, opened from a ranking
+     name (sgOpenFive). display:none here, display:flex only in JS (rule 6). -->
+<div id="five-overlay" style="display:none;position:fixed;inset:0;z-index:531;background:var(--bg);flex-direction:column;">
+  <div class="chat-head">
+    <button class="chat-back" onclick="closeFive()" aria-label="Close" data-i18n-aria="sg.five.close">←</button>
+    <div class="chat-title" id="five-title" style="flex:1;min-width:0;">Five</div>
+  </div>
+  <div class="mo-body" id="five-body"></div>
 </div>
 
 <script>
@@ -4426,7 +4444,7 @@ function renderSidebarYourClub(){
 // layout viewport itself, and there this changes nothing.
 function fitOverlayToViewport(){
   const vv=window.visualViewport;
-  ['chat-overlay','match-overlay'].forEach(id=>{
+  ['chat-overlay','match-overlay','five-overlay'].forEach(id=>{
     const ov=document.getElementById(id);
     if(!ov||ov.style.display==='none')return;
     if(vv){ ov.style.height=vv.height+'px'; ov.style.top=vv.offsetTop+'px'; ov.style.bottom='auto'; }
@@ -6211,6 +6229,7 @@ async function sgRenderPlayed(r){
   if(!el) return;
   sgSubmitBar(null);
   const e=SG.entries.get(r.id);
+  FIVE.targets=[];
   // The band (spec v1.2 §7): round, my points, my rank. Filled once the
   // scores are in (sgPlayedBand below); dashes until then, never a guess.
   const status=t(r.status==='final'?'sg.st.final':sgInPlay(r)?'sg.st.inPlay':'sg.st.ft');
@@ -6234,7 +6253,7 @@ async function sgRenderPlayed(r){
   if(pb) pb.innerHTML=sgPlayedBand(r,status,mineTotal,myRank);
   sgRenderFixtures(fixtures||[]);
   const rr=document.getElementById('sg-round-rank');
-  if(rr) rr.innerHTML='<div class="sg-section">'+t('sg.topRound')+'</div>'+sgTable(top||[],(rank||[])[0]&&me?Object.assign({user_id:me,name:t('sg.you')},rank[0]):null,'total');
+  if(rr) rr.innerHTML='<div class="sg-section">'+t('sg.topRound')+'</div>'+sgTable(top||[],(rank||[])[0]&&me?Object.assign({user_id:me,name:t('sg.you')},rank[0]):null,'total',null,{roundId:r.id});
 }
 
 /**
@@ -6272,10 +6291,10 @@ function sgFormationOrder(picks,pos){
 }
 
 /** The played round's band: round · my points · my rank (dashes when not in). */
-function sgPlayedBand(r,status,total,rank){
+function sgPlayedBand(r,status,total,rank,other){
   return sgBand([
     {lab:t('sg.band.round'),big:r.round_no!=null?String(r.round_no):String(r.round_label||'—'),line:sgLeagueName(r)},
-    {lab:t('sg.band.points'),big:total==null?'—':sgPts(total),line:status},
+    {lab:t(other?'sg.five.points':'sg.band.points'),big:total==null?'—':sgPts(total),line:status},
     {lab:t('sg.band.rank'),big:rank&&rank.rank!=null?tOrd(rank.rank):'—',
       line:rank&&rank.participants?t('sg.ofN',{n:sgCount(rank.participants)}):(r.participants?t('sg.playing',{n:sgCount(r.participants)}):'')}
   ]);
@@ -6290,6 +6309,21 @@ function sgRenderMine(r,e,scores,rank,pos){
     el.innerHTML='<div class="sg-empty">'+t(isGuestNow()?'sg.signNext':'sg.didNotPick')+'</div>';
     return null;
   }
+  const f=sgFiveRows(e,scores,pos);
+  // The totals live in the band above (sgPlayedBand).
+  const total=rank&&rank.total!=null?rank.total:(f.any?f.sum:null);
+  el.innerHTML='<div class="sg-section">'+t('sg.yourFive')+'</div>'+f.html
+    +'<div class="sg-note">'+t('sg.tapBreakdown')+'</div>';
+  return total;
+}
+
+/**
+ * One entry's five picks as rows, for my five and for anyone's five after the
+ * lock (sgOpenFive): position, photo with the captain's C, name, the locked
+ * tier chip, and the points once scored. {html, any, sum}.
+ */
+function sgFiveRows(e,scores,pos){
+  pos=pos||new Map();
   const bySlot=new Map();
   for(const s of scores){
     const k=s.slot; if(!bySlot.has(k)) bySlot.set(k,[]); bySlot.get(k).push(s);
@@ -6321,11 +6355,7 @@ function sgRenderMine(r,e,scores,rank,pos){
       +(brk?'<div class="sg-brk">'+brk+'</div>':'')
       +'</div>';
   }).join('');
-  // The totals live in the band above (sgPlayedBand).
-  const total=rank&&rank.total!=null?rank.total:(any?sum:null);
-  el.innerHTML='<div class="sg-section">'+t('sg.yourFive')+'</div>'+rows
-    +'<div class="sg-note">'+t('sg.tapBreakdown')+'</div>';
-  return total;
+  return {html:rows,any:any,sum:sum};
 }
 
 /** Each scoring line, summed over the fixtures the pick played in. */
@@ -6368,10 +6398,10 @@ function sgRenderFixtures(rows){
 // ── RANKINGS ──
 
 /** A ranking table; `mine` is pinned under it when it is not in the rows. */
-function sgTable(rows,mine,field,extra){
+function sgTable(rows,mine,field,extra,scope){
   const me=myUserId();
   if(!rows.length) return '<div class="sg-empty">'+t('sg.noScored')+'</div>';
-  const line=(x,pinned)=>'<div class="sg-rank-row'+(x.user_id&&x.user_id===me?' me':'')+(pinned?' pinned':'')+'">'
+  const line=(x,pinned)=>'<div class="sg-rank-row'+(x.user_id&&x.user_id===me?' me':'')+(pinned?' pinned':'')+'"'+sgFiveTap(x,scope)+'>'
     +'<span class="sg-rank-n">'+sanitize(String(x.rank))+'</span>'
     +(x.main_club_id?clubCrestById(x.main_club_id,16):'<span style="width:16px;display:inline-block;"></span>')
     +'<span class="sg-rank-name">'+(x.user_id&&x.user_id===me?t('sg.you'):sgFan(x.name))+'</span>'
@@ -6382,9 +6412,98 @@ function sgTable(rows,mine,field,extra){
   return '<div class="sg-rank">'+html+'</div>';
 }
 
+// ── ANYONE'S FIVE, ONCE THE ROUND IS LOCKED ──
+// Tapping a name in a ranking or a private league opens that person's five.
+// The database decides what can be read (017): someone else's game_entries,
+// game_picks and game_pick_scores come back only once the round's status is
+// no longer 'open', for anon and signed-in alike. The page asks only for
+// rounds that are not open; it never holds a pick the database withheld.
+// scope: {roundId} = that round; {leagueId,season} = that competition's
+// rounds; {all:true} = every round. The newest locked one opens first.
+const FIVE={targets:[],open:null,tg:null,list:[],i:0};
+function sgFiveTap(x,scope){
+  if(!x||!x.user_id||!scope) return '';
+  const i=FIVE.targets.push({user_id:String(x.user_id),name:x.name||null,scope:scope})-1;
+  return ' role="button" tabindex="0" onclick="sgOpenFive('+i+')" onkeydown="if(event.key===\'Enter\')sgOpenFive('+i+')"';
+}
+async function sgOpenFive(i){
+  const tg=FIVE.targets[i];
+  const ov=document.getElementById('five-overlay'), body=document.getElementById('five-body');
+  if(!tg||!ov||!body) return;
+  const token={};
+  FIVE.open=token; FIVE.tg=tg; FIVE.list=[]; FIVE.i=0;
+  document.getElementById('five-title').textContent=tg.user_id===myUserId()?t('sg.yourFive'):t('sg.five.title',{name:tg.name||t('sg.deletedUser')});
+  body.innerHTML='<div class="sg-empty">'+t('sg.loading')+'</div>';
+  ov.style.display='flex';
+  document.body.style.overflow='hidden';
+  const s=tg.scope;
+  let q='game_entries?select=id,round_id,game_rounds!inner(id,league_id,season,round_label,round_no,deadline_utc,status,participants,leagues(slug,name,flag)),'
+    +'game_picks(slot,player_id,is_captain,locked_tier,locked_multiplier,locked_contrarian,players(name,photo_url))'
+    +'&user_id=eq.'+encodeURIComponent(tg.user_id)+'&game_rounds.status=neq.open&limit=200';
+  if(s.roundId!=null) q+='&round_id=eq.'+Number(s.roundId);
+  else if(s.leagueId!=null) q+='&game_rounds.league_id=eq.'+Number(s.leagueId)+'&game_rounds.season=eq.'+Number(s.season);
+  try{
+    const rows=await apiGet(q);
+    if(FIVE.open!==token) return;
+    FIVE.list=(rows||[]).filter(e=>e.game_rounds&&e.game_rounds.status!=='open')
+      .sort((a,b)=>String(b.game_rounds.deadline_utc).localeCompare(String(a.game_rounds.deadline_utc)));
+    if(!FIVE.list.length){ body.innerHTML='<div class="sg-empty">'+t('sg.five.none')+'</div>'; return; }
+    await sgFiveShow(token);
+  }catch(e){
+    console.error('five:',e);
+    if(FIVE.open===token) body.innerHTML=isOffline()?offlineHtml():'<div class="sg-empty">'+t('sg.five.fail')+'</div>';
+  }
+}
+/** The round on screen in the five sheet: its band, then the five rows (sgFiveRows). */
+async function sgFiveShow(token){
+  const body=document.getElementById('five-body'), e=FIVE.list[FIVE.i];
+  if(!body||!e) return;
+  const r=e.game_rounds;
+  body.innerHTML='<div class="mo-inner">'+sgFiveNav()+'<div class="sg-empty">'+t('sg.loading')+'</div></div>';
+  const [scores,rank,pos]=await Promise.all([
+    apiGet('game_pick_scores?select=slot,fixture_id,base_points,breakdown,multiplier,is_captain,contrarian,total&entry_id=eq.'+Number(e.id)).catch(()=>[]),
+    apiGet('game_round_rankings?select=rank,participants,total&round_id=eq.'+Number(r.id)+'&user_id=eq.'+encodeURIComponent(FIVE.tg.user_id)).catch(()=>[]),
+    sgPositions(r,(e.game_picks||[]).map(p=>p.player_id))
+  ]);
+  if(FIVE.open!==token||FIVE.list[FIVE.i]!==e) return;
+  const f=sgFiveRows(e,scores||[],pos);
+  const rk=(rank||[])[0]||null;
+  const total=rk&&rk.total!=null?rk.total:(f.any?f.sum:null);
+  const status=t(r.status==='final'?'sg.st.final':sgInPlay(r)?'sg.st.inPlay':'sg.st.ft');
+  body.innerHTML='<div class="mo-inner">'+sgFiveNav()+sgPlayedBand(r,status,total,rk,FIVE.tg.user_id!==myUserId())
+    +(f.any?'':'<div class="sg-note">'+t('sg.pointsLater')+'</div>')
+    +'<div class="five-rows">'+f.html+'</div>'
+    +'<div class="sg-note">'+t('sg.tapBreakdown')+'</div></div>';
+}
+/** ‹ older · round · newer ›, when the person has more than one locked round in scope. */
+function sgFiveNav(){
+  if(FIVE.list.length<2) return '';
+  const r=FIVE.list[FIVE.i].game_rounds;
+  return '<div class="five-nav">'
+    +'<button class="sg-chip" onclick="sgFiveStep(1)"'+(FIVE.i>=FIVE.list.length-1?' disabled':'')+' aria-label="'+sanitize(t('sg.five.older'))+'">‹</button>'
+    +'<span class="five-nav-lab">'+sanitize(sgLeagueName(r))+' · '+sanitize(sgRoundName(r))+'</span>'
+    +'<button class="sg-chip" onclick="sgFiveStep(-1)"'+(FIVE.i<=0?' disabled':'')+' aria-label="'+sanitize(t('sg.five.newer'))+'">›</button></div>';
+}
+function sgFiveStep(d){
+  const n=FIVE.i+d;
+  if(!FIVE.open||n<0||n>=FIVE.list.length) return;
+  FIVE.i=n;
+  sgFiveShow(FIVE.open);
+}
+function closeFive(){
+  FIVE.open=null;
+  const ov=document.getElementById('five-overlay');
+  if(ov) ov.style.display='none';
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&FIVE.open) closeFive();
+});
+
 async function sgRenderRankings(){
   const body=document.getElementById('sg-body');
   if(!body) return;
+  FIVE.targets=[];   // the tap targets of the tables drawn below
   const views=['round','comp','overall','torcida','leagues'];
   body.innerHTML='<div class="sg-chips">'+views.map(v=>'<button class="sg-chip'+(SG.rankView===v?' active':'')+'" onclick="sgRankView(\''+v+'\')">'+t('sg.rv.'+v)+'</button>').join('')+'</div>'
     +'<div id="sg-rank-body"><div class="sg-empty">'+t('sg.loading')+'</div></div>';
@@ -6402,17 +6521,20 @@ async function sgRenderRankings(){
       if(!r){ out.innerHTML='<div class="sg-empty">'+t('sg.rk.noRound')+'</div>'; return; }
       const base='game_round_rankings?select=rank,name,main_club_id,total,user_id,participants&round_id=eq.'+r.id;
       const [rows,mine]=await Promise.all([apiGet(base+'&order=rank.asc&limit=50'),mineOf(base)]);
-      html='<div class="sg-rank-title">'+sanitize(sgLeagueName(r))+' · '+sanitize(sgRoundName(r))+'</div>'+sgTable(rows,mine,'total');
+      html='<div class="sg-rank-title">'+sanitize(sgLeagueName(r))+' · '+sanitize(sgRoundName(r))+'</div>'+sgTable(rows,mine,'total',null,{roundId:r.id})
+        +'<div class="sg-note">'+t('sg.five.tapHint')+'</div>';
     }else if(v==='comp'){
       const r=lr[lr.length-1]||sgRoundsFor(league)[0];
       if(!r){ out.innerHTML='<div class="sg-empty">'+t('sg.rk.noComp')+'</div>'; return; }
       const base='game_competition_standings?select=rank,name,main_club_id,total,user_id,rounds_played&league_id=eq.'+r.league_id+'&season=eq.'+r.season;
       const [rows,mine]=await Promise.all([apiGet(base+'&order=rank.asc&limit=50'),mineOf(base)]);
-      html='<div class="sg-rank-title">'+t('sg.rk.season',{league:sanitize(sgLeagueName(r))})+'</div>'+sgTable(rows,mine,'total',x=>t('sg.rk.rd',{n:x.rounds_played}));
+      html='<div class="sg-rank-title">'+t('sg.rk.season',{league:sanitize(sgLeagueName(r))})+'</div>'+sgTable(rows,mine,'total',x=>t('sg.rk.rd',{n:x.rounds_played}),{leagueId:r.league_id,season:r.season})
+        +'<div class="sg-note">'+t('sg.five.tapHint')+'</div>';
     }else if(v==='overall'){
       const base='game_overall_standings?select=rank,name,main_club_id,total,user_id,rounds_played';
       const [rows,mine]=await Promise.all([apiGet(base+'&order=rank.asc&limit=50'),mineOf(base)]);
-      html='<div class="sg-rank-title">'+t('sg.rk.overall')+'</div>'+sgTable(rows,mine,'total',x=>t('sg.rk.rd',{n:x.rounds_played}));
+      html='<div class="sg-rank-title">'+t('sg.rk.overall')+'</div>'+sgTable(rows,mine,'total',x=>t('sg.rk.rd',{n:x.rounds_played}),{all:true})
+        +'<div class="sg-note">'+t('sg.five.tapHint')+'</div>';
     }else{
       const club=mainClubId();
       const min=Math.max(3,Number((SG.config||{}).torcida_min_members||3));
@@ -6422,7 +6544,7 @@ async function sgRenderRankings(){
       }else{
         const base='game_torcida_standings?select=rank,name,main_club_id,total,user_id,members&main_club_id=eq.'+club;
         const [rows,mine]=await Promise.all([apiGet(base+'&order=rank.asc&limit=50'),mineOf(base)]);
-        fans='<div class="sg-rank-title">'+clubCrestById(club,16)+' '+t('sg.rk.fans',{club:sanitize(clubLabel(club))})+'</div>'+sgTable(rows,mine,'total');
+        fans='<div class="sg-rank-title">'+clubCrestById(club,16)+' '+t('sg.rk.fans',{club:sanitize(clubLabel(club))})+'</div>'+sgTable(rows,mine,'total',null,{all:true});
       }
       const table=await apiGet('game_torcida_table?select=rank,main_club_id,club,members,top10_mean&order=rank.asc&limit=50');
       const clubRows=(table||[]).map(x=>'<div class="sg-rank-row'+(x.main_club_id===club?' me':'')+'">'
@@ -6828,7 +6950,7 @@ async function glRenderLeague(out,id){
   const closed=!!L.closed_at;
   let when='';
   try{ when=closed?new Date(L.closed_at).toLocaleDateString(smLocale(),{day:'numeric',month:'short',year:'numeric'}):''; }catch(e){}
-  const line=x=>'<div class="sg-rank-row'+(x.user_id===me?' me':'')+'">'
+  const line=x=>'<div class="sg-rank-row'+(x.user_id===me?' me':'')+'"'+sgFiveTap(x,{leagueId:L.league_id,season:L.season})+'>'
     +'<span class="sg-rank-n">'+(x.rank!=null?sanitize(String(x.rank)):'—')+'</span>'
     +(x.main_club_id?clubCrestById(x.main_club_id,16):'<span style="width:16px;display:inline-block;"></span>')
     +'<span class="sg-rank-name">'+(x.user_id===me?t('sg.you'):sgFan(x.name))
@@ -6836,7 +6958,7 @@ async function glRenderLeague(out,id){
     +'<span class="sg-rank-x">'+sanitize(t('sg.rk.rd',{n:x.rounds_played||0}))+'</span>'
     +'<span class="sg-rank-pts">'+(x.total!=null?sgPts(x.total):'—')+'</span>'
     +(L.is_owner&&!closed&&x.user_id!==me
-      ?'<button class="gl-x" onclick="glRemove(\''+sanitize(x.user_id)+'\')" aria-label="'+sanitize(t('gl.remove',{name:x.name||t('sg.deletedUser')}))+'">✕</button>':'')
+      ?'<button class="gl-x" onclick="event.stopPropagation();glRemove(\''+sanitize(x.user_id)+'\')" aria-label="'+sanitize(t('gl.remove',{name:x.name||t('sg.deletedUser')}))+'">✕</button>':'')
     +'</div>';
   out.innerHTML='<button class="back-btn" onclick="glBack()">'+t('gl.back')+'</button>'
     +'<div class="gl-head"><div class="gl-name">'+sanitize(L.name)+'</div>'

@@ -44,7 +44,7 @@ check('the old "Your club" card is gone', !/id="sidebar-club-card"/.test(idx) &&
 check('viewport-fit=cover', /<meta name="viewport" content="width=device-width, initial-scale=1\.0, viewport-fit=cover">/.test(idx));
 check('installed on an iPhone the page draws under the status bar', /apple-mobile-web-app-status-bar-style" content="black-translucent"/.test(idx));
 check('the band pads for the status bar', /\.hb\{background:var\(--navy\);color:var\(--on-navy\);padding:calc\(6px \+ env\(safe-area-inset-top\)\)/.test(idx));
-check('the nav and the full-screen overlays pad for it too', /\.sm-nav\{padding-top:calc\(10px \+ env\(safe-area-inset-top\)\);\}/.test(idx) && /#chat-overlay,#match-overlay\{padding-top:env\(safe-area-inset-top\);\}/.test(idx));
+check('the nav and the full-screen overlays pad for it too', /\.sm-nav\{padding-top:calc\(10px \+ env\(safe-area-inset-top\)\);\}/.test(idx) && /#chat-overlay,#match-overlay,#five-overlay\{padding-top:env\(safe-area-inset-top\);\}/.test(idx));
 check('the tab bar sits above the home indicator, and the page clears it', /\.sm-tabs-bottom\{[^}]*padding-bottom:env\(safe-area-inset-bottom\);/.test(idx) && /body\{padding-bottom:calc\(64px \+ env\(safe-area-inset-bottom\)\);\}/.test(idx));
 check('browser bar: navy on Home, read from the token (no literal), ground elsewhere',
   /var home=document\.body&&document\.body\.classList\.contains\('on-home'\);/.test(idx) && /getPropertyValue\('--navy'\)/.test(idx) && /smTheme\.paintBar\(\)/.test(fn('showPage')));

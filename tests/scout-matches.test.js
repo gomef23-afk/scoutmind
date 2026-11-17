@@ -71,9 +71,9 @@ check('Matches: league chips (All + the competitions) above the day picker, reme
   && /MATCH_LEAGUE_NAMES\['\s*\+\s*i\s*\+\s*'\]/.test(fn('renderMatchDay')) && /dated = dated\.filter\(m => \(m\.compName \|\| m\.comp\) === pickedLeague\)/.test(fn('renderMatchDay')));
 check('Matches: one 760px column, centred', /\.matches-col\{max-width:760px;margin:0 auto;/.test(idx) && /<div class="matches-col">/.test(idx));
 check('my five: position, photo, name, opponent line, tier chip', /sg-slot-pos[\s\S]*?sgPhoto\(p,30\)[\s\S]*?sgFixtureLine\(p\)[\s\S]*?sgTierFor\(p\)/.test(fn('sgRenderSlots')));
-check('played picks: the locked tier chip and points in the number face', /sgTierChip\(p\.locked_tier,p\.locked_multiplier\)/.test(fn('sgRenderMine')) && /\.sg-pick-pts\{font-family:var\(--font-num\)/.test(idx));
-check('no "average" anywhere in the Scout Game', !/average/i.test(fn('sgRenderSlots') + fn('sgRenderList') + fn('sgRenderMine')));
-check('captain: a navy disc with a gold C', /\.sg-cap-disc\{[^}]*background:var\(--navy\);color:var\(--gold\)/.test(idx) && /sgCapDisc\(\)/.test(fn('sgRenderSlots')) && /sgCapDisc\(\)/.test(fn('sgRenderMine')));
+check('played picks: the locked tier chip and points in the number face', /sgTierChip\(p\.locked_tier,p\.locked_multiplier\)/.test(fn('sgFiveRows')) && /\.sg-pick-pts\{font-family:var\(--font-num\)/.test(idx));
+check('no "average" anywhere in the Scout Game', !/average/i.test(fn('sgRenderSlots') + fn('sgRenderList') + fn('sgRenderMine') + fn('sgFiveRows')));
+check('captain: a navy disc with a gold C', /\.sg-cap-disc\{[^}]*background:var\(--navy\);color:var\(--gold\)/.test(idx) && /sgCapDisc\(\)/.test(fn('sgRenderSlots')) && /sgCapDisc\(\)/.test(fn('sgFiveRows')));
 check('league names without flag emoji', /function sgLeagueName\(r\)\{ const l=r&&r\.leagues; return l\?l\.name:''; \}/.test(idx) && /function glComp\(x\)\{ return x\.competition\|\|''; \}/.test(idx));
 
 // ── Matches in this round, while picking (follow-up to 4a) ──
@@ -97,10 +97,10 @@ check('fxRow: onTap replaces opening the match; selected adds sel + aria-pressed
 
 // ── Pick labels by real position (17 Nov, option A) ──
 check('played picks are labelled by the player\'s real position (the 023 rule), not the slot number',
-  /const g=sgGroup\(pos\.get\(p\.player_id\)\)\|\|SG_SLOT_GROUP\[p\.slot-1\];/.test(fn('sgRenderMine')) && /sgFormationOrder\(e\.game_picks\|\|\[\],pos\)/.test(fn('sgRenderMine')));
+  /const g=sgGroup\(pos\.get\(p\.player_id\)\)\|\|SG_SLOT_GROUP\[p\.slot-1\];/.test(fn('sgFiveRows')) && /sgFormationOrder\(e\.game_picks\|\|\[\],pos\)/.test(fn('sgFiveRows')));
 check('positions: main position by minutes in that competition and season, ties by letter',
   /fixtures\.league_id=eq\.'\+r\.league_id\+'&fixtures\.season=eq\.'\+r\.season/.test(fn('sgPositions')) && /\(m\[b\]-m\[a\]\)\|\|a\.localeCompare\(b\)/.test(fn('sgPositions')));
-check('nothing is re-slotted: scores stay keyed by slot', /bySlot\.get\(p\.slot\)/.test(fn('sgRenderMine')) && !/game_picks[^;]*PATCH|update.*game_picks/i.test(idx));
+check('nothing is re-slotted: scores stay keyed by slot', /bySlot\.get\(p\.slot\)/.test(fn('sgFiveRows')) && !/game_picks[^;]*PATCH|update.*game_picks/i.test(idx));
 {
   // The production case: Round 35, saved before 023, slots in the order picked.
   const c2 = { sgGroup: (p) => p === 'G' ? 'G' : p === 'D' ? 'D' : (p === 'M' || p === 'F') ? 'X' : null };
