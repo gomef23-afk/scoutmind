@@ -69,6 +69,7 @@ const PAIRS = [
   ['navy', 'on-navy', 'avatar and Sign in on the Home band (navy on white)'],
   ['on-chip', 'chip-win', 'W chip'], ['on-chip', 'chip-loss', 'L chip'], ['on-chip', 'chip-draw', 'D chip'],
   ['loss-ink', 'card', 'LIVE / errors on cards'], ['win', 'card', 'positive text'],
+  ['loss-ink', 'ground', 'LIVE under a fixture row (4a)'], ['navy-ink', 'field', 'a fixture row on hover'], ['ink', 'field', 'a fixture row on hover'],
   ['cat-transfer', 'card', 'Transfer / Rumour label'], ['cat-injury', 'card', 'Suspension / Injury label'], ['cat-interview', 'card', 'Interview label'], ['cat-match', 'card', 'Match label'],
 ];
 const table = [];
