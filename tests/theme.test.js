@@ -108,7 +108,7 @@ const dfltC = /var DEFAULT='(\w+)'/.exec(read('public/community.html'));
 check('community.html has the same default as index.html', !!dfltC && !!dflt && dfltC[1] === dflt[1], dfltC && dfltC[1]);
 const comm = read('public/community.html');
 check('community.html: primary buttons are navy with on-navy text', /\.pfbtn\{background:var\(--navy\);color:var\(--on-navy\)/.test(comm) && /\.signin-btn\{background:var\(--navy\);color:var\(--on-navy\)/.test(comm));
-check('community.html: numbers use the number face', /\.sv\{font-family:var\(--font-num\)/.test(comm) && /class="wrank num/.test(comm) && /class="pop num"/.test(comm) && /lg avg <span class="num">/.test(comm));
+check('community.html: numbers use the number face', /\.sv\{font-family:var\(--font-num\)/.test(comm) && /class="wrank num/.test(comm) && /class="pop num"/.test(comm) && /t\('clubs\.lgAvg',\{v:avg\}\)/.test(comm));
 check('community.html: no Bebas Neue or DM Mono left (neither is self-hosted)', !/Bebas|DM Mono/.test(comm));
 check('community.html: muted text never sits on --tint (the chosen club row is --field)', /\.ts-team\.active\{background:var\(--field\)/.test(comm));
 check('pwa.js banner uses the tokens (old palette only as fallbacks)', /background:var\(--card,#0d1117\)/.test(read('public/pwa.js')) && /background:var\(--navy,/.test(read('public/pwa.js')));

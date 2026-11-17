@@ -7,7 +7,7 @@
      domain, so jsDelivr and Google Fonts are gone from every directive. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://kdhbpzooyjxcglbxbuya.supabase.co; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://kdhbpzooyjxcglbxbuya.supabase.co; worker-src 'self'; manifest-src 'self';">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
-<title>ScoutMind — Sign In</title>
+<title data-i18n="auth.docTitle">ScoutMind — Sign In</title>
 <meta name="description" content="Sign in to ScoutMind, or create a free account.">
 <!-- Icons and link previews: the same block on every page (scripts/make-icons.ps1 makes the files). -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -198,7 +198,7 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
   <a href="/privacy.html" data-i18n="foot.privacy">Privacy</a> · <a href="/terms.html" data-i18n="foot.terms">Terms</a> · <a href="mailto:hello@scoutmind.app" data-i18n="foot.contact">Contact</a>
 </footer>
 
-<script src="/i18n.js?v=7c379f3d0c"></script>
+<script src="/i18n.js?v=3cb88360eb"></script>
 <script src="/vendor/supabase-js-2.119.0.js"></script>
 <script src="/sm_auth.js?v=2a7db71965"></script>
 <script>
@@ -584,7 +584,7 @@ async function doRegister() {
 }
 
 function doDemo() {
-  saveUser('demo', 'demo@scoutmind.app', 'Demo User', 'fan');
+  saveUser('demo', 'demo@scoutmind.app', t('auth.demoName'), 'fan');
   window.location.href = '/';
 }
 </script>

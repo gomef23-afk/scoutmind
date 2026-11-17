@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Club communities — ScoutMind</title>
+<title data-i18n="comm.docTitle">Club communities — ScoutMind</title>
 <meta name="description" content="Your club's page on ScoutMind: news, the club room and the conversation around it.">
 <!-- Icons and link previews: the same block on every page (scripts/make-icons.ps1 makes the files). -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -121,7 +121,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .pbarfill{height:100%;border-radius:3px;background:var(--accent);transition:width .6s ease;}
 .pbarfill.v{background:var(--accent2);}
 .pvb{font-size:10px;color:var(--accent);margin-left:6px;}
-.pfi{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;}
+.pfi{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;}
+/* 4b-5: line icons instead of emoji; the badge's four points as a real list. */
+.sheet-ic,.empty-ic{display:flex;justify-content:center;color:var(--navy-ink);margin-bottom:12px;}
+.empty .empty-ic{color:var(--muted);}
+.badge-points{list-style:none;margin:0 0 20px;padding:12px 14px;background:var(--field);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--ink);line-height:1.8;}
+.badge-points li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:8px;border-radius:50%;background:var(--navy-ink);vertical-align:middle;}
 .pfinput{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:7px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;}
 .pfinput:focus{border-color:var(--accent);}
 .pfbtn{background:var(--navy);color:var(--on-navy);border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
@@ -296,19 +301,19 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 <!-- ── SIGN-IN SHEET (guest write gate) ── -->
 <div id="signin-sheet" class="signin-sheet">
   <div class="signin-sheet-card">
-    <div style="font-size:34px;margin-bottom:10px;">⚽</div>
-    <div class="signin-sheet-title">Join the conversation</div>
-    <div class="signin-sheet-sub" id="signin-sheet-sub">Create a free account to join the conversation.</div>
+    <div class="sheet-ic" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg></div>
+    <div class="signin-sheet-title" data-i18n="sheet.title">Join the conversation</div>
+    <div class="signin-sheet-sub" id="signin-sheet-sub" data-i18n="cmt.gate">Create a free account to join the conversation.</div>
     <div class="signin-sheet-actions">
-      <button class="signin-sheet-primary" onclick="window.location.href='/auth.html?tab=signup'">Create a free account</button>
-      <button class="signin-sheet-secondary" onclick="window.location.href='/auth.html'">I already have an account</button>
-      <button class="signin-sheet-dismiss" onclick="closeSigninSheet()">Keep browsing</button>
+      <button class="signin-sheet-primary" onclick="window.location.href='/auth.html?tab=signup'" data-i18n="prof.guest.create">Create a free account</button>
+      <button class="signin-sheet-secondary" onclick="window.location.href='/auth.html'" data-i18n="prof.guest.have">I already have an account</button>
+      <button class="signin-sheet-dismiss" onclick="closeSigninSheet()" data-i18n="sheet.keep">Keep browsing</button>
     </div>
   </div>
 </div>
 <div class="page">
   <div style="margin-bottom:20px">
-    <div class="cm-display" style="font-size:32px;margin-bottom:4px">Communities</div>
+    <div class="cm-display" style="font-size:32px;margin-bottom:4px" data-i18n="comm.title">Communities</div>
     <div style="font-size:13px;color:var(--muted)" data-i18n="comm.sub">Pick a club to see its league position, this season's numbers and a link to its fan room.</div>
   </div>
   <div class="two-col">
@@ -318,17 +323,17 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
       <div class="team-selector">
         <h2 class="ts-title"><span class="ts-t-wide" data-i18n="comm.find">Find your club</span><span class="ts-t-phone" data-i18n="comm.explore">Explore other communities</span></h2>
         <!-- Filled by fillLeagueSelect() with the leagues we carry (from `teams`). -->
-        <select class="league-select" id="comm-league" onchange="loadLeague()" aria-label="League">
+        <select class="league-select" id="comm-league" onchange="loadLeague()" aria-label="League" data-i18n-aria="fx.leagueFilter">
         </select>
-        <input type="text" class="ts-search" id="comm-search" placeholder="Search teams..." oninput="filterTeams()">
+        <input type="text" class="ts-search" id="comm-search" placeholder="Search clubs…" data-i18n-ph="comm.searchPh" aria-label="Search clubs" data-i18n-aria="comm.searchPh" oninput="filterTeams()">
         <div class="ts-scroll" id="comm-list"></div>
       </div>
     </div>
     <div id="comm-main">
       <div class="empty">
-        <div style="font-size:40px;margin-bottom:16px;opacity:0.3">👥</div>
-        <div class="cm-display" style="font-size:22px;margin-bottom:6px">Select Your Club</div>
-        <div style="font-size:13px">Pick a team from the list to see their community</div>
+        <div class="empty-ic" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/></svg></div>
+        <div class="cm-display" style="font-size:22px;margin-bottom:6px" data-i18n="comm.selectTitle">Select your club</div>
+        <div style="font-size:13px" data-i18n="comm.selectSub">Pick a club from the list to see its page.</div>
       </div>
     </div>
   </div>
@@ -337,43 +342,39 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 <div id="badge-modal" style="display:none;position:fixed;inset:0;background:var(--scrim);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:min(540px,95vw);max-height:90vh;overflow-y:auto;padding:28px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <div class="cm-display" style="font-size:26px;">Apply for Analyst Badge</div>
-      <button onclick="closeBadgeModal()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;">✕</button>
+      <div class="cm-display" style="font-size:26px;" data-i18n="badge.title">Apply for the Analyst badge</div>
+      <button onclick="closeBadgeModal()" aria-label="Close" data-i18n-aria="sg.five.close" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;background:transparent;border:none;color:var(--muted);cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
     </div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;">The Analyst badge is <strong style="color:var(--accent)">free</strong> and reserved for verified football professionals. We review every application manually and get back within 48 hours.</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;" data-i18n-html="badge.intro">The Analyst badge is <strong>free</strong> and reserved for verified football professionals. We review every application by hand and reply within 48 hours.</div>
     <div id="badge-form-wrap">
-      <div class="pfi">Your name</div>
-      <input id="ba-name" class="pfinput" placeholder="Full name">
-      <div class="pfi">Email address</div>
-      <input id="ba-email" type="email" class="pfinput" placeholder="your@email.com">
-      <div class="pfi">Your role</div>
+      <label class="pfi" for="ba-name" data-i18n="badge.name">Your name</label>
+      <input id="ba-name" class="pfinput" placeholder="Full name" data-i18n-ph="auth.field.name">
+      <label class="pfi" for="ba-email" data-i18n="badge.email">Email address</label>
+      <input id="ba-email" type="email" class="pfinput" placeholder="you@email.com" data-i18n-ph="badge.emailPh">
+      <label class="pfi" for="ba-role" data-i18n="badge.role">Your role</label>
+      <!-- `value` is what badge_applications stores (English, stable); the label is translated. -->
       <select id="ba-role" class="pfinput">
-        <option value="">Select your role...</option>
-        <option>Football Journalist</option>
-        <option>Licensed Scout</option>
-        <option>FIFA Agent</option>
-        <option>Club Director / DoF</option>
-        <option>TV/Radio Analyst</option>
-        <option>Former Professional Player</option>
-        <option>Other</option>
+        <option value="" data-i18n="badge.rolePick">Select your role…</option>
+        <option value="Football Journalist" data-i18n="badge.r.journalist">Football journalist</option>
+        <option value="Licensed Scout" data-i18n="badge.r.scout">Licensed scout</option>
+        <option value="FIFA Agent" data-i18n="badge.r.agent">FIFA agent</option>
+        <option value="Club Director / DoF" data-i18n="badge.r.director">Club director / director of football</option>
+        <option value="TV/Radio Analyst" data-i18n="badge.r.analyst">TV or radio analyst</option>
+        <option value="Former Professional Player" data-i18n="badge.r.former">Former professional player</option>
+        <option value="Other" data-i18n="badge.r.other">Other</option>
       </select>
-      <div class="pfi">Organisation / Affiliation</div>
-      <input id="ba-org" class="pfinput" placeholder="e.g. ESPN Brasil, Flamengo FC, Independent">
-      <div class="pfi" style="margin-top:4px;">Brief bio <span style="font-weight:400;color:var(--muted)">(tell us about your experience)</span></div>
-      <textarea id="ba-bio" placeholder="e.g. I've covered Série A for ESPN Brasil for 8 years..." style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;font-family:inherit;outline:none;resize:vertical;min-height:90px;margin-bottom:18px;"></textarea>
-      <div style="background:var(--field);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:1.8;">
-        ✓ Completely free — no payment required<br>
-        ✓ Post insights in any team's community<br>
-        ✓ Your name + verified credential badge on every post<br>
-        ✓ Applications reviewed within 48 hours
-      </div>
-      <button class="pfbtn" onclick="submitBadgeApp()" style="width:100%;padding:13px;font-size:14px;letter-spacing:1px;">SUBMIT APPLICATION</button>
+      <label class="pfi" for="ba-org" data-i18n="badge.org">Organisation / affiliation</label>
+      <input id="ba-org" class="pfinput" placeholder="e.g. ESPN Brasil, a club, independent" data-i18n-ph="badge.orgPh">
+      <label class="pfi" for="ba-bio" style="margin-top:4px;" data-i18n-html="badge.bio">Brief bio <span style="font-weight:400;color:var(--muted)">(tell us about your experience)</span></label>
+      <textarea id="ba-bio" placeholder="e.g. I have covered the Série A for 8 years…" data-i18n-ph="badge.bioPh" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;font-family:inherit;outline:none;resize:vertical;min-height:90px;margin-bottom:18px;"></textarea>
+      <ul class="badge-points" data-i18n-html="badge.points"><li>Completely free — no payment required</li><li>Post insights on any club's page</li><li>Your name and a verified badge on every post</li><li>Applications reviewed within 48 hours</li></ul>
+      <button class="pfbtn" onclick="submitBadgeApp()" style="width:100%;padding:13px;font-size:14px;" data-i18n="badge.submit">Submit application</button>
     </div>
     <div id="badge-success" style="display:none;text-align:center;padding:20px 0;">
-      <div style="font-size:48px;margin-bottom:16px;">✅</div>
-      <div class="cm-display" style="font-size:24px;margin-bottom:8px;">Application Submitted!</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;">We'll review it and get back to you within 48 hours. Once approved, you'll be able to post analyst insights across all team communities.</div>
-      <button class="pfbtn" onclick="closeBadgeModal()">Done</button>
+      <div class="empty-ic" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M5 12l5 5l10 -10"/></svg></div>
+      <div class="cm-display" style="font-size:24px;margin-bottom:8px;" data-i18n="badge.doneTitle">Application sent</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;" data-i18n="badge.doneText">We will review it and reply within 48 hours. Once approved, you can post analyst insights on every club's page.</div>
+      <button class="pfbtn" onclick="closeBadgeModal()" data-i18n="badge.done">Done</button>
     </div>
   </div>
 </div>
@@ -383,7 +384,7 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
      in the app now: one official room per club. -->
 <script src="/club_names.js?v=25627f760c"></script>
 <script src="/sm_auth.js?v=2a7db71965"></script>
-<script src="/i18n.js?v=7c379f3d0c"></script>
+<script src="/i18n.js?v=3cb88360eb"></script>
 <script src="/league-names.js?v=cdddf511b0"></script>
 <!-- Still loaded because init() waits on it (rule 8, until R10 deletes the file); nothing on screen reads it. -->
 <script src="/leagues_data.js?v=1ca1cc2deb"></script>
@@ -410,7 +411,7 @@ function renderAuthUi(){
   var langSlot=document.getElementById('lang-slot');   // 4b-5: EN / PT for guests
   if(langSlot)langSlot.style.display=isGuest?'flex':'none';
   if(!isGuest){
-    var nm=cu.name||(cu.email?cu.email.split('@')[0]:'')||'User';
+    var nm=cu.name||(cu.email?cu.email.split('@')[0]:'')||t('prof.user');
     document.getElementById('nav-name').textContent=nm;
     var ini=nm.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
     document.getElementById('nav-av').textContent=ini;
@@ -429,7 +430,7 @@ function openSigninSheet(message){
   var sheet=document.getElementById('signin-sheet');
   if(!sheet){window.location.href='/auth.html';return;}
   var sub=document.getElementById('signin-sheet-sub');
-  if(sub)sub.textContent=message||'Create a free account to join the conversation.';
+  if(sub)sub.textContent=message||t('cmt.gate');
   sheet.style.display='flex';
   document.body.style.overflow='hidden';
 }
@@ -476,7 +477,7 @@ var LEAGUE_ORDER=['serie_a','premier_league','la_liga','serie_a_it','bundesliga'
 function escH(s){
   return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
 }
-function ordN(n){ if(n==null)return null; var s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+// ordN() (English-only ordinals) went in 4b-5: tOrd() from i18n.js says 1st / 1º.
 
 async function loadClubs(){
   // Through SMAuth so a signed-in reader sends a live token and a guest sends
@@ -534,19 +535,19 @@ function realStatsRow(r){
   if(!r)return '';
   var cell=function(label,val,avg){
     if(val==null||val==='')return '';
-    return '<div class="sc"><div class="sv">'+val+'</div><div class="sl">'+label+'</div>'
-      +(avg!=null?'<div class="sl" style="margin-top:2px;">lg avg <span class="num">'+avg+'</span></div>':'')
+    return '<div class="sc"><div class="sv">'+val+'</div><div class="sl">'+escH(label)+'</div>'
+      +(avg!=null?'<div class="sl" style="margin-top:2px;">'+escH(t('clubs.lgAvg',{v:avg}))+'</div>':'')
       +'</div>';
   };
-  var ord=function(n){ if(n==null)return null; var s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
   var dp=function(v){ return v!=null?Number(v).toFixed(2):null; };
   var pc=function(v){ return v!=null?Math.round(v)+'%':null; };
   var a=r.avg||{};
-  var cells=cell('Position',ord(r.rank))
-    +cell('Points',r.points)
-    +cell('Goals/game',dp(r.gs),dp(a.gs))
-    +cell('Conceded/game',dp(r.gc),dp(a.gc))
-    +cell('Pass accuracy',pc(r.pa),pc(a.pa));
+  // Labels and ordinals in the reader's language (4b-5).
+  var cells=cell(t('clubs.stat.pos'),r.rank!=null?tOrd(r.rank):null)
+    +cell(t('clubs.stat.pts'),r.points)
+    +cell(t('clubs.stat.gf'),dp(r.gs),dp(a.gs))
+    +cell(t('clubs.stat.ga'),dp(r.gc),dp(a.gc))
+    +cell(t('clubs.stat.pass'),pc(r.pa),pc(a.pa));
   return cells?('<div class="stats4" style="grid-template-columns:repeat(auto-fit,minmax(88px,1fr));">'+cells+'</div>'):'';
 }
 
@@ -564,14 +565,14 @@ function filterTeams(){
   var clubs=(CLUBS[AL]||[]).slice().sort(function(a,b){return a.label.localeCompare(b.label);});
   _ft=q?clubs.filter(function(c){return c.label.toLowerCase().includes(q);}):clubs;
   var el=document.getElementById('comm-list');
-  if(_ft.length===0){el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">No teams found</div>';return;}
+  if(_ft.length===0){el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">'+escH(t('comm.noClubs'))+'</div>';return;}
   var html='';
   for(var i=0;i<_ft.length;i++){
     var c=_ft[i];
     var act=(AT&&c.id===AT.id)?'active':'';
     // The position is the real standings rank, or nothing.
     html+='<div class="ts-team '+act+'" onclick="pickTeam('+i+')">'
-      +'<div><div class="ts-name">'+escH(c.label)+'</div><div class="ts-pos">'+(c.rank!=null?escH(ordN(c.rank)):'')+'</div></div>'
+      +'<div><div class="ts-name">'+escH(c.label)+'</div><div class="ts-pos">'+(c.rank!=null?escH(tOrd(c.rank)):'')+'</div></div>'
       +'<div style="font-size:10px;color:var(--muted)">›</div></div>';
   }
   el.innerHTML=html;
@@ -597,7 +598,7 @@ function renderTeamPage(){
         +'<div style="display:none;'+box+'">'
       :'<div style="display:flex;'+box+'">')
     +'<div class="cm-display" style="font-size:24px;color:var(--text)">'+escH(ini)+'</div></div>';
-  var meta=[c.city,c.venue,c.founded?'Est. '+c.founded:null].filter(Boolean).map(escH).join(' · ');
+  var meta=[c.city,c.venue,c.founded?t('comm.est',{year:c.founded}):null].filter(Boolean).map(escH).join(' · ');
   var chip='font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:var(--bg3);color:var(--muted)';
   var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;">'
     +'<div style="padding:20px 22px;">'
@@ -608,15 +609,15 @@ function renderTeamPage(){
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
     +'<div style="'+chip+'">'+escH(c.leagueName)+'</div>'
     // One position source: the standings rank, the same number as the box below.
-    +(c.rank!=null?'<div style="'+chip+'">'+escH(ordN(c.rank))+' in league</div>':'')
+    +(c.rank!=null?'<div style="'+chip+'">'+escH(t('comm.inLeague',{rank:tOrd(c.rank)}))+'</div>':'')
     +'</div></div>'
     +'</div>'
     // The coach only when the teams job has named one (teams.coach_name).
     +(c.coach?'<div style="background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:14px;">'
-      +'<div style="font-size:11px;color:var(--muted)">Head coach</div><div style="font-size:13px;font-weight:600">'+escH(c.coach)+'</div></div>':'')
+      +'<div style="font-size:11px;color:var(--muted)">'+escH(t('comm.coach'))+'</div><div style="font-size:13px;font-weight:600">'+escH(c.coach)+'</div></div>':'')
     // Five real numbers from standings + team_season_stats, by team_id.
     +realStatsRow(c)
-    +'<div style="margin-top:16px;"><a class="pfbtn" href="/?room='+Number(c.id)+'" style="display:inline-block;text-decoration:none;">Open the club room</a></div>'
+    +'<div style="margin-top:16px;"><a class="pfbtn" href="/?room='+Number(c.id)+'" style="display:inline-block;text-decoration:none;">'+escH(t('comm.openRoom'))+'</a></div>'
     +'</div></div>'
     // Polls · Transfer Wishlist · Analyst Insights (migration 028). Filled by
     // loadFeatures(); stays empty until 028 has run (rule 21). Groups is gone
@@ -979,12 +980,12 @@ function startingClub(){
 }
 async function init(){
   try{ applyI18n(); }catch(e){}
-  document.getElementById('comm-list').innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">Loading clubs…</div>';
+  document.getElementById('comm-list').innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">'+escH(t('comm.loading'))+'</div>';
   try{
     await loadClubs();
   }catch(e){
     console.error('loadClubs:',e.message);
-    document.getElementById('comm-list').innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">Clubs could not load just now.</div>';
+    document.getElementById('comm-list').innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px;text-align:center">'+escH(t('comm.loadFail'))+'</div>';
     return;
   }
   AT=startingClub();
@@ -994,11 +995,15 @@ async function init(){
   if(AT){
     renderTeamPage();
   }else{
-    document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;"><div style="font-size:40px;margin-bottom:16px;opacity:0.4">👥</div><div class="cm-display" style="font-size:24px;margin-bottom:8px;">Choose Your Club</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Pick a team from the list, or set your main club so it loads automatically every time.</div><button class="pfbtn" onclick="window.location.href=\'/\'">Set My Main Club</button></div>';
+    document.getElementById('comm-main').innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;">'
+      +'<div class="empty-ic" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3"/></svg></div>'
+      +'<div class="cm-display" style="font-size:24px;margin-bottom:8px;">'+escH(t('clubs.choose'))+'</div>'
+      +'<div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">'+escH(t('comm.chooseText'))+'</div>'
+      +'<button class="pfbtn" onclick="window.location.href=\'/\'">'+escH(t('comm.setMain'))+'</button></div>';
   }
 }
 function openBadgeModal(){
-  if(!requireAuth('Create a free account to apply for an analyst badge.'))return;
+  if(!requireAuth(t('badge.gate')))return;
   // Pre-fill name and email from logged-in user
   var nameEl=document.getElementById('ba-name');
   var emailEl=document.getElementById('ba-email');
@@ -1014,17 +1019,17 @@ function closeBadgeModal(){
   document.body.style.overflow='';
 }
 async function submitBadgeApp(){
-  if(!requireAuth('Create a free account to apply for an analyst badge.'))return;
+  if(!requireAuth(t('badge.gate')))return;
   var name=document.getElementById('ba-name').value.trim();
   var email=document.getElementById('ba-email').value.trim();
   var role=document.getElementById('ba-role').value;
   var org=document.getElementById('ba-org').value.trim();
   var bio=document.getElementById('ba-bio').value.trim();
   if(!name||!email||!role||!org||!bio){
-    alert('Please fill in all fields before submitting.');return;
+    alert(t('badge.fill'));return;
   }
   var btn=document.querySelector('#badge-form-wrap button:last-child');
-  if(btn){btn.textContent='Submitting...';btn.disabled=true;}
+  if(btn){btn.textContent=t('badge.sending');btn.disabled=true;}
   var r=await _sb.from('badge_applications').insert({
     user_name:name,
     email:email,
@@ -1033,18 +1038,26 @@ async function submitBadgeApp(){
     bio:bio
   });
   if(r.error){
-    alert('Error submitting. Please try again.');
-    if(btn){btn.textContent='SUBMIT APPLICATION';btn.disabled=false;}
+    alert(t('badge.fail'));
+    if(btn){btn.textContent=t('badge.submit');btn.disabled=false;}
     return;
   }
   document.getElementById('badge-form-wrap').style.display='none';
   document.getElementById('badge-success').style.display='block';
 }
+// 4b-5: a language switch (the EN / PT in the nav for guests) redraws what
+// script drew, from what is already loaded.
+window.addEventListener('sm-lang',function(){
+  try{ renderAuthUi(); }catch(e){}
+  try{ if(LEAGUES&&LEAGUES.length){ filterTeams(); if(AT) renderTeamPage(); } }catch(e){ console.error('sm-lang:',e); }
+});
+// This script runs before the footer is parsed: fill the rest once the page is whole.
+document.addEventListener('DOMContentLoaded',function(){ try{ applyI18n(); }catch(e){} });
 if(typeof TEAMS!=='undefined'){init();}else{window.addEventListener('load',init);}
 </script>
 <!-- Footer: the same three links on every page. -->
 <footer class="sm-foot">
-  <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="mailto:hello@scoutmind.app">Contact</a>
+  <a href="/privacy.html" data-i18n="foot.privacy">Privacy</a> · <a href="/terms.html" data-i18n="foot.terms">Terms</a> · <a href="mailto:hello@scoutmind.app" data-i18n="foot.contact">Contact</a>
 </footer>
 </body>
 </html>

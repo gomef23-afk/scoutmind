@@ -26,20 +26,20 @@ const load = fn('loadClubs');
 check('loadClubs reads the header fields from teams', /teams\?select=id,api_team_id,name,founded,venue_name,venue_city,logo_url,coach_name,leagues!teams_league_id_fkey\(slug,name\)/.test(load));
 check('the leagues embed is disambiguated (rule 20)', /leagues!teams_league_id_fkey/.test(load) && !/[^!]leagues\(/.test(load.replace(/leagues!teams_league_id_fkey\(/g, '')));
 const page = fn('renderTeamPage');
-check('the header uses the club row: name, city, stadium, founded', /escH\(c\.label\)/.test(page) && /\[c\.city,c\.venue,c\.founded\?'Est\. '\+c\.founded:null\]/.test(page));
+check('the header uses the club row: name, city, stadium, founded', /escH\(c\.label\)/.test(page) && /\[c\.city,c\.venue,c\.founded\?t\('comm\.est',\{year:c\.founded\}\):null\]/.test(page));
 check('the crest is teams.logo_url, initials only when the image fails', /c\.logo/.test(page) && /onerror="this\.parentNode\.style\.display=\\'none\\';this\.parentNode\.nextElementSibling\.style\.display=\\'flex\\';"/.test(page));
 check('the coach shows only when teams.coach_name has a value, no "since"', /\(c\.coach\?/.test(page) && !/[Ss]ince/.test(page));
 check('no Instagram, typed full name, TEAM_INFO or COACHES on the page',
   !/instagram|fullName|TEAM_INFO|COACHES/.test(page + load + fn('filterTeams')));
 
 // ── 2. One position source ──
-check('the chip uses the standings rank, or nothing', /\(c\.rank!=null\?'<div style="'\+chip\+'">'\+escH\(ordN\(c\.rank\)\)\+' in league<\/div>':''\)/.test(page));
-check('the club list uses the standings rank, or nothing', /\(c\.rank!=null\?escH\(ordN\(c\.rank\)\):''\)/.test(fn('filterTeams')));
+check('the chip uses the standings rank, or nothing', /\(c\.rank!=null\?'<div style="'\+chip\+'">'\+escH\(t\('comm\.inLeague',\{rank:tOrd\(c\.rank\)\}\)\)\+'<\/div>':''\)/.test(page));
+check('the club list uses the standings rank, or nothing', /\(c\.rank!=null\?escH\(tOrd\(c\.rank\)\):''\)/.test(fn('filterTeams')));
 check('the hard-coded .pos is never read', !/\.pos\b/.test(page + fn('filterTeams') + fn('init') + fn('startingClub')));
 check('standings are matched by team_id, not by name', /CLUB_BY_ID\[s\.team_id\]/.test(load) && !/_NAME_BRIDGE|_indexKey|REAL_STATS/.test(js));
 
 // ── 3. Only the leagues we carry ──
-check('the league picker is filled from the data, not a static list', /<select class="league-select" id="comm-league" onchange="loadLeague\(\)" aria-label="League">\s*<\/select>/.test(html) && /LEAGUES\.map/.test(fn('fillLeagueSelect')));
+check('the league picker is filled from the data, not a static list', /<select class="league-select" id="comm-league" onchange="loadLeague\(\)" aria-label="League" data-i18n-aria="fx\.leagueFilter">\s*<\/select>/.test(html) && /LEAGUES\.map/.test(fn('fillLeagueSelect')));
 check('the club list comes from CLUBS (teams), not TEAMS', /CLUBS\[AL\]/.test(fn('filterTeams')) && !/TEAMS\[/.test(fn('filterTeams') + fn('init')));
 
 // ── 4. Main club and ?club= ──
