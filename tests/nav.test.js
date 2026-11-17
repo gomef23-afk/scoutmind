@@ -3,7 +3,7 @@
 //   node tests/nav.test.js
 //
 // - every page with a nav (index, community, about, terms, privacy; news.html
-//   has none and goes in 4b-7) carries the same five tabs, top and bottom:
+//   was deleted in 4b-7) carries the same five tabs, top and bottom:
 //   Home · Clubs · Scout · Matches · Rooms, in that order, as Tabler line
 //   icons (the same paths as public/icons.js), labelled through i18n keys;
 //   no emoji, no Profile tab;

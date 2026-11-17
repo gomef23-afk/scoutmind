@@ -44,13 +44,19 @@ check('manifest: 192 and 512 icons, and a maskable 512', ['192x192:any', '512x51
 check('manifest icons exist', mf.icons.every((i) => existsSync(new URL(i.src.slice(1), pub))));
 
 // Every page that carries the nav links the manifest and pwa.js.
-for (const page of ['index.html', 'about.html', 'community.html', 'news.html', 'auth.html', 'terms.html', 'privacy.html']) {
+for (const page of ['index.html', 'about.html', 'community.html', 'auth.html', 'terms.html', 'privacy.html']) {
   const html = readFileSync(new URL(page, pub), 'utf8');
   check(`${page}: manifest + pwa.js + apple tags`,
     html.includes('<link rel="manifest" href="/manifest.json">') && /<script src="\/pwa\.js(\?v=[0-9a-f]+)?" defer><\/script>/.test(html)
       && html.includes('apple-mobile-web-app-capable'));
   check(`${page}: no third-party font or script host`, !/fonts\.googleapis\.com|cdn\.jsdelivr\.net/.test(html));
 }
+
+// news.html is gone (4b-7): no file, no link to it, a redirect for old links.
+check('news.html is deleted and nothing links to it', !existsSync(new URL('news.html', pub))
+  && ['index.html', 'about.html', 'community.html', 'auth.html', 'terms.html', 'privacy.html', 'offline.html', 'sw.js', 'pwa.js']
+    .every((p) => !readFileSync(new URL(p, pub), 'utf8').includes('news.html')));
+check('vercel.json sends an old /news.html link to the app', (() => { try { const v = JSON.parse(readFileSync(new URL('../vercel.json', pub), 'utf8')); return (v.redirects || []).some((r) => r.source === '/news.html' && r.destination === '/'); } catch (e) { return false; } })());
 
 // Offline empty states (Day 6, commit 5): Matches checks the network before
 // it starts a fixtures request, so a failed load offline cannot loop.

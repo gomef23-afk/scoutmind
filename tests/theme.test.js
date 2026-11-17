@@ -87,7 +87,9 @@ for (const [fg, bg, use] of PAIRS) {
 }
 
 // ── Pages: the no-flash script, then theme.css, then the page's own CSS ──
-const CONVERTED = ['public/index.html', 'public/community.html'];   // the static pages join in Sequence 2 commit 4b
+// Every page since 4b-7 (the static pages joined then; app.html is a redirect).
+const CONVERTED = ['public/index.html', 'public/community.html', 'public/about.html', 'public/auth.html', 'public/terms.html', 'public/privacy.html', 'public/offline.html'];
+const WITH_ALIASES = ['public/index.html', 'public/community.html'];   // until 4b-8 renames them
 for (const page of CONVERTED) {
   const html = read(page);
   const s = html.indexOf("localStorage.getItem('sm_theme')");
@@ -99,9 +101,19 @@ for (const page of CONVERTED) {
   check(`${page}: "system" follows the device, live`, /prefers-color-scheme: dark/.test(html) && /addEventListener\('change'/.test(html));
   const literals = [...html.matchAll(/#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgba?\([^)]*\)/g)].map((m) => m[0]).filter((c) => !['#0F141B', '#F6F7F9'].includes(c));
   check(`${page}: no literal colour outside theme.css (theme-color meta values excepted)`, literals.length === 0, [...new Set(literals)].join(' '));
-  const oldRoot = /:root\{--bg:var\(--ground\);--bg2:var\(--card\);--bg3:var\(--field\);--accent:var\(--navy-ink\)/.test(html);
-  check(`${page}: the old variable names are aliases of the new tokens`, oldRoot);
+  if (WITH_ALIASES.includes(page)) {
+    const oldRoot = /:root\{--bg:var\(--ground\);--bg2:var\(--card\);--bg3:var\(--field\);--accent:var\(--navy-ink\)/.test(html);
+    check(`${page}: the old variable names are aliases of the new tokens`, oldRoot);
+  } else {
+    // A static page uses the tokens by their own names: no alias, no old name.
+    const old = [...html.matchAll(/var\(--(bg|bg2|bg3|accent|accent2|text|warn|red|yellow|green|glow)\)/g)].map((m) => m[1]);
+    check(`${page}: tokens by their own names (no --bg / --accent / --text)`, old.length === 0, [...new Set(old)].join(' '));
+  }
+  check(`${page}: no Bebas Neue or DM Mono`, !/Bebas|DM Mono/.test(html.replace(/<!--[\s\S]*?-->/g, '')) || WITH_ALIASES.includes(page));
+  check(`${page}: the theme-color meta starts on the dark ground`, /<meta name="theme-color" content="#0F141B">/.test(html));
 }
+const allDefaults = CONVERTED.map((p) => (/var DEFAULT='(\w+)'/.exec(read(p)) || [])[1]);
+check('every page has the same default theme', new Set(allDefaults).size === 1 && !!allDefaults[0], allDefaults.join(' '));
 const dflt = /var DEFAULT='(\w+)'/.exec(read('public/index.html'));
 check('rollout: no saved choice = dark until commit 4b (then system)', !!dflt && ['dark', 'system'].includes(dflt[1]), dflt && dflt[1]);
 const dfltC = /var DEFAULT='(\w+)'/.exec(read('public/community.html'));

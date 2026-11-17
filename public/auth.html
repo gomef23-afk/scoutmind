@@ -13,7 +13,26 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#07090f">
+<meta name="theme-color" content="#0F141B">
+<!-- Theme (design spec v1.2), BEFORE any stylesheet so the first paint is
+     already right: the same script as index.html (4b-7). -->
+<script>
+(function(){
+  var DEFAULT='dark';                                   // 4b: 'system'
+  var root=document.documentElement, mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+  function pref(){ try{ var s=localStorage.getItem('sm_theme'); return s==='light'||s==='dark'||s==='system'?s:DEFAULT; }catch(e){ return DEFAULT; } }
+  function resolve(p){ return p==='system'?(mq&&mq.matches?'dark':'light'):p; }
+  function apply(){
+    var t=resolve(pref());
+    root.setAttribute('data-theme',t);
+    var m=document.querySelector('meta[name="theme-color"]');
+    if(m) m.setAttribute('content',t==='dark'?'#0F141B':'#F6F7F9');
+  }
+  apply();
+  if(mq&&mq.addEventListener) mq.addEventListener('change',function(){ if(pref()==='system') apply(); });
+})();
+</script>
+<link rel="stylesheet" href="/theme.css?v=8463eb220a">
 <!-- Installable app (Day 6): manifest, iOS home-screen tags, service worker. -->
 <link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -33,54 +52,62 @@
 <meta name="twitter:card" content="summary_large_image">
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <style>
+/* 4b-7: on the v1.2 tokens (/theme.css), light and dark. No literal colours
+   in this page: tests/theme.test.js checks it. */
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;color:#00e5a0;margin-bottom:6px;}
-.logo span{color:#edf2f7;}
-.tagline{font-size:13px;color:#5a6a85;margin-bottom:32px;}
-.card{background:#0d1117;border:1px solid #1a2540;border-radius:16px;padding:32px;width:100%;max-width:420px;}
-.tabs{display:flex;border-bottom:1px solid #1a2540;margin-bottom:24px;gap:0;}
-.tab-btn{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:600;color:#5a6a85;cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;transition:all .2s;}
-.tab-btn.active{color:#00e5a0;border-bottom:2px solid #00e5a0;}
+body{background:var(--ground);color:var(--ink);font-family:var(--font-sans);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.logo{font-family:var(--font-num);font-weight:700;font-size:34px;letter-spacing:0.5px;color:var(--navy-ink);margin-bottom:6px;}
+.logo span{color:var(--ink);}
+.tagline{font-size:13px;color:var(--muted);margin-bottom:32px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:420px;}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;gap:0;}
+.tab-btn{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-sans);transition:all .2s;}
+.tab-btn.active{color:var(--navy-ink);border-bottom:2px solid var(--navy-ink);font-weight:700;}
 .form-section{display:none;}
 .form-section.active{display:block;}
 .field{margin-bottom:16px;}
-.field label{display:block;font-size:11px;font-weight:600;color:#5a6a85;letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;}
-.field input{width:100%;background:#141b27;border:1px solid #1a2540;color:#edf2f7;padding:11px 14px;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;}
-.field input:focus{border-color:#00e5a0;}
-.btn-primary{width:100%;background:#00e5a0;color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;}
-.btn-primary:hover{background:#00ffb3;}
-.divider{text-align:center;color:#5a6a85;font-size:12px;margin:14px 0;position:relative;}
-.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:#1a2540;}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;}
+.field input{width:100%;background:var(--field);border:1px solid var(--border);color:var(--ink);padding:11px 14px;border-radius:8px;font-size:14px;font-family:var(--font-sans);outline:none;}
+.field input:focus{border-color:var(--navy-ink);}
+.btn-primary{width:100%;background:var(--navy);color:var(--on-navy);border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font-sans);margin-top:4px;}
+.btn-primary:hover{background:var(--navy-hover);}
+.divider{text-align:center;color:var(--muted);font-size:12px;margin:14px 0;position:relative;}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border);}
 .divider::before{left:0;} .divider::after{right:0;}
-.btn-demo{width:100%;background:transparent;border:1px solid #1a2540;color:#5a6a85;padding:10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.btn-demo:hover{border-color:#5a6a85;color:#edf2f7;}
+.btn-demo{width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--font-sans);}
+.btn-demo:hover{border-color:var(--border-strong);color:var(--ink);}
 .msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
-.msg.error{background:rgba(255,69,96,0.1);border:1px solid rgba(255,69,96,0.3);color:#ff4560;}
-.msg.success{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:#00e5a0;}
-.back{text-align:center;margin-top:14px;font-size:12px;color:#5a6a85;cursor:pointer;}
-.back:hover{color:#edf2f7;}
+.msg.error{background:var(--loss-tint);border:1px solid var(--loss-ink);color:var(--loss-ink);}
+.msg.success{background:var(--card);border:1px solid var(--win);color:var(--win);}
+.back{text-align:center;margin-top:14px;font-size:12px;color:var(--muted);cursor:pointer;}
+.back:hover{color:var(--ink);}
 /* Day 6 audit: 16px fields (14px made iOS Safari zoom on focus) and 44px
    targets throughout. */
 .field input{font-size:16px;min-height:44px;}
 .tab-btn,.btn-primary,.btn-demo{min-height:44px;}
 .back{display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:6px;}
-.link-row{text-align:center;margin-top:8px;font-size:12px;color:#5a6a85;}
-.link-row a{color:#8fa3bf;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 6px;}
-.link-row a:hover{color:#00e5a0;}
-.panel-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:10px;}
-.panel-text{font-size:13px;line-height:1.6;color:#c7d3e4;margin-bottom:12px;}
-.panel-text.muted{color:#5a6a85;font-size:12px;}
+.link-row{text-align:center;margin-top:8px;font-size:12px;color:var(--muted);}
+.link-row a{color:var(--navy-ink);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 6px;}
+.link-row a:hover{text-decoration:underline;}
+.panel-title{font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:24px;letter-spacing:0.5px;margin-bottom:10px;}
+.panel-text{font-size:13px;line-height:1.6;color:var(--ink);margin-bottom:12px;}
+.panel-text.muted{color:var(--muted);font-size:12px;}
 .btn-link{display:block;text-align:center;text-decoration:none;}
-.btn-primary:disabled{opacity:.55;cursor:default;}
-.legal-note{max-width:420px;margin:14px auto 0;font-size:11px;color:#5a6a85;line-height:1.6;text-align:center;}
-.legal-note a{color:#8fa3bf;}
-.sm-foot{text-align:center;font-size:12px;color:#5a6a85;padding:18px 16px 10px;}
-.sm-foot a{color:#5a6a85;text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 8px;}
-.sm-foot a:hover{color:#edf2f7;}
+/* Disabled while it works: the spec's pair (ink on border-strong), not a faded navy. */
+.btn-primary:disabled{background:var(--border-strong);color:var(--ink);cursor:default;}
+.legal-note{max-width:420px;margin:14px auto 0;font-size:11px;color:var(--muted);line-height:1.6;text-align:center;}
+.legal-note a{color:var(--navy-ink);}
+.sm-foot{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 10px;}
+.sm-foot a{color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 8px;}
+.sm-foot a:hover{color:var(--ink);}
 .lang-toggle{display:flex;gap:4px;margin:-20px 0 16px;}
-.lang-toggle button{min-width:44px;min-height:44px;background:transparent;border:1px solid #1a2540;color:#5a6a85;border-radius:22px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;}
-.lang-toggle button.on{border-color:#00e5a0;color:#00e5a0;}
+.lang-toggle button{min-width:44px;min-height:44px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:22px;font-family:var(--font-sans);font-weight:700;font-size:12px;cursor:pointer;}
+.lang-toggle button.on{border-color:var(--navy-ink);color:var(--navy-ink);}
+/* "Already signed in" (shown by the script when a session exists). */
+.already{background:var(--card);border:1px solid var(--navy-ink);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.6;color:var(--ink);}
+.already-go{background:var(--navy);color:var(--on-navy);text-decoration:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:700;}
+.already-go:hover{background:var(--navy-hover);}
+.already-switch{background:transparent;border:1px solid var(--border-strong);color:var(--navy-ink);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;}
 </style>
 </head>
 <body>
@@ -105,11 +132,11 @@ body{background:#07090f;color:#edf2f7;font-family:'DM Sans',sans-serif;min-heigh
 
   <!-- Shown when a session already exists. This page used to redirect to '/'
        instead, which raced against a sign-in already in flight. -->
-  <div id="already-signed-in" style="display:none;background:rgba(0,229,160,0.07);border:1px solid rgba(0,229,160,0.3);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.6;color:#c7d3e4;">
+  <div id="already-signed-in" class="already" style="display:none;">
     <span data-i18n="auth.already.pre">Already signed in as</span> <strong id="already-email"></strong>.
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-      <a href="/" style="background:#00e5a0;color:#000;text-decoration:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:700;" data-i18n="auth.already.continue">Continue</a>
-      <button onclick="signOutAndStay()" style="background:transparent;border:1px solid #2a3a52;color:#8fa3bf;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;" data-i18n="auth.already.switch">Sign out and use another account</button>
+      <a href="/" class="already-go" data-i18n="auth.already.continue">Continue</a>
+      <button onclick="signOutAndStay()" class="already-switch" data-i18n="auth.already.switch">Sign out and use another account</button>
     </div>
   </div>
 

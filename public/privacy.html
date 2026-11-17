@@ -9,7 +9,26 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#07090f">
+<meta name="theme-color" content="#0F141B">
+<!-- Theme (design spec v1.2), BEFORE any stylesheet so the first paint is
+     already right: the same script as index.html (4b-7). -->
+<script>
+(function(){
+  var DEFAULT='dark';                                   // 4b: 'system'
+  var root=document.documentElement, mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
+  function pref(){ try{ var s=localStorage.getItem('sm_theme'); return s==='light'||s==='dark'||s==='system'?s:DEFAULT; }catch(e){ return DEFAULT; } }
+  function resolve(p){ return p==='system'?(mq&&mq.matches?'dark':'light'):p; }
+  function apply(){
+    var t=resolve(pref());
+    root.setAttribute('data-theme',t);
+    var m=document.querySelector('meta[name="theme-color"]');
+    if(m) m.setAttribute('content',t==='dark'?'#0F141B':'#F6F7F9');
+  }
+  apply();
+  if(mq&&mq.addEventListener) mq.addEventListener('change',function(){ if(pref()==='system') apply(); });
+})();
+</script>
+<link rel="stylesheet" href="/theme.css?v=8463eb220a">
 <!-- Installable app (Day 6): manifest, iOS home-screen tags, service worker. -->
 <link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -59,45 +78,46 @@
   Portuguese text is the one a Brazilian authority will read.
 -->
 <style>
-:root{--bg:#07090f;--bg2:#0d1117;--bg3:#141b27;--accent:#00e5a0;--accent2:#00b8ff;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;--yellow:#f5c842;}
+/* 4b-7: on the v1.2 tokens (/theme.css), light and dark. No literal colours
+   in this page: tests/theme.test.js checks it. */
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;padding-bottom:calc(64px + env(safe-area-inset-bottom));}
-/* ── B2 NAV — kept in sync with index.html, about.html, community.html, news.html (rule 5) ── */
-.sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(7,9,15,0.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
-.sm-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent);text-decoration:none;flex-shrink:0;}
-.sm-logo span{color:var(--text);}
+body{background:var(--ground);color:var(--ink);font-family:var(--font-sans);min-height:100vh;padding-bottom:calc(64px + env(safe-area-inset-bottom));}
+/* ── NAV — kept in sync with index.html, about.html, community.html, terms.html (rule 5) ── */
+.sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100;}
+.sm-logo{font-family:var(--font-num);font-weight:700;font-size:22px;letter-spacing:0.5px;color:var(--navy-ink);text-decoration:none;flex-shrink:0;}
+.sm-logo span{color:var(--ink);}
 .sm-nav-right{display:flex;align-items:center;gap:4px;margin-left:auto;}
 .sm-about{font-size:12px;color:var(--muted);text-decoration:none;padding:0 8px;min-height:44px;display:flex;align-items:center;}
-.sm-about:hover{color:var(--text);}
+.sm-about:hover{color:var(--ink);}
 .sm-tabs{display:flex;}
-.sm-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;line-height:1.2;cursor:pointer;text-decoration:none;}
+.sm-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:transparent;border:none;color:var(--muted);font-family:var(--font-sans);font-size:10px;font-weight:600;line-height:1.2;cursor:pointer;text-decoration:none;}
 .sm-tab-icon{display:flex;line-height:1;}
 .sm-tab-icon svg{width:22px;height:22px;}
-.sm-tabs-bottom .sm-tab.active{box-shadow:inset 0 3px 0 var(--accent);}
+.sm-tabs-bottom .sm-tab.active{box-shadow:inset 0 3px 0 var(--navy-ink);}
 .nav-prefs{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;color:var(--muted);text-decoration:none;}
-.nav-prefs:hover{color:var(--text);}
+.nav-prefs:hover{color:var(--ink);}
 .nav-prefs svg{width:22px;height:22px;}
-.sm-tab:hover{color:var(--text);}
+.sm-tab:hover{color:var(--ink);}
 .sm-tabs-top{display:none;}
-.sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(7,9,15,0.98);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
+.sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:var(--card);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
 /* ── LEGAL PAGE ── */
 .legal{max-width:760px;margin:0 auto;padding:24px 16px 40px;}
-.legal-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1.5px;line-height:1.1;}
+.legal-title{font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:34px;letter-spacing:0.5px;line-height:1.1;}
 .legal-meta{font-size:12px;color:var(--muted);margin-top:6px;}
-.legal-draft{margin:14px 0 18px;padding:10px 12px;border:1px solid rgba(245,200,66,0.35);background:rgba(245,200,66,0.06);border-radius:8px;font-size:12px;color:var(--yellow);line-height:1.6;}
+.legal-draft{margin:14px 0 18px;padding:10px 12px;border:1px solid var(--border-strong);background:var(--tint);border-radius:8px;font-size:12px;color:var(--ink);line-height:1.6;}
 .lang-toggle{display:flex;gap:6px;margin-bottom:22px;}
-.lang-btn{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
-.lang-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,160,0.06);}
+.lang-btn{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;}
+.lang-btn.active{border-color:var(--navy-ink);color:var(--navy-ink);background:var(--tint);}
 .legal h2{font-size:16px;font-weight:700;margin:26px 0 8px;}
-.legal p,.legal li{font-size:14px;line-height:1.7;color:#c7d3e4;}
+.legal p,.legal li{font-size:14px;line-height:1.7;color:var(--ink);}
 .legal p{margin-bottom:10px;}
 .legal ul{margin:0 0 10px 20px;}
 .legal li{margin-bottom:4px;}
-.legal a{color:var(--accent);}
-.legal strong{color:var(--text);}
+.legal a{color:var(--navy-ink);}
+.legal strong{color:var(--ink);font-weight:700;}
 .legal-table{width:100%;border-collapse:collapse;margin:6px 0 12px;font-size:13px;}
-.legal-table th,.legal-table td{text-align:left;vertical-align:top;padding:8px 6px;border-bottom:1px solid var(--border);color:#c7d3e4;line-height:1.5;}
-.legal-table th{color:var(--text);font-weight:600;}
+.legal-table th,.legal-table td{text-align:left;vertical-align:top;padding:8px 6px;border-bottom:1px solid var(--border);color:var(--ink);line-height:1.5;}
+.legal-table th{color:var(--ink);font-weight:700;}
 /* One language at a time; the toggle sets data-lang on <html>. */
 html[data-lang="en"] [lang="pt-BR"].legal-body{display:none;}
 html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
@@ -106,7 +126,7 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
 /* Day 6 audit: the logo is a 27px-tall link; give it a 44px hit area. */
 .sm-logo{position:relative;}
 .sm-logo::after{content:'';position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%);}
-.sm-foot a:hover{color:var(--text);}
+.sm-foot a:hover{color:var(--ink);}
 @media(min-width:900px){
   body{padding-bottom:0;}
   .sm-nav{padding:10px 28px;gap:18px;}
