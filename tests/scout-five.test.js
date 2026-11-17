@@ -31,8 +31,15 @@ for (const [table, name] of [['game_entries', 'own, or after lock'], ['game_pick
 check('017: game_picks cannot change after the deadline (restrictive insert/update/delete)',
   ['insert', 'update', 'delete'].every((op) => new RegExp(`"game_picks: ${op} only before the deadline"[\\s\\S]*?as restrictive for ${op}`).test(m017)));
 const later = readdirSync(new URL('../supabase/migrations/', import.meta.url)).filter((f) => /^\d{3}/.test(f) && f > '017_scout_game.sql');
-const loosened = later.filter((f) => /(drop|alter|create) policy[^;]*on public\.(game_entries|game_picks|game_pick_scores)\b/i.test(read('supabase/migrations/' + f)));
-check('no later migration replaces those policies', loosened.length === 0, loosened.join(', '));
+// 029 moved "after lock" to "from the deadline" (picks are frozen at the
+// deadline already); tests/ownership.test.js pins its three policies. No
+// other migration may touch them.
+const loosened = later.filter((f) => f !== '029_ownership_shadow.sql'
+  && /(drop|alter|create) policy[^;]*on public\.(game_entries|game_picks|game_pick_scores)\b/i.test(read('supabase/migrations/' + f)));
+check('no migration after 017 touches those policies except 029', loosened.length === 0, loosened.join(', '));
+const m029 = read('supabase/migrations/029_ownership_shadow.sql');
+check('029 keeps "own row" and opens others only from the deadline',
+  (m029.match(/using \(user_id = auth\.uid\(\)\s+or exists \(select 1 from public\.game_rounds g\s+where g\.id = round_id and \(g\.status <> 'open' or g\.deadline_utc <= now\(\)\)\)\)/g) || []).length === 2);
 check('no function that reads or writes picks/entries is granted to anon', later.concat(['017_scout_game.sql']).every((f) => !/grant execute on function public\.\w*(_picks|_entries|_entry)\([^)]*\) to [^;]*anon/i.test(read('supabase/migrations/' + f))));
 
 // ── Every ranking name is a tap target ──
@@ -53,8 +60,9 @@ check('the tap is an index, never the id in an inline string (rule 4 spirit)', /
 
 // ── The sheet ──
 const open = fn('sgOpenFive');
-check('asks only for rounds that are not open (the database would withhold them anyway)', /game_rounds!inner\(/.test(open) && /&game_rounds\.status=neq\.open/.test(open)
-  && /filter\(e=>e\.game_rounds&&e\.game_rounds\.status!=='open'\)/.test(open));
+check('asks only for rounds locked or past their deadline (the database would withhold the rest anyway)', /game_rounds!inner\(/.test(open)
+  && /&game_rounds\.or=\(status\.neq\.open,deadline_utc\.lte\.'\+encodeURIComponent\(nowIso\)\+'\)/.test(open)
+  && /const past=g=>g&&\(g\.status!=='open'\|\|\(g\.deadline_utc&&new Date\(g\.deadline_utc\)<=new Date\(\)\)\);/.test(open) && /filter\(e=>past\(e\.game_rounds\)\)/.test(open));
 check('newest locked round first', /sort\(\(a,b\)=>String\(b\.game_rounds\.deadline_utc\)\.localeCompare\(String\(a\.game_rounds\.deadline_utc\)\)\)/.test(open));
 check('the scope becomes the filter', /round_id=eq\.'\+Number\(s\.roundId\)/.test(open) && /game_rounds\.league_id=eq\.'\+Number\(s\.leagueId\)\+'&game_rounds\.season=eq\.'\+Number\(s\.season\)/.test(open));
 check('the user id is encoded in the query', /user_id=eq\.'\+encodeURIComponent\(tg\.user_id\)/.test(open));

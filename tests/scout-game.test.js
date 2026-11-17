@@ -157,7 +157,7 @@ eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
   globalThis.fetch = async (url, init = {}) => {
     const path = new URL(url).pathname.replace('/rest/v1/', '');
     calls.push(`${init.method || 'GET'} ${path}`);
-    if (path === 'game_config' && init.method === 'PATCH') configWrite = JSON.parse(init.body);
+    if (path === 'game_config' && init.method === 'PATCH' && !configWrite) configWrite = JSON.parse(init.body);
     const body = path === 'rpc/lock_due_rounds' ? [] : path.startsWith('rpc/') ? 0 : null;
     return new Response(body === null ? null : JSON.stringify(body),
       { status: body === null ? 204 : 200, headers: { 'content-type': 'application/json' } });
@@ -166,7 +166,7 @@ eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
     const { runScoutGame } = await import('../api/cron/player-stats.js');
     const out = await runScoutGame([]);
     eq('job: game steps in order', calls, [
-      'PATCH game_config', 'POST rpc/sync_game_rounds', 'POST rpc/lock_due_rounds',
+      'PATCH game_config', 'PATCH game_config', 'POST rpc/sync_game_rounds', 'POST rpc/lock_due_rounds',
       'POST rpc/refresh_game_results', 'POST rpc/post_round_messages',
     ]);
     eq('job: game_config gets the ladder from scout-game.js',
@@ -207,6 +207,7 @@ eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
     'supabase/migrations/020_lineup_rule.sql', 'supabase/migrations/021_pickable_fixture.sql',
     'supabase/migrations/022_base_points_precision.sql', 'scripts/backtest-scout-game.mjs',
     'supabase/migrations/023_formation_and_history.sql', 'supabase/migrations/024_account_deletion.sql',
+    'supabase/migrations/029_ownership_shadow.sql',
     'api/account/delete.js',
     'public/index.html'];   // the Scout tab's copy lives here since Day 4
   // Money words, spelt in pieces so this file passes its own check.

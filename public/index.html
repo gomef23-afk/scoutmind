@@ -6436,16 +6436,17 @@ async function sgOpenFive(i){
   body.innerHTML='<div class="sg-empty">'+t('sg.loading')+'</div>';
   ov.style.display='flex';
   document.body.style.overflow='hidden';
-  const s=tg.scope;
+  const s=tg.scope, nowIso=new Date().toISOString();
+  const past=g=>g&&(g.status!=='open'||(g.deadline_utc&&new Date(g.deadline_utc)<=new Date()));
   let q='game_entries?select=id,round_id,game_rounds!inner(id,league_id,season,round_label,round_no,deadline_utc,status,participants,leagues(slug,name,flag)),'
     +'game_picks(slot,player_id,is_captain,locked_tier,locked_multiplier,locked_contrarian,players(name,photo_url))'
-    +'&user_id=eq.'+encodeURIComponent(tg.user_id)+'&game_rounds.status=neq.open&limit=200';
+    +'&user_id=eq.'+encodeURIComponent(tg.user_id)+'&game_rounds.or=(status.neq.open,deadline_utc.lte.'+encodeURIComponent(nowIso)+')&limit=200';
   if(s.roundId!=null) q+='&round_id=eq.'+Number(s.roundId);
   else if(s.leagueId!=null) q+='&game_rounds.league_id=eq.'+Number(s.leagueId)+'&game_rounds.season=eq.'+Number(s.season);
   try{
     const rows=await apiGet(q);
     if(FIVE.open!==token) return;
-    FIVE.list=(rows||[]).filter(e=>e.game_rounds&&e.game_rounds.status!=='open')
+    FIVE.list=(rows||[]).filter(e=>past(e.game_rounds))
       .sort((a,b)=>String(b.game_rounds.deadline_utc).localeCompare(String(a.game_rounds.deadline_utc)));
     if(!FIVE.list.length){ body.innerHTML='<div class="sg-empty">'+t('sg.five.none')+'</div>'; return; }
     await sgFiveShow(token);

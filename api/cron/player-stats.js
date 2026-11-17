@@ -23,7 +23,8 @@ import { select, upsert, update, rpc, activeLeagues, teamIdMap, count } from '..
 import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 import { parseFixture } from '../_lib/players.js';
 import {
-  scorePick, TIER_MULTIPLIER, UNRANKED_MULTIPLIER, CONTRARIAN, CAPTAIN_MODE, MAX_MULTIPLIER,
+  scorePick, shadowScore, TIER_MULTIPLIER, UNRANKED_MULTIPLIER, CONTRARIAN, CAPTAIN_MODE, MAX_MULTIPLIER,
+  OWNERSHIP_LADDER, OWNERSHIP_MIN_PARTICIPANTS, OWNERSHIP_LIVE,
 } from '../_lib/scout-game.js';
 
 const FINISHED = ['FT', 'AET', 'PEN'];
@@ -260,15 +261,21 @@ export async function runScoutGame(ingestedFixtureIds) {
       contrarian_bonus: CONTRARIAN.bonus,
       rules_synced_at: new Date().toISOString(),
     });
+    // The ownership ladder (029). Its own write: until 029 runs the columns
+    // do not exist, and that must not stop the game steps (rule 21).
+    try {
+      await update('game_config', 'id=is.true', {
+        ownership_ladder: OWNERSHIP_LADDER,
+        ownership_min_participants: OWNERSHIP_MIN_PARTICIPANTS,
+        ownership_live: OWNERSHIP_LIVE,
+      });
+    } catch (e) {
+      console.warn('[player-stats] ownership config (before 029?):', e.message.slice(0, 200));
+    }
 
     out.rounds_synced = (await rpc('sync_game_rounds')) ?? 0;
 
-    const locked = ((await rpc('lock_due_rounds', {
-      p_ladder: TIER_MULTIPLIER,
-      p_unranked: UNRANKED_MULTIPLIER,
-      p_contrarian_pct: CONTRARIAN.maxOwnershipPct,
-      p_contrarian_min: CONTRARIAN.minParticipants,
-    })) || []).map(scalar);
+    const locked = (await lockDueRounds()).map(scalar);
     out.rounds_locked = locked.length;
 
     // Rounds to score: those whose counting fixtures got player rows this run,
@@ -301,6 +308,33 @@ export async function runScoutGame(ingestedFixtureIds) {
     out.error = e.message.slice(0, 300);
   }
   return out;
+}
+
+/**
+ * Lock the rounds past their deadline. The 029 signature carries the
+ * ownership ladder; until 029 runs PostgREST answers PGRST202 (no such
+ * function) and the 017 signature is called instead, with the contrarian
+ * floor out of reach (retired) so it can never fire.
+ */
+async function lockDueRounds() {
+  try {
+    return (await rpc('lock_due_rounds', {
+      p_ladder: TIER_MULTIPLIER,
+      p_unranked: UNRANKED_MULTIPLIER,
+      p_own_ladder: OWNERSHIP_LADDER,
+      p_own_min: OWNERSHIP_MIN_PARTICIPANTS,
+      p_own_live: OWNERSHIP_LIVE,
+    })) || [];
+  } catch (e) {
+    if (!/PGRST202/.test(e.message)) throw e;
+    console.warn('[player-stats] lock_due_rounds: 029 not run yet, using the 017 signature');
+    return (await rpc('lock_due_rounds', {
+      p_ladder: TIER_MULTIPLIER,
+      p_unranked: UNRANKED_MULTIPLIER,
+      p_contrarian_pct: CONTRARIAN.maxOwnershipPct,
+      p_contrarian_min: 2147483647,
+    })) || [];
+  }
 }
 
 /** Score every locked pick of these rounds from scratch. Returns rows written. */
@@ -339,11 +373,15 @@ async function scoreRounds(roundIds) {
   // A pick who did not play in a fixture has no row there and scores nothing:
   // once a fixture is ingested, no row means did not play.
   const scores = [];
+  const playedOf = new Map();   // entry_id:slot -> [{ row, ownGoals }], for the shadow
   for (const pick of picks) {
     for (const fixtureId of fixturesOf.get(pick.round_id) || []) {
       const row = rowOf.get(`${fixtureId}:${pick.player_id}`);
       if (!row) continue;
       const og = ownGoals.get(`${fixtureId}:${apiOf.get(pick.player_id)}`) || 0;
+      const key = `${pick.entry_id}:${pick.slot}`;
+      if (!playedOf.has(key)) playedOf.set(key, []);
+      playedOf.get(key).push({ row, ownGoals: og });
       const s = scorePick(row, pick, { ownGoals: og });
       scores.push({
         entry_id: pick.entry_id, slot: pick.slot, fixture_id: fixtureId,
@@ -354,5 +392,35 @@ async function scoreRounds(roundIds) {
       });
     }
   }
-  return upsert('game_pick_scores', scores, 'entry_id,slot,fixture_id');
+  const written = await upsert('game_pick_scores', scores, 'entry_id,slot,fixture_id');
+  await scoreShadow(roundIds, picks, playedOf);
+  return written;
+}
+
+/**
+ * The shadow score (029): the same base points at the ownership band's
+ * multiplier, into game_shadow_picks. Whole rows go back (rule 25: an upsert
+ * is an INSERT first, so every NOT NULL column is in it). Before 029 the
+ * table does not exist and this is skipped; it never stops the real scoring.
+ */
+async function scoreShadow(roundIds, picks, playedOf) {
+  try {
+    const shadow = await selectIn('game_shadow_picks', 'round_id', roundIds, 'select=*');
+    if (!shadow.length) return 0;
+    const pickOf = new Map(picks.map((p) => [`${p.entry_id}:${p.slot}`, p]));
+    const now = new Date().toISOString();
+    const rows = [];
+    for (const s of shadow) {
+      const key = `${s.entry_id}:${s.slot}`;
+      const pick = pickOf.get(key);
+      if (!pick) continue;
+      const sc = shadowScore(playedOf.get(key), { multiplier: Number(s.multiplier), is_captain: Boolean(pick.is_captain) });
+      if (!sc) continue;
+      rows.push({ ...s, shadow_base: sc.base, shadow_total: sc.total, scored_at: now });
+    }
+    return await upsert('game_shadow_picks', rows, 'entry_id,slot');
+  } catch (e) {
+    console.warn('[player-stats] shadow scores (before 029?):', e.message.slice(0, 200));
+    return 0;
+  }
 }

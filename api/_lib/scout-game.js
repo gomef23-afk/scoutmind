@@ -67,8 +67,48 @@ export const UNRANKED_MULTIPLIER = 1.4;
  */
 export const CAPTAIN_MODE = 'additive';
 
-/** Contrarian: under this share of a round's entries, with enough of them. */
+/**
+ * Contrarian: RETIRED 17 Nov 2026 (migration 029). lock_due_rounds() no longer
+ * sets locked_contrarian; the ownership ladder below pays for being picked by
+ * few. Kept so picks locked before 029 keep scoring as they were locked.
+ */
 export const CONTRARIAN = { maxOwnershipPct: 5, minParticipants: 50, bonus: 0.5 };
+
+/**
+ * The ownership ladder (plan A, 17 Nov 2026): a pick's multiplier from the
+ * share of the round's entries that picked the player, the fewer the higher,
+ * capped at x1.4. The bands reuse the five tier words (5 Star .. 1 Hidden gem)
+ * and the tier ladder's five multipliers. Highest min_pct reached wins.
+ * Starting edges, to be tuned from the shadow data (game_shadow_picks).
+ */
+export const OWNERSHIP_LADDER = [
+  { min_pct: 30, tier: 5, multiplier: 1 },
+  { min_pct: 15, tier: 4, multiplier: 1.05 },
+  { min_pct: 7.5, tier: 3, multiplier: 1.1 },
+  { min_pct: 3, tier: 2, multiplier: 1.2 },
+  { min_pct: 0, tier: 1, multiplier: 1.4 },
+];
+/** Below this many entries in a round, the performance tiers apply. */
+export const OWNERSHIP_MIN_PARTICIPANTS = 20;
+/**
+ * false = SHADOW: every round locks on the performance tiers and the
+ * ownership band is only recorded and scored beside it. true = rounds with
+ * enough entries lock on the ownership ladder. Switching is a one-line
+ * commit; rounds already locked keep their mode.
+ */
+export const OWNERSHIP_LIVE = false;
+
+/** { tier, multiplier } for an ownership percentage (null = nobody = 0%). */
+export function ownershipBand(pct, ladder = OWNERSHIP_LADDER) {
+  const p = pct == null || Number.isNaN(Number(pct)) ? 0 : Number(pct);
+  const band = [...ladder].sort((a, b) => b.min_pct - a.min_pct).find((b) => p >= b.min_pct);
+  return band ? { tier: band.tier, multiplier: band.multiplier } : null;
+}
+
+/** 'ownership' or 'tier': the mode a round locks in. */
+export function multiplierMode(participants, { live = OWNERSHIP_LIVE, min = OWNERSHIP_MIN_PARTICIPANTS } = {}) {
+  return live && Number(participants) >= min ? 'ownership' : 'tier';
+}
 
 /**
  * No single pick's effective multiplier ever exceeds this. A rule, kept even
@@ -179,6 +219,23 @@ export function scorePick(row, pick, { ownGoals = 0, mode = CAPTAIN_MODE } = {})
     mode,
   });
   return { base, breakdown, multiplier, total: pickTotal(base, multiplier) };
+}
+
+/**
+ * The shadow score of one pick (029): the same base points as the real score,
+ * paid at the ownership band's multiplier instead of the locked one, captain
+ * as usual, no contrarian. `played` = [{ row, ownGoals }], one per fixture the
+ * pick has a stats row in. null when there is none yet (not "0": unscored is
+ * not zero, rule 14's spirit).
+ */
+export function shadowScore(played, { multiplier, is_captain }) {
+  if (!played || !played.length) return null;
+  let base = 0, total = 0;
+  for (const { row, ownGoals } of played) {
+    const s = scorePick(row, { locked_multiplier: multiplier, is_captain, locked_contrarian: false }, { ownGoals });
+    base += s.base; total += s.total;
+  }
+  return { base: round2(base), total: round2(total) };
 }
 
 function round2(v) {
