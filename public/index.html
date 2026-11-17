@@ -73,7 +73,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=3cb88360eb"></script>
+<script src="/i18n.js?v=30de457dd7"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=d008ee2323"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -783,13 +783,34 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .mx-bar{position:sticky;top:var(--mx-nav,0px);z-index:6;background:var(--ground);margin:0 -16px;padding:6px 16px 8px;}
 @media (min-width:900px){ .mx-bar{margin:0;padding:6px 0 8px;} }
 .mx-list{padding-bottom:24px;}
-.mx-day-h{position:sticky;top:var(--mx-top,0px);z-index:5;background:var(--ground);display:flex;align-items:baseline;gap:8px;margin:0;padding:12px 8px 8px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;color:var(--ink);}
-.mx-day-h .mx-word{font-weight:800;}
-.mx-day-h .mx-date{font-weight:600;color:var(--muted);font-size:13px;}
-.mx-day.today .mx-day-h{box-shadow:inset 3px 0 0 var(--navy-ink);}
+/* 4b-5b: each day its own block, a large heading ("Today · Wed 18 Nov"),
+   room between days, a thin divider at each new week. */
+.mx-day{margin-top:22px;}
+.mx-day-h{position:sticky;top:var(--mx-top,0px);z-index:5;background:var(--ground);display:flex;align-items:baseline;flex-wrap:wrap;gap:6px;margin:0;padding:12px 4px 10px;font-size:18px;font-weight:800;line-height:1.25;color:var(--ink);}
+.mx-day-h .mx-dot{color:var(--muted);font-weight:600;}
+.mx-day-h .mx-date{font-weight:700;color:var(--ink);}
 .mx-day.today .mx-word{color:var(--navy-ink);}
-.mx-day .md-league:first-of-type{margin-top:10px;}
-.mx-empty{padding:16px 8px;font-size:13px;color:var(--muted);}
+.mx-day-body{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2px 8px 4px;}
+.mx-day.today .mx-day-body{box-shadow:inset 3px 0 0 var(--navy-ink);}
+.mx-day-body .fx-row:last-child{border-bottom:none;}
+.mx-day .md-league:first-of-type{margin-top:8px;}
+.mx-empty{padding:14px 4px;font-size:13px;color:var(--muted);}
+.mx-week{display:flex;align-items:center;gap:10px;margin:30px 4px 0;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+.mx-week::before,.mx-week::after{content:"";flex:1;height:1px;background:var(--border);}
+.mx-earlier{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px;border:1px solid var(--border);border-radius:22px;background:var(--card);color:var(--navy-ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+.mx-earlier:hover{background:var(--field);}
+/* The date strip: 3 back to 10 ahead; today ringed, the day in view pressed. */
+.mx-strip{display:flex;gap:6px;overflow-x:auto;margin:8px -16px 0;padding:0 16px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.mx-strip::-webkit-scrollbar{display:none;}
+.mx-strip[hidden]{display:none;}
+@media (min-width:900px){ .mx-strip{margin:8px 0 0;padding:0 0 2px;} }
+.mx-dc{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:48px;min-height:52px;padding:4px 6px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--muted);font:inherit;font-size:11px;font-weight:600;cursor:pointer;}
+.mx-dc b{font-size:18px;color:var(--ink);}
+.mx-dc.empty b{color:var(--muted);}
+.mx-dc.today{border-color:var(--navy-ink);border-width:2px;}
+.mx-dc.today span{color:var(--navy-ink);font-weight:800;}
+.mx-dc[aria-current="true"]{background:var(--tint);}
+.mx-dc[aria-current="true"] span,.mx-dc[aria-current="true"] b{color:var(--ink);}
 .mx-edge{min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted);text-align:center;}
 .mx-end{min-height:44px;margin-bottom:40vh;}
 .mx-retry{background:none;border:none;color:var(--navy-ink);font:inherit;font-weight:700;cursor:pointer;min-height:44px;padding:0 6px;}
@@ -1275,6 +1296,8 @@ if(!_cu){
     <div id="matches-league-chips" class="chip-scroll" role="group" aria-label="League" data-i18n-aria="fx.leagueFilter"></div>
     <!-- 4b-3b: Matches / Table, only while one league is chosen. -->
     <div id="mx-view" class="mx-view" role="group" hidden></div>
+    <!-- 4b-5b: the date strip, 3 days back to 10 ahead; follows the scroll. -->
+    <div id="mx-strip" class="mx-strip" role="group" aria-label="Days" data-i18n-aria="fx.days"></div>
   </div>
   <div id="matches-list" class="mx-list"></div>
   <div id="mx-table" class="mx-table" hidden></div>
@@ -3271,34 +3294,56 @@ function dayHeading(key){
   return d.toLocaleDateString(smLocale()||[], {weekday:'long',day:'numeric',month:'short'});
 }
 
-// ── MATCHES TAB (Sequence 2 commit 4b-2) ──
-// ONE continuous list grouped by day. Today is anchored at the top whenever
-// the tab opens; scrolling up loads earlier days with their results,
-// scrolling down later days, a week at a time, until the first / last
-// fixture we hold. A "Today" button jumps back. The league chips filter in
+// ── MATCHES TAB (Sequence 2 commit 4b-2, reworked in 4b-5b) ──
+// ONE list grouped by day, each day its own block under a large heading
+// ("Today · Wed 18 Nov"), a thin divider at each new week ("Week of 23 Nov").
+// Today is anchored at the top whenever the tab opens. Earlier days load only
+// from the "Show earlier results" button at the top (a week per tap; it felt
+// like an endless scroll); later days load as you scroll down, until the
+// first / last fixture we hold. Under the league chips, a date strip (3 days
+// back to 10 ahead): today marked, a tap scrolls to that day, the strip
+// follows the scroll. A "Today" button jumps back. The league chips filter in
 // the query itself, so every loaded day is complete for that league. The
 // Home sidebar keeps its own small load (loadSidebarFixtures). UI state only,
 // in memory (rule 10); the chosen league is a device preference
 // (localStorage sm_matches_league = the league's slug).
 const MX_WEEK = 7;      // one more load = a week
 const MX_BACK = 3;      // the first load: three days back ...
-const MX_AHEAD = 7;     // ... to a week ahead
+const MX_AHEAD = 10;    // ... to ten ahead: the whole date strip is loaded at once
 const MX = { leagues:null, chips:[], league:null, days:new Map(), ids:new Set(), from:null, to:null,
   first:null, last:null, started:false, err:false, busy:{past:false,future:false}, failed:{past:false,future:false},
-  gen:0, todayKey:null };
+  gen:0, todayKey:null, stripDay:null };
 
 function mxMidnight(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
 function mxAddDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
 
-/** { word: 'Today' | 'Tomorrow' | 'Yesterday' | '', date: 'Mon 17 Nov' / 'Saturday 22 Nov' }. */
+/** "Wed 18 Nov" / "qua. 18 nov" (weekday optional): the parts, in the reader's language, without commas or "de". */
+function mxDate(d,withWeekday){
+  try{
+    const parts=new Intl.DateTimeFormat(smLocale()||undefined,withWeekday?{weekday:'short',day:'numeric',month:'short'}:{day:'numeric',month:'short'}).formatToParts(d);
+    const get=type=>((parts.find(p=>p.type===type)||{}).value||'');
+    return [withWeekday?get('weekday'):'',get('day'),get('month').replace(/\.$/,'')].filter(Boolean).join(' ');
+  }catch(e){ return d.toLocaleDateString(); }
+}
+/** { word: 'Today' | 'Tomorrow' | 'Yesterday' | '', date: 'Wed 18 Nov' } for a day heading. */
 function mxDayTitle(key){
   const d=new Date(key+'T12:00:00');
   const diff=Math.round((d-new Date(localDayKey(new Date())+'T12:00:00'))/86400000);
-  const near=diff>=-1&&diff<=1;
   return {
     word: diff===0?t('fx.today'):diff===1?t('fx.tomorrow'):diff===-1?t('fx.yesterday'):'',
-    date: d.toLocaleDateString(smLocale()||[],{weekday:near?'short':'long',day:'numeric',month:'short'})
+    date: mxDate(d,true)
   };
+}
+/** The Monday of a day's week, as a day key (weeks start on Monday). */
+function mxWeekKey(key){
+  const d=new Date(key+'T12:00:00');
+  return localDayKey(mxAddDays(d,-((d.getDay()+6)%7)));
+}
+/** The strip's days: 3 back to 10 ahead of today, as day keys. */
+function mxStripKeys(){
+  const today=mxMidnight(new Date()), out=[];
+  for(let i=-MX_BACK;i<=MX_AHEAD;i++) out.push(localDayKey(mxAddDays(today,i)));
+  return out;
 }
 
 function mxPref(){ try{ return localStorage.getItem('sm_matches_league')||null; }catch(e){ return null; } }
@@ -3369,7 +3414,7 @@ function mxDayHtml(key){
   const h=mxDayTitle(key);
   let body='';
   if(!ms.length){
-    body='<div class="mx-empty">'+sanitize(t('fx.noneToday'))+'</div>';
+    body='<div class="mx-empty">'+sanitize(t(today?'fx.noneToday':'fx.noneDay'))+'</div>';
   }else if(MX.league){
     body='<div class="fx-list">'+ms.map(mxRow).join('')+'</div>';
   }else{
@@ -3382,27 +3427,88 @@ function mxDayHtml(key){
         +'<span style="font-weight:500;letter-spacing:0;" class="num">· '+g.length+'</span></div>'
         +'<div class="fx-list">'+g.map(mxRow).join('')+'</div>'; }).join('');
   }
+  // "Today · Wed 18 Nov": the word, a dot, the date (4b-5b). The day's rows sit in one block.
   return '<section class="mx-day'+(today?' today':'')+'" data-day="'+sanitize(key)+'"'+(today?' id="mx-today-day"':'')+'>'
-    +'<h2 class="mx-day-h">'+(h.word?'<span class="mx-word">'+sanitize(h.word)+'</span>':'')
-    +'<span class="mx-date">'+sanitize(h.date)+'</span></h2>'+body+'</section>';
+    +'<h2 class="mx-day-h">'+(h.word?'<span class="mx-word">'+sanitize(h.word)+'</span><span class="mx-dot" aria-hidden="true">·</span>':'')
+    +'<span class="mx-date">'+sanitize(h.date)+'</span></h2><div class="mx-day-body">'+body+'</div></section>';
 }
-/** The days in [from, to) that have fixtures, plus today when it falls inside. */
-function mxDaysHtml(from,to){
-  const a=localDayKey(from), b=localDayKey(to);
-  const keys=[...MX.days.keys()].filter(k=>k>=a&&k<b);
-  if(MX.todayKey>=a&&MX.todayKey<b&&keys.indexOf(MX.todayKey)<0) keys.push(MX.todayKey);
-  return keys.sort().map(mxDayHtml).join('');
+/**
+ * Every loaded day: the days with fixtures, plus every day of the date strip
+ * that is loaded (so a tap on the strip always has a day to go to; an empty
+ * one says so), oldest first, with a divider where a new week starts.
+ */
+function mxAllDaysHtml(){
+  const a=localDayKey(MX.from), b=localDayKey(MX.to);
+  const keys=new Set([...MX.days.keys()].filter(k=>k>=a&&k<b));
+  for(const k of mxStripKeys()) if(k>=a&&k<b) keys.add(k);
+  let html='', week=null;
+  for(const k of [...keys].sort()){
+    const w=mxWeekKey(k);
+    if(w!==week){
+      week=w;
+      html+='<div class="mx-week" role="separator">'+sanitize(t('fx.weekOf',{date:mxDate(new Date(w+'T12:00:00'),false)}))+'</div>';
+    }
+    html+=mxDayHtml(k);
+  }
+  return html;
 }
 function mxAtEdge(dir){
   return dir==='past'?(!MX.first||MX.from<=MX.first):(!MX.last||MX.to>=MX.last);
 }
-/** The strip above / below the days: loading, the end, or a retry. Fixed height: no jump. */
+/**
+ * Above the days: "Show earlier results" (a tap loads the week before), or
+ * loading, a retry, the first fixture we hold. Below: loading, a retry, the
+ * end (later days load on their own as you scroll). Fixed height: no jump.
+ */
 function mxEdge(dir){
   const el=document.getElementById(dir==='past'?'mx-top':'mx-bottom');
   if(!el) return;
   el.innerHTML=MX.busy[dir]?sanitize(t(dir==='past'?'fx.loadingEarlier':'fx.loadingLater'))
     :MX.failed[dir]?sanitize(t('fx.loadFail'))+' <button class="mx-retry" onclick="mxMore(\''+dir+'\')">'+sanitize(t('fx.retry'))+'</button>'
-    :mxAtEdge(dir)?sanitize(t(dir==='past'?'fx.start':'fx.end')):'';
+    :mxAtEdge(dir)?sanitize(t(dir==='past'?'fx.start':'fx.end'))
+    :dir==='past'?'<button type="button" class="mx-earlier" onclick="mxMore(\'past\')">'+Icons.svg('arrowUp',16)+'<span>'+sanitize(t('fx.earlier'))+'</span></button>'
+    :'';
+}
+
+/** The date strip: one chip per day, 3 back to 10 ahead; today marked; the day in view pressed. */
+function mxRenderStrip(){
+  const el=document.getElementById('mx-strip');
+  if(!el) return;
+  el.hidden=MX.view==='table';
+  el.innerHTML=mxStripKeys().map(k=>{
+    const d=new Date(k+'T12:00:00'), today=k===MX.todayKey, n=(MX.days.get(k)||[]).length;
+    const wd=today?t('fx.today'):mxDate(d,true).split(' ')[0];
+    const label=mxDayTitle(k).date+(n?' · '+tn('fx.nMatches',n):' · '+t('fx.noneDay'));
+    return '<button type="button" class="mx-dc'+(today?' today':'')+(n?'':' empty')+'" data-day="'+k+'" onclick="mxGoDay(\''+k+'\')"'
+      +' aria-label="'+sanitize(label)+'"><span>'+sanitize(wd)+'</span><b class="num">'+d.getDate()+'</b></button>';
+  }).join('');
+  MX.stripDay=null;
+  mxSyncStrip();
+}
+/** A tap on the strip: that day's block under the bar. */
+function mxGoDay(key){
+  const el=document.querySelector('#mx-days .mx-day[data-day="'+key+'"]');
+  if(!el) return;
+  const top=el.getBoundingClientRect().top+window.scrollY-mxMeasure();
+  window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+  mxSyncStrip(key);
+}
+/** The strip follows the scroll: the day under the bar is pressed and kept in view. */
+function mxSyncStrip(forced){
+  const strip=document.getElementById('mx-strip');
+  if(!strip||strip.hidden) return;
+  let key=forced||null;
+  if(!key){
+    const top=mxMeasure()+4;
+    const cur=[...document.querySelectorAll('#mx-days .mx-day')].find(s=>s.getBoundingClientRect().bottom>top);
+    key=cur&&cur.dataset.day;
+  }
+  if(!key||key===MX.stripDay) return;
+  MX.stripDay=key;
+  let on=null;
+  strip.querySelectorAll('.mx-dc').forEach(b=>{ const yes=b.dataset.day===key; b.setAttribute('aria-current',yes?'true':'false'); if(yes) on=b; });
+  // Bring the pressed chip into view sideways only (scrollLeft: the page never jumps).
+  if(on) strip.scrollLeft=Math.max(0,on.offsetLeft-strip.offsetLeft-(strip.clientWidth-on.offsetWidth)/2);
 }
 
 /** Nav + league bar height: where a day heading sticks and where "today" is anchored. */
@@ -3436,22 +3542,22 @@ function mxWatchToday(){
   btn.hidden=!away;
 }
 /**
- * Load the next week when the top or bottom edge comes within 600px, and
- * keep the Today button right. Run after every load (an empty week, an
- * international break, leaves the edge in reach: it goes on) and on scroll.
+ * Load the next week when the bottom edge comes within 600px (earlier days
+ * only on a tap, 4b-5b), keep the Today button and the date strip right. Run
+ * after every load (an empty week, an international break, leaves the edge in
+ * reach: it goes on) and on scroll.
  */
 function mxCheckEdges(){
   const page=document.getElementById('page-matches');
   if(!page||!page.classList.contains('active')) return;
   mxWatchToday();
   if(MX.view==='table') return;
+  mxSyncStrip();
   const vh=window.innerHeight||800;
-  for(const [id,dir] of [['mx-top','past'],['mx-bottom','future']]){
-    const el=document.getElementById(id);
-    if(!el) continue;
-    const r=el.getBoundingClientRect();
-    if(r.bottom>-600&&r.top<vh+600) mxMore(dir);
-  }
+  const el=document.getElementById('mx-bottom');
+  if(!el) return;
+  const r=el.getBoundingClientRect();
+  if(r.bottom>-600&&r.top<vh+600) mxMore('future');
 }
 /** On scroll, at most every 120 ms; only the Matches tab listens (mxCheckEdges returns elsewhere). */
 let MX_SCROLL_T=null;
@@ -3486,9 +3592,10 @@ async function mxStart(){
     const [,rows]=await Promise.all([mxBounds(),mxFetch(MX.from,MX.to)]);
     if(gen!==MX.gen) return;
     mxAdd(rows);
-    list.innerHTML='<div id="mx-top" class="mx-edge"></div><div id="mx-days">'+mxDaysHtml(MX.from,MX.to)+'</div>'
+    list.innerHTML='<div id="mx-top" class="mx-edge"></div><div id="mx-days">'+mxAllDaysHtml()+'</div>'
       +'<div id="mx-bottom" class="mx-edge mx-end"></div>';
     mxEdge('past'); mxEdge('future');
+    mxRenderStrip();
     mxAnchorToday(false);
     mxObserve();
   }catch(e){
@@ -3500,7 +3607,11 @@ async function mxStart(){
   }
 }
 
-/** One more week, above (past) or below (future). Content added above keeps the reader's place. */
+/**
+ * One more week, above (past: from the button) or below (future: on scroll).
+ * The days are redrawn whole (the week dividers depend on what is loaded) and
+ * the reader's place is kept: the day they were looking at stays put.
+ */
 async function mxMore(dir){
   if(!MX.started||MX.err||MX.busy[dir]||mxAtEdge(dir)||!document.getElementById('mx-days')) return;
   const gen=MX.gen;
@@ -3517,37 +3628,41 @@ async function mxMore(dir){
   }
   if(gen!==MX.gen) return;
   mxAdd(rows);
-  const days=document.getElementById('mx-days');
-  if(dir==='past'){
-    MX.from=from;
-    // The browser's own scroll anchoring is off for this one insert (Safari
-    // has none, Chrome would add its own shift): we keep the place ourselves.
-    const root=document.documentElement, before=root.scrollHeight, prev=root.style.overflowAnchor;
-    root.style.overflowAnchor='none';
-    days.insertAdjacentHTML('afterbegin',mxDaysHtml(from,to));
-    window.scrollBy(0,root.scrollHeight-before);
-    root.style.overflowAnchor=prev;
-  }else{
-    MX.to=to;
-    days.insertAdjacentHTML('beforeend',mxDaysHtml(from,to));
-  }
-  MX.busy[dir]=false; mxEdge(dir);
+  if(dir==='past') MX.from=from; else MX.to=to;
+  MX.busy[dir]=false;
+  mxRepaint();
+  mxEdge(dir);
   setTimeout(mxCheckEdges,0);
 }
 
-/** Re-draw the loaded days (my clubs changed, say), keeping the reader's place. */
-function mxRefresh(){
+/**
+ * Redraw every loaded day keeping the reader's place: the first day under the
+ * bar stays exactly where it was (the browser's own scroll anchoring is off
+ * for this one redraw: Safari has none, Chrome would add its own shift).
+ */
+function mxRepaint(){
   const days=document.getElementById('mx-days');
-  if(!MX.started||MX.err||!days) return;
+  if(!days) return;
   const top=mxMeasure();
   const first=[...days.querySelectorAll('.mx-day')].find(s=>s.getBoundingClientRect().bottom>top);
   const key=first&&first.dataset.day, off=first?first.getBoundingClientRect().top:0;
-  mxRenderChips();
-  days.innerHTML=mxDaysHtml(MX.from,MX.to);
+  const root=document.documentElement, prev=root.style.overflowAnchor;
+  root.style.overflowAnchor='none';
+  days.innerHTML=mxAllDaysHtml();
   const again=key&&days.querySelector('.mx-day[data-day="'+key+'"]');
   const page=document.getElementById('page-matches');
   if(again&&page&&page.classList.contains('active')) window.scrollBy(0,again.getBoundingClientRect().top-off);
+  root.style.overflowAnchor=prev;
+  mxRenderStrip();
   mxWatchToday();
+}
+
+/** Re-draw the loaded days (my clubs or the language changed), keeping the reader's place. */
+function mxRefresh(){
+  if(!MX.started||MX.err||!document.getElementById('mx-days')) return;
+  mxRenderChips();
+  mxRepaint();
+  mxEdge('past'); mxEdge('future');
 }
 
 /**
@@ -3601,6 +3716,8 @@ function mxShowView(){
   const table=MX.view==='table'&&!!MX.league;
   if(list) list.hidden=table;
   if(tb) tb.hidden=!table;
+  const strip=document.getElementById('mx-strip');   // the date strip belongs to the match list
+  if(strip){ strip.hidden=table; if(!table){ MX.stripDay=null; } }
   if(table){
     if(btn) btn.hidden=true;
     window.scrollTo(0,0);
