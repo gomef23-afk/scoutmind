@@ -103,6 +103,8 @@
 
     // ── community.html (the club page) ──
     'comm.sub': 'Pick a club to see its league position, this season\'s numbers and a link to its fan room.',
+    'comm.find': 'Find your club',
+    'comm.explore': 'Explore other communities',
     // Polls, Transfer Wishlist, Analyst Insights (028)
     'cm.tab.polls': 'Polls',
     'cm.tab.wishlist': 'Transfer Wishlist',
@@ -255,6 +257,17 @@
     'hb.followers.other': '{n} followers',
     'hb.roomEmpty': 'No messages yet. Say something.',
     'hb.open': 'Open',
+    // Home on laptop (commit 3): the left and right columns.
+    'hb.leagues': 'Your leagues',
+    'hb.noLeagues': 'No private leagues yet.',
+    'hb.startLeague': 'Start or join one',
+    'hb.tableOf': '{league} table',
+    'hb.send': 'Send',
+    'hb.msgPh': 'Message the {club} room…',
+    'hb.signinChat': 'Sign in to chat',
+    'news.r.fire': 'Fire',
+    'news.r.clap': 'Respect',
+    'news.r.mind_blown': 'No way',
 
     // ── News cards (Sequence 2 commit 2b) ──
     'news.cat.transfer': 'Transfer',
@@ -702,6 +715,8 @@
     'auth.sb.session': 'Esse link expirou. Peça um novo.',
 
     'comm.sub': 'Escolha um clube para ver a posição na tabela, os números da temporada e o link para a sala da torcida.',
+    'comm.find': 'Encontre seu clube',
+    'comm.explore': 'Explorar outras comunidades',
     'cm.tab.polls': 'Enquetes',
     'cm.tab.wishlist': 'Lista de reforços',
     'cm.tab.analyst': 'Análises',
@@ -850,6 +865,16 @@
     'hb.followers.other': '{n} seguidores',
     'hb.roomEmpty': 'Nenhuma mensagem ainda. Diga algo.',
     'hb.open': 'Abrir',
+    'hb.leagues': 'Suas ligas',
+    'hb.noLeagues': 'Nenhuma liga privada ainda.',
+    'hb.startLeague': 'Crie ou entre em uma',
+    'hb.tableOf': 'Tabela: {league}',
+    'hb.send': 'Enviar',
+    'hb.msgPh': 'Mensagem para a sala do {club}…',
+    'hb.signinChat': 'Entre para conversar',
+    'news.r.fire': 'Fogo',
+    'news.r.clap': 'Respeito',
+    'news.r.mind_blown': 'Não acredito',
     'news.cat.transfer': 'Transferência',
     'news.cat.rumour': 'Rumor',
     'news.cat.match': 'Jogo',

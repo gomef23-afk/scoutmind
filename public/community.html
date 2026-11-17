@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Club communities — ScoutMind</title>
 <meta name="description" content="Your club's page on ScoutMind: news, the club room and the conversation around it.">
 <!-- Icons and link previews: the same block on every page (scripts/make-icons.ps1 makes the files). -->
@@ -205,6 +205,17 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
   #nav-user .logout-btn{display:inline-block;}
 }
 @media(max-width:768px){.two-col{grid-template-columns:minmax(0,1fr);}.team-selector{position:static;}.ts-scroll{max-height:200px;}.stats4{grid-template-columns:repeat(2,1fr);}nav{padding:12px 16px;}.page{padding:14px;}}
+/* Phone (Sequence 2, commit 3): the selected club first — header, numbers,
+   coach, room link, then its tabs — and the finder below it under "Explore
+   other communities". A laptop keeps the two columns, finder on the left. */
+.ts-t-phone{display:none;}
+@media(max-width:768px){
+  #comm-main{order:1;}
+  .finder-col{order:2;margin-top:8px;}
+  .ts-t-wide{display:none;}
+  .ts-t-phone{display:inline;}
+  .team-selector .ts-title{font-size:13px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:700;}
+}
 /* ── B2: FIVE-TAB NAV — mobile-first (base = 375px, desktop at 900px) ──
    Copied verbatim from index.html (rule #5 — keep all three in sync). */
 .sm-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100;}
@@ -221,7 +232,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 .sm-tab.active{color:var(--accent);}
 .sm-tabs-top{display:none;}
 .sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:var(--card);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
-body{padding-bottom:64px;}
+body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 @media(min-width:900px){
   .sm-nav{padding:10px 28px;gap:18px;}
   .sm-tabs-bottom{display:none;}
@@ -292,9 +303,11 @@ body{padding-bottom:64px;}
     <div style="font-size:13px;color:var(--muted)" data-i18n="comm.sub">Pick a club to see its league position, this season's numbers and a link to its fan room.</div>
   </div>
   <div class="two-col">
-    <div>
+    <!-- The finder. On a phone it comes AFTER the selected club (CSS order),
+         under "Explore other communities"; on a laptop it is the left column. -->
+    <div class="finder-col">
       <div class="team-selector">
-        <div class="ts-title">Find Your Club</div>
+        <h2 class="ts-title"><span class="ts-t-wide" data-i18n="comm.find">Find your club</span><span class="ts-t-phone" data-i18n="comm.explore">Explore other communities</span></h2>
         <!-- Filled by fillLeagueSelect() with the leagues we carry (from `teams`). -->
         <select class="league-select" id="comm-league" onchange="loadLeague()" aria-label="League">
         </select>
@@ -552,6 +565,10 @@ function pickTeam(i){
   AT=_ft[i];
   filterTeams();
   renderTeamPage();
+  // The club opens at the top of the page (on a phone the list is below it),
+  // and the address says which club, so a reload or a shared link keeps it.
+  try{ const u=new URL(location.href); u.searchParams.set('club',String(Number(AT.id))); history.replaceState(null,'',u.pathname+u.search); }catch(e){}
+  window.scrollTo(0,0);
 }
 function renderTeamPage(){
   if(!AT)return;

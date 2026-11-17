@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>About ScoutMind — Your club. Everything around it.</title>
 <meta name="description" content="What ScoutMind is: a free football social network with your club's news, club rooms, matches and the Scout Game. No payments, no ads.">
 <!-- Icons and link previews: the same block on every page (scripts/make-icons.ps1 makes the files). -->
@@ -702,7 +702,7 @@ footer {
 .sm-tab.active{color:var(--accent);}
 .sm-tabs-top{display:none;}
 .sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:rgba(7,9,15,0.98);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
-body{padding-bottom:64px;}
+body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 /* This page's own section links, desktop only. */
 .sm-subnav{display:none;}
 @media(min-width:900px){

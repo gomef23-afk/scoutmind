@@ -76,9 +76,19 @@ const card = (/function renderNewsCard\(n,lead\)\{[\s\S]*?\n\}/.exec(idx) || [''
 const tileFn = (/function newsTile\(n,lead\)\{[\s\S]*?\n\}/.exec(idx) || [''])[0];
 check('the card uses the tile and the category mapping', /NewsCard\.tile\(n,lead\)/.test(tileFn) && /newsTile\(n,true\)/.test(card) && /newsTile\(n,false\)/.test(card)
   && /NewsCard\.category\(n\.category\)/.test(card));
-check('lead card: visual on top, then the label line, then the headline under it',
-  /if\(lead\)\{[\s\S]*?'<a class="nc-vis"[\s\S]*?newsTile\(n,true\)[\s\S]*?'<div class="nc-body">'\+meta\+head\+'<\/div>'/.test(card));
-check('following rows: the visual left, then the label line and headline', /\}else\{[\s\S]*?'<div class="nc-row"><a class="nc-vis"[\s\S]*?newsTile\(n,false\)[\s\S]*?'<div class="nc-body">'\+meta\+head/.test(card));
+check('lead card: the visual first, then the label line, the headline and the foot',
+  /if\(lead\)\{[\s\S]*?'<div class="nc-lead-in"><a class="nc-vis"[\s\S]*?newsTile\(n,true\)[\s\S]*?'<div class="nc-body">'\+meta\+head\+foot\+'<\/div><\/div>'/.test(card));
+check('following rows: the visual left, then the label line, headline and foot', /\}else\{[\s\S]*?'<div class="nc-row"><a class="nc-vis"[\s\S]*?newsTile\(n,false\)[\s\S]*?'<div class="nc-body">'\+meta\+head\+foot/.test(card));
+// ── Commit 3 ──
+check('laptop lead: side by side, a 220px square tile on the left',
+  /@media\(min-width:900px\)\{\s*\.nc-lead-in\{display:flex;[\s\S]*?\.nc-lead \.nt-lead\{width:220px;height:220px;/.test(idx));
+check('the lead tile is never empty: club name(s) and the category word under the crests',
+  /if\(lead\)\{[\s\S]*?names\.join\(' × '\)[\s\S]*?'<span class="nt-cap">'[\s\S]*?'<span class="nt-word">'\+sanitize\(t\(cat\.key\)\)/.test(tileFn));
+check('reactions, Comment and Read on one small line; no full-width bar under each card',
+  /const foot='<div class="nc-foot">'[\s\S]*?reactionButtons\(n\.id\)[\s\S]*?commentToggleLabel\(n\.id\)[\s\S]*?news\.read/.test(card) && !/social-bar/.test(idx));
+check('reactions are line icons with counts, labelled in both languages', /icon:'<path/.test(idx) && !/emoji:'/.test(idx)
+  && ['news.r.fire', 'news.r.clap', 'news.r.mind_blown'].every((k) => (read('public/i18n.js').match(new RegExp(`'${k.replace(/\./g, '\\.')}':`, 'g')) || []).length === 2));
+check('the foot links are 44px to the finger', /\.nc-foot \.reaction::after,\.nc-foot \.comment-toggle::after,\.nc-foot \.read-link::after\{[^}]*height:44px/.test(idx));
 const toggle = (/function commentToggleLabel\(itemId\)\{[\s\S]*?\n\}/.exec(idx) || [''])[0];
 check('no emoji on the card (the comment toggle uses a line icon)', !/&#x1F4AC;|💬|&#x1F/.test(card + toggle + tileFn) && /ICON_MSG/.test(toggle));
 check('the club tint is a token class in theme.css, no colour literal in index.html',

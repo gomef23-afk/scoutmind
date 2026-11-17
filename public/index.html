@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- viewport-fit=cover: the page runs under the iPhone status bar and home
+     indicator, so env(safe-area-inset-*) has real values. The sticky nav, the
+     Home band, the full-screen overlays and the bottom tab bar pad themselves
+     with them (Sequence 2 commit 3). -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 <title>ScoutMind — Your club. Everything around it.</title>
@@ -26,13 +30,19 @@
     var t=resolve(pref());
     root.setAttribute('data-theme',t);
     var m=document.querySelector('meta[name="theme-color"]');
-    if(m) m.setAttribute('content',t==='dark'?'#0F141B':'#F6F7F9');
+    // On Home the browser bar is the band's navy (commit 3), read from the
+    // token so this file holds no navy literal; elsewhere the page ground.
+    var home=document.body&&document.body.classList.contains('on-home');
+    var navy=home?getComputedStyle(root).getPropertyValue('--navy').trim():'';
+    if(m) m.setAttribute('content',navy||(t==='dark'?'#0F141B':'#F6F7F9'));
   }
   apply();
   if(mq&&mq.addEventListener) mq.addEventListener('change',function(){ if(pref()==='system') apply(); });
   window.smTheme={
     get:pref,
-    set:function(p){ try{ localStorage.setItem('sm_theme',p); }catch(e){} apply(); try{ window.dispatchEvent(new CustomEvent('sm-theme',{detail:{theme:p}})); }catch(e){} }
+    set:function(p){ try{ localStorage.setItem('sm_theme',p); }catch(e){} apply(); try{ window.dispatchEvent(new CustomEvent('sm-theme',{detail:{theme:p}})); }catch(e){} },
+    // showPage() calls this when Home is entered or left: the bar colour follows.
+    paintBar:apply
   };
 })();
 </script>
@@ -41,7 +51,9 @@
 <link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<!-- black-translucent: installed on an iPhone, the page draws under the status
+     bar (the Home band's navy runs to the top edge; other tabs pad the nav). -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ScoutMind">
 <script src="/pwa.js" defer></script>
 <meta property="og:site_name" content="ScoutMind">
@@ -125,8 +137,13 @@ hr{border:none;border-top:1px solid var(--border);}
 .sm-tab.active{color:var(--accent);}
 .sm-tabs-top{display:none;}
 .sm-tabs-bottom{position:fixed;left:0;right:0;bottom:0;z-index:120;background:var(--card);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);}
-/* Clearance so the fixed bar never covers page content on mobile. */
-body{padding-bottom:64px;}
+/* Clearance so the fixed bar never covers page content on mobile, including
+   the home indicator's strip (viewport-fit=cover gives env() its value). */
+body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
+/* Under the status bar (viewport-fit=cover): the sticky nav and the
+   full-screen overlays start below it. The Home band pads itself (.hb). */
+.sm-nav{padding-top:calc(10px + env(safe-area-inset-top));}
+#chat-overlay,#match-overlay{padding-top:env(safe-area-inset-top);}
 @media(min-width:900px){
   .sm-nav{padding:10px 28px;gap:18px;}
   .sm-tabs-bottom{display:none;}
@@ -146,10 +163,31 @@ body{padding-bottom:64px;}
 .feed-page{display:block;min-height:calc(100vh - 53px);}
 .feed-main{padding:20px 16px;min-width:0;}
 .feed-side{padding:0 16px 24px;}
-@media (min-width: 900px){
-  .feed-page{display:grid;grid-template-columns:1fr 300px;align-items:start;}
-  .feed-main{padding:20px 24px;border-right:1px solid var(--border);}
+.feed-left{display:none;}
+[hidden]{display:none !important;}
+/* ── HOME ON LAPTOP (commit 3, spec v1.2 §5) ── everything under the band is at
+   most 1440px wide and centred. 700–1099: centre + right, with my leagues as a
+   row above them. ≥1100: left 300 / centre / right 320, 24px gaps. */
+.home-wrap{max-width:1440px;margin:0 auto;}
+@media (min-width: 700px){
+  .feed-page{display:grid;grid-template-columns:minmax(0,1fr) 300px;align-items:start;}
+  .feed-left{display:flex;grid-column:1 / -1;gap:12px;padding:16px 16px 0;}
+  .feed-left .hl-card{flex:1;min-width:0;margin-bottom:0;}
+  .feed-main{padding:20px 20px;border-right:1px solid var(--border);}
   .feed-side{padding:20px 16px;position:sticky;top:53px;max-height:calc(100vh - 53px);overflow-y:auto;}
+}
+@media (max-width: 1099px){
+  .hl-picks,.hr-room{display:none !important;}   /* the sheet carries them below 1100 */
+}
+@media (max-width: 699px){
+  .hr-table{display:none !important;}
+}
+@media (min-width: 1100px){
+  .feed-page{grid-template-columns:300px minmax(0,1fr) 320px;column-gap:24px;padding:0 24px;}
+  .feed-left{display:block;grid-column:auto;padding:20px 0;position:sticky;top:53px;max-height:calc(100vh - 53px);overflow-y:auto;}
+  .feed-left .hl-card{margin-bottom:12px;}
+  .feed-main{padding:20px 0;border-right:none;}
+  .feed-side{padding:20px 0;}
 }
 /* ── FEED PAGE ── */
 .feed-tabs-bar{display:flex;gap:2px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:0;}
@@ -277,12 +315,10 @@ body{padding-bottom:64px;}
 .search-clear{position:absolute;right:10px;background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 6px;line-height:1;}
 .search-clear:hover{color:var(--text);}
 .search-summary{font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}/* ── SOCIAL: reactions + comments (mobile-first, rule 11) ── */
-.social-bar{display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding:9px 14px;background:var(--bg2);}
 .reaction-row{display:flex;gap:6px;flex:0 1 auto;min-width:0;}
 .reaction{display:inline-flex;align-items:center;gap:4px;background:transparent;border:1px solid var(--border);border-radius:16px;padding:3px 9px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);transition:border-color .15s,background .15s;min-height:28px;}
 .reaction:hover{border-color:var(--accent2);}
 .reaction.on{border-color:var(--accent);background:var(--tint);color:var(--accent);}
-.reaction-emoji{font-size:14px;line-height:1;}
 .reaction-n{font-family:'DM Mono',monospace;font-size:11px;}
 /* Pushed to the right, and never stretched: it is a button, not a bar. */
 .comment-toggle{margin-left:auto;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border);border-radius:16px;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:3px 11px;white-space:nowrap;min-height:28px;}
@@ -476,7 +512,34 @@ body{padding-bottom:64px;}
 .nt-navy .nt-src{color:var(--on-navy);font-size:30px;}
 .nt-thumb .nt-src{font-size:12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
 .comment-toggle svg{flex-shrink:0;}
-@media(max-width:768px){
+/* ── Commit 3: the lead tile's caption, the lead side by side, the slim foot ── */
+.nt-lead{flex-direction:column;gap:8px;padding:12px;}
+.nt-cap{font-size:15px;font-weight:700;line-height:1.2;text-align:center;color:var(--on-navy);max-width:100%;overflow-wrap:anywhere;}
+.nt-word{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--on-navy);}
+.nt-lead .nt-src{font-size:26px;}
+.nt-lead .nt-disc{width:60px;height:60px;}
+.nt-lead .nt-disc img{width:40px;height:40px;}
+.nc-lead .nt-lead{height:auto;min-height:150px;}
+@media(min-width:900px){
+  .nc-lead-in{display:flex;align-items:stretch;}
+  .nc-lead .nc-vis{width:220px;flex:0 0 220px;}
+  .nc-lead .nt-lead{width:220px;height:220px;min-height:0;}
+  .nc-lead .nc-body{padding:16px 18px 12px;display:flex;flex-direction:column;}
+  .nc-lead .nc-h{font-size:20px;}
+  .nc-lead .nc-foot{margin-top:auto;}
+}
+/* One line: reaction icons with counts, Comment, Read. 32px tall to the eye,
+   44px to the finger (the ::after). */
+.nc-foot{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px;margin-left:-6px;}
+.nc-foot .reaction-row{display:inline-flex;gap:0;}
+.nc-foot .reaction,.nc-foot .comment-toggle,.nc-foot .read-link{position:relative;min-height:32px;border:none;background:none;border-radius:16px;padding:0 7px;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;text-decoration:none;font-family:inherit;margin:0;}
+.nc-foot .reaction::after,.nc-foot .comment-toggle::after,.nc-foot .read-link::after{content:'';position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%);}
+.nc-foot .reaction:hover,.nc-foot .comment-toggle:hover,.nc-foot .read-link:hover{color:var(--navy-ink);background:var(--field);}
+.nc-foot .reaction.on{color:var(--navy-ink);}
+.nc-foot .reaction.on .reaction-ico{fill:currentColor;fill-opacity:.18;}
+.nc-foot .comment-toggle{margin-left:auto;}
+.nc-foot .comment-toggle.open{color:var(--navy-ink);background:var(--tint);}
+.nc-foot .read-link{color:var(--navy-ink);}@media(max-width:768px){
   nav{padding:12px 16px;flex-wrap:wrap;gap:8px;}
   nav>div:first-child{order:1;}
   nav>.nav-right{order:2;gap:6px;}
@@ -638,7 +701,11 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 /* ── HOME BAND (2a, spec v1.2 §4) ── mobile first. Text on the band is
    --on-navy, the countdown --gold, LIVE --live-on-band: the three pairs
    tests/theme.test.js measures on --navy. Hairlines are --navy-hover. */
-.hb{background:var(--navy);color:var(--on-navy);padding:6px 16px 34px;}
+/* padding-top: the band runs under the iPhone status bar (viewport-fit=cover). */
+.hb{background:var(--navy);color:var(--on-navy);padding:calc(6px + env(safe-area-inset-top)) 16px 34px;}
+.hb-inner{max-width:1440px;margin:0 auto;}
+.hb-side{display:none;}
+.feed-title{font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--ink);margin-bottom:6px;}
 .hb-top{display:flex;align-items:center;gap:4px;min-height:48px;}
 .hb-word{display:flex;align-items:center;min-height:44px;font-family:var(--font-num);font-weight:700;font-size:24px;letter-spacing:0.5px;color:var(--on-navy);text-decoration:none;margin-right:auto;}
 .hb-word span{color:var(--on-navy);opacity:1;}
@@ -694,7 +761,58 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
   .hb-top{display:none;}           /* the nav above already has them */
   .hb-sheet{padding:14px 24px 0;}
   .hb-card{max-width:720px;}
+  /* On Home the nav is the band's top row (spec §5): navy, white text. Every
+     pair here is on-navy on navy (13.45 / 12.28). */
+  body.on-home .sm-nav{background:var(--navy);border-bottom-color:var(--navy-hover);}
+  body.on-home .sm-logo,body.on-home .sm-logo span,body.on-home .sm-tab,body.on-home .sm-tab.active,
+  body.on-home .sm-about,body.on-home #nav-name,body.on-home .logout-btn{color:var(--on-navy);}
+  body.on-home .sm-tabs-top .sm-tab.active{border-bottom-color:var(--on-navy);font-weight:700;}
+  body.on-home .user-badge{background:transparent;border-color:var(--navy-hover);}
+  body.on-home .logout-btn{border-color:var(--navy-hover);}
+  body.on-home .signin-btn{background:var(--on-navy);color:var(--navy);}
 }
+@media(min-width:1100px){
+  /* The band's second row: club + form left, the slots in the middle at a
+     fixed width, my picks right. */
+  .hb{padding-bottom:30px;}
+  .hb-row{display:grid;grid-template-columns:minmax(0,1fr) 520px minmax(0,1fr);align-items:center;gap:28px;}
+  .hb-slots{margin-top:0;border-top:none;}
+  .hb-slot{padding-top:0;}
+  .hb-big{font-size:38px;}
+  .hb-side{display:flex;justify-content:flex-end;align-items:center;gap:14px;min-width:0;}
+  .hb-sheet{display:none;}
+  .hb-club{margin-top:0;}
+}
+.hb-side .hb-avs{padding-left:10px;}
+.hb-side .hb-pav{width:38px;height:38px;margin-left:-10px;border-color:var(--navy);}
+.hb-side .hb-cap{border-color:var(--navy);}
+.hb-side-t{font-size:12px;line-height:1.35;color:var(--on-navy);text-align:right;min-width:0;}
+.hb-side-t b{display:block;font-size:13px;}
+.hb-btn-w{flex-shrink:0;min-height:44px;padding:0 16px;border-radius:8px;border:none;background:var(--on-navy);color:var(--navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+/* Left and right columns (commit 3) */
+.hl-row{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:6px 0;border:none;border-bottom:1px solid var(--border);background:none;color:var(--ink);font:inherit;font-size:13px;text-align:left;cursor:pointer;}
+.hl-row:last-child{border-bottom:none;}
+.hl-row-n{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hl-row-v{flex-shrink:0;font-size:12px;color:var(--muted);}
+.hl-empty{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px;}
+.hl-pick{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;color:var(--ink);}
+.hl-pick .hb-pav{margin-left:0;}
+.hl-pick-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hl-btn{width:100%;margin-top:8px;}
+.hr-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.hr-head-t{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--ink);}
+.hr-head-t span{font-weight:400;color:var(--muted);}
+.hr-msg{padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;line-height:1.45;color:var(--ink);overflow-wrap:anywhere;}
+.hr-msg b{display:block;font-size:11px;color:var(--muted);font-weight:600;}
+.hr-form{display:flex;gap:6px;margin-top:10px;}
+.hr-form input{flex:1;min-width:0;min-height:40px;}
+.hr-err{font-size:12px;color:var(--loss-ink);margin-top:6px;}
+.hr-err:empty{display:none;}
+.ht-row{display:flex;align-items:center;gap:8px;padding:6px 6px;border-radius:6px;font-size:13px;color:var(--ink);}
+.ht-row.me{background:var(--tint);font-weight:700;}
+.ht-rank{width:22px;text-align:right;}
+.ht-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ht-pts{width:34px;text-align:right;}
 /* Offline empty state (Day 6) */
 .offline-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.7;}
 .offline-empty-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);margin-bottom:4px;}
@@ -864,6 +982,7 @@ if(!_cu){
      on Home below 900px), then the club, its last five and three slots. The
      slot rules are public/home-band.js; renderHomeBand() paints them. -->
 <section class="hb" id="home-band" aria-label="Your club">
+ <div class="hb-inner">
   <div class="hb-top">
     <a class="hb-word" href="/" aria-label="ScoutMind">Scout<span>Mind</span></a>
     <button class="hb-icon" type="button" onclick="homeSearch()" data-i18n-aria="hb.search" aria-label="Search">
@@ -872,19 +991,38 @@ if(!_cu){
     </button>
     <span id="hb-me"></span>
   </div>
-  <div id="hb-club" class="hb-club"></div>
-  <!-- "Pick your club" nudge (Day 7): signed in, no main club. Filled and
-       shown by renderClubNudge(); empty and hidden otherwise. In the band since
-       2a, in place of the club row. -->
-  <div id="club-nudge" class="club-nudge" style="display:none;"></div>
-  <div id="hb-slots" class="hb-slots"></div>
+  <!-- Laptop (commit 3): one row — club + form left, the three slots in the
+       middle at a fixed width, my picks + Edit picks right. Stacked below 1100px. -->
+  <div class="hb-row">
+    <div class="hb-left">
+      <div id="hb-club" class="hb-club"></div>
+      <!-- "Pick your club" nudge (Day 7): signed in, no main club. Filled and
+           shown by renderClubNudge(); empty and hidden otherwise. In the band
+           since 2a, in place of the club row. -->
+      <div id="club-nudge" class="club-nudge" style="display:none;"></div>
+    </div>
+    <div id="hb-slots" class="hb-slots"></div>
+    <div id="hb-side" class="hb-side"></div>
+  </div>
+ </div>
 </section>
-<!-- The light sheet under the band: the picks row and the room line. -->
+<!-- Everything under the band, at most 1440px wide and centred (commit 3). -->
+<div class="home-wrap">
+<!-- The light sheet under the band: the picks row and the room line. Below
+     1100px only; on a laptop the band shows the picks and the right column the
+     room. -->
 <div class="hb-sheet" id="home-sheet">
   <div id="hb-picks"></div>
   <div id="hb-room"></div>
 </div>
+<!-- Columns (spec v1.2 §5): ≥1100px left 300 / centre / right 320; 700–1099
+     centre + right, with the left column's leagues as a row above them; a
+     phone, one column. -->
 <div class="feed-page">
+  <aside class="feed-left" id="home-left" aria-label="Your game">
+    <div class="feed-side-card hl-card" id="hl-leagues" hidden></div>
+    <div class="feed-side-card hl-card hl-picks" id="hl-picks" hidden></div>
+  </aside>
   <div class="feed-main">
     <div class="feed-tabs-bar">
       <button class="ftab active" onclick="showFeedTab('trending',this)">Trending</button>
@@ -898,9 +1036,7 @@ if(!_cu){
     <!-- TRENDING TAB — first and default. Ranked by engagement decayed by age,
          with coverage breadth as the fallback signal. No cron: scored here. -->
     <div id="feedtab-trending">
-      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">Trending</div>
-      </div>
+      <div class="feed-title">Trending</div>
       <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px;">
         What people are reacting to, and the stories the most outlets are covering right now.
       </div>
@@ -909,9 +1045,7 @@ if(!_cu){
 
     <!-- NEWS TAB. Real headlines from news_items. -->
     <div id="feedtab-transfers" style="display:none;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;">News</div>
-      </div>
+      <div class="feed-title" style="margin-bottom:14px;">News</div>
       <div class="search-wrap">
         <!-- Tabler icon "search" (MIT): no emoji (spec §8). -->
         <span class="search-icon" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg></span>
@@ -950,13 +1084,11 @@ if(!_cu){
     </div>
 </div><!-- /feed-main -->
   <div class="feed-side">
-    <!-- Your club: position, next match, last result and the room, in one card.
-         It absorbed the "Your club's chat" card. Hidden for guests and for
-         anyone without a main club. Rendered by renderSidebarYourClub(). -->
-    <div class="feed-side-card" id="sidebar-club-card" style="display:none;">
-      <div class="feed-side-title">Your club</div>
-      <div id="sidebar-club"></div>
-    </div>
+    <!-- Right column (commit 3): the room (last 3 messages + a composer, its
+         follower count), today's matches, the table around my club. The old
+         "Your club" card is gone: its position, next match and room now live
+         in the band and here. -->
+    <div class="feed-side-card hr-room" id="hr-room" hidden></div>
     <div class="feed-side-card">
       <!-- Was three hardcoded rows (Botafogo-Fluminense 21:00, Arsenal-Chelsea,
            Real Madrid-Sevilla). Now real fixtures for today in the viewer's
@@ -964,6 +1096,7 @@ if(!_cu){
       <div class="feed-side-title" id="sidebar-matches-title">Today's matches</div>
       <div id="sidebar-matches"></div>
     </div>
+    <div class="feed-side-card hr-table" id="hr-table" hidden></div>
     <div class="feed-side-card">
       <div class="feed-side-title">My clubs</div>
       <!-- Rendered by renderSidebarClubs(). Used to hardcode "Botafogo" for
@@ -972,6 +1105,7 @@ if(!_cu){
     </div>
   </div>
 </div>
+</div><!-- /home-wrap -->
 </div>
 
 <!-- MATCHES PAGE — promoted from the old "Match day" feed tab in B2 -->
@@ -1701,10 +1835,12 @@ function logInstallOnce(){
 // ── REACTIONS AND COMMENTS ───────────────────────────────────────────────
 // Counts always come from the rows. There is no cached counter to drift.
 
+// Line icons, not emoji (spec §8, commit 3): Tabler "flame", "thumb-up" and
+// "bolt" (MIT). The types stored in `reactions` are unchanged.
 const REACTIONS=[
-  {type:'fire',       emoji:'🔥', label:'Fire'},
-  {type:'clap',       emoji:'👏', label:'Respect'},
-  {type:'mind_blown', emoji:'🤯', label:'No way'},
+  {type:'fire',       key:'news.r.fire', icon:'<path d="M12 12c2 -2.96 0 -7 -1 -8c0 3.038 -1.773 4.741 -3 6c-1.226 1.26 -2 3.24 -2 5a6 6 0 1 0 12 0c0 -1.532 -1.056 -3.94 -2 -5c-1.786 3 -2.791 3 -4 2z"/>'},
+  {type:'clap',       key:'news.r.clap', icon:'<path d="M7 11v8a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1v-7a1 1 0 0 1 1 -1h3a4 4 0 0 0 4 -4v-1a2 2 0 0 1 4 0v5h3a2 2 0 0 1 2 2l-1 5a2 3 0 0 1 -2 2h-7a3 3 0 0 1 -3 -3"/>'},
+  {type:'mind_blown', key:'news.r.mind_blown', icon:'<path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"/>'},
 ];
 
 // news_item_id -> { counts:{type:n}, mine:Set<type> }
@@ -2790,6 +2926,8 @@ function showPage(id){
   if(id==='matches') try{renderMatchDay();}catch(e){}
   // The Home band is the header on a phone (2a): the nav hides on Home only.
   document.body.classList.toggle('on-home', id==='feed');
+  // The browser / status bar: navy on Home, the page ground elsewhere (3).
+  try{ if(window.smTheme&&smTheme.paintBar) smTheme.paintBar(); }catch(e){}
   if(id==='feed'&&typeof loadHomeBand==='function') loadHomeBand(false).catch(e=>console.error('loadHomeBand:',e));
   window.scrollTo(0,0);
 }
@@ -3952,6 +4090,15 @@ function newsTile(n,lead){
   }else{
     inner='<span class="nt-src">'+sanitize(tl.text||'')+'</span>';
   }
+  // The lead tile is never just a rectangle (commit 3): under the crests the
+  // club's name ("A × B", "A, B +N"), and the category word when there is one.
+  if(lead){
+    const names=tl.crests.map(c=>c.label||c.name).filter(Boolean);
+    const who=names.length===2&&!tl.more?names.join(' × '):names.join(', ')+(tl.more?' +'+tl.more:'');
+    const cat=NewsCard.category(n.category);
+    inner+=(who?'<span class="nt-cap">'+sanitize(who)+'</span>':'')
+      +(cat?'<span class="nt-word">'+sanitize(t(cat.key))+'</span>':'');
+  }
   return '<span class="'+cls+'"'+attr+' aria-hidden="true">'+inner+'</span>';
 }
 
@@ -3985,26 +4132,28 @@ function renderNewsCard(n,lead){
     +'<span>'+sanitize(newsAgo(n.publishedAt))+'</span>'+hint+'</div>';
   const url=sanitize(n.url);
   const head='<a class="nc-h" href="'+url+'" target="_blank" rel="noopener noreferrer">'+sanitize(n.title)+'</a>';
+  // One small line under the headline (commit 3): reactions as icons with
+  // counts, then Comment and Read as text links. No full-width bar.
+  const foot='<div class="nc-foot">'
+    +'<span class="reaction-row" id="rx-'+n.id+'">'+reactionButtons(n.id)+'</span>'
+    +'<button class="comment-toggle'+(commentState(n.id).expanded?' open':'')+'" id="ct-'+n.id+'" onclick="toggleComments('+n.id+')">'
+    +commentToggleLabel(n.id)+'</button>'
+    +'<a class="read-link" href="'+url+'" target="_blank" rel="noopener noreferrer" title="'+sanitize(t('news.readOn',{source:n.source}))+'">'+sanitize(t('news.read'))+' &#x2197;</a>'
+    +'</div>';
   // lang on the card itself, so per-item browser translation targets the
   // right text instead of guessing from the page language.
   let html='<article class="nc'+(lead?' nc-lead':'')+'" lang="'+sanitize(n.lang||'')+'">';
   if(lead){
-    // Lead: the visual on top, then the label line, then the headline under it.
-    html+='<a class="nc-vis" href="'+url+'" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">'+newsTile(n,true)+'</a>'
-      +'<div class="nc-body">'+meta+head+'</div>';
+    // Lead: the visual on top (phone, tablet) or on the left (≥900px, a 220px
+    // square), then the label line, then the headline.
+    html+='<div class="nc-lead-in"><a class="nc-vis" href="'+url+'" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">'+newsTile(n,true)+'</a>'
+      +'<div class="nc-body">'+meta+head+foot+'</div></div>';
   }else{
     // Following: the 56px visual left, the label line and headline right.
     html+='<div class="nc-row"><a class="nc-vis" href="'+url+'" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">'+newsTile(n,false)+'</a>'
-      +'<div class="nc-body">'+meta+head+'</div></div>';
+      +'<div class="nc-body">'+meta+head+foot+'</div></div>';
   }
-  // ONE action row: react, comment, and read the story at its source.
-  html+='<div class="social-bar">'
-    +'<div class="reaction-row" id="rx-'+n.id+'">'+reactionButtons(n.id)+'</div>'
-    +'<button class="comment-toggle'+(commentState(n.id).expanded?' open':'')+'" id="ct-'+n.id+'" onclick="toggleComments('+n.id+')">'
-    +commentToggleLabel(n.id)+'</button>'
-    +'<a class="read-link" href="'+url+'" target="_blank" rel="noopener noreferrer" title="'+sanitize(t('news.readOn',{source:n.source}))+'">'+sanitize(t('news.read'))+' &#x2197;</a>'
-    +'</div>'
-    +'<div class="comments-body" id="cb-'+n.id+'"></div>'
+  html+='<div class="comments-body" id="cb-'+n.id+'"></div>'
     +'</article>';
   return html;
 }
@@ -4022,10 +4171,11 @@ function reactionButtons(itemId){
   return REACTIONS.map(function(r){
     const n=s.counts[r.type]||0;
     const on=s.mine.has(r.type);
-    return '<button class="reaction'+(on?' on':'')+'" title="'+r.label+'"'
+    const label=t(r.key);
+    return '<button class="reaction'+(on?' on':'')+'" title="'+sanitize(label)+'" aria-label="'+sanitize(label)+'" aria-pressed="'+on+'"'
       +' onclick="toggleReaction('+itemId+',\''+r.type+'\')">'
-      +'<span class="reaction-emoji">'+r.emoji+'</span>'
-      +(n>0?'<span class="reaction-n">'+n+'</span>':'')
+      +'<svg class="reaction-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+r.icon+'</svg>'
+      +(n>0?'<span class="reaction-n num">'+n+'</span>':'')
       +'</button>';
   }).join('');
 }
@@ -4203,84 +4353,15 @@ function chatBlockHtml(clubId){
 }
 
 /**
- * Home sidebar "Your club": position, next match, last result and the room.
- * It absorbed the old chat-only card. Guests and readers without a main club
- * see nothing: there is no honest thing to show them here.
- *
- * Every line renders only when its data is real and loaded: no position before
- * standings, no matches before fixtures, no room before club_chat_overview.
+ * Home's right column (commit 3, spec v1.2 §5): the room card and the table
+ * slice. The old "Your club" card (position, next, last, room) is gone — the
+ * band carries position and next match. Kept under this name because its call
+ * sites are exactly when the column must repaint: the account, the room
+ * overview or the fixtures arriving, and a change of club.
  */
 function renderSidebarYourClub(){
-  const card=document.getElementById('sidebar-club-card');
-  const el=document.getElementById('sidebar-club');
-  if(!card||!el)return;
-  const id=currentUser?mainClubId():null;
-  if(!id||!CLUB_DATA.get(id)){ card.style.display='none'; return; }
-  card.style.display='';
-
-  const s=clubStats(id)||{};
-  const standing=[s.rank!=null?ordinal(s.rank):null,s.points!=null?s.points+' pts':null]
-    .filter(Boolean).join(' · ');
-  let html='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
-    +clubCrestById(id,30)
-    +'<div style="flex:1;min-width:0;">'
-    +'<div style="font-size:12px;font-weight:600;">'+sanitize(clubLabel(id))+'</div>'
-    +(standing?'<div style="font-size:10px;color:var(--muted);">'+sanitize(standing)+'</div>':'')
-    +'</div></div>';
-
-  // Fixtures come from the same load as the Matches page (-7 / +21 days).
-  if(LIVE_MATCHES===null||!LIVE_MATCHES.length){
-    html+='<div class="yc-line"><span class="yc-k">Next</span><span class="yc-v" style="color:var(--muted);">'
-      +(LIVE_MATCHES===null?'Loading fixtures…':'—')+'</span></div>';
-  }else{
-    const mine=LIVE_MATCHES.filter(m=>m.kickoff&&m.teamIds&&m.teamIds.indexOf(id)>-1)
-      .sort((a,b)=>a.kickoff-b.kickoff);
-    const live=mine.find(m=>m.status==='live');
-    const next=mine.find(m=>m.status==='upcoming');
-    const last=mine.filter(m=>m.status==='finished').pop();
-    const opp=(m)=>{
-      const home=m.teamIds[0]===id;
-      return (home?'vs ':'at ')+(home?m.away:m.home);
-    };
-    // Each line opens that match's panel.
-    const tap=(m)=>m.id?' match-tap" role="button" tabindex="0" onclick="openMatch('+Number(m.id)+')':'';
-    if(live){
-      html+='<div class="yc-line'+tap(live)+'"><span class="yc-k" style="color:var(--accent);">Live</span>'
-        +'<span class="yc-v">'+sanitize(opp(live))+' · '+sanitize(live.score||'')+'</span></div>';
-    }
-    if(next){
-      html+='<div class="yc-line'+tap(next)+'"><span class="yc-k">Next</span>'
-        +'<span class="yc-v">'+sanitize(opp(next))+' · '+sanitize(dayHeading(next.dayKey))+' '+sanitize(next.time||'')+'</span></div>';
-    }
-    if(last&&last.homeGoals!=null&&last.awayGoals!=null){
-      const home=last.teamIds[0]===id;
-      const f=home?last.homeGoals:last.awayGoals, a=home?last.awayGoals:last.homeGoals;
-      const res=f>a?'W':f<a?'L':'D';
-      const col=f>a?'var(--accent)':f<a?'var(--red)':'var(--muted)';
-      html+='<div class="yc-line'+tap(last)+'"><span class="yc-k">Last</span>'
-        +'<span class="yc-v"><span style="color:'+col+';font-weight:700;">'+res+'</span> '
-        +f+'–'+a+' '+sanitize(opp(last))+'</span></div>';
-    }
-    if(!live&&!next&&!last){
-      html+='<div class="yc-line"><span class="yc-k">Next</span><span class="yc-v" style="color:var(--muted);">No fixture in the next three weeks</span></div>';
-    }
-  }
-
-  // The room, as the old chat card showed it.
-  const o=chatOverview(id);
-  if(o){
-    const msg=o.last_message_preview
-      ? (o.last_message_is_system?'ScoutMind: ':'')+o.last_message_preview
-      : 'No messages yet — say something.';
-    html+='<button class="chat-card" style="margin-top:8px;" onclick="openChat('+id+')">'
-      +'<div style="flex:1;min-width:0;">'
-      +'<div class="chat-card-last">'+sanitize(msg)+'</div>'
-      +'<div style="font-size:10px;color:var(--muted);margin-top:3px;">'+sanitize(memberLabel(o.member_count))+'</div>'
-      +'</div>'
-      +'<div style="font-size:10px;color:var(--accent);flex-shrink:0;">Open the room →</div>'
-      +'</button>';
-  }
-  el.innerHTML=html;
+  try{ renderHomeRoom(); }catch(e){ console.error('renderHomeRoom:',e); }
+  try{ renderHomeTable(); }catch(e){ console.error('renderHomeTable:',e); }
 }
 
 // ── KEYBOARD (Day 6 audit) ──
@@ -6782,6 +6863,14 @@ async function loadHomeBand(force){
       try{ await sgLoadBase(force); await sgLoadEntries(); }
       catch(e){ console.warn('home band rounds:',e.message); }
     })());
+    // Commit 3: my private leagues (left column), the table around my club and
+    // the room's last messages (right column).
+    if(!isGuestNow()) jobs.push(glLoad().catch(()=>{}));
+    if(clubId&&HBD.league){
+      jobs.push(apiGet('standings?select=team_id,rank,points,group_label&league_id=eq.'+HBD.league.id+'&season=eq.'+HBD.league.season+'&order=rank.asc&limit=60')
+        .then(rows=>{ HBD.table=rows||[]; }).catch(e=>{ console.warn('home table:',e.message); HBD.table=[]; }));
+    }else HBD.table=[];
+    if(clubId) jobs.push(loadHomeRoom(clubId));
     await Promise.all(jobs);
     const rounds=(SG.rounds||[]).map(r=>Object.assign({},r,{league_slug:r.leagues&&r.leagues.slug}));
     const entered=new Set([...SG.entries.keys()]);
@@ -6926,6 +7015,140 @@ function renderHomeBand(){
   }
   const sheet=document.getElementById('home-sheet');
   if(sheet) sheet.classList.toggle('empty',!(picksEl&&picksEl.innerHTML)&&!(roomEl&&roomEl.innerHTML));
+
+  // Laptop (commit 3): my five on the band's right, the left and right columns.
+  try{ renderBandSide(); }catch(e){ console.error('renderBandSide:',e); }
+  try{ renderHomeLeft(); }catch(e){ console.error('renderHomeLeft:',e); }
+  try{ renderSidebarYourClub(); }catch(e){}
+}
+
+/** The band's right side on a laptop: my five, the captain, Edit picks. */
+function renderBandSide(){
+  const el=document.getElementById('hb-side');
+  if(!el) return;
+  const row=HBD.loadedAt?HomeBand.picksRow(HBD.round,HBD.entry):null;
+  if(!row){ el.innerHTML=''; return; }
+  const go='hbOpenRound('+Number(row.roundId)+')';
+  if(row.state==='none'){
+    el.innerHTML='<div class="hb-side-t"><b>'+sanitize(t('hb.roundOpen',{round:sgRoundName(HBD.round)}))+'</b>'
+      +sanitize(t('hb.noPicks'))+'</div><button class="hb-btn-w" onclick="'+go+'">'+sanitize(t('hb.pickYour5'))+'</button>';
+    return;
+  }
+  el.innerHTML='<div class="hb-avs" aria-hidden="true">'+row.picks.map(p=>
+      '<span class="hb-pav">'+(p.photo_url?'<img src="'+sanitize(p.photo_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">':sanitize((p.name||'?').slice(0,1)))
+      +(p.is_captain?'<span class="hb-cap">C</span>':'')+'</span>').join('')+'</div>'
+    +'<div class="hb-side-t"><b>'+sanitize(t(row.state==='in'?'hb.picksIn':'hb.yourPicks',{round:sgRoundName(HBD.round)}))+'</b>'
+    +(row.captain?sanitize(t('hb.captain',{name:row.captain})):'')+'</div>'
+    +'<button class="hb-btn-w" onclick="'+go+'">'+sanitize(t(row.state==='in'?'hb.editPicks':'hb.seePicks'))+'</button>';
+}
+
+/** Left column: my private leagues, and (≥1100) my five for this round. */
+function renderHomeLeft(){
+  const lg=document.getElementById('hl-leagues');
+  if(lg){
+    if(isGuestNow()||!Array.isArray(GL.list)){ lg.hidden=true; }
+    else{
+      const open=GL.list.filter(x=>!x.closed_at);
+      lg.innerHTML='<div class="feed-side-title">'+sanitize(t('hb.leagues'))+'</div>'
+        +(open.length?open.slice(0,6).map(x=>'<button class="hl-row" onclick="showPage(\'scout\');glOpen('+Number(x.id)+')">'
+            +'<span class="hl-row-n">'+sanitize(x.name)+'</span><span class="hl-row-v num">'+sanitize(glRankText(x))+'</span></button>').join('')
+          :'<div class="hl-empty">'+sanitize(t('hb.noLeagues'))+'</div>'
+            +'<button class="hb-link" style="padding:0;" onclick="showPage(\'scout\')">'+sanitize(t('hb.startLeague'))+'</button>');
+      lg.hidden=false;
+    }
+  }
+  const pk=document.getElementById('hl-picks');
+  if(pk){
+    const row=HBD.loadedAt?HomeBand.picksRow(HBD.round,HBD.entry):null;
+    if(!row||row.state==='none'){ pk.hidden=true; pk.innerHTML=''; }
+    else{
+      pk.innerHTML='<div class="feed-side-title">'+sanitize(t('hb.yourPicks',{round:sgRoundName(HBD.round)}))+'</div>'
+        +row.picks.map(p=>'<div class="hl-pick"><span class="hb-pav">'
+          +(p.photo_url?'<img src="'+sanitize(p.photo_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">':sanitize((p.name||'?').slice(0,1)))
+          +(p.is_captain?'<span class="hb-cap">C</span>':'')+'</span><span class="hl-pick-n">'+sanitize(p.name||'')+'</span></div>').join('')
+        +'<button class="hb-btn hl-btn" onclick="hbOpenRound('+Number(row.roundId)+')">'+sanitize(t(row.state==='in'?'hb.editPicks':'hb.seePicks'))+'</button>';
+      pk.hidden=false;
+    }
+  }
+}
+
+/** The room's last three messages, for the right column. */
+async function loadHomeRoom(clubId){
+  const o=chatOverview(clubId);
+  if(!o){ HBD.room=null; return; }
+  try{
+    const rows=await apiGet('group_messages?select=id,user_id,content,created_at,is_system'
+      +'&group_id=eq.'+encodeURIComponent(o.group_id)+'&deleted_at=is.null&order=created_at.desc&limit=3');
+    await loadAuthors((rows||[]).map(r=>r.user_id).filter(Boolean));
+    HBD.room={groupId:String(o.group_id),clubId:clubId,msgs:(rows||[]).reverse()};
+  }catch(e){ console.warn('home room:',e.message); HBD.room={groupId:String(o.group_id),clubId:clubId,msgs:[]}; }
+}
+
+/** Right column: the room — name, followers, last three messages, a composer. */
+function renderHomeRoom(){
+  const el=document.getElementById('hr-room');
+  if(!el) return;
+  const clubId=HBD.clubId, o=clubId&&chatOverview(clubId), club=clubId&&CLUB_DATA.get(clubId);
+  if(!o||!club){ el.hidden=true; return; }
+  const msgs=(HBD.room&&HBD.room.clubId===clubId)?HBD.room.msgs:[];
+  const draft=(document.getElementById('hr-input')||{}).value||'';
+  el.innerHTML='<div class="hr-head"><span class="hb-room-ico" aria-hidden="true">'+ICON_MSG+'</span>'
+      +'<div class="hr-head-t">'+sanitize(t('hb.roomName',{club:club.label}))+' <span>· '+sanitize(tn('hb.followers',o.member_count||0))+'</span></div>'
+      +'<button class="hb-link" onclick="openChat('+Number(clubId)+')">'+sanitize(t('hb.open'))+'</button></div>'
+    +(msgs.length?msgs.map(m=>{
+        const who=m.is_system?'ScoutMind':!m.user_id?t('cm.deletedUser'):((AUTHORS.get(m.user_id)||{}).name||t('cm.someone'));
+        return '<div class="hr-msg"><b>'+sanitize(who)+' · '+sanitize(newsAgo(m.created_at))+'</b>'+sanitize(m.content)+'</div>';
+      }).join(''):'<div class="hl-empty">'+sanitize(t('hb.roomEmpty'))+'</div>')
+    +(isGuestNow()
+      ?'<button class="hb-link" style="padding:0;margin-top:6px;" onclick="requireAuth(\'Create a free account to join your club\\\'s chat.\')">'+sanitize(t('hb.signinChat'))+'</button>'
+      :'<form class="hr-form" onsubmit="event.preventDefault();sendHomeRoom();">'
+        +'<input id="hr-input" type="text" maxlength="500" autocomplete="off" placeholder="'+sanitize(t('hb.msgPh',{club:club.label}))+'" value="'+sanitize(draft)+'">'
+        +'<button class="hb-btn" id="hr-send" type="submit">'+sanitize(t('hb.send'))+'</button></form>'
+        +'<div class="hr-err" id="hr-err" role="alert"></div>');
+  el.hidden=false;
+}
+
+/** Post from the right column. Members only (028b): your main club always is. */
+async function sendHomeRoom(){
+  if(!requireAuth('Create a free account to join your club\'s chat.'))return;
+  const input=document.getElementById('hr-input'), btn=document.getElementById('hr-send'), err=document.getElementById('hr-err');
+  const room=HBD.room; if(!input||!room) return;
+  const text=cleanComment(input.value);
+  if(text.length<2) return;
+  if(btn) btn.disabled=true;
+  if(err) err.textContent='';
+  try{
+    await apiSend('POST','group_messages',[{group_id:room.groupId,user_id:myUserId(),content:text}]);
+    input.value='';
+    logEvent('group_message','group',null);
+    await loadHomeRoom(room.clubId);
+    renderHomeRoom();
+    loadChatOverview().catch(()=>{});
+  }catch(e){
+    if(err) err.textContent=tServer(friendlyDbError(e.message));
+  }finally{
+    const b=document.getElementById('hr-send'); if(b) b.disabled=false;
+  }
+}
+
+/** Right column: five rows of my club's table, my club in the middle (its group, in a split league). */
+function renderHomeTable(){
+  const el=document.getElementById('hr-table');
+  if(!el) return;
+  const clubId=HBD.clubId, rows=HBD.table||[];
+  const me=rows.find(r=>r.team_id===clubId);
+  if(!clubId||!me||me.rank==null){ el.hidden=true; return; }
+  const group=rows.filter(r=>(r.group_label||null)===(me.group_label||null)&&r.rank!=null).sort((a,b)=>a.rank-b.rank);
+  const i=group.indexOf(me), from=Math.max(0,Math.min(i-2,group.length-5));
+  const slice=group.slice(from,from+5);
+  el.innerHTML='<div class="feed-side-title">'+sanitize(t('hb.tableOf',{league:(HBD.league&&HBD.league.name)||''}))+'</div>'
+    +slice.map(r=>{
+      const c=CLUB_DATA.get(r.team_id);
+      return '<div class="ht-row'+(r.team_id===clubId?' me':'')+'"><span class="ht-rank num">'+Number(r.rank)+'</span>'
+        +clubCrestById(r.team_id,18)+'<span class="ht-name">'+sanitize(c?c.label:'—')+'</span>'
+        +'<span class="ht-pts num">'+(r.points!=null?Number(r.points):'—')+'</span></div>';
+    }).join('');
+  el.hidden=false;
 }
 
 /** The countdown ticks every 30 s; the data is re-read every 2 min while something is live, else 10. */
