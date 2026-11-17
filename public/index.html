@@ -73,7 +73,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=30de457dd7"></script>
+<script src="/i18n.js?v=094fac0911"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=d008ee2323"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -5839,6 +5839,17 @@ document.querySelectorAll('.league-filter-btn').forEach(btn=>{
   // A direct load of ?page=profile calls showPage() before the account arrives,
   // when isAdmin() cannot be true yet, so the queue has to render again here.
   renderReports().catch(e=>console.error('renderReports:',e));
+  // /?match=<fixtures.id>: a row on the club page's Fixtures & results (4b-6).
+  // Opens the match panel over the Matches tab once the clubs (crests, names)
+  // are in, then drops the parameter so a reload does not reopen it.
+  try{
+    const match=Number(new URLSearchParams(location.search).get('match'))||null;
+    if(match){
+      try{ const u=new URL(location.href); u.searchParams.delete('match'); history.replaceState(null,'',u.pathname+u.search+u.hash); }catch(e){}
+      showPage('matches');
+      openMatch(match);
+    }
+  }catch(e){ console.error('match link:',e); }
   // Chat summaries before the club cards paint, so the "Community chat" block
   // is there on the first render rather than appearing a beat later.
   try{ await loadChatOverview(); }catch(e){}
