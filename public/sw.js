@@ -14,7 +14,7 @@
 // changed and VERSION did not (CLAUDE.md rule 24), so an old shell can never
 // outlive a deploy: a new VERSION is a new cache, and activate drops the old.
 
-const VERSION = 'sm-c55b04f292fe';
+const VERSION = 'sm-9c23e3693372';
 const SHELL = 'scoutmind-shell-' + VERSION;
 const IMAGES = 'scoutmind-img-v1';
 const IMAGE_MAX = 300;
@@ -45,6 +45,8 @@ const PRECACHE = [
   '/apple-touch-icon.png',
   '/icon-192.png',
   '/icon-512.png',
+  '/icon-maskable-192.png',
+  '/icon-maskable-512.png',
   '/vendor/supabase-js-2.119.0.js',
   '/vendor/fonts/fonts.css',
   '/vendor/fonts/barlow-condensed-normal-600-latin.woff2',

@@ -38,9 +38,11 @@ check('writes are never intercepted', /if \(req\.method !== 'GET'\) return;/.tes
 // The manifest the installability check reads.
 const mf = JSON.parse(readFileSync(new URL('manifest.json', pub), 'utf8'));
 check('manifest: start_url and scope are /', mf.start_url === '/' && mf.scope === '/');
-check('manifest: standalone, #07090f', mf.display === 'standalone' && mf.theme_color === '#07090f' && mf.background_color === '#07090f');
+check('manifest: standalone, navy theme and splash (commit 5)', mf.display === 'standalone' && mf.theme_color === '#12304F' && mf.background_color === '#12304F');
 const sizes = mf.icons.map((i) => i.sizes + ':' + i.purpose);
-check('manifest: 192 and 512 icons, and a maskable 512', ['192x192:any', '512x512:any', '512x512:maskable'].every((s) => sizes.includes(s)), sizes.join(', '));
+check('manifest: 192 and 512 icons, any and maskable', ['192x192:any', '512x512:any', '192x192:maskable', '512x512:maskable'].every((s) => sizes.includes(s)), sizes.join(', '));
+check('manifest: maskable icons are their own files (safe-zone monogram), not the "any" ones',
+  mf.icons.filter((i) => i.purpose === 'maskable').every((i) => /icon-maskable-\d+\.png$/.test(i.src)));
 check('manifest icons exist', mf.icons.every((i) => existsSync(new URL(i.src.slice(1), pub))));
 
 // Every page that carries the nav links the manifest and pwa.js.

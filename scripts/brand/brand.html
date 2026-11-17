@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+  ScoutMind brand source (commit 5, "Scoreboard" identity, design spec v1.2).
+  ONE file for every generated image: scripts/make-icons.ps1 screenshots it
+  with headless Edge and writes the results into public/.
+
+    ?view=icon      512x512  app icon, full-bleed square (iOS / Android round it)
+    ?view=round     512x512  rounded square, for favicon.ico and favicon.svg
+    ?view=maskable  512x512  Android maskable: the monogram inside the middle
+                             80% safe circle, navy to every edge
+    ?view=og        1200x630 the link preview (og:image)
+
+  Rules: navy ground, the wordmark in the number face (Barlow Condensed 700),
+  text in DM Sans, no gradients, no emoji, no numbers (CLAUDE.md rule 22).
+  Colours are the theme.css tokens, written out because this page does not
+  load theme.css (tests/brand.test.js checks they still match):
+    --navy        #12304F  the ground
+    --navy-hover  #1B4170  the band at the foot of the preview
+    navy-ink/dark #A9C7EA  "Scout" (as the wordmark reads in dark mode)
+    --on-navy     #FFFFFF  "Mind" and the text
+  Fonts come from public/vendor/fonts (self-hosted; never a third-party host).
+-->
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @font-face{font-family:'Barlow Condensed';font-weight:700;src:url(../../public/vendor/fonts/barlow-condensed-normal-700-latin.woff2) format('woff2');}
+  @font-face{font-family:'DM Sans';font-weight:300 700;src:url(../../public/vendor/fonts/dm-sans-normal-300-700-latin.woff2) format('woff2');}
+  :root{--navy:#12304F;--band:#1B4170;--scout:#A9C7EA;--mind:#FFFFFF;}
+  html,body{margin:0;padding:0;overflow:hidden;background:var(--navy);}
+  body{width:100vw;height:100vh;}
+  .num{font-family:'Barlow Condensed',sans-serif;font-weight:700;}
+  .s{color:var(--scout);} .m{color:var(--mind);}
+
+  /* Icons: "SM" in the number face, optically centred (caps sit on the baseline). */
+  .tile{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);box-sizing:border-box;}
+  .mono{font-size:var(--fs);line-height:1;transform:translateY(var(--dy));}
+  .mono .s{margin-right:0.04em;}
+  .view-icon{--fs:64vw;--dy:-3vw;}
+  /* Maskable: the monogram's corners stay inside the 80% safe circle (radius
+     40vw from the centre); at 54vw they reach about 30vw. */
+  .view-maskable{--fs:54vw;--dy:-2.5vw;}
+  html:has(.view-round),.view-round{--fs:64vw;--dy:-3vw;background:transparent;}
+  .view-round .tile{border-radius:22%;}
+
+  /* Link preview. */
+  .og{position:relative;width:1200px;height:630px;box-sizing:border-box;padding:88px 96px 0;background:var(--navy);color:var(--mind);font-family:'DM Sans',sans-serif;}
+  .og .word{font-size:176px;line-height:0.9;letter-spacing:-1px;}
+  .og .pt{font-size:46px;font-weight:700;margin-top:34px;}
+  .og .en{font-size:34px;font-weight:500;color:var(--scout);margin-top:10px;}
+  .og .band{position:absolute;left:0;right:0;bottom:0;height:104px;background:var(--band);display:flex;align-items:center;justify-content:space-between;padding:0 96px;}
+  .og .url{font-size:30px;font-weight:700;letter-spacing:0.5px;}
+  .og .what{font-size:26px;font-weight:500;color:var(--scout);}
+</style>
+</head>
+<body>
+<script>
+  var view = (/[?&]view=(\w+)/.exec(location.search) || [])[1] || 'icon';
+  document.body.className = 'view-' + view;
+  var mono = '<div class="tile"><div class="mono num"><span class="s">S</span><span class="m">M</span></div></div>';
+  document.body.innerHTML = view === 'og'
+    ? '<div class="og">'
+      + '<div class="word num"><span class="s">Scout</span><span class="m">Mind</span></div>'
+      + '<div class="pt">Seu clube. Tudo em volta dele.</div>'
+      + '<div class="en">Your club. Everything around it.</div>'
+      + '<div class="band"><span class="url">scoutmind.app</span>'
+      + '<span class="what">Notícias · Salas · Jogos · Scout Game</span></div>'
+      + '</div>'
+    : mono;
+  // make-icons.ps1 waits on this: the screenshot is taken only once both
+  // faces are in, or the picture would show a fallback font.
+  document.fonts.ready.then(function () {
+    var ok = document.fonts.check('700 40px "Barlow Condensed"') && document.fonts.check('500 40px "DM Sans"');
+    document.title = ok ? 'fonts-ready' : 'fonts-missing';
+  });
+</script>
+</body>
+</html>
