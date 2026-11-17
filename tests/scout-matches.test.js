@@ -67,6 +67,25 @@ check('no "average" anywhere in the Scout Game', !/average/i.test(fn('sgRenderSl
 check('captain: a navy disc with a gold C', /\.sg-cap-disc\{[^}]*background:var\(--navy\);color:var\(--gold\)/.test(idx) && /sgCapDisc\(\)/.test(fn('sgRenderSlots')) && /sgCapDisc\(\)/.test(fn('sgRenderMine')));
 check('league names without flag emoji', /function sgLeagueName\(r\)\{ const l=r&&r\.leagues; return l\?l\.name:''; \}/.test(idx) && /function glComp\(x\)\{ return x\.competition\|\|''; \}/.test(idx));
 
+// ── Matches in this round, while picking (follow-up to 4a) ──
+const pick = fn('sgRenderPick');
+check('pick screen: your five, then the round\'s matches, then the filters and list',
+  /'<div id="sg-slots"><\/div><div id="sg-round-fx"><\/div><div id="sg-filters"><\/div><div id="sg-list">/.test(pick));
+const rfx = fn('sgRenderRoundFx');
+check('the round\'s matches use the shared row; tapping one filters instead of opening it',
+  /fxRow\(\{[\s\S]*?onTap:'sgFilterFx\('\+Number\(f\.id\)\+'\)',selected:SG\.filter\.fx===f\.id\}/.test(rfx));
+check('collapsible: open on a laptop, a summary line on a phone; the reader\'s toggle is kept',
+  /<details class="sg-rfx"'\+\(open\?' open':''\)\+' ontoggle="SG\.rfxOpen=this\.open">/.test(rfx)
+  && /SG\.rfxOpen!=null\?SG\.rfxOpen:window\.matchMedia\('\(min-width: 900px\)'\)\.matches/.test(rfx));
+check('the summary: "10 matches · Wed to Thu"', /tn\('sg\.rfx\.n',fx\.length\)\+\(a\?' · '\+\(a===b\?a:t\('sg\.rfx\.range',\{a:a,b:b\}\)\):''\)/.test(rfx));
+check('tap again clears the filter', /SG\.filter\.fx=SG\.filter\.fx===id\?null:id;/.test(fn('sgFilterFx')));
+check('the list keeps only the two clubs, and says so with a way back', /\(!fxc\|\|fxc\.indexOf\(p\.team_id\)>=0\)/.test(fn('sgRenderList')) && /sg\.rfx\.only[\s\S]*?sg\.rfx\.clear/.test(fn('sgRenderList')));
+check('a new round starts with no match filter', /SG\.filter=\{q:'',pos:'',club:'',fx:null\};/.test(pick));
+check('the chosen row: --tint with ink text (muted never on --tint), announced as pressed',
+  /\.fx-row\.sel small,\.fx-row\.sel \.fx-mid b\{color:var\(--ink\);\}/.test(idx) && /aria-pressed="'\+\(o\.selected\?'true':'false'\)\+'"/.test(fn('fxRow')));
+const sel = ctx.fxRow({ id: 5, homeId: 7, awayId: 9, status: 'upcoming', kickoff: Date.now(), onTap: 'sgFilterFx(5)', selected: true });
+check('fxRow: onTap replaces opening the match; selected adds sel + aria-pressed', /class="fx-row sel"/.test(sel) && /onclick="sgFilterFx\(5\)"/.test(sel) && /aria-pressed="true"/.test(sel) && !/openMatch/.test(sel));
+
 // ── The match panel ──
 const mo = fn('renderMatchDetail');
 check('match band: navy, crests on white discs, the status line', /<div class="mo-band">/.test(mo) && /moDisc\(home\)/.test(mo) && /moDisc\(away\)/.test(mo) && /\.mo-disc\{[^}]*background:var\(--crest-disc\)/.test(idx));

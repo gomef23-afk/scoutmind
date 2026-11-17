@@ -702,6 +702,23 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .fx-row{display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);align-items:center;gap:8px;min-height:48px;padding:6px 8px;border-bottom:1px solid var(--border);font-size:13px;color:var(--ink);cursor:pointer;}
 .fx-row:hover{background:var(--field);}
 .fx-row.mine{box-shadow:inset 3px 0 0 var(--navy-ink);font-weight:700;}
+/* A match chosen as the player filter (pick screen): --tint, every text ink
+   (muted never sits on --tint). */
+.fx-row.sel,.fx-row.sel:hover{background:var(--tint);}
+.fx-row.sel small,.fx-row.sel .fx-mid b{color:var(--ink);}
+/* "Matches in this round" on the pick screen: collapsible; open on a laptop,
+   one summary line on a phone. */
+.sg-rfx{margin:14px 0 4px;border:1px solid var(--border);border-radius:12px;background:var(--card);}
+.sg-rfx summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:48px;padding:6px 14px;cursor:pointer;}
+.sg-rfx summary::-webkit-details-marker{display:none;}
+.sg-rfx-t{font-size:13px;font-weight:700;color:var(--ink);}
+.sg-rfx-s{flex:1;min-width:0;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sg-rfx-chev{flex-shrink:0;color:var(--muted);transition:transform .15s;}
+.sg-rfx[open] .sg-rfx-chev{transform:rotate(180deg);}
+.sg-rfx .fx-list{padding:0 6px 6px;}
+.sg-rfx-hint{font-size:11px;color:var(--muted);padding:0 14px 6px;}
+.sg-fxnote{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--ink);margin:8px 0 4px;}
+.sg-fxnote button{background:none;border:none;color:var(--navy-ink);font:inherit;font-weight:700;cursor:pointer;min-height:44px;padding:0 4px;}
 .fx-team{display:flex;align-items:center;gap:8px;min-width:0;}
 .fx-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .fx-team.r{justify-content:flex-end;text-align:right;}
@@ -3230,7 +3247,8 @@ let MATCHES_ERR = false;
  * by Scout's "Matches in this round", so the two can never drift apart.
  * o: { id, homeId, awayId, home?, away?, status ('live'|'finished'|'upcoming'),
  *      statusShort?, minute?, homeGoals?, awayGoals?, kickoff (Date|ms|iso),
- *      showDay?, mine? }
+ *      showDay?, mine?, onTap? (JS run on tap instead of opening the match),
+ *      selected? (a toggle: true / false, shown and announced) }
  */
 function fxRow(o){
   const OFF=['PST','CANC','ABD','SUSP','AWD','WO'];
@@ -3249,8 +3267,10 @@ function fxRow(o){
     small=o.showDay&&k?k.toLocaleDateString(smLocale()||[],{weekday:'short',day:'numeric'}):'';
   }
   const name=(id,fallback)=>clubLabel(id)||fallback||'—';
-  const tap=o.id?' role="button" tabindex="0" onclick="openMatch('+Number(o.id)+')" onkeydown="if(event.key===\'Enter\')openMatch('+Number(o.id)+')"':'';
-  return '<div class="fx-row'+(o.mine?' mine':'')+'"'+tap+'>'
+  const act=o.onTap||(o.id?'openMatch('+Number(o.id)+')':'');
+  const tap=act?' role="button" tabindex="0" onclick="'+act+'" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();'+act+'}"'
+    +(o.selected!=null?' aria-pressed="'+(o.selected?'true':'false')+'"':''):'';
+  return '<div class="fx-row'+(o.mine?' mine':'')+(o.selected?' sel':'')+'"'+tap+'>'
     +'<span class="fx-team">'+clubCrestById(o.homeId,20)+'<span>'+sanitize(name(o.homeId,o.home))+'</span></span>'
     +'<span class="fx-mid"><b>'+sanitize(big)+'</b>'+(small?'<small'+(live?' class="live"':'')+'>'+sanitize(small)+'</small>':'')+'</span>'
     +'<span class="fx-team r"><span>'+sanitize(name(o.awayId,o.away))+'</span>'+clubCrestById(o.awayId,20)+'</span>'
@@ -5754,7 +5774,7 @@ async function sgRenderPick(r){
     const cap=picks.find(p=>p.is_captain);
     SG.captain=cap?cap.player_id:null;
     SG.draftRound=r.id;
-    SG.filter={q:'',pos:'',club:''};
+    SG.filter={q:'',pos:'',club:'',fx:null};
   }
   // The band (spec v1.2 §7): round, the countdown in gold, my season rank.
   const head=sgBand([
@@ -5764,9 +5784,11 @@ async function sgRenderPick(r){
       sgSeasonSlot(r)
     ])
     +(SG.entries.get(r.id)?'<div class="sg-saved">'+t('sg.saved')+'</div>':'');
-  el.innerHTML=head+'<div id="sg-slots"></div><div id="sg-filters"></div><div id="sg-list"><div class="sg-empty">'+t('sg.loadingPlayers')+'</div></div>';
+  // Your five, then the round's matches (tap one to see its players), then the list.
+  el.innerHTML=head+'<div id="sg-slots"></div><div id="sg-round-fx"></div><div id="sg-filters"></div><div id="sg-list"><div class="sg-empty">'+t('sg.loadingPlayers')+'</div></div>';
   sgSubmitBar(r);
   sgLoadSeasonRank(r);
+  sgLoadRoundFx(r).then(()=>{ if(SG.roundId===r.id) sgRenderRoundFx(r); });
   if(!SG.pickable.has(r.id)&&!SG.pickErr.has(r.id)){
     try{
       // A read, open to guests too: not apiSend, which refuses without a session.
@@ -5780,7 +5802,61 @@ async function sgRenderPick(r){
   }
   if(SG.roundId!==r.id||!document.getElementById('sg-list')) return;   // moved on while loading
   sgSeatAll();
-  sgRenderSlots(); sgRenderFilters(); sgRenderList(); sgSubmitBar(r);
+  sgRenderSlots(); sgRenderRoundFx(r); sgRenderFilters(); sgRenderList(); sgSubmitBar(r);
+}
+
+// ── MATCHES IN THIS ROUND, while picking ──
+// The same compact rows as the Matches tab (fxRow), above the player list.
+// Open on a laptop, one summary line on a phone; the reader's own toggle is
+// kept while the screen re-renders. Tapping a match filters the list to its
+// two clubs; tapping it again clears the filter.
+SG.roundFx=new Map();      // round id -> [fixtures]
+SG.rfxOpen=null;           // null: the default for the width; else the reader's choice
+async function sgLoadRoundFx(r){
+  if(SG.roundFx.has(r.id)) return;
+  try{
+    const rows=await apiGet('game_round_fixtures?select=fixture_id,fixtures(id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id)'
+      +'&round_id=eq.'+r.id+'&counts=is.true');
+    SG.roundFx.set(r.id,(rows||[]).map(x=>x.fixtures).filter(Boolean)
+      .sort((a,b)=>String(a.kickoff_utc).localeCompare(String(b.kickoff_utc))));
+  }catch(e){ console.warn('round fixtures:',e.message); SG.roundFx.set(r.id,[]); }
+}
+function sgRenderRoundFx(r){
+  const el=document.getElementById('sg-round-fx');
+  if(!el) return;
+  const fx=SG.roundFx.get(r.id);
+  if(!fx||!fx.length){ el.innerHTML=''; return; }
+  const day=d=>{ try{ return new Date(d).toLocaleDateString(smLocale()||[],{weekday:'short'}); }catch(e){ return ''; } };
+  const a=day(fx[0].kickoff_utc), b=day(fx[fx.length-1].kickoff_utc);
+  const summary=tn('sg.rfx.n',fx.length)+(a?' · '+(a===b?a:t('sg.rfx.range',{a:a,b:b})):'');
+  const open=SG.rfxOpen!=null?SG.rfxOpen:window.matchMedia('(min-width: 900px)').matches;
+  const mine=new Set(myClubIds());
+  el.innerHTML='<details class="sg-rfx"'+(open?' open':'')+' ontoggle="SG.rfxOpen=this.open">'
+    +'<summary><span class="sg-rfx-t">'+sanitize(t('sg.matchesRound'))+'</span><span class="sg-rfx-s">'+sanitize(summary)+'</span>'
+    +'<svg class="sg-rfx-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg></summary>'
+    +'<div class="sg-rfx-hint">'+sanitize(t('sg.rfx.hint'))+'</div>'
+    +'<div class="fx-list">'+fx.map(f=>{
+      const done=['FT','AET','PEN'].indexOf(f.status_short)>=0;
+      const live=['1H','HT','2H','ET','BT','P','LIVE','INT'].indexOf(f.status_short)>=0;
+      return fxRow({id:f.id,homeId:f.home_team_id,awayId:f.away_team_id,status:live?'live':done?'finished':'upcoming',
+        statusShort:f.status_short,minute:f.elapsed,homeGoals:f.home_goals,awayGoals:f.away_goals,kickoff:f.kickoff_utc,
+        showDay:true,mine:mine.has(f.home_team_id)||mine.has(f.away_team_id),
+        onTap:'sgFilterFx('+Number(f.id)+')',selected:SG.filter.fx===f.id});
+    }).join('')+'</div></details>';
+}
+/** Tap a match: the list shows its two clubs' players; tap it again: everyone. */
+function sgFilterFx(id){
+  SG.filter.fx=SG.filter.fx===id?null:id;
+  const r=sgRound(SG.roundId);
+  if(r) sgRenderRoundFx(r);
+  sgRenderList();
+  if(SG.filter.fx!=null){ const l=document.getElementById('sg-list'); if(l&&l.getBoundingClientRect().top>window.innerHeight) l.scrollIntoView({block:'start'}); }
+}
+/** The chosen match's two clubs, or null. */
+function sgFxClubs(){
+  if(SG.filter.fx==null) return null;
+  const f=(SG.roundFx.get(SG.roundId)||[]).find(x=>x.id===SG.filter.fx);
+  return f?[f.home_team_id,f.away_team_id]:null;
 }
 
 /**
@@ -5944,13 +6020,18 @@ function sgRenderList(){
   const rows=SG.pickable.get(SG.roundId);
   if(!rows){ el.innerHTML=isOffline()?offlineHtml():'<div class="sg-empty">'+t('sg.loadingPlayers')+'</div>'; return; }
   const q=pickerNorm(SG.filter.q||'');
+  const fxc=sgFxClubs();
+  // The chosen match, said in words with a way back (the row's tint is not the only sign).
+  const note=fxc?'<div class="sg-fxnote">'+sanitize(t('sg.rfx.only',{home:clubLabel(fxc[0])||'—',away:clubLabel(fxc[1])||'—'}))
+    +'<button onclick="sgFilterFx('+Number(SG.filter.fx)+')">'+sanitize(t('sg.rfx.clear'))+'</button></div>':'';
   const list=rows.filter(p=>(!SG.filter.pos||p.position===SG.filter.pos)
+      &&(!fxc||fxc.indexOf(p.team_id)>=0)
       &&(!SG.filter.club||String(p.team_id)===String(SG.filter.club))
       &&(!q||pickerNorm(p.name||'').indexOf(q)>=0||pickerNorm(clubLabel(p.team_id)||'').indexOf(q)>=0))
     .sort((a,b)=>(b.minutes||0)-(a.minutes||0));
-  if(!list.length){ el.innerHTML='<div class="sg-empty">'+t('sg.noPlayerMatch')+'</div>'; return; }
+  if(!list.length){ el.innerHTML=note+'<div class="sg-empty">'+t('sg.noPlayerMatch')+'</div>'; return; }
   const shown=list.slice(0,SG_LIST_MAX);
-  el.innerHTML=shown.map(p=>{
+  el.innerHTML=note+shown.map(p=>{
     const on=SG.picks.indexOf(p.player_id)>=0;
     const block=on?null:sgBlock(p);
     return '<div class="sg-row'+(on?' on':'')+(block?' blocked':'')+'">'
