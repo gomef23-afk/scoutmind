@@ -75,10 +75,15 @@ for (const [file, html] of Object.entries(pages)) {
   for (const m of html.matchAll(/data-i18n(?:-html|-ph|-aria|-title)?="([^"]+)"/g)) { used++; if (!(m[1] in en)) missing.push(`${file} data-i18n "${m[1]}"`); }
   // t(cond ? 'a' : 'b') and t('prefix.'+x): every quoted key inside a t( … ) call.
   for (const m of html.matchAll(/\bt\(([^()]*\?[^()]*)\)/g)) {
-    for (const k of m[1].matchAll(/'((?:sg|mo|pick|onb|auth|pg|sp|team|pref|cm)\.[\w.]+)'/g)) { used++; if (!(k[1] in en)) missing.push(`${file} t(…'${k[1]}'…)`); }
+    for (const k of m[1].matchAll(/'((?:sg|mo|pick|onb|auth|pg|sp|team|pref|cm|hb)\.[\w.]+)'/g)) { used++; if (!(k[1] in en)) missing.push(`${file} t(…'${k[1]}'…)`); }
   }
 }
 check(`every key used by the pages exists (${used} uses)`, missing.length === 0, missing.join('; '));
+
+// The Home band's rules (public/home-band.js) hand back keys; every one exists.
+const hbKeys = [...new Set([...read('public/home-band.js').matchAll(/key: '(hb\.[\w.]+)'/g)].map((m) => m[1]))];
+const hbMissing = hbKeys.filter((k) => !(k in en));
+check(`every key home-band.js returns exists (${hbKeys.length})`, hbKeys.length >= 15 && hbMissing.length === 0, hbMissing.join(', '));
 
 // Keys built at runtime: position, pick-slot, full-group and status families.
 const idx = pages['public/index.html'];

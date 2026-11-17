@@ -62,6 +62,8 @@
 <script src="/club_names.js"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
 <script src="/i18n.js"></script>
+<!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
+<script src="/home-band.js"></script>
 <style>
 /* The pre-Sequence-2 names, kept as aliases of the v1.2 tokens in /theme.css
    so every existing rule keeps working in light and dark. Removed in commit
@@ -592,6 +594,66 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 /* "Pick your club" nudge on Home (Day 7) */
 .club-nudge{align-items:center;justify-content:space-between;gap:12px;background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:6px 6px 6px 14px;margin:0 0 12px;font-size:13px;line-height:1.4;color:var(--text);}
 .club-nudge-btn{flex-shrink:0;min-height:44px;padding:0 18px;border-radius:22px;border:none;background:var(--navy);color:var(--on-navy);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+/* ── HOME BAND (2a, spec v1.2 §4) ── mobile first. Text on the band is
+   --on-navy, the countdown --gold, LIVE --live-on-band: the three pairs
+   tests/theme.test.js measures on --navy. Hairlines are --navy-hover. */
+.hb{background:var(--navy);color:var(--on-navy);padding:6px 16px 34px;}
+.hb-top{display:flex;align-items:center;gap:4px;min-height:48px;}
+.hb-word{display:flex;align-items:center;min-height:44px;font-family:var(--font-num);font-weight:700;font-size:24px;letter-spacing:0.5px;color:var(--on-navy);text-decoration:none;margin-right:auto;}
+.hb-word span{color:var(--on-navy);opacity:1;}
+.hb-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--on-navy);cursor:pointer;border-radius:22px;}
+.hb-av{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;padding:0;}
+.hb-av span{width:32px;height:32px;border-radius:50%;background:var(--on-navy);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.hb-signin{min-height:44px;padding:0 16px;border-radius:22px;border:none;background:var(--on-navy);color:var(--navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+.hb-club{display:flex;align-items:center;gap:12px;margin-top:8px;}
+.hb-club:empty{display:none;}
+.hb-crest{width:46px;height:46px;border-radius:50%;background:var(--on-navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hb-crest img{width:32px;height:32px;object-fit:contain;}
+.hb-crest b{color:var(--navy);font-family:var(--font-num);font-size:18px;}
+.hb-name{font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:1.15;color:var(--on-navy);overflow-wrap:anywhere;}
+.hb-form{display:flex;gap:4px;margin-top:5px;}
+.hb-chip{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--on-chip);}
+.hb-chip.W{background:var(--chip-win);} .hb-chip.D{background:var(--chip-draw);} .hb-chip.L{background:var(--chip-loss);}
+.hb .club-nudge{background:var(--card);margin:10px 0 0;}
+.hb-guest{font-size:13px;line-height:1.5;color:var(--on-navy);margin-top:8px;}
+.hb-slots{display:flex;margin-top:14px;border-top:1px solid var(--navy-hover);}
+.hb-slots:empty{display:none;}
+.hb-slot{flex:1 1 0;min-width:0;padding:10px 8px 0 10px;border-left:1px solid var(--navy-hover);}
+.hb-slot:first-child{border-left:none;padding-left:0;}
+.hb-slot[role=button]{cursor:pointer;}
+/* Two label lines reserved, so the numbers line up when a label wraps (pt-BR). */
+.hb-lab{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;line-height:12px;min-height:24px;color:var(--on-navy);}
+.hb-lab.live{color:var(--live-on-band);}
+.hb-big{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1;font-weight:700;font-size:26px;line-height:1.1;margin-top:3px;color:var(--on-navy);white-space:nowrap;}
+.hb-big.gold{color:var(--gold);}
+.hb-line{font-size:11px;line-height:1.35;margin-top:2px;color:var(--on-navy);overflow-wrap:anywhere;}
+/* The light sheet: rounded top, overlapping the band by 22px. */
+.hb-sheet{position:relative;background:var(--ground);border-radius:18px 18px 0 0;margin-top:-22px;padding:14px 16px 0;}
+.hb-sheet:empty,.hb-sheet.empty{display:none;}
+.hb-card{width:100%;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:10px;color:var(--ink);font:inherit;text-align:left;}
+.hb-card-body{flex:1;min-width:0;}
+.hb-card-t{font-size:13px;font-weight:700;color:var(--ink);}
+.hb-card-s{font-size:12px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hb-card-s.wrap{white-space:normal;overflow-wrap:anywhere;}
+.hb-btn{flex-shrink:0;min-height:44px;padding:0 16px;border-radius:8px;border:none;background:var(--navy);color:var(--on-navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+.hb-btn:hover{background:var(--navy-hover);}
+.hb-link{flex-shrink:0;min-height:44px;padding:0 6px;display:flex;align-items:center;background:none;border:none;color:var(--navy-ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+.hb-avs{display:flex;flex-shrink:0;padding-left:8px;}
+.hb-pav{position:relative;width:32px;height:32px;margin-left:-8px;border-radius:50%;border:2px solid var(--card);background:var(--field);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ink);}
+.hb-pav img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.hb-cap{position:absolute;right:-5px;bottom:-5px;width:16px;height:16px;border-radius:50%;background:var(--navy);color:var(--gold);font-family:var(--font-num);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1px solid var(--card);}
+.hb-room-ico{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--tint);color:var(--navy-ink);display:flex;align-items:center;justify-content:center;}
+.hb-room{cursor:pointer;}
+@media(max-width:899px){
+  /* On Home the band is the header; the nav comes back on every other page. */
+  body.on-home .sm-nav{display:none;}
+}
+@media(min-width:900px){
+  .hb{padding:14px 24px 34px;}
+  .hb-top{display:none;}           /* the nav above already has them */
+  .hb-sheet{padding:14px 24px 0;}
+  .hb-card{max-width:720px;}
+}
 /* Offline empty state (Day 6) */
 .offline-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.7;}
 .offline-empty-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);margin-bottom:4px;}
@@ -756,11 +818,33 @@ if(!_cu){
 </div>
 
 <div class="page active" id="page-feed">
+<!-- HOME BAND (Sequence 2 commit 2a, design spec v1.2 §4). The navy band: on a
+     phone it carries the wordmark, search and avatar (the global nav is hidden
+     on Home below 900px), then the club, its last five and three slots. The
+     slot rules are public/home-band.js; renderHomeBand() paints them. -->
+<section class="hb" id="home-band" aria-label="Your club">
+  <div class="hb-top">
+    <a class="hb-word" href="/" aria-label="ScoutMind">Scout<span>Mind</span></a>
+    <button class="hb-icon" type="button" onclick="homeSearch()" data-i18n-aria="hb.search" aria-label="Search">
+      <!-- Tabler icon "search" (MIT) -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
+    </button>
+    <span id="hb-me"></span>
+  </div>
+  <div id="hb-club" class="hb-club"></div>
+  <!-- "Pick your club" nudge (Day 7): signed in, no main club. Filled and
+       shown by renderClubNudge(); empty and hidden otherwise. In the band since
+       2a, in place of the club row. -->
+  <div id="club-nudge" class="club-nudge" style="display:none;"></div>
+  <div id="hb-slots" class="hb-slots"></div>
+</section>
+<!-- The light sheet under the band: the picks row and the room line. -->
+<div class="hb-sheet" id="home-sheet">
+  <div id="hb-picks"></div>
+  <div id="hb-room"></div>
+</div>
 <div class="feed-page">
   <div class="feed-main">
-    <!-- "Pick your club" nudge (Day 7): signed in, no main club. Filled and
-         shown by renderClubNudge(); empty and hidden otherwise. -->
-    <div id="club-nudge" class="club-nudge" style="display:none;"></div>
     <div class="feed-tabs-bar">
       <button class="ftab active" onclick="showFeedTab('trending',this)">Trending</button>
       <button class="ftab" onclick="showFeedTab('transfers',this)">News</button>
@@ -2614,6 +2698,8 @@ function applyClubSelection(){
   // the club cards again once they land.
   loadChatOverview().then(function(){
     try{ renderSidebarYourClub(); renderMyClubCard(); renderClubsGrid(); }catch(e){}
+    // A new main club is a new band: its league, table, match and round.
+    if(typeof loadHomeBand==='function') loadHomeBand(true).catch(e=>console.error('loadHomeBand:',e));
   });
   // DO NOT rename the nav — always stays "Clubs"
 }
@@ -2659,6 +2745,9 @@ function showPage(id){
   if(id==='communities'){ try{renderMyClubCard();renderClubsGrid();}catch(e){console.error('clubs page:',e);} }
   if(id==='feed') try{renderFeedNews();}catch(e){}
   if(id==='matches') try{renderMatchDay();}catch(e){}
+  // The Home band is the header on a phone (2a): the nav hides on Home only.
+  document.body.classList.toggle('on-home', id==='feed');
+  if(id==='feed'&&typeof loadHomeBand==='function') loadHomeBand(false).catch(e=>console.error('loadHomeBand:',e));
   window.scrollTo(0,0);
 }
 
@@ -5129,6 +5218,9 @@ function filterWeekly(league, btn) {
   try{ logInstallOnce(); }catch(e){}
   try{ maybeStartOnboarding(); }catch(e){ console.error('onboarding:',e); }
   try{ renderClubNudge(); }catch(e){}
+  // The Home band needs the account (main club), the clubs and the room
+  // overview, all loaded above.
+  if(typeof loadHomeBand==='function') loadHomeBand(true).catch(e=>console.error('loadHomeBand:',e));
 })();
 try{initProfile();}catch(e){console.error('initProfile:',e);}
 try{renderWeeklyReport();}catch(e){console.error('renderWeeklyReport:',e);}
@@ -6504,6 +6596,228 @@ function renderThemePref(){
   }).join('');
 }
 
+// ── HOME BAND (Sequence 2 commit 2a, design spec v1.2 §4) ─────────────────
+// Gathers the data and paints; the rules for what each slot says live in
+// public/home-band.js (HomeBand), tested by tests/home-band.test.js. Every
+// read is public or the reader's own rows, and each fails on its own: a
+// missing piece hides or blanks its slot, never the band (rule 21).
+const HBD={clubId:null,league:null,form:null,fixtures:[],round:null,me:{},entry:null,
+  loadedAt:0,loading:null,timer:null,ticks:0};
+
+/** Search from the band: the News tab, search box focused. */
+function homeSearch(){
+  const btn=document.querySelectorAll('.feed-tabs-bar .ftab')[1];
+  showFeedTab('transfers',btn);
+  const box=document.getElementById('feed-search');
+  if(box){ box.scrollIntoView({block:'center'}); box.focus(); }
+}
+
+/** The Scout tab on this round. */
+function hbOpenRound(roundId){
+  const r=SG.rounds.find(x=>x.id===roundId);
+  if(r){ SG.view='league'; SG.leagueId=r.league_id; SG.roundId=r.id; }
+  showPage('scout');
+}
+
+async function loadHomeBand(force){
+  if(HBD.loading) return HBD.loading;
+  const clubId=mainClubId()||null;
+  if(!force&&HBD.loadedAt&&Date.now()-HBD.loadedAt<60000&&HBD.clubId===clubId){ renderHomeBand(); return; }
+  HBD.loading=(async function(){
+    if(HBD.clubId!==clubId){ HBD.league=null; HBD.form=null; HBD.fixtures=[]; }
+    HBD.clubId=clubId;
+    renderHomeBand();        // crest, name and room line paint at once from what is cached
+    const now=Date.now(), me=myUserId();
+    // The club's league and season: match_form() and the round need them.
+    if(clubId&&(!HBD.league||HBD.league.clubId!==clubId)){
+      try{
+        const rows=await apiGet('teams?select=league_id,leagues!teams_league_id_fkey(id,current_season,name,slug)&id=eq.'+clubId);
+        const lg=rows&&rows[0]&&rows[0].leagues;
+        HBD.league=lg?{clubId:clubId,id:lg.id,season:lg.current_season,name:lg.name,slug:lg.slug}:null;
+      }catch(e){ console.warn('home band league:',e.message); HBD.league=null; }
+    }
+    const jobs=[];
+    if(clubId&&HBD.league){
+      jobs.push(sgRpc('match_form',{p_team_id:clubId,p_league_id:HBD.league.id,p_season:HBD.league.season,p_before:new Date(now).toISOString()})
+        .then(f=>{ HBD.form=f||null; }).catch(e=>{ console.warn('match_form:',e.message); HBD.form=null; }));
+    }
+    if(clubId){
+      const from=new Date(now-36*3600000).toISOString(), to=new Date(now+30*86400000).toISOString();
+      jobs.push(apiGet('fixtures?select=id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id'
+          +'&or=(home_team_id.eq.'+clubId+',away_team_id.eq.'+clubId+')'
+          +'&kickoff_utc=gte.'+from+'&kickoff_utc=lte.'+to+'&order=kickoff_utc.asc&limit=12')
+        .then(rows=>{ HBD.fixtures=(rows||[]).map(f=>{
+          const opp=f.home_team_id===clubId?f.away_team_id:f.home_team_id;
+          const c=CLUB_DATA.get(opp);
+          return {id:f.id,kickoff:new Date(f.kickoff_utc).getTime(),status_short:f.status_short,elapsed:f.elapsed,
+            home_id:f.home_team_id,away_id:f.away_team_id,home_goals:f.home_goals,away_goals:f.away_goals,opponent:c?c.label:'—'};
+        }); }).catch(e=>{ console.warn('home band fixtures:',e.message); HBD.fixtures=[]; }));
+    }
+    // The Scout Game: the same rounds and entries the Scout tab reads.
+    jobs.push((async function(){
+      try{ await sgLoadBase(force); await sgLoadEntries(); }
+      catch(e){ console.warn('home band rounds:',e.message); }
+    })());
+    await Promise.all(jobs);
+    const rounds=(SG.rounds||[]).map(r=>Object.assign({},r,{league_slug:r.leagues&&r.leagues.slug}));
+    const entered=new Set([...SG.entries.keys()]);
+    const club=clubId&&CLUB_DATA.get(clubId);
+    HBD.round=HomeBand.pickRound(rounds,club?club.league:null,entered,SG.playing||null,Date.now());
+    HBD.me={entered:!!(HBD.round&&entered.has(HBD.round.id))};
+    const e=HBD.round&&SG.entries.get(HBD.round.id);
+    HBD.entry=e?{picks:(e.game_picks||[]).map(p=>({slot:p.slot,is_captain:p.is_captain,
+      name:p.players&&p.players.name||'',photo_url:p.players&&p.players.photo_url||null}))}:null;
+    // My rank in the competition, and my points and rank in this round.
+    if(HBD.round&&HBD.me.entered&&me&&!isGuestNow()){
+      const r=HBD.round;
+      await Promise.all([
+        apiGet('game_competition_standings?select=rank&league_id=eq.'+r.league_id+'&season=eq.'+r.season+'&user_id=eq.'+me)
+          .then(x=>{ HBD.me.compRank=x&&x[0]?x[0].rank:null; }).catch(()=>{ HBD.me.compRank=null; }),
+        r.status==='open'?Promise.resolve():apiGet('game_round_rankings?select=rank,total&round_id=eq.'+r.id+'&user_id=eq.'+me)
+          .then(x=>{ HBD.me.roundRank=x&&x[0]?x[0].rank:null; HBD.me.roundTotal=x&&x[0]?x[0].total:null; })
+          .catch(()=>{ HBD.me.roundRank=null; HBD.me.roundTotal=null; })
+      ]);
+    }
+    HBD.loadedAt=Date.now();
+    renderHomeBand();
+    hbStartTimer();
+  })().finally(()=>{ HBD.loading=null; });
+  return HBD.loading;
+}
+
+/** A slot's big text, from the kind HomeBand gave it. */
+function hbBig(b){
+  if(!b||b.kind==='dash') return '—';
+  if(b.kind==='ord') return tOrd(b.n);
+  if(b.kind==='score') return b.home+'–'+b.away;
+  if(b.kind==='points') return sgPts(b.n);
+  if(b.kind==='countdown') return HomeBand.countdownText(b.at,Date.now());
+  if(b.kind==='time'){ try{ return new Date(b.at).toLocaleTimeString(smLocale()||[],{hour:'2-digit',minute:'2-digit'}); }catch(e){ return '—'; } }
+  return '—';
+}
+function hbText(x){
+  if(!x) return '';
+  const v=Object.assign({},x.vars||{});
+  if(x.key==='hb.dayVs'){
+    const d=new Date(v.at), today=localDayKey(new Date())===localDayKey(d);
+    v.day=today?t('hb.today'):d.toLocaleDateString(smLocale()||[],{weekday:'short'});
+  }
+  if(x.key==='hb.rankIn') v.ord=tOrd(v.n);
+  if(x.key==='hb.live'&&v.m==null) return t('hb.liveNow');
+  return t(x.key,v);
+}
+function hbSlot(s,act){
+  if(!s) return '';
+  const live=s.tone==='live', gold=s.tone==='gold';
+  return '<div class="hb-slot"'+(act?' role="button" tabindex="0" onclick="'+act+'" onkeydown="if(event.key===\'Enter\'){this.click();}"':'')+'>'
+    +'<div class="hb-lab'+(live?' live':'')+'">'+sanitize(hbText(s.label))+'</div>'
+    +'<div class="hb-big'+(gold?' gold':'')+'"'+(s.big&&s.big.kind==='countdown'?' data-at="'+s.big.at+'"':'')+'>'+sanitize(hbBig(s.big))+'</div>'
+    +(s.line?'<div class="hb-line">'+sanitize(hbText(s.line))+'</div>':'')
+    +'</div>';
+}
+
+function renderHomeBand(){
+  const band=document.getElementById('home-band');
+  if(!band) return;
+  // Me: avatar (opens Profile) or Sign in.
+  const meEl=document.getElementById('hb-me');
+  if(meEl) meEl.innerHTML=isGuestNow()
+    ?'<button class="hb-signin" onclick="window.location.href=\'/auth.html\'">'+sanitize(t('hb.signin'))+'</button>'
+    :'<button class="hb-av" onclick="showPage(\'profile\')" aria-label="'+sanitize(t('hb.profile'))+'"><span>'+sanitize(myInitials())+'</span></button>';
+
+  const clubId=HBD.clubId, club=clubId&&CLUB_DATA.get(clubId);
+  const clubEl=document.getElementById('hb-club');
+  if(clubEl){
+    if(club){
+      const chips=HomeBand.formChips(HBD.form);
+      clubEl.innerHTML='<div class="hb-crest">'+(club.logo_url
+          ?'<img src="'+sanitize(club.logo_url)+'" alt="" crossorigin="anonymous" referrerpolicy="no-referrer" onerror="this.outerHTML=\'<b>'+sanitize((club.label||'?').slice(0,1))+'</b>\'">'
+          :'<b>'+sanitize((club.label||'?').slice(0,1))+'</b>')+'</div>'
+        +'<div style="min-width:0;"><div class="hb-name">'+sanitize(club.label)+'</div>'
+        +(chips.length?'<div class="hb-form" role="list" aria-label="'+sanitize(t('hb.form'))+'">'
+          +chips.map(c=>'<span class="hb-chip '+c.r+'" role="listitem" title="'+sanitize((c.home?'':'@ ')+c.opponent+' '+c.score)+'">'+sanitize(t('mo.res.'+c.r))+'</span>').join('')+'</div>':'')
+        +'</div>';
+    }else if(isGuestNow()){
+      clubEl.innerHTML='<div class="hb-guest">'+sanitize(t('hb.guest'))+'</div>';
+    }else{
+      clubEl.innerHTML='';      // the nudge (renderClubNudge) takes this place
+    }
+  }
+
+  // Slots: TABLE and MATCH need a club; ROUND shows for everyone.
+  const slotsEl=document.getElementById('hb-slots');
+  if(slotsEl){
+    const now=Date.now();
+    const s1=club?HomeBand.tableSlot(HBD.form):null;
+    const s2=club?HomeBand.matchSlot(clubId,HBD.fixtures,now):null;
+    const lgName=HBD.round&&HBD.round.leagues?HBD.round.leagues.name:(HBD.league&&HBD.league.name)||'';
+    const s3=HomeBand.roundSlot(HBD.round,HBD.me,lgName);
+    // Before the first load there is nothing true to say yet: no slots at all.
+    slotsEl.innerHTML=HBD.loadedAt?(hbSlot(s1,'showPage(\'communities\')')
+      +hbSlot(s2,s2&&s2.fixtureId?'openMatch('+Number(s2.fixtureId)+')':'')
+      +hbSlot(s3,s3.roundId?'hbOpenRound('+Number(s3.roundId)+')':'showPage(\'scout\')')):'';
+  }
+
+  // The sheet: picks row, room line.
+  const picksEl=document.getElementById('hb-picks');
+  if(picksEl){
+    const row=HBD.loadedAt?HomeBand.picksRow(HBD.round,HBD.entry):null;
+    if(!row){ picksEl.innerHTML=''; }
+    else{
+      const avs=row.picks.length?'<div class="hb-avs" aria-hidden="true">'+row.picks.map(p=>
+        '<span class="hb-pav">'+(p.photo_url?'<img src="'+sanitize(p.photo_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">':sanitize((p.name||'?').slice(0,1)))
+        +(p.is_captain?'<span class="hb-cap">C</span>':'')+'</span>').join('')+'</div>':'';
+      const go='hbOpenRound('+Number(row.roundId)+')';
+      // With no club the round could be any competition's: name it.
+      const rName=sgRoundName(HBD.round)+(club?'':(HBD.round.leagues&&HBD.round.leagues.name?' · '+HBD.round.leagues.name:''));
+      if(row.state==='in'){
+        picksEl.innerHTML='<div class="hb-card">'+avs+'<div class="hb-card-body"><div class="hb-card-t">'+sanitize(t('hb.picksIn'))+'</div>'
+          +(row.captain?'<div class="hb-card-s wrap">'+sanitize(t('hb.captain',{name:row.captain}))+'</div>':'')+'</div>'
+          +'<button class="hb-btn" onclick="'+go+'">'+sanitize(t('hb.editPicks'))+'</button></div>';
+      }else if(row.state==='none'){
+        picksEl.innerHTML='<div class="hb-card"><div class="hb-card-body"><div class="hb-card-t">'+sanitize(t('hb.roundOpen',{round:rName}))+'</div>'
+          +'<div class="hb-card-s">'+sanitize(sgCountdown(HBD.round.deadline_utc))+'</div></div>'
+          +'<button class="hb-btn" onclick="'+go+'">'+sanitize(t('hb.pickYour5'))+'</button></div>';
+      }else{
+        picksEl.innerHTML='<div class="hb-card">'+avs+'<div class="hb-card-body"><div class="hb-card-t">'+sanitize(t('hb.yourPicks',{round:rName}))+'</div>'
+          +(row.captain?'<div class="hb-card-s wrap">'+sanitize(t('hb.captain',{name:row.captain}))+'</div>':'')+'</div>'
+          +'<button class="hb-link" onclick="'+go+'">'+sanitize(t('hb.seePicks'))+'</button></div>';
+      }
+    }
+  }
+  const roomEl=document.getElementById('hb-room');
+  if(roomEl){
+    const o=clubId&&chatOverview(clubId);
+    if(!o){ roomEl.innerHTML=''; }
+    else{
+      const prev=o.last_message_preview?(o.last_message_is_system?'ScoutMind: ':'')+o.last_message_preview:t('hb.roomEmpty');
+      roomEl.innerHTML='<div class="hb-card hb-room" role="button" tabindex="0" onclick="openChat('+Number(clubId)+')" onkeydown="if(event.key===\'Enter\'){this.click();}">'
+        // Tabler icon "message" (MIT)
+        +'<span class="hb-room-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/></svg></span>'
+        +'<div class="hb-card-body"><div class="hb-card-t">'+sanitize(t('hb.roomName',{club:club?club.label:''}))
+        +' <span style="font-weight:400;color:var(--muted);">· '+sanitize(tn('hb.followers',o.member_count||0))+'</span></div>'
+        +'<div class="hb-card-s">'+sanitize(prev)+'</div></div>'
+        +'<span class="hb-link">'+sanitize(t('hb.open'))+'</span></div>';
+    }
+  }
+  const sheet=document.getElementById('home-sheet');
+  if(sheet) sheet.classList.toggle('empty',!(picksEl&&picksEl.innerHTML)&&!(roomEl&&roomEl.innerHTML));
+}
+
+/** The countdown ticks every 30 s; the data is re-read every 2 min while something is live, else 10. */
+function hbStartTimer(){
+  if(HBD.timer) return;
+  HBD.timer=setInterval(function(){
+    const home=document.getElementById('page-feed');
+    if(document.hidden||!home||!home.classList.contains('active')) return;
+    document.querySelectorAll('#hb-slots .hb-big[data-at]').forEach(el=>{ el.textContent=HomeBand.countdownText(Number(el.getAttribute('data-at')),Date.now()); });
+    HBD.ticks++;
+    const live=(HBD.fixtures||[]).some(f=>['1H','HT','2H','ET','BT','P','LIVE','INT'].indexOf(f.status_short)>=0)||(HBD.round&&HBD.round.status==='locked');
+    const closed=HBD.round&&HBD.round.status==='open'&&new Date(HBD.round.deadline_utc).getTime()<=Date.now();
+    if(closed||HBD.ticks%(live?4:20)===0) loadHomeBand(true).catch(e=>console.error('loadHomeBand:',e));
+  },30000);
+}
+
 // A switch redraws everything translated that is on screen, from what is
 // already loaded: no re-read, and the search boxes and drafts are kept.
 window.addEventListener('sm-lang',function(){
@@ -6511,6 +6825,7 @@ window.addEventListener('sm-lang',function(){
   renderThemePref();
   if(REMIND_ON!==null) renderRemindPref();
   renderClubNudge();
+  if(typeof renderHomeBand==='function') renderHomeBand();
   const page=document.getElementById('page-scout');
   if(page&&page.classList.contains('active')&&SG.loadedAt){ sgTabs(); sgRender(); }
   const gls=document.getElementById('gl-sheet');

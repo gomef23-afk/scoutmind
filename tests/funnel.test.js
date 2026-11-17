@@ -67,7 +67,7 @@ check('026 deletes nothing', !/\bdelete from\b/i.test(sql));
 // ── Day 7 fixes on Home ──
 const nudge = /function renderClubNudge\(\)\{([\s\S]*?)\n\}/.exec(idx);
 check('the club nudge exists and is called on load, on club changes and on a language switch',
-  !!nudge && /try\{ renderClubNudge\(\); \}catch\(e\)\{\}\r?\n\}\)\(\);/.test(idx)
+  !!nudge && /try\{ renderClubNudge\(\); \}catch\(e\)\{\}[^]{0,300}?\r?\n\}\)\(\);/.test(idx)
   && /function applyClubSelection\(\)\{[\s\S]{0,200}renderClubNudge\(\)/.test(idx) && /sm-lang[\s\S]{0,300}renderClubNudge\(\)/.test(idx));
 check('the nudge shows for any signed-in reader without a main club — "later" AND never-onboarded accounts',
   !!nudge && /!isGuestNow\(\)&&!!MY_PROFILE&&ACCOUNT_CLUBS_LOADED&&!mainClubId\(\)/.test(nudge[1]) && !/onboarded_at/.test(nudge[1]));
