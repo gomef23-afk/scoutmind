@@ -54,7 +54,8 @@ const comm = read('public/community.html');
 check('index: tabs are keyed by data-tab, Rooms included', ['feed', 'communities', 'scout', 'matches', 'rooms'].every((k) => (idx.match(new RegExp(`data-tab="${k}" onclick="showPage\\('${k}'\\)"`, 'g')) || []).length === 2));
 check('community: the Clubs tab is the current one', (comm.match(/class="sm-tab active" href="\/\?page=communities" aria-current="page"/g) || []).length === 2);
 check('index + community: the guest profile icon shows only for guests', /if\(prefsBtn\)prefsBtn\.style\.display=guest\?'flex':'none';/.test(idx) && /if\(prefs\)prefs\.style\.display=isGuest\?'flex':'none';/.test(comm));
-check('Home band: a guest gets the profile icon next to Sign in', /isGuestNow\(\)\s*\?'<button class="hb-icon" type="button" onclick="showPage\(\\'profile\\'\)" aria-label="'\+sanitize\(t\('nav\.profile'\)\)\+'">'\+Icons\.svg\('user',22\)/.test(idx));
+check('Home band: a guest gets the EN / PT switch and the profile icon next to Sign in',
+  /isGuestNow\(\)\s*\?'<span data-lang-switch>'\+langSwitchHtml\(\)\+'<\/span>'\s*\+'<button class="hb-icon" type="button" onclick="showPage\(\\'profile\\'\)" aria-label="'\+sanitize\(t\('nav\.profile'\)\)\+'">'\+Icons\.svg\('user',22\)/.test(idx));
 check('?page=rooms opens the Rooms tab', /const VALID = \['feed','communities','scout','matches','rooms','profile'\];/.test(idx));
 
 // ── The Rooms screen ──

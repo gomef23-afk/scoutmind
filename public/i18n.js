@@ -14,11 +14,15 @@
 //                                        [data-i18n-aria], [data-i18n-title],
 //                                        [data-i18n-html] (dictionary only)
 //
-// The language: localStorage.sm_lang if set (Profile -> Preferences, or the
-// toggle on auth.html), else the legal pages' older sm_legal_lang, else the
-// browser's (pt* -> pt-BR, anything else -> en). A UI preference, so
+// The language: localStorage.sm_lang if set (Profile -> Preferences, the EN /
+// PT switch on auth.html, the nav and the Home band for guests), else the legal
+// pages' older sm_legal_lang, else the DEVICE: any Portuguese in
+// navigator.languages -> pt-BR, anything else -> en (4b-5). Reading never
+// saves: the device decides until the person chooses. A UI preference, so
 // localStorage is right (CLAUDE.md rule 10). setLang() saves it and fires an
 // `sm-lang` event so a page can re-render what it drew from script.
+// langSwitchHtml() draws the EN / PT switch; [data-lang-switch] elements are
+// repainted by applyI18n().
 //
 // Placeholder values are inserted as given: a caller putting t() into
 // innerHTML sanitizes user text (names, clubs) before passing it in.
@@ -729,7 +733,81 @@
     'mo.noResults': 'No league results yet this season.',
     'mo.form': 'League position and last five',
     'mo.oldNew': 'oldest → newest',
-    'mo.rankPts': '{rank} · {pts} pts'
+    'mo.rankPts': '{rank} · {pts} pts',
+
+    // ── 4b-5: language switch, footer, offline page ──
+    'lang.switch': 'Language',
+    'off.docTitle': 'Offline — ScoutMind',
+    'off.body': 'ScoutMind needs a connection for news, scores and the Scout Game. It will be here when you\'re back.',
+    'off.retry': 'Try again',
+
+    // ── 4b-5: about.html ──
+    'about.docTitle': 'About ScoutMind — Your club. Everything around it.',
+    'about.openApp': 'Open the app',
+    'about.sub.how': 'How it works',
+    'about.sub.who': 'For who',
+    'about.sub.clubs': 'For clubs',
+    'about.sub.faq': 'FAQ',
+    'about.hero.tag': 'The social network for football',
+    'about.hero.h1': 'Your club.<br><span class="accent">Everything</span><br><span class="outline">around</span> <span class="accent">it.</span>',
+    'about.hero.desc': 'Follow your club\'s news, matches, data and community in one place. Free for supporters.',
+    'about.hero.open': '▶ Open the app',
+    'about.hero.see': 'See how it works',
+    'about.stat.leagues': 'Leagues with live data',
+    'about.stat.clubs': 'Clubs to follow',
+    'about.stat.outlets': 'News outlets, 6 languages',
+    'about.live.title': 'What is live today',
+    'about.live.news': 'Around 500 stories a day',
+    'about.live.scores': 'Live scores and fixtures',
+    'about.live.scoresSub': 'Kickoffs, results and tables in your timezone',
+    'about.live.stats': 'Real season stats',
+    'about.live.statsSub': 'Position, points, goals and pass accuracy per club',
+    'about.live.page': 'A page for every club',
+    'about.live.pageSub': 'Polls, transfer wishlists and analyst insights',
+    'about.proof': 'Seven leagues, 146 clubs · MLS next',
+    'about.how.title': 'Follow Your Club,<br>Everywhere It Plays',
+    'about.how.sub': 'Free, no subscription, no locked leagues. Pick your clubs once and the whole app arranges itself around them.',
+    'about.s1.t': 'Pick your clubs',
+    'about.s1.d': 'Choose from 146 clubs across seven leagues: Série A, the Premier League, La Liga, Serie A, the Bundesliga, Ligue 1 and Argentina\'s Liga Profesional. One main club, as many others as you like.',
+    'about.s2.t': 'Get their news',
+    'about.s2.d': 'Around 500 stories a day from ten outlets in six languages, tagged to the clubs they are actually about. Read in the languages you choose — and anything about your clubs reaches you whatever language it is written in.',
+    'about.s3.t': 'Follow match day',
+    'about.s3.d': 'Fixtures and results grouped by date in your own timezone, with your clubs first: the last result and the next match, always labelled as such. Live scores update while games are on.',
+    'about.s4.t': 'See the real numbers',
+    'about.s4.d': 'League position, points, goals scored and conceded per game, and pass accuracy — measured from this season\'s matches, not estimated. Where we do not have a number, we show nothing rather than guess.',
+    'about.s5.t': 'Join the community',
+    'about.s5.d': 'Every club has its own page: polls, a transfer wishlist, and insights from analysts with a verified badge. Free to read, free to post.',
+    'about.s6.t': 'Dig into the squad',
+    'about.s6.d': 'Scout Mode compares a squad against its league average and suggests the player profiles that would strengthen it. One feature among the rest, and still running on a fixed sample of players — it says so at the top of the page.',
+    'about.who.title': 'Built for<br>Supporters',
+    'about.who.sub': 'Supporters first. Analysts and journalists can post alongside them with a verified badge.',
+    'about.who.fans': 'Football Fans',
+    'about.who.fansD': 'Your clubs\' news, fixtures and results in one feed, in the languages you read — plus a community page for every club.',
+    'about.who.free': 'Free',
+    'about.who.analysts': 'Analysts & Journalists',
+    'about.who.analystsD': 'Post insights on any club page with a verified badge. Free to apply — we check credentials, not follower counts.',
+    'about.who.badge': 'Free · Verified badge',
+    'about.clubs.title': 'ScoutMind<br>for Clubs',
+    'about.clubs.sub': 'ScoutMind is free for every fan, analyst and agent — always. Clubs, federations and academies that want dedicated recruitment tools can talk to us directly.',
+    'about.clubs.cta': 'For clubs — contact us',
+    'about.faq.title': 'Common Questions',
+    'about.faq.q1': 'Where does the data come from?',
+    'about.faq.a1': 'Fixtures, results, league tables and season statistics come from API-Football. News headlines come from the public RSS feeds of ten outlets — ge, ESPN Brasil, BBC Sport, Sky Sports, Olé, AS, Marca, La Gazzetta dello Sport, kicker and RMC Sport. We store a headline, a short summary and a link, and every story links back to the publisher.',
+    'about.faq.q2': 'Which leagues do you cover?',
+    'about.faq.a2': 'Seven, with 146 clubs: Brazil\'s Série A, the Premier League, La Liga, Italy\'s Serie A, the Bundesliga, Ligue 1 and Argentina\'s Liga Profesional. MLS is next. If a club is not in one of those, you will not find it yet — we would rather cover fewer leagues properly than list a lot of them with nothing behind it.',
+    'about.faq.q3': 'Is ScoutMind really free?',
+    'about.faq.a3': 'Yes. Every feature is free for every user — no subscriptions, no trials, no locked leagues, no paid tier planned. You need an account only to pick your clubs, post and vote; reading works signed out.',
+    'about.faq.q4': 'What is the community?',
+    'about.faq.a4': 'Every club has its own page where supporters run polls, vote on a transfer wishlist, and read insights from analysts with a verified badge. Journalists, licensed scouts and agents can apply for that badge for free.',
+    'about.faq.q5': 'What about the scouting tools?',
+    'about.faq.a5': 'Scout Mode compares a squad against its league average and suggests player profiles to strengthen. It still runs on a fixed sample of players rather than live data, and it says so at the top of the page. It moves onto real player data alongside the rest of the app.',
+    'about.faq.q6': 'Which languages does the feed speak?',
+    'about.faq.a6': 'Six: Portuguese, English, Spanish, Italian, German and French. You choose which ones your feed shows, and anything about a club you follow reaches you whatever language it was written in.',
+    'about.cta.title': 'Your Club,<br><span>Every Day.</span>',
+    'about.cta.sub': 'Free, and launching this autumn. Pick your clubs and the feed is yours.',
+    'about.cta.faq': 'Common questions',
+    'about.copy': '© 2026 ScoutMind. All rights reserved.',
+    'about.liveBadge': 'Live App →'
   };
 
   I18N['pt-BR'] = {
@@ -1409,7 +1487,81 @@
     'mo.noResults': 'Nenhum resultado na liga nesta temporada ainda.',
     'mo.form': 'Posição na liga e últimos cinco',
     'mo.oldNew': 'mais antigo → mais recente',
-    'mo.rankPts': '{rank} · {pts} pts'
+    'mo.rankPts': '{rank} · {pts} pts',
+
+    // ── 4b-5: language switch, footer, offline page ──
+    'lang.switch': 'Idioma',
+    'off.docTitle': 'Sem conexão — ScoutMind',
+    'off.body': 'O ScoutMind precisa de conexão para notícias, placares e o Scout Game. Ele vai estar aqui quando você voltar.',
+    'off.retry': 'Tentar de novo',
+
+    // ── 4b-5: about.html ──
+    'about.docTitle': 'Sobre o ScoutMind — Seu clube. Tudo em volta dele.',
+    'about.openApp': 'Abrir o app',
+    'about.sub.how': 'Como funciona',
+    'about.sub.who': 'Para quem',
+    'about.sub.clubs': 'Para clubes',
+    'about.sub.faq': 'Perguntas',
+    'about.hero.tag': 'A rede social do futebol',
+    'about.hero.h1': 'Seu clube.<br><span class="accent">Tudo</span><br><span class="outline">em volta</span> <span class="accent">dele.</span>',
+    'about.hero.desc': 'Acompanhe as notícias, os jogos, os números e a torcida do seu clube num só lugar. Grátis para torcedores.',
+    'about.hero.open': '▶ Abrir o app',
+    'about.hero.see': 'Veja como funciona',
+    'about.stat.leagues': 'Ligas com dados ao vivo',
+    'about.stat.clubs': 'Clubes para seguir',
+    'about.stat.outlets': 'Veículos de notícias, 6 idiomas',
+    'about.live.title': 'O que já funciona hoje',
+    'about.live.news': 'Cerca de 500 notícias por dia',
+    'about.live.scores': 'Placares ao vivo e jogos',
+    'about.live.scoresSub': 'Horários, resultados e tabelas no seu fuso',
+    'about.live.stats': 'Números reais da temporada',
+    'about.live.statsSub': 'Posição, pontos, gols e precisão de passe por clube',
+    'about.live.page': 'Uma página para cada clube',
+    'about.live.pageSub': 'Enquetes, listas de desejos de reforços e análises de analistas',
+    'about.proof': 'Sete ligas, 146 clubes · MLS em seguida',
+    'about.how.title': 'Siga seu clube,<br>onde quer que ele jogue',
+    'about.how.sub': 'Grátis, sem assinatura, sem ligas bloqueadas. Escolha seus clubes uma vez e o app inteiro se organiza em torno deles.',
+    'about.s1.t': 'Escolha seus clubes',
+    'about.s1.d': 'Escolha entre 146 clubes de sete ligas: Série A, Premier League, La Liga, Serie A italiana, Bundesliga, Ligue 1 e a Liga Profesional argentina. Um clube principal e quantos outros quiser.',
+    'about.s2.t': 'Receba as notícias deles',
+    'about.s2.d': 'Cerca de 500 notícias por dia de dez veículos em seis idiomas, marcadas com os clubes de que realmente tratam. Leia nos idiomas que escolher — e tudo sobre os seus clubes chega até você, seja qual for o idioma em que foi escrito.',
+    'about.s3.t': 'Acompanhe a rodada',
+    'about.s3.d': 'Jogos e resultados agrupados por data no seu fuso, com os seus clubes primeiro: o último resultado e o próximo jogo, sempre indicados como tal. Os placares ao vivo se atualizam durante as partidas.',
+    'about.s4.t': 'Veja os números reais',
+    'about.s4.d': 'Posição na liga, pontos, gols marcados e sofridos por jogo e precisão de passe — medidos nos jogos desta temporada, não estimados. Quando não temos um número, não mostramos nada em vez de chutar.',
+    'about.s5.t': 'Entre na comunidade',
+    'about.s5.d': 'Cada clube tem a sua página: enquetes, uma lista de desejos de reforços e análises de analistas com selo verificado. Grátis para ler, grátis para publicar.',
+    'about.s6.t': 'Mergulhe no elenco',
+    'about.s6.d': 'O Modo Scout compara um elenco com a média da liga e sugere os perfis de jogador que o reforçariam. Um recurso entre os outros, que ainda usa uma amostra fixa de jogadores — e diz isso no topo da página.',
+    'about.who.title': 'Feito para<br>torcedores',
+    'about.who.sub': 'Os torcedores em primeiro lugar. Analistas e jornalistas podem publicar ao lado deles com um selo verificado.',
+    'about.who.fans': 'Torcedores',
+    'about.who.fansD': 'Notícias, jogos e resultados dos seus clubes num só feed, nos idiomas que você lê — e uma página de comunidade para cada clube.',
+    'about.who.free': 'Grátis',
+    'about.who.analysts': 'Analistas e jornalistas',
+    'about.who.analystsD': 'Publique análises em qualquer página de clube com um selo verificado. A inscrição é grátis — verificamos credenciais, não número de seguidores.',
+    'about.who.badge': 'Grátis · Selo verificado',
+    'about.clubs.title': 'ScoutMind<br>para clubes',
+    'about.clubs.sub': 'O ScoutMind é grátis para todo torcedor, analista e agente — sempre. Clubes, federações e academias que queiram ferramentas próprias de recrutamento podem falar direto com a gente.',
+    'about.clubs.cta': 'Para clubes — fale com a gente',
+    'about.faq.title': 'Perguntas frequentes',
+    'about.faq.q1': 'De onde vêm os dados?',
+    'about.faq.a1': 'Jogos, resultados, tabelas e estatísticas da temporada vêm da API-Football. As manchetes vêm dos feeds RSS públicos de dez veículos — ge, ESPN Brasil, BBC Sport, Sky Sports, Olé, AS, Marca, La Gazzetta dello Sport, kicker e RMC Sport. Guardamos a manchete, um resumo curto e o link, e toda notícia leva de volta ao veículo.',
+    'about.faq.q2': 'Quais ligas vocês cobrem?',
+    'about.faq.a2': 'Sete, com 146 clubes: a Série A do Brasil, a Premier League, La Liga, a Serie A da Itália, a Bundesliga, a Ligue 1 e a Liga Profesional da Argentina. A MLS vem em seguida. Se um clube não está numa delas, você ainda não vai encontrá-lo — preferimos cobrir menos ligas direito a listar muitas sem nada por trás.',
+    'about.faq.q3': 'O ScoutMind é grátis mesmo?',
+    'about.faq.a3': 'Sim. Todos os recursos são grátis para todo usuário — sem assinaturas, sem período de teste, sem ligas bloqueadas, sem plano pago previsto. Você só precisa de uma conta para escolher seus clubes, publicar e votar; dá para ler sem entrar.',
+    'about.faq.q4': 'O que é a comunidade?',
+    'about.faq.a4': 'Cada clube tem a sua página, onde os torcedores fazem enquetes, votam numa lista de desejos de reforços e leem análises de analistas com selo verificado. Jornalistas, olheiros licenciados e agentes podem pedir esse selo de graça.',
+    'about.faq.q5': 'E as ferramentas de scouting?',
+    'about.faq.a5': 'O Modo Scout compara um elenco com a média da liga e sugere perfis de jogador para reforçá-lo. Ele ainda usa uma amostra fixa de jogadores em vez de dados ao vivo, e diz isso no topo da página. Ele passa a usar dados reais de jogadores junto com o resto do app.',
+    'about.faq.q6': 'Em quais idiomas o feed funciona?',
+    'about.faq.a6': 'Seis: português, inglês, espanhol, italiano, alemão e francês. Você escolhe quais o seu feed mostra, e tudo sobre um clube que você segue chega até você, seja qual for o idioma em que foi escrito.',
+    'about.cta.title': 'Seu clube,<br><span>todo dia.</span>',
+    'about.cta.sub': 'Grátis, e chegando neste outono. Escolha seus clubes e o feed é seu.',
+    'about.cta.faq': 'Perguntas frequentes',
+    'about.copy': '© 2026 ScoutMind. Todos os direitos reservados.',
+    'about.liveBadge': 'App ao vivo →'
   };
 
   // Database messages -> keys, by the exact English text the server sends.
@@ -1488,12 +1640,21 @@
   }
   function norm(l) { return /^pt/i.test(String(l || '')) ? 'pt-BR' : 'en'; }
 
-  /** 'en' or 'pt-BR'. */
+  /**
+   * 'en' or 'pt-BR'. The person's own choice (saved by setLang) wins; until
+   * they make one, the device decides: any Portuguese in its language list
+   * means pt-BR, anything else English (4b-5). Reading never saves.
+   */
   function smLang() {
     var saved = store('sm_lang') || store('sm_legal_lang');
     if (saved) return norm(saved);
-    var nav = root.navigator && (root.navigator.language || (root.navigator.languages || [])[0]);
-    return norm(nav);
+    return deviceLang();
+  }
+  function deviceLang() {
+    var n = root.navigator || {};
+    var list = (n.languages && n.languages.length ? Array.prototype.slice.call(n.languages) : []).concat(n.language || []);
+    for (var i = 0; i < list.length; i++) if (/^pt/i.test(String(list[i] || ''))) return 'pt-BR';
+    return 'en';
   }
   /** For toLocaleString(): pt-BR, or undefined (the reader's own locale) in English. */
   function smLocale() { return smLang() === 'pt-BR' ? 'pt-BR' : undefined; }
@@ -1549,14 +1710,35 @@
     each('[data-i18n-ph]', function (el) { el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
     each('[data-i18n-aria]', function (el) { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
     each('[data-i18n-title]', function (el) { el.setAttribute('title', t(el.getAttribute('data-i18n-title'))); });
+    if (!rootEl) paintLangSwitches();
   }
 
   /** Save the choice, refill the page, and tell its scripts (`sm-lang`). */
   function setLang(l) {
     l = norm(l);
     store('sm_lang', l);
-    applyI18n();
+    applyI18n();   // repaints the EN / PT switches too
     try { root.dispatchEvent(new CustomEvent('sm-lang', { detail: { lang: l } })); } catch (e) {}
+  }
+
+  /**
+   * The EN / PT switch, for any element (4b-5: guests reach it from the first
+   * screen — the sign-up page, the logged-out Home, every nav). Two buttons,
+   * the current one pressed; a tap is the person's choice and is saved.
+   */
+  function langSwitchHtml() {
+    var cur = smLang();
+    var b = function (l, label) {
+      return '<button type="button" class="lang-switch-b" data-lang="' + l + '" aria-pressed="' + (cur === l) + '" onclick="setLang(\'' + l + '\')"'
+        + ' lang="' + l + '" title="' + (l === 'en' ? 'English' : 'Português (Brasil)') + '">' + label + '</button>';
+    };
+    return '<span class="lang-switch" role="group" aria-label="' + t('lang.switch') + '">' + b('en', 'EN') + b('pt-BR', 'PT') + '</span>';
+  }
+  function paintLangSwitches() {
+    var doc = root.document;
+    if (!doc) return;
+    var els = doc.querySelectorAll('[data-lang-switch]');
+    for (var i = 0; i < els.length; i++) els[i].innerHTML = langSwitchHtml();
   }
 
   root.I18N = I18N;
@@ -1570,4 +1752,10 @@
   root.smLocale = smLocale;
   root.setLang = setLang;
   root.applyI18n = applyI18n;
+  root.smDeviceLang = deviceLang;
+  root.langSwitchHtml = langSwitchHtml;
+  root.paintLangSwitches = paintLangSwitches;
+  // The page's language from the first moment (screen readers, hyphenation),
+  // not only once applyI18n() runs at the end of the body.
+  try { if (root.document && root.document.documentElement) root.document.documentElement.lang = smLang(); } catch (e) {}
 })(typeof window !== 'undefined' ? window : globalThis);

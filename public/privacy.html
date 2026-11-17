@@ -16,7 +16,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ScoutMind">
-<script src="/pwa.js?v=91655c8750" defer></script>
+<script src="/pwa.js?v=2693c9caba" defer></script>
+<!-- 4b-5: the nav in the reader's language (the page's text switches itself below). -->
+<script src="/i18n.js?v=80a097adb2"></script>
 <meta property="og:site_name" content="ScoutMind">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Privacy Policy — ScoutMind">
@@ -335,17 +337,26 @@ html[data-lang="pt-BR"] [lang="en"].legal-body{display:none;}
 // preference, so localStorage is fine under rule 10), then the browser. Since
 // Day 6 the key is sm_lang, shared with the app and auth.html (i18n.js);
 // sm_legal_lang, the older key, is still read.
-function setLang(l){
+// 4b-5: showing a language is not choosing one. Only a tap on the buttons
+// saves it; until then the device decides (any Portuguese in its language
+// list -> pt-BR), as in the app (i18n.js).
+function applyLang(l){
   document.documentElement.setAttribute('data-lang',l);
   document.documentElement.setAttribute('lang',l==='pt-BR'?'pt-BR':'en');
   document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-set-lang')===l); });
+}
+function setLang(l){
+  applyLang(l);
   try{ localStorage.setItem('sm_lang',l); }catch(e){}
+  if(typeof applyI18n==='function') applyI18n();   // the nav (i18n.js reads the saved choice)
 }
 (function(){
   var q=new URLSearchParams(location.search).get('lang');
   var saved=null; try{ saved=localStorage.getItem('sm_lang')||localStorage.getItem('sm_legal_lang'); }catch(e){}
-  var l=q?(/^pt/i.test(q)?'pt-BR':'en'):saved||(/^pt/i.test(navigator.language||'')?'pt-BR':'en');
-  setLang(l);
+  var dev=[].concat(navigator.languages||[],navigator.language||[]).some(function(x){ return /^pt/i.test(String(x||'')); })?'pt-BR':'en';
+  var l=q?(/^pt/i.test(q)?'pt-BR':'en'):saved?(/^pt/i.test(saved)?'pt-BR':'en'):dev;
+  if(typeof applyI18n==='function') applyI18n();
+  applyLang(l);   // after applyI18n, which sets lang from the saved / device choice; ?lang= wins
 })();
 </script>
 </body>

@@ -51,6 +51,14 @@ check('the same {placeholders} in both languages', phDiff.length === 0, phDiff.m
 const untranslated = enKeys.filter((k) => en[k] === pt[k] && /[a-z]{4,}/i.test(en[k])
   && !/^(sg\.title|sg\.tab\.rankings|badge\.top_ten_percent\.name|auth\.ph\.email|sg\.base|pg\.pts|mo\.rankPts|sg\.dur\.dh|cm\.deletedUser|nav\.scout)$/.test(k));
 check('nothing left in English in pt-BR (beyond names that stay)', untranslated.length === 0, untranslated.join(', '));
+// A key written twice in one dictionary: the later silently wins (4b-5 found three).
+{
+  const src = readFileSync(new URL('../public/i18n.js', import.meta.url), 'utf8');
+  const start = src.indexOf('I18N.en = {'), mid = src.indexOf("I18N['pt-BR'] = {"), end = src.indexOf('var SERVER');
+  const dupes = (s) => { const seen = new Set(), d = []; for (const m of s.matchAll(/^\s+'([\w.-]+)':/gm)) { if (seen.has(m[1])) d.push(m[1]); seen.add(m[1]); } return d; };
+  const d = [...dupes(src.slice(start, mid)), ...dupes(src.slice(mid, end > mid ? end : undefined))];
+  check('no key written twice in a dictionary', d.length === 0, d.join(', '));
+}
 
 // ── Money words (CLAUDE.md: no betting language anywhere) ──
 const MONEY_EN = /\b(odds|bets?|betting|wager|stake|win money|cash|prize money|jackpot)\b/i;

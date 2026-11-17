@@ -108,6 +108,15 @@
 
 /* ── Shared components (4b): drawn by more than one page ── */
 
+/* The EN / PT switch (i18n.js langSwitchHtml, 4b-5): in the nav for guests, on
+   the Home band for guests, wherever a page puts [data-lang-switch]. */
+.lang-switch{display:inline-flex;flex-shrink:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.lang-switch-b{min-width:40px;min-height:44px;padding:0 8px;background:transparent;border:none;color:var(--muted);font:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+.lang-switch-b[aria-pressed="true"]{background:var(--tint);color:var(--ink);}
+.hb .lang-switch{border-color:var(--navy-hover);}
+.hb .lang-switch-b{color:var(--on-navy);}
+.hb .lang-switch-b[aria-pressed="true"]{background:var(--navy-hover);color:var(--on-navy);}
+
 /* An inline line icon (icons.js): sits on the text baseline, takes its colour. */
 .ic{display:inline-block;vertical-align:middle;flex-shrink:0;}
 

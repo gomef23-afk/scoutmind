@@ -57,6 +57,23 @@
     if (!/CriOS|FxiOS|EdgiOS/.test(ua)) window.addEventListener('load', function () { setTimeout(function () { show('ios'); }, 1500); });
   }
 
+  // The banner's words, in the reader's language: their saved choice, else the
+  // device's (any Portuguese in its list -> pt-BR), the same rule as i18n.js
+  // (4b-5). Its own six strings, so this file never waits on i18n.js.
+  function lang() {
+    var saved = get('sm_lang') || get('sm_legal_lang');
+    if (saved) return /^pt/i.test(saved) ? 'pt' : 'en';
+    var list = [].concat(navigator.languages || [], navigator.language || []);
+    for (var i = 0; i < list.length; i++) if (/^pt/i.test(String(list[i] || ''))) return 'pt';
+    return 'en';
+  }
+  var WORDS = {
+    en: { label: 'Install ScoutMind', title: 'Install ScoutMind', body: 'Add it to your home screen: it opens full-screen, like an app.', go: 'Install',
+      iosTitle: 'Add ScoutMind to your Home Screen', iosBody: 'Tap <span aria-label="Share">Share ⬆</span>, then “Add to Home Screen”.', close: 'Close' },
+    pt: { label: 'Instalar o ScoutMind', title: 'Instale o ScoutMind', body: 'Coloque na tela de início: ele abre em tela cheia, como um app.', go: 'Instalar',
+      iosTitle: 'Adicione o ScoutMind à Tela de Início', iosBody: 'Toque em <span aria-label="Compartilhar">Compartilhar ⬆</span> e depois em “Adicionar à Tela de Início”.', close: 'Fechar' }
+  };
+
   var shown = false;
   function show(kind) {
     if (shown || !eligible) return;
@@ -75,17 +92,18 @@
       '.a2hs-go{min-height:44px;padding:0 16px;border-radius:8px;border:none;background:var(--navy,#00e5a0);color:var(--on-navy,#000);font-weight:800;font-family:inherit;font-size:13px;cursor:pointer;}' +
       '.a2hs-x{min-width:44px;min-height:44px;border:none;background:transparent;color:var(--muted,#5a6a85);font-size:18px;cursor:pointer;}';
     document.head.appendChild(css);
+    var w = WORDS[lang()];
     var el = document.createElement('div');
     el.className = 'a2hs';
     el.id = 'a2hs';
     el.setAttribute('role', 'dialog');
-    el.setAttribute('aria-label', 'Install ScoutMind');
+    el.setAttribute('aria-label', w.label);
     el.innerHTML = '<img src="/apple-touch-icon.png" alt="">' +
       (kind === 'android'
-        ? '<div class="a2hs-text"><b>Install ScoutMind</b>Add it to your home screen: it opens full-screen, like an app.</div>' +
-          '<button class="a2hs-go" id="a2hs-go">Install</button>'
-        : '<div class="a2hs-text"><b>Add ScoutMind to your Home Screen</b>Tap <span aria-label="Share">Share ⬆</span>, then “Add to Home Screen”.</div>') +
-      '<button class="a2hs-x" id="a2hs-x" aria-label="Close">✕</button>';
+        ? '<div class="a2hs-text"><b>' + w.title + '</b>' + w.body + '</div>' +
+          '<button class="a2hs-go" id="a2hs-go">' + w.go + '</button>'
+        : '<div class="a2hs-text"><b>' + w.iosTitle + '</b>' + w.iosBody + '</div>') +
+      '<button class="a2hs-x" id="a2hs-x" aria-label="' + w.close + '">✕</button>';
     document.body.appendChild(el);
     document.getElementById('a2hs-x').onclick = hide;
     var go = document.getElementById('a2hs-go');

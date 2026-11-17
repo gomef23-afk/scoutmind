@@ -67,6 +67,7 @@ const PAIRS = [
   ['navy-ink', 'field', 'the chosen club in the club list'], ['ink', 'border-strong', 'a primary button while it works'],
   ['on-navy', 'navy', 'white on the band / primary button'], ['gold', 'navy', 'countdown, captain C'], ['live-on-band', 'navy', 'LIVE on the band'],
   ['navy', 'on-navy', 'avatar and Sign in on the Home band (navy on white)'],
+  ['on-navy', 'navy-hover', 'the pressed EN / PT on the Home band (4b-5)'],
   ['on-chip', 'chip-win', 'W chip'], ['on-chip', 'chip-loss', 'L chip'], ['on-chip', 'chip-draw', 'D chip'],
   ['loss-ink', 'card', 'LIVE / errors on cards'], ['win', 'card', 'positive text'],
   ['loss-ink', 'ground', 'LIVE under a fixture row (4a)'], ['navy-ink', 'field', 'a fixture row on hover'], ['ink', 'field', 'a fixture row on hover'],

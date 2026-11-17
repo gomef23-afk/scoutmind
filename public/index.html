@@ -46,7 +46,7 @@
   };
 })();
 </script>
-<link rel="stylesheet" href="/theme.css?v=e5b6bfc46d">
+<link rel="stylesheet" href="/theme.css?v=8463eb220a">
 <!-- Installable app (Day 6): manifest, iOS home-screen tags, service worker + install hint. -->
 <link rel="manifest" href="/manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -55,7 +55,7 @@
      bar (the Home band's navy runs to the top edge; other tabs pad the nav). -->
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ScoutMind">
-<script src="/pwa.js?v=91655c8750" defer></script>
+<script src="/pwa.js?v=2693c9caba" defer></script>
 <meta property="og:site_name" content="ScoutMind">
 <meta property="og:type" content="website">
 <meta property="og:title" content="ScoutMind — Your club. Everything around it.">
@@ -73,7 +73,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=fac005badc"></script>
+<script src="/i18n.js?v=80a097adb2"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=d008ee2323"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -824,7 +824,11 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .hb-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--on-navy);cursor:pointer;border-radius:22px;}
 .hb-av{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;padding:0;}
 .hb-av span{width:32px;height:32px;border-radius:50%;background:var(--on-navy);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
-.hb-signin{min-height:44px;padding:0 16px;border-radius:22px;border:none;background:var(--on-navy);color:var(--navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+.hb-signin{min-height:44px;padding:0 12px;border-radius:22px;border:none;background:var(--on-navy);color:var(--navy);font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+/* Me (4b-5): a guest has EN / PT, Profile & settings and Sign in on one row;
+   it fits 375px with the wordmark and search. */
+#hb-me{display:flex;align-items:center;gap:4px;}
+.hb .lang-switch-b{min-width:34px;padding:0 6px;}
 .hb-club{display:flex;align-items:center;gap:12px;margin-top:8px;}
 .hb-club:empty{display:none;}
 .hb-crest{width:46px;height:46px;border-radius:50%;background:var(--on-navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -1066,8 +1070,8 @@ if(!_cu){
   </div>
   <div class="sm-nav-right">
     <!-- Currency switcher removed: market values were dropped in R0, so it changed nothing. -->
-    <!-- B4 fills this with the language switcher. -->
-    <div class="sm-lang-slot" id="lang-slot"></div>
+    <!-- 4b-5: the EN / PT switch, for guests (signed-in readers have Profile). -->
+    <div class="sm-lang-slot" id="lang-slot" data-lang-switch style="display:none;"></div>
     <a href="/about.html" class="sm-about" data-i18n="nav.about">About</a>
     <!-- Logged-in: name + avatar + sign out. Toggled by renderAuthUi(). -->
     <div id="nav-user" style="display:none;align-items:center;gap:10px;">
@@ -1444,6 +1448,8 @@ function renderAuthUi(){
   if(userBlock)userBlock.style.display=guest?'none':'flex';
   if(signinBtn)signinBtn.style.display=guest?'block':'none';
   if(prefsBtn)prefsBtn.style.display=guest?'flex':'none';
+  const langSlot=document.getElementById('lang-slot');   // 4b-5: EN / PT for guests
+  if(langSlot)langSlot.style.display=guest?'flex':'none';
   if(!guest){
     const nameEl=document.getElementById('nav-name');
     if(nameEl)nameEl.textContent=currentUser.name||'User';
@@ -7722,9 +7728,11 @@ function renderHomeBand(){
   if(!band) return;
   // Me: avatar (opens Profile) or Sign in.
   const meEl=document.getElementById('hb-me');
-  // A guest reaches Profile & settings (language, theme) from here too (4b-4).
+  // A guest reaches Profile & settings (language, theme) from here too (4b-4),
+  // and switches the language right here (4b-5).
   if(meEl) meEl.innerHTML=isGuestNow()
-    ?'<button class="hb-icon" type="button" onclick="showPage(\'profile\')" aria-label="'+sanitize(t('nav.profile'))+'">'+Icons.svg('user',22)+'</button>'
+    ?'<span data-lang-switch>'+langSwitchHtml()+'</span>'
+      +'<button class="hb-icon" type="button" onclick="showPage(\'profile\')" aria-label="'+sanitize(t('nav.profile'))+'">'+Icons.svg('user',22)+'</button>'
       +'<button class="hb-signin" onclick="window.location.href=\'/auth.html\'">'+sanitize(t('hb.signin'))+'</button>'
     :'<button class="hb-av" onclick="showPage(\'profile\')" aria-label="'+sanitize(t('hb.profile'))+'"><span>'+sanitize(myInitials())+'</span></button>';
 

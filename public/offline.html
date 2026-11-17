@@ -3,13 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Offline — ScoutMind</title>
+<title data-i18n="off.docTitle">Offline — ScoutMind</title>
 <meta name="theme-color" content="#07090f">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <!-- Shown by sw.js when a page is requested offline and no copy of it is
-     cached yet. Everything it needs is in the precache. -->
+     cached yet. Everything it needs is in the precache, i18n.js included:
+     the page speaks the reader's language (the device's until they choose). -->
+<script src="/i18n.js?v=80a097adb2"></script>
 <style>
 :root{--bg:#07090f;--bg2:#0d1117;--accent:#00e5a0;--text:#edf2f7;--muted:#5a6a85;--border:#1a2540;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -23,8 +25,9 @@ button{min-height:44px;padding:0 22px;border-radius:22px;border:none;background:
 </head>
 <body>
   <div class="logo">Scout<span>Mind</span></div>
-  <h1>You're offline</h1>
-  <p>ScoutMind needs a connection for news, scores and the Scout Game. It will be here when you're back.</p>
-  <button onclick="location.reload()">Try again</button>
+  <h1 data-i18n="off.title">You're offline</h1>
+  <p data-i18n="off.body">ScoutMind needs a connection for news, scores and the Scout Game. It will be here when you're back.</p>
+  <button onclick="location.reload()" data-i18n="off.retry">Try again</button>
+<script>if (typeof applyI18n === 'function') applyI18n();</script>
 </body>
 </html>

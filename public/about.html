@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>About ScoutMind — Your club. Everything around it.</title>
+<title data-i18n="about.docTitle">About ScoutMind — Your club. Everything around it.</title>
 <meta name="description" content="What ScoutMind is: a free football social network with your club's news, club rooms, matches and the Scout Game. No payments, no ads.">
 <!-- Icons and link previews: the same block on every page (scripts/make-icons.ps1 makes the files). -->
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -16,7 +16,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="ScoutMind">
-<script src="/pwa.js?v=91655c8750" defer></script>
+<script src="/pwa.js?v=2693c9caba" defer></script>
+<!-- 4b-5: this page in the reader's language (the device's until they choose). -->
+<script src="/i18n.js?v=80a097adb2"></script>
 <meta property="og:site_name" content="ScoutMind">
 <meta property="og:type" content="website">
 <meta property="og:title" content="About ScoutMind — Your club. Everything around it.">
@@ -693,6 +695,10 @@ footer {
 .sm-logo span{color:var(--text);}
 .sm-nav-right{display:flex;align-items:center;gap:4px;margin-left:auto;}
 .sm-lang-slot{display:flex;align-items:center;}
+/* The EN / PT switch (i18n.js langSwitchHtml), 44px to the finger. */
+.lang-switch{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.lang-switch-b{min-width:40px;min-height:36px;padding:0 8px;background:transparent;border:none;color:var(--muted);font:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+.lang-switch-b[aria-pressed="true"]{background:var(--bg3);color:var(--text);}
 .sm-about{font-size:12px;color:var(--muted);text-decoration:none;padding:0 8px;min-height:44px;display:flex;align-items:center;}
 .sm-about:hover{color:var(--text);}
 .sm-tabs{display:flex;}
@@ -739,18 +745,18 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
   </div>
   <div class="sm-nav-right">
     <!-- B4 fills this with the language switcher. -->
-    <div class="sm-lang-slot" id="lang-slot"></div>
+    <div class="sm-lang-slot" id="lang-slot" data-lang-switch></div>
     <a href="/about.html" class="sm-about" style="color:var(--accent);" data-i18n="nav.about">About</a>
     <a class="nav-prefs" href="/?page=profile" aria-label="Profile and settings" data-i18n-aria="nav.profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg></a>
-    <a class="nav-cta" href="/">Open the app</a>
+    <a class="nav-cta" href="/" data-i18n="about.openApp">Open the app</a>
   </div>
 </nav>
 <!-- This page's own section links. Desktop only; on mobile people just scroll. -->
 <div class="sm-subnav">
-  <a onclick="scrollToSection('how')">How it works</a>
-  <a onclick="scrollToSection('for-who')">For who</a>
-  <a onclick="scrollToSection('for-clubs')">For clubs</a>
-  <a onclick="scrollToSection('faq')">FAQ</a>
+  <a onclick="scrollToSection('how')" data-i18n="about.sub.how">How it works</a>
+  <a onclick="scrollToSection('for-who')" data-i18n="about.sub.who">For who</a>
+  <a onclick="scrollToSection('for-clubs')" data-i18n="about.sub.clubs">For clubs</a>
+  <a onclick="scrollToSection('faq')" data-i18n="about.sub.faq">FAQ</a>
 </div>
 <!-- Mobile bottom bar — same five tabs. -->
 <div class="sm-tabs sm-tabs-bottom">
@@ -780,32 +786,25 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 
   <div class="hero-inner">
     <div class="hero-left">
-      <div class="hero-tag">The social network for football</div>
-      <h1>
-        Your club.<br>
-        <span class="accent">Everything</span><br>
-        <span class="outline">around</span>
-        <span class="accent">it.</span>
-      </h1>
-      <p class="hero-desc">
-        Follow your club's news, matches, data and community in one place. Free for supporters.
-      </p>
+      <div class="hero-tag" data-i18n="about.hero.tag">The social network for football</div>
+      <h1 data-i18n-html="about.hero.h1">Your club.<br><span class="accent">Everything</span><br><span class="outline">around</span> <span class="accent">it.</span></h1>
+      <p class="hero-desc" data-i18n="about.hero.desc">Follow your club's news, matches, data and community in one place. Free for supporters.</p>
       <div class="hero-actions">
-        <a class="btn-primary" href="/">▶ Open the app</a>
-        <a class="btn-ghost" onclick="scrollToSection('how')">See how it works</a>
+        <a class="btn-primary" href="/" data-i18n="about.hero.open">▶ Open the app</a>
+        <a class="btn-ghost" onclick="scrollToSection('how')" data-i18n="about.hero.see">See how it works</a>
       </div>
       <div class="hero-stats">
         <div>
           <div class="hero-stat-num">7</div>
-          <div class="hero-stat-lbl">Leagues with live data</div>
+          <div class="hero-stat-lbl" data-i18n="about.stat.leagues">Leagues with live data</div>
         </div>
         <div>
           <div class="hero-stat-num">146</div>
-          <div class="hero-stat-lbl">Clubs to follow</div>
+          <div class="hero-stat-lbl" data-i18n="about.stat.clubs">Clubs to follow</div>
         </div>
         <div>
           <div class="hero-stat-num">10</div>
-          <div class="hero-stat-lbl">News outlets, 6 languages</div>
+          <div class="hero-stat-lbl" data-i18n="about.stat.outlets">News outlets, 6 languages</div>
         </div>
       </div>
     </div>
@@ -823,27 +822,27 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
           <div class="preview-url">scoutmind.app</div>
         </div>
         <div class="preview-body">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#5a6a85;text-transform:uppercase;margin-bottom:12px">What is live today</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#5a6a85;text-transform:uppercase;margin-bottom:12px" data-i18n="about.live.title">What is live today</div>
           <div style="display:grid;gap:10px;">
             <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:11px 13px;">
               <span style="font-size:16px;line-height:1">📰</span>
-              <div><div style="font-size:13px;font-weight:600;color:#edf2f7">Around 500 stories a day</div>
+              <div><div style="font-size:13px;font-weight:600;color:#edf2f7" data-i18n="about.live.news">Around 500 stories a day</div>
               <div style="font-size:11px;color:#5a6a85;margin-top:2px">ge, ESPN, BBC, Sky, Olé, AS, Marca, Gazzetta, kicker, RMC</div></div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:11px 13px;">
               <span style="font-size:16px;line-height:1">⚽</span>
-              <div><div style="font-size:13px;font-weight:600;color:#edf2f7">Live scores and fixtures</div>
-              <div style="font-size:11px;color:#5a6a85;margin-top:2px">Kickoffs, results and tables in your timezone</div></div>
+              <div><div style="font-size:13px;font-weight:600;color:#edf2f7" data-i18n="about.live.scores">Live scores and fixtures</div>
+              <div style="font-size:11px;color:#5a6a85;margin-top:2px" data-i18n="about.live.scoresSub">Kickoffs, results and tables in your timezone</div></div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:11px 13px;">
               <span style="font-size:16px;line-height:1">📊</span>
-              <div><div style="font-size:13px;font-weight:600;color:#edf2f7">Real season stats</div>
-              <div style="font-size:11px;color:#5a6a85;margin-top:2px">Position, points, goals and pass accuracy per club</div></div>
+              <div><div style="font-size:13px;font-weight:600;color:#edf2f7" data-i18n="about.live.stats">Real season stats</div>
+              <div style="font-size:11px;color:#5a6a85;margin-top:2px" data-i18n="about.live.statsSub">Position, points, goals and pass accuracy per club</div></div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:11px 13px;">
               <span style="font-size:16px;line-height:1">💬</span>
-              <div><div style="font-size:13px;font-weight:600;color:#edf2f7">A page for every club</div>
-              <div style="font-size:11px;color:#5a6a85;margin-top:2px">Polls, transfer wishlists and analyst insights</div></div>
+              <div><div style="font-size:13px;font-weight:600;color:#edf2f7" data-i18n="about.live.page">A page for every club</div>
+              <div style="font-size:11px;color:#5a6a85;margin-top:2px" data-i18n="about.live.pageSub">Polls, transfer wishlists and analyst insights</div></div>
             </div>
           </div>
         </div>
@@ -856,7 +855,7 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 <div class="proof-section">
     <!-- The seven leagues we actually ingest. Serie B, Serie C and MLS were
          listed here and are not in the database. -->
-    <div class="proof-label">Seven leagues, 146 clubs · MLS next</div>
+    <div class="proof-label" data-i18n="about.proof">Seven leagues, 146 clubs · MLS next</div>
     <div class="proof-leagues">
     <div class="proof-league">🇧🇷 SÉRIE A</div>
     <div class="proof-league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 PREMIER LEAGUE</div>
@@ -871,39 +870,39 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 <!-- HOW IT WORKS -->
 <div id="how">
 <div class="section reveal">
-  <div class="section-tag">How it works</div>
-  <div class="section-title">Follow Your Club,<br>Everywhere It Plays</div>
-  <div class="section-sub">Free, no subscription, no locked leagues. Pick your clubs once and the whole app arranges itself around them.</div>
+  <div class="section-tag" data-i18n="about.sub.how">How it works</div>
+  <div class="section-title" data-i18n-html="about.how.title">Follow Your Club,<br>Everywhere It Plays</div>
+  <div class="section-sub" data-i18n="about.how.sub">Free, no subscription, no locked leagues. Pick your clubs once and the whole app arranges itself around them.</div>
   <div class="steps">
     <div class="step">
       <div class="step-num">01</div>
-      <div class="step-title">Pick your clubs</div>
-      <div class="step-desc">Choose from 146 clubs across seven leagues: Série A, the Premier League, La Liga, Serie A, the Bundesliga, Ligue 1 and Argentina's Liga Profesional. One main club, as many others as you like.</div>
+      <div class="step-title" data-i18n="about.s1.t">Pick your clubs</div>
+      <div class="step-desc" data-i18n="about.s1.d">Choose from 146 clubs across seven leagues: Série A, the Premier League, La Liga, Serie A, the Bundesliga, Ligue 1 and Argentina's Liga Profesional. One main club, as many others as you like.</div>
     </div>
     <div class="step">
       <div class="step-num">02</div>
-      <div class="step-title">Get their news</div>
-      <div class="step-desc">Around 500 stories a day from ten outlets in six languages, tagged to the clubs they are actually about. Read in the languages you choose — and anything about your clubs reaches you whatever language it is written in.</div>
+      <div class="step-title" data-i18n="about.s2.t">Get their news</div>
+      <div class="step-desc" data-i18n="about.s2.d">Around 500 stories a day from ten outlets in six languages, tagged to the clubs they are actually about. Read in the languages you choose — and anything about your clubs reaches you whatever language it is written in.</div>
     </div>
     <div class="step">
       <div class="step-num">03</div>
-      <div class="step-title">Follow match day</div>
-      <div class="step-desc">Fixtures and results grouped by date in your own timezone, with your clubs first: the last result and the next match, always labelled as such. Live scores update while games are on.</div>
+      <div class="step-title" data-i18n="about.s3.t">Follow match day</div>
+      <div class="step-desc" data-i18n="about.s3.d">Fixtures and results grouped by date in your own timezone, with your clubs first: the last result and the next match, always labelled as such. Live scores update while games are on.</div>
     </div>
     <div class="step">
       <div class="step-num">04</div>
-      <div class="step-title">See the real numbers</div>
-      <div class="step-desc">League position, points, goals scored and conceded per game, and pass accuracy — measured from this season's matches, not estimated. Where we do not have a number, we show nothing rather than guess.</div>
+      <div class="step-title" data-i18n="about.s4.t">See the real numbers</div>
+      <div class="step-desc" data-i18n="about.s4.d">League position, points, goals scored and conceded per game, and pass accuracy — measured from this season's matches, not estimated. Where we do not have a number, we show nothing rather than guess.</div>
     </div>
     <div class="step">
       <div class="step-num">05</div>
-      <div class="step-title">Join the community</div>
-      <div class="step-desc">Every club has its own page: polls, a transfer wishlist, and insights from analysts with a verified badge. Free to read, free to post.</div>
+      <div class="step-title" data-i18n="about.s5.t">Join the community</div>
+      <div class="step-desc" data-i18n="about.s5.d">Every club has its own page: polls, a transfer wishlist, and insights from analysts with a verified badge. Free to read, free to post.</div>
     </div>
     <div class="step">
       <div class="step-num">06</div>
-      <div class="step-title">Dig into the squad</div>
-      <div class="step-desc">Scout Mode compares a squad against its league average and suggests the player profiles that would strengthen it. One feature among the rest, and still running on a fixed sample of players — it says so at the top of the page.</div>
+      <div class="step-title" data-i18n="about.s6.t">Dig into the squad</div>
+      <div class="step-desc" data-i18n="about.s6.d">Scout Mode compares a squad against its league average and suggests the player profiles that would strengthen it. One feature among the rest, and still running on a fixed sample of players — it says so at the top of the page.</div>
     </div>
   </div>
 </div>
@@ -913,21 +912,21 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 <div id="for-who">
 <div class="audience-section reveal">
   <div class="audience-inner">
-    <div class="section-tag">For who</div>
-      <div class="section-title">Built for<br>Supporters</div>
-      <div class="section-sub">Supporters first. Analysts and journalists can post alongside them with a verified badge.</div>
+    <div class="section-tag" data-i18n="about.sub.who">For who</div>
+      <div class="section-title" data-i18n-html="about.who.title">Built for<br>Supporters</div>
+      <div class="section-sub" data-i18n="about.who.sub">Supporters first. Analysts and journalists can post alongside them with a verified badge.</div>
       <div class="audience-grid">
         <div class="audience-card c1">
           <div class="audience-icon">⚽</div>
-          <div class="audience-title">Football Fans</div>
-          <div class="audience-desc">Your clubs' news, fixtures and results in one feed, in the languages you read — plus a community page for every club.</div>
-          <div class="audience-tag t1">Free</div>
+          <div class="audience-title" data-i18n="about.who.fans">Football Fans</div>
+          <div class="audience-desc" data-i18n="about.who.fansD">Your clubs' news, fixtures and results in one feed, in the languages you read — plus a community page for every club.</div>
+          <div class="audience-tag t1" data-i18n="about.who.free">Free</div>
         </div>
         <div class="audience-card c2">
           <div class="audience-icon">📊</div>
-          <div class="audience-title">Analysts &amp; Journalists</div>
-          <div class="audience-desc">Post insights on any club page with a verified badge. Free to apply — we check credentials, not follower counts.</div>
-          <div class="audience-tag t2">Free · Verified badge</div>
+          <div class="audience-title" data-i18n="about.who.analysts">Analysts &amp; Journalists</div>
+          <div class="audience-desc" data-i18n="about.who.analystsD">Post insights on any club page with a verified badge. Free to apply — we check credentials, not follower counts.</div>
+          <div class="audience-tag t2" data-i18n="about.who.badge">Free · Verified badge</div>
         </div>
       </div>
   </div>
@@ -937,10 +936,10 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 <!-- FOR CLUBS -->
 <div id="for-clubs">
 <div class="reveal" style="padding:80px 24px;text-align:center;">
-  <div class="section-tag">For clubs</div>
-  <div class="section-title">ScoutMind<br>for Clubs</div>
-  <div class="section-sub">ScoutMind is free for every fan, analyst and agent — always. Clubs, federations and academies that want dedicated recruitment tools can talk to us directly.</div>
-  <a class="btn-ghost" href="mailto:hello@scoutmind.app?subject=ScoutMind%20for%20Clubs">For clubs — contact us</a>
+  <div class="section-tag" data-i18n="about.sub.clubs">For clubs</div>
+  <div class="section-title" data-i18n-html="about.clubs.title">ScoutMind<br>for Clubs</div>
+  <div class="section-sub" data-i18n="about.clubs.sub">ScoutMind is free for every fan, analyst and agent — always. Clubs, federations and academies that want dedicated recruitment tools can talk to us directly.</div>
+  <a class="btn-ghost" href="mailto:hello@scoutmind.app?subject=ScoutMind%20for%20Clubs" data-i18n="about.clubs.cta">For clubs — contact us</a>
 </div>
 </div>
 
@@ -948,32 +947,32 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 <div id="faq">
 <div class="faq-section reveal">
   <div class="faq-inner">
-    <div class="section-tag" style="text-align:center">FAQ</div>
-    <div class="section-title" style="text-align:center;font-size:44px">Common Questions</div>
+    <div class="section-tag" style="text-align:center" data-i18n="about.sub.faq">FAQ</div>
+    <div class="section-title" style="text-align:center;font-size:44px" data-i18n="about.faq.title">Common Questions</div>
         <div class="faq-list">
           <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">Where does the data come from?</div>
-            <div class="faq-a">Fixtures, results, league tables and season statistics come from API-Football. News headlines come from the public RSS feeds of ten outlets — ge, ESPN Brasil, BBC Sport, Sky Sports, Olé, AS, Marca, La Gazzetta dello Sport, kicker and RMC Sport. We store a headline, a short summary and a link, and every story links back to the publisher.</div>
+            <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q1">Where does the data come from?</div>
+            <div class="faq-a" data-i18n="about.faq.a1">Fixtures, results, league tables and season statistics come from API-Football. News headlines come from the public RSS feeds of ten outlets — ge, ESPN Brasil, BBC Sport, Sky Sports, Olé, AS, Marca, La Gazzetta dello Sport, kicker and RMC Sport. We store a headline, a short summary and a link, and every story links back to the publisher.</div>
           </div>
           <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">Which leagues do you cover?</div>
-            <div class="faq-a">Seven, with 146 clubs: Brazil's Série A, the Premier League, La Liga, Italy's Serie A, the Bundesliga, Ligue 1 and Argentina's Liga Profesional. MLS is next. If a club is not in one of those, you will not find it yet — we would rather cover fewer leagues properly than list a lot of them with nothing behind it.</div>
+            <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q2">Which leagues do you cover?</div>
+            <div class="faq-a" data-i18n="about.faq.a2">Seven, with 146 clubs: Brazil's Série A, the Premier League, La Liga, Italy's Serie A, the Bundesliga, Ligue 1 and Argentina's Liga Profesional. MLS is next. If a club is not in one of those, you will not find it yet — we would rather cover fewer leagues properly than list a lot of them with nothing behind it.</div>
           </div>
           <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">Is ScoutMind really free?</div>
-            <div class="faq-a">Yes. Every feature is free for every user — no subscriptions, no trials, no locked leagues, no paid tier planned. You need an account only to pick your clubs, post and vote; reading works signed out.</div>
+            <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q3">Is ScoutMind really free?</div>
+            <div class="faq-a" data-i18n="about.faq.a3">Yes. Every feature is free for every user — no subscriptions, no trials, no locked leagues, no paid tier planned. You need an account only to pick your clubs, post and vote; reading works signed out.</div>
           </div>
           <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">What is the community?</div>
-            <div class="faq-a">Every club has its own page where supporters run polls, vote on a transfer wishlist, and read insights from analysts with a verified badge. Journalists, licensed scouts and agents can apply for that badge for free.</div>
+            <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q4">What is the community?</div>
+            <div class="faq-a" data-i18n="about.faq.a4">Every club has its own page where supporters run polls, vote on a transfer wishlist, and read insights from analysts with a verified badge. Journalists, licensed scouts and agents can apply for that badge for free.</div>
           </div>
           <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">What about the scouting tools?</div>
-            <div class="faq-a">Scout Mode compares a squad against its league average and suggests player profiles to strengthen. It still runs on a fixed sample of players rather than live data, and it says so at the top of the page. It moves onto real player data alongside the rest of the app.</div>
+            <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q5">What about the scouting tools?</div>
+            <div class="faq-a" data-i18n="about.faq.a5">Scout Mode compares a squad against its league average and suggests player profiles to strengthen. It still runs on a fixed sample of players rather than live data, and it says so at the top of the page. It moves onto real player data alongside the rest of the app.</div>
           </div>
           <div class="faq-item">
-            <div class="faq-q" onclick="toggleFaq(this)">Which languages does the feed speak?</div>
-            <div class="faq-a">Six: Portuguese, English, Spanish, Italian, German and French. You choose which ones your feed shows, and anything about a club you follow reaches you whatever language it was written in.</div>
+            <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q6">Which languages does the feed speak?</div>
+            <div class="faq-a" data-i18n="about.faq.a6">Six: Portuguese, English, Spanish, Italian, German and French. You choose which ones your feed shows, and anything about a club you follow reaches you whatever language it was written in.</div>
           </div>
         </div>
   </div>
@@ -982,11 +981,11 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 
 <!-- CTA BOTTOM -->
 <div class="cta-section reveal">
-  <div class="cta-title">Your Club,<br><span>Every Day.</span></div>
-  <p class="cta-sub">Free, and launching this autumn. Pick your clubs and the feed is yours.</p>
+  <div class="cta-title" data-i18n-html="about.cta.title">Your Club,<br><span>Every Day.</span></div>
+  <p class="cta-sub" data-i18n="about.cta.sub">Free, and launching this autumn. Pick your clubs and the feed is yours.</p>
   <div class="cta-actions">
-    <a class="btn-primary" href="/">▶ Open the app</a>
-    <a class="btn-ghost" onclick="scrollToSection('faq')">Common questions</a>
+    <a class="btn-primary" href="/" data-i18n="about.hero.open">▶ Open the app</a>
+    <a class="btn-ghost" onclick="scrollToSection('faq')" data-i18n="about.cta.faq">Common questions</a>
   </div>
 </div>
 
@@ -994,20 +993,23 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 <footer>
   <div class="footer-logo">Scout<span>Mind</span></div>
   <div class="footer-links">
-    <a href="/privacy.html">Privacy</a>
-    <a href="/terms.html">Terms</a>
-    <a href="mailto:hello@scoutmind.app">Contact</a>
+    <a href="/privacy.html" data-i18n="foot.privacy">Privacy</a>
+    <a href="/terms.html" data-i18n="foot.terms">Terms</a>
+    <a href="mailto:hello@scoutmind.app" data-i18n="foot.contact">Contact</a>
   </div>
-  <div class="footer-copy">© 2026 ScoutMind. All rights reserved.</div>
+  <div class="footer-copy" data-i18n="about.copy">© 2026 ScoutMind. All rights reserved.</div>
 </footer>
 
 <!-- FLOATING BADGE -->
 <a class="live-badge" href="/">
   <div class="live-dot-badge"></div>
-  Live App →
+  <span data-i18n="about.liveBadge">Live App →</span>
 </a>
 
 <script>
+// 4b-5: fill the page in the reader's language and the EN / PT switch.
+if (typeof applyI18n === 'function') applyI18n();
+
 function scrollToSection(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 }
