@@ -1,0 +1,1072 @@
+[
+ {
+  "api_team_id": 38,
+  "name": "Watford",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 39,
+  "name": "Wolves",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 41,
+  "name": "Southampton",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 43,
+  "name": "Cardiff",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 44,
+  "name": "Burnley",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 48,
+  "name": "West Ham",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 54,
+  "name": "Birmingham",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 56,
+  "name": "Bristol City",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 58,
+  "name": "Millwall",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 59,
+  "name": "Preston",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 60,
+  "name": "West Brom",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 62,
+  "name": "Sheffield Utd",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 67,
+  "name": "Blackburn",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 68,
+  "name": "Bolton",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 69,
+  "name": "Derby",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 70,
+  "name": "Middlesbrough",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 71,
+  "name": "Norwich",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 72,
+  "name": "QPR",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 75,
+  "name": "Stoke City",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 76,
+  "name": "Swansea",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 1335,
+  "name": "Charlton",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 1355,
+  "name": "Portsmouth",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 1379,
+  "name": "Lincoln",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 1837,
+  "name": "Wrexham",
+  "league": "championship"
+ },
+ {
+  "api_team_id": 193,
+  "name": "PEC Zwolle",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 194,
+  "name": "Ajax",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 195,
+  "name": "Willem II",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 196,
+  "name": "Excelsior",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 197,
+  "name": "PSV Eindhoven",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 198,
+  "name": "ADO Den Haag",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 201,
+  "name": "AZ Alkmaar",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 202,
+  "name": "Groningen",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 205,
+  "name": "Fortuna Sittard",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 207,
+  "name": "Utrecht",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 209,
+  "name": "Feyenoord",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 210,
+  "name": "Heerenveen",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 410,
+  "name": "GO Ahead Eagles",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 413,
+  "name": "NEC Nijmegen",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 415,
+  "name": "Twente",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 420,
+  "name": "Cambuur",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 426,
+  "name": "Sparta Rotterdam",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 427,
+  "name": "Telstar",
+  "league": "eredivisie"
+ },
+ {
+  "api_team_id": 211,
+  "name": "Benfica",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 212,
+  "name": "FC Porto",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 214,
+  "name": "Maritimo",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 215,
+  "name": "Moreirense",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 217,
+  "name": "SC Braga",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 224,
+  "name": "Vitória SC",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 225,
+  "name": "Nacional",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 226,
+  "name": "Rio Ave",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 227,
+  "name": "Santa Clara",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 228,
+  "name": "Sporting CP",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 230,
+  "name": "Estoril",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 238,
+  "name": "Academico Viseu",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 240,
+  "name": "Arouca",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 242,
+  "name": "Famalicao",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 762,
+  "name": "GIL Vicente",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 4716,
+  "name": "Casa Pia",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 4724,
+  "name": "Alverca",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 15130,
+  "name": "Estrela",
+  "league": "primeira_liga"
+ },
+ {
+  "api_team_id": 259,
+  "name": "Lommel United",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 260,
+  "name": "OH Leuven",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 261,
+  "name": "KVC Westerlo",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 266,
+  "name": "KV Mechelen",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 554,
+  "name": "Anderlecht",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 569,
+  "name": "Club Brugge KV",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 600,
+  "name": "Zulte Waregem",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 631,
+  "name": "Gent",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 733,
+  "name": "Standard Liege",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 734,
+  "name": "Kortrijk",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 735,
+  "name": "St. Truiden",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 736,
+  "name": "Charleroi",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 738,
+  "name": "SK Beveren",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 740,
+  "name": "Antwerp",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 741,
+  "name": "Cercle Brugge",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 742,
+  "name": "Genk",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 1393,
+  "name": "Union St. Gilloise",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 5902,
+  "name": "RAAL La Louvière",
+  "league": "belgian_pro_league"
+ },
+ {
+  "api_team_id": 247,
+  "name": "Celtic",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 249,
+  "name": "Hibernian",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 250,
+  "name": "Kilmarnock",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 251,
+  "name": "ST Mirren",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 252,
+  "name": "Aberdeen",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 253,
+  "name": "Dundee",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 254,
+  "name": "Heart Of Midlothian",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 256,
+  "name": "Motherwell",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 257,
+  "name": "Rangers",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 258,
+  "name": "ST Johnstone",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 1386,
+  "name": "Dundee Utd",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 1389,
+  "name": "Falkirk",
+  "league": "scottish_premiership"
+ },
+ {
+  "api_team_id": 549,
+  "name": "Beşiktaş",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 564,
+  "name": "Başakşehir",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 607,
+  "name": "Konyaspor",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 611,
+  "name": "Fenerbahçe",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 645,
+  "name": "Galatasaray",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 994,
+  "name": "Göztepe",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 996,
+  "name": "Alanyaspor",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 997,
+  "name": "Gençlerbirliği S.K.",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 998,
+  "name": "Trabzonspor",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 1004,
+  "name": "Kasımpaşa",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 1007,
+  "name": "Rizespor",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 1009,
+  "name": "Erzurumspor FK",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 3573,
+  "name": "Gaziantep FK",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 3579,
+  "name": "Amed",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 3588,
+  "name": "Eyüpspor",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 3603,
+  "name": "Samsunspor",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 6343,
+  "name": "Çorum FK",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 7411,
+  "name": "Kocaelispor",
+  "league": "super_lig"
+ },
+ {
+  "api_team_id": 2928,
+  "name": "Al Khaleej Saihat",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2929,
+  "name": "Al-Ahli Jeddah",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2930,
+  "name": "Al-Faisaly FC",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2931,
+  "name": "Al-Fateh",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2932,
+  "name": "Al-Hilal Saudi FC",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2933,
+  "name": "Al-Qadisiyah FC",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2934,
+  "name": "Al-Ettifaq",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2936,
+  "name": "Al Taawon",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2938,
+  "name": "Al-Ittihad FC",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2939,
+  "name": "Al-Nassr",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2940,
+  "name": "Al Shabab",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2944,
+  "name": "Al-Fayha",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2945,
+  "name": "Al-Hazm",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 2951,
+  "name": "Abha",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 10509,
+  "name": "Al Kholood",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 10511,
+  "name": "Al Riyadh",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 10513,
+  "name": "NEOM",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 26738,
+  "name": "Al Diriyah",
+  "league": "saudi_pro_league"
+ },
+ {
+  "api_team_id": 1595,
+  "name": "Seattle Sounders",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1596,
+  "name": "San Jose Earthquakes",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1597,
+  "name": "FC Dallas",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1598,
+  "name": "Orlando City SC",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1599,
+  "name": "Philadelphia Union",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1600,
+  "name": "Houston Dynamo",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1601,
+  "name": "Toronto FC",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1602,
+  "name": "New York Red Bulls",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1603,
+  "name": "Vancouver Whitecaps",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1604,
+  "name": "New York City FC",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1605,
+  "name": "Los Angeles Galaxy",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1606,
+  "name": "Real Salt Lake",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1607,
+  "name": "Chicago Fire",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1608,
+  "name": "Atlanta United FC",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1609,
+  "name": "New England Revolution",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1610,
+  "name": "Colorado Rapids",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1611,
+  "name": "Sporting Kansas City",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1612,
+  "name": "Minnesota United FC",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1613,
+  "name": "Columbus Crew",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1614,
+  "name": "CF Montreal",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1615,
+  "name": "DC United",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1616,
+  "name": "Los Angeles FC",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 1617,
+  "name": "Portland Timbers",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 2242,
+  "name": "FC Cincinnati",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 9568,
+  "name": "Inter Miami",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 9569,
+  "name": "Nashville SC",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 16489,
+  "name": "Austin",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 18310,
+  "name": "Charlotte",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 20787,
+  "name": "St. Louis City",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 25484,
+  "name": "San Diego",
+  "league": "mls"
+ },
+ {
+  "api_team_id": 2278,
+  "name": "Guadalajara Chivas",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2279,
+  "name": "Tigres UANL",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2280,
+  "name": "Club Tijuana",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2281,
+  "name": "Toluca",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2282,
+  "name": "Monterrey",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2283,
+  "name": "Atlas",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2285,
+  "name": "Santos Laguna",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2286,
+  "name": "U.N.A.M. - Pumas",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2287,
+  "name": "Club America",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2288,
+  "name": "Necaxa",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2289,
+  "name": "Leon",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2290,
+  "name": "Club Queretaro",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2291,
+  "name": "Puebla",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2292,
+  "name": "CF Pachuca",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2295,
+  "name": "Cruz Azul",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2298,
+  "name": "FC Juarez",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2312,
+  "name": "Atlante FC",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 2314,
+  "name": "Atletico San Luis",
+  "league": "liga_mx"
+ },
+ {
+  "api_team_id": 123,
+  "name": "Sport Recife",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 125,
+  "name": "America Mineiro",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 129,
+  "name": "Ceara",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 139,
+  "name": "Ponte Preta",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 140,
+  "name": "Criciuma",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 142,
+  "name": "Vila Nova",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 144,
+  "name": "Atletico Goianiense",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 145,
+  "name": "Avai",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 146,
+  "name": "CRB",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 148,
+  "name": "Londrina",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 151,
+  "name": "Goias",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 152,
+  "name": "Juventude",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 154,
+  "name": "Fortaleza EC",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 755,
+  "name": "Nautico Recife",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 1193,
+  "name": "Cuiaba",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 1223,
+  "name": "Operario-PR",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 2618,
+  "name": "Botafogo SP",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 7834,
+  "name": "Novorizontino",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 7865,
+  "name": "São Bernardo",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 13975,
+  "name": "Athletic Club",
+  "league": "serie_b"
+ },
+ {
+  "api_team_id": 137,
+  "name": "Figueirense",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 138,
+  "name": "Guarani Campinas",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 149,
+  "name": "Paysandu",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 753,
+  "name": "Santa Cruz",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 1197,
+  "name": "Botafogo PB",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 1201,
+  "name": "Inter De Limeira",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 1211,
+  "name": "Brusque",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 1221,
+  "name": "Ypiranga-RS",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 2204,
+  "name": "AO Itabaiana",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 7770,
+  "name": "Caxias",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 7772,
+  "name": "Confiança",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 7774,
+  "name": "Floresta",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 7779,
+  "name": "Ituano",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 7814,
+  "name": "Volta Redonda",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 7826,
+  "name": "Ferroviária",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 7832,
+  "name": "Maranhão",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 7833,
+  "name": "Maringá",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 7852,
+  "name": "Anápolis",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 10862,
+  "name": "Amazonas",
+  "league": "serie_c"
+ },
+ {
+  "api_team_id": 18271,
+  "name": "Barra",
+  "league": "serie_c"
+ }
+]

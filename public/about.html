@@ -37,7 +37,7 @@
 <meta name="apple-mobile-web-app-title" content="ScoutMind">
 <script src="/pwa.js?v=4801f83526" defer></script>
 <!-- 4b-5: this page in the reader's language (the device's until they choose). -->
-<script src="/i18n.js?v=e7350d813d"></script>
+<script src="/i18n.js?v=167b7042bf"></script>
 <meta property="og:site_name" content="ScoutMind">
 <meta property="og:type" content="website">
 <meta property="og:title" content="About ScoutMind — Your club. Everything around it.">
@@ -125,6 +125,8 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .proof-section { padding: 28px 16px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--card); display: flex; flex-direction: column; gap: 14px; }
 .proof-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 .proof-leagues { display: flex; gap: 8px 10px; flex-wrap: wrap; }
+.proof-groups { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.proof-group-label { font-size: 11px; font-weight: 700; color: var(--ink); margin-top: 4px; }
 .proof-league { font-size: 12px; font-weight: 600; color: var(--ink); white-space: nowrap; padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px; background: var(--field); }
 
 /* ── SECTIONS ── */
@@ -290,11 +292,15 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
       </div>
       <div class="hero-stats">
         <div>
-          <div class="hero-stat-num">7</div>
-          <div class="hero-stat-lbl" data-i18n="about.stat.leagues">Leagues with live data</div>
+          <div class="hero-stat-num">18</div>
+          <div class="hero-stat-lbl" data-i18n="about.stat.leagues">Leagues covered</div>
         </div>
         <div>
-          <div class="hero-stat-num">146</div>
+          <div class="hero-stat-num">7</div>
+          <div class="hero-stat-lbl" data-i18n="about.stat.playable">In the Scout Game</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">360</div>
           <div class="hero-stat-lbl" data-i18n="about.stat.clubs">Clubs to follow</div>
         </div>
         <div>
@@ -349,9 +355,13 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
 
 <!-- SOCIAL PROOF -->
 <div class="proof-section">
-    <!-- The seven leagues we actually ingest. Serie B, Serie C and MLS were
-         listed here and are not in the database. -->
-    <div class="proof-label" data-i18n="about.proof">Seven leagues, 146 clubs</div>
+    <!-- The 18 leagues in the database (api/_lib/leagues.js, active since 036),
+         in two groups: the seven in the Scout Game, and the eleven covered
+         only (matches, live scores, tables, club pages, rooms). Rule 22: every
+         number here is checkable in Supabase (see the commit of 18 Nov 2026). -->
+    <div class="proof-label" data-i18n="about.proof">18 leagues, 360 clubs · 7 in the Scout Game</div>
+    <div class="proof-groups">
+    <div class="proof-group-label" data-i18n="about.proof.game">In the Scout Game</div>
     <div class="proof-leagues">
     <!-- 4b-7: names with the country code, as everywhere in the app (league-names.js); no flags. -->
     <div class="proof-league">Série A · BRA</div>
@@ -361,6 +371,21 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
     <div class="proof-league">Bundesliga · GER</div>
     <div class="proof-league">Ligue 1 · FRA</div>
     <div class="proof-league">Liga Profesional · ARG</div>
+    </div>
+    <div class="proof-group-label" data-i18n="about.proof.also">Also covered</div>
+    <div class="proof-leagues">
+    <div class="proof-league">Championship · ENG</div>
+    <div class="proof-league">Série B · BRA</div>
+    <div class="proof-league">Série C · BRA</div>
+    <div class="proof-league">Eredivisie · NED</div>
+    <div class="proof-league">Primeira Liga · POR</div>
+    <div class="proof-league">Jupiler Pro League · BEL</div>
+    <div class="proof-league">Premiership · SCO</div>
+    <div class="proof-league">Süper Lig · TUR</div>
+    <div class="proof-league">Saudi Pro League · KSA</div>
+    <div class="proof-league">MLS · USA</div>
+    <div class="proof-league">Liga MX · MEX</div>
+    </div>
     </div>
 </div>
 
@@ -374,7 +399,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
     <div class="step">
       <div class="step-num">01</div>
       <div class="step-title" data-i18n="about.s1.t">Pick your clubs</div>
-      <div class="step-desc" data-i18n="about.s1.d">Choose from 146 clubs across seven leagues: Série A, the Premier League, La Liga, Serie A, the Bundesliga, Ligue 1 and Argentina's Liga Profesional. One main club, as many others as you like.</div>
+      <div class="step-desc" data-i18n="about.s1.d">Choose from 360 clubs across 18 leagues: the top divisions of Brazil, England, Spain, Italy, Germany, France and Argentina, plus the Championship, Série B, Série C, the Eredivisie, Primeira Liga, Jupiler Pro League, Scottish Premiership, Süper Lig, Saudi Pro League, MLS and Liga MX. One main club, as many others as you like.</div>
     </div>
     <div class="step">
       <div class="step-num">02</div>
@@ -453,7 +478,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
           </div>
           <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q2">Which leagues do you cover?</div>
-            <div class="faq-a" data-i18n="about.faq.a2">Seven, with 146 clubs: Brazil's Série A, the Premier League, La Liga, Italy's Serie A, the Bundesliga, Ligue 1 and Argentina's Liga Profesional. If a club is not in one of those, you will not find it yet — we would rather cover fewer leagues properly than list a lot of them with nothing behind it.</div>
+            <div class="faq-a" data-i18n="about.faq.a2">Eighteen, with 360 clubs. Seven are in the Scout Game: Brazil's Série A, the Premier League, La Liga, Italy's Serie A, the Bundesliga, Ligue 1 and Argentina's Liga Profesional. The other eleven are covered (matches, live scores, tables, club pages and rooms) but not playable in the game: the Championship, Série B, Série C, the Eredivisie, Primeira Liga, Jupiler Pro League, Scottish Premiership, Süper Lig, Saudi Pro League, MLS and Liga MX. If a club is not in one of those, you will not find it yet.</div>
           </div>
           <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q3">Is ScoutMind really free?</div>
@@ -465,7 +490,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
           </div>
           <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q5">What is the Scout Game?</div>
-            <div class="faq-a" data-i18n="about.faq.a5">A free game that runs alongside the season. Before each round's deadline you pick five players from the leagues we cover and name one of them captain. When the matches are played, each player scores from real match stats, and your captain earns extra. Rankings show how you compare with everyone, and private leagues let you play against a group of friends with a join link. No prizes, just fun.</div>
+            <div class="faq-a" data-i18n="about.faq.a5">A free game that runs alongside the season. Before each round's deadline you pick five players from the seven leagues in the game and name one of them captain. When the matches are played, each player scores from real match stats, and your captain earns extra. Rankings show how you compare with everyone, and private leagues let you play against a group of friends with a join link. No prizes, just fun.</div>
           </div>
           <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q6">Which languages does the feed speak?</div>

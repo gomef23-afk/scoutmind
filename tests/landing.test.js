@@ -126,7 +126,9 @@ const BASE = {
   // Most-followed from 034; the band drawn by HomeBand; competitions with codes.
   const L = makeLanding({ db: Object.assign({}, BASE, { 'club_follow_counts?': [{ club_id: 9, followers: 31 }], 'game_rounds?': [] }) });
   await L.ctx.landStart(); await settle();
-  check('competitions: every active league, "Name · CODE", shown', !L.get('comps-box').hidden && /Série A · BRA|Serie A · BRA/.test(L.get('comps').innerHTML) && /Premier League · ENG/.test(L.get('comps').innerHTML));
+  check('competitions: every active league, "Name · CODE", shown (the seven under "In the Scout Game")', !L.get('comps-box').hidden && !L.get('comps-game-box').hidden
+    && /Série A · BRA|Serie A · BRA/.test(L.get('comps-game').innerHTML) && /Premier League · ENG/.test(L.get('comps-game').innerHTML));
+  check('the Scout Game step counts the playable competitions from the database', /from the 2 competitions in the Scout Game/.test(L.get('s1d').textContent));
   check('clubs of inactive leagues are left out', !L.get('m-pick').innerHTML.includes('Old Club') && (L.get('m-pick').innerHTML.match(/<option /g) || []).length === 3);
   check('opens on the most-followed club (034), and says so', L.ctx.LAND.clubId === 9 && !L.get('m-note').hidden && /value="9" selected/.test(L.get('m-pick').innerHTML));
   check('the mock is the real band: club row and slots from home-band.js', !L.get('mock').hidden && /class="hb-name">Palmeiras</.test(L.get('m-club').innerHTML)
@@ -134,6 +136,17 @@ const BASE = {
   check('mock slots are not buttons (nothing to open for a visitor)', !/role="button"/.test(L.get('m-slots').innerHTML));
   L.ctx.mockPick('40'); await settle();
   check('the picker switches the club, and the "most followed" line goes', L.ctx.LAND.clubId === 40 && /Arsenal/.test(L.get('m-club').innerHTML) && L.get('m-note').hidden);
+}
+{
+  // Covered vs playable (commit 3): a tracked-only league is listed under "Also covered", never in the game.
+  const lg = LEAGUES.concat([{ id: 8, slug: 'championship', name: 'Championship', country: 'England', country_code: 'ENG', current_season: 2026, playable: false }])
+    .map((l) => (l.playable === false ? l : Object.assign({ playable: true }, l)));
+  const L = makeLanding({ db: Object.assign({}, BASE, { 'leagues?': lg, 'club_follow_counts?': [{ club_id: 9, followers: 3 }] }) });
+  await L.ctx.landStart(); await settle();
+  check('covered vs playable: Championship under "Also covered", not in the game list',
+    /Championship · ENG/.test(L.get('comps').innerHTML) && !/Championship/.test(L.get('comps-game').innerHTML) && !L.get('comps-also-box').hidden);
+  check('…and the step says 2 competitions, not 3', /from the 2 competitions in the Scout Game/.test(L.get('s1d').textContent));
+  check('the step keeps a number-free wording until the database answers', /data-i18n="land\.game\.s1dPlain"/.test(wel) && !/\{n\}/.test(wel.replace(/<script[\s\S]*?<\/script>/g, '')));
 }
 {
   // 034 not run yet → the room overview's identical count (rule 21).

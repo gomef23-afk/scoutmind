@@ -13,7 +13,7 @@ import { select, upsert, upsertReturning, update } from '../_lib/supabase.js';
 import { parseFeed } from '../_lib/rss.js';
 import { buildIndex, tagText, clipSummary, normalise } from '../_lib/tagger.js';
 import { isFootball } from '../_lib/football-filter.js';
-import { TAGGED_SLUGS } from '../_lib/leagues.js';
+import { TAGGED_SLUGS, ESTABLISHED_SLUGS } from '../_lib/leagues.js';
 
 const FETCH_TIMEOUT_MS = 8000;
 const WALL_CLOCK_BUDGET_MS = RUN_BUDGET_MS; // rule 16: cron-job.org gives up at 30s
@@ -106,6 +106,9 @@ export default withCron('news', async ({ req }) => {
       api_team_id: t.api_team_id,
       name: t.name,
       league: leagueSlug.get(t.league_id),
+      // A club from a league added on 18 Nov 2026 never takes a tag from an
+      // established club that shares its name (buildIndex).
+      established: ESTABLISHED_SLUGS.has(leagueSlug.get(t.league_id)),
     })),
     aliasRows
       .filter((a) => apiId.has(a.team_id))

@@ -39,7 +39,15 @@ check('slugs and API ids are unique', new Set(LEAGUES.map((l) => l.slug)).size =
 check('every code is three capital letters', LEAGUES.every((l) => /^[A-Z]{3}$/.test(l.code)), LEAGUES.filter((l) => !/^[A-Z]{3}$/.test(l.code)).map((l) => l.slug).join(','));
 eq('the seven playable, and only they', LEAGUES.filter((l) => l.playable).map((l) => l.slug), ['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina']);
 check('playable implies active', LEAGUES.every((l) => !l.playable || l.active));
-eq('commit 1: Championship is the only new league switched on', LEAGUES.filter((l) => l.active && !l.playable).map((l) => l.slug), ['championship']);
+eq('commit 3: all eleven tracked leagues switched on, none playable', LEAGUES.filter((l) => l.active && !l.playable).map((l) => l.slug),
+  ['championship', 'eredivisie', 'primeira_liga', 'belgian_pro_league', 'scottish_premiership', 'super_lig', 'saudi_pro_league', 'mls', 'liga_mx', 'serie_b', 'serie_c']);
+// 036 switches on exactly the ten that 035 inserted dormant (Championship was active from 035).
+const sql036 = readFileSync(new URL('../supabase/migrations/036_switch_on_ten_leagues.sql', import.meta.url), 'utf8').replace(/--[^\n]*/g, '');
+const slugs036 = [...((/set active = true[\s\S]*?where slug in \(([^)]*)\)/.exec(sql036) || [])[1] || '').matchAll(/'(\w+)'/g)].map((m) => m[1]);
+eq('036 switches on exactly the config\'s tracked leagues except Championship', slugs036.sort(),
+  LEAGUES.filter((l) => l.active && !l.playable && l.slug !== 'championship').map((l) => l.slug).sort());
+check('036: data only, re-runnable, never playable, nothing deleted', /and not active;/.test(sql036) && /set playable = false/.test(sql036)
+  && !/set playable = true|alter table|create |delete from|drop /i.test(sql036));
 const VERIFIED = { championship: 40, eredivisie: 88, primeira_liga: 94, belgian_pro_league: 144, scottish_premiership: 179, super_lig: 203, saudi_pro_league: 307,
   mls: 253, liga_mx: 262, serie_b: 72, serie_c: 75, serie_a: 71, premier_league: 39, la_liga: 140, bundesliga: 78, serie_a_it: 135, ligue_1: 61, argentina: 128 };
 check('API-Football ids as verified on 17 Nov 2026', Object.entries(VERIFIED).every(([s, id]) => BY_SLUG[s] && BY_SLUG[s].apiId === id));
@@ -49,10 +57,24 @@ check('Série C: no stats coverage, season over (25 Oct 2026)', BY_SLUG.serie_c.
 eq('display names (decision 2)', ['belgian_pro_league', 'saudi_pro_league', 'mls', 'scottish_premiership'].map((s) => BY_SLUG[s].name + ' · ' + BY_SLUG[s].code),
   ['Jupiler Pro League · BEL', 'Saudi Pro League · KSA', 'MLS · USA', 'Premiership · SCO']);
 check('the existing seven keep their database names and slugs', [['serie_a', 'Série A'], ['serie_a_it', 'Serie A'], ['argentina', 'Liga Profesional']].every(([s, n]) => BY_SLUG[s].name === n));
-check('news: only the seven tag clubs until commit 3', [...TAGGED_SLUGS].sort().join() === ['argentina', 'bundesliga', 'la_liga', 'ligue_1', 'premier_league', 'serie_a', 'serie_a_it'].join());
-eq('the tagger\'s LEAGUE_LANG is the config\'s, unchanged for the seven', LEAGUE_LANG, { serie_a: ['pt-BR'], premier_league: ['en'], la_liga: ['es'], bundesliga: ['de'], serie_a_it: ['it'], ligue_1: ['fr'], argentina: ['es'] });
+check('news: since commit 3 every league tags its clubs (after the measured check, tests/tagger-new-leagues.test.js)', TAGGED_SLUGS.size === 18);
+eq('the tagger\'s LEAGUE_LANG is the config\'s: unchanged for the seven, our sources\' languages for the eleven', LEAGUE_LANG, {
+  serie_a: ['pt-BR'], premier_league: ['en'], la_liga: ['es'], bundesliga: ['de'], serie_a_it: ['it'], ligue_1: ['fr'], argentina: ['es'],
+  championship: ['en'], eredivisie: [], primeira_liga: [], belgian_pro_league: ['fr'], scottish_premiership: ['en'], super_lig: [], saudi_pro_league: [],
+  mls: ['en'], liga_mx: ['es'], serie_b: ['pt-BR'], serie_c: ['pt-BR'] });
 const { LEAGUE_LANG: TAGGER_LANG } = await import('../api/_lib/tagger.js');
 check('tagger.js reads it from the config', TAGGER_LANG === LEAGUE_LANG);
+
+// ── about.html says what the database holds (rule 22, commit 3) ──
+const about = readFileSync(new URL('../public/about.html', import.meta.url), 'utf8');
+const stats = [...about.matchAll(/<div class="hero-stat-num">(\d+)<\/div>\s*<div class="hero-stat-lbl" data-i18n="([\w.]+)"/g)].map((m) => [m[2], Number(m[1])]);
+const clubs = JSON.parse(readFileSync(new URL('./fixtures/teams.json', import.meta.url), 'utf8')).length
+  + JSON.parse(readFileSync(new URL('./fixtures/teams-new-leagues.json', import.meta.url), 'utf8')).length;
+eq('about.html: leagues covered, in the game, clubs = the config and the frozen club lists',
+  stats.filter(([k]) => k !== 'about.stat.outlets'), [['about.stat.leagues', LEAGUES.filter((l) => l.active).length], ['about.stat.playable', LEAGUES.filter((l) => l.playable).length], ['about.stat.clubs', clubs]]);
+const chips = [...about.matchAll(/<div class="proof-league">([^<]+)<\/div>/g)].map((m) => m[1]);
+eq('about.html: one chip per league, the seven playable first', [chips.length, chips.slice(0, 7).every((c) => LEAGUES.filter((l) => l.playable).some((l) => `${l.name} · ${l.code}` === c))], [18, true]);
+check('about.html: every chip is a config league, "Name · CODE"', chips.every((c) => LEAGUES.some((l) => `${l.name} · ${l.code}` === c)));
 
 // ── Generated blocks ──
 const sync = spawnSync(process.execPath, [new URL('../scripts/sync-leagues.mjs', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'), '--check'], { encoding: 'utf8' });

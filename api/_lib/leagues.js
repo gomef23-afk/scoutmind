@@ -50,29 +50,35 @@ export const LEAGUES = [
   { slug: 'argentina', apiId: 128, name: 'Liga Profesional', country: 'Argentina', code: 'ARG', season: 2026, seasonStart: '2026-01-22', seasonEnd: '2026-11-22',
     active: true, playable: true, statsCoverage: null, region: null, langs: ['es'], tagNews: true },
 
-  // ── Tracked only (17 Nov 2026): matches, live, tables, clubs, rooms; not in the Scout Game ──
+  // ── Tracked only: matches, live, tables, clubs, rooms; not in the Scout Game ──
+  // Championship switched on in 035 (17 Nov 2026), the other ten in 036
+  // (18 Nov 2026). News tagging for all eleven since the measured check of
+  // 18 Nov (tests/tagger-new-leagues.test.js). langs: only the press
+  // languages our sources write in (LANGS in tagger.js): none for the Dutch,
+  // Turkish and Saudi leagues, and none for Portugal either: our Portuguese
+  // sources are Brazilian, where "nacional" is an ordinary word.
   { slug: 'championship', apiId: 40, name: 'Championship', country: 'England', code: 'ENG', season: 2026, seasonStart: '2026-08-14', seasonEnd: '2027-05-01',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: false },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true },
   { slug: 'eredivisie', apiId: 88, name: 'Eredivisie', country: 'Netherlands', code: 'NED', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-23',
-    active: false, playable: false, statsCoverage: null, region: 'europe', langs: [], tagNews: false },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: [], tagNews: true },
   { slug: 'primeira_liga', apiId: 94, name: 'Primeira Liga', country: 'Portugal', code: 'POR', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-16',
-    active: false, playable: false, statsCoverage: null, region: 'europe', langs: [], tagNews: false },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: [], tagNews: true },
   { slug: 'belgian_pro_league', apiId: 144, name: 'Jupiler Pro League', country: 'Belgium', code: 'BEL', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-22',
-    active: false, playable: false, statsCoverage: null, region: 'europe', langs: ['fr'], tagNews: false },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['fr'], tagNews: true },
   { slug: 'scottish_premiership', apiId: 179, name: 'Premiership', country: 'Scotland', code: 'SCO', season: 2026, seasonStart: '2026-07-31', seasonEnd: '2027-04-10',
-    active: false, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: false },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true },
   { slug: 'super_lig', apiId: 203, name: 'Süper Lig', country: 'Turkey', code: 'TUR', season: 2026, seasonStart: '2026-08-14', seasonEnd: '2027-05-23',
-    active: false, playable: false, statsCoverage: null, region: 'europe', langs: [], tagNews: false },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: [], tagNews: true },
   { slug: 'saudi_pro_league', apiId: 307, name: 'Saudi Pro League', country: 'Saudi Arabia', code: 'KSA', season: 2026, seasonStart: '2026-08-13', seasonEnd: '2027-05-29',
-    active: false, playable: false, statsCoverage: null, region: null, langs: [], tagNews: false },
+    active: true, playable: false, statsCoverage: null, region: null, langs: [], tagNews: true },
   { slug: 'mls', apiId: 253, name: 'MLS', country: 'USA', code: 'USA', season: 2026, seasonStart: '2026-02-21', seasonEnd: '2026-11-29',
-    active: false, playable: false, statsCoverage: null, region: null, langs: ['en'], tagNews: false },
+    active: true, playable: false, statsCoverage: null, region: null, langs: ['en'], tagNews: true },
   { slug: 'liga_mx', apiId: 262, name: 'Liga MX', country: 'Mexico', code: 'MEX', season: 2026, seasonStart: '2026-07-17', seasonEnd: '2026-11-23',
-    active: false, playable: false, statsCoverage: null, region: null, langs: ['es'], tagNews: false },
+    active: true, playable: false, statsCoverage: null, region: null, langs: ['es'], tagNews: true },
   { slug: 'serie_b', apiId: 72, name: 'Série B', country: 'Brazil', code: 'BRA', season: 2026, seasonStart: '2026-03-21', seasonEnd: '2026-11-28',
-    active: false, playable: false, statsCoverage: null, region: 'brazil', langs: ['pt-BR'], tagNews: false },
+    active: true, playable: false, statsCoverage: null, region: 'brazil', langs: ['pt-BR'], tagNews: true },
   { slug: 'serie_c', apiId: 75, name: 'Série C', country: 'Brazil', code: 'BRA', season: 2026, seasonStart: '2026-04-04', seasonEnd: '2026-10-25',
-    active: false, playable: false, statsCoverage: false, region: 'brazil', langs: ['pt-BR'], tagNews: false },
+    active: true, playable: false, statsCoverage: false, region: 'brazil', langs: ['pt-BR'], tagNews: true },
 ];
 
 /** By slug. */
@@ -83,6 +89,13 @@ export const LEAGUE_LANG = Object.fromEntries(LEAGUES.filter((l) => l.tagNews).m
 
 /** Slugs whose clubs the news tagger indexes. */
 export const TAGGED_SLUGS = new Set(LEAGUES.filter((l) => l.tagNews).map((l) => l.slug));
+
+/**
+ * The leagues whose clubs were tagged before 18 Nov 2026. In a name clash
+ * with a club from any other league, the tagger never lets one of these lose
+ * its tag (buildIndex, `established`; decision 5).
+ */
+export const ESTABLISHED_SLUGS = new Set(['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina']);
 
 /**
  * Rough API-Football requests per league per day with the cron schedule of

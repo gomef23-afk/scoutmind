@@ -83,7 +83,19 @@ export const COMMON = {
   central: ['es', 'en'],
   parma: ['it'],
   genoa: ['it'],
+  // 18 Nov 2026, the measured check for the new leagues: CD Nacional (Portugal)
+  // matched "Atlético Nacional", "Policía Nacional" and "Primera División
+  // nacional" on the frozen samples.
+  nacional: ['pt-BR', 'es'],
 };
+
+/**
+ * Names that are an ordinary noun on their own and only mean the club with a
+ * qualifier ("Derby County", never a bare "derby": the measured check of
+ * 18 Nov 2026 found "the derby" in English and "Debüt im Derby" in German).
+ * Such a name never enters the index by itself; an alias with more words does.
+ */
+export const NEEDS_QUALIFIER = new Set(['derby']);
 
 // Portuguese context rules. Brazilian press writes the bare club name
 // constantly ("Santos acerta venda"), so we cannot require a qualifier — we
@@ -131,10 +143,29 @@ function foldKeepCase(s) {
  * what lets "Inter" mean Internacional in Portuguese and Inter Milan elsewhere.
  * If two different clubs still claim a key in the same language, that language
  * is dropped for that key — an ambiguous tag is worse than none.
+ *
+ * Except when a club from a league added later (`established: false`, the 11
+ * leagues of 18 Nov 2026) is one of the claimants: an existing club must never
+ * lose a tag because a newcomer shares its name. Then the club whose league's
+ * press writes in this language wins ("Athletic Club" in Brazilian copy is the
+ * Série B club; in Spanish, Athletic Bilbao); failing that, the existing club;
+ * only if neither decides is the key dropped. A team without the field is
+ * established, so a clash among the original clubs behaves exactly as before.
  */
 export function buildIndex(teams, aliases = []) {
   const leagueOf = new Map();
-  for (const t of teams) leagueOf.set(t.api_team_id, t.league);
+  const established = new Map();
+  for (const t of teams) {
+    leagueOf.set(t.api_team_id, t.league);
+    established.set(t.api_team_id, t.established !== false);
+  }
+  const resolve = (lang, ids) => {
+    if (!ids.some((id) => !established.get(id))) return null;           // only original clubs: unchanged
+    const home = ids.filter((id) => (LEAGUE_LANG[leagueOf.get(id)] || []).includes(lang));
+    if (home.length === 1) return home[0];
+    const old = ids.filter((id) => established.get(id));
+    return old.length === 1 ? old[0] : null;
+  };
 
   const rows = [
     ...teams.map((t) => ({
@@ -153,6 +184,7 @@ export function buildIndex(teams, aliases = []) {
     const key = normalise(r.alias);
     if (!key) continue;
     if (key.replace(/ /g, '').length < MIN_ALIAS_LEN && !r.short_ok) continue;
+    if (NEEDS_QUALIFIER.has(key)) continue;   // "derby" alone is a noun, not Derby County
     if (!leagueOf.has(r.api_team_id)) continue; // alias for a team we do not hold
 
     let slot = staging.get(key);
@@ -177,11 +209,17 @@ export function buildIndex(teams, aliases = []) {
     for (const lang of LANGS) {
       const claims = slot.scoped.get(lang) || slot.unscoped;
       if (claims.size === 0) continue;
+      let id, kind;
       if (claims.size > 1) {
-        dropped.push({ key, lang, teams: [...claims.keys()] });
-        continue;
+        const pick = resolve(lang, [...claims.keys()]);
+        if (pick == null) {
+          dropped.push({ key, lang, teams: [...claims.keys()] });
+          continue;
+        }
+        [id, kind] = [pick, claims.get(pick)];
+      } else {
+        [id, kind] = [...claims.entries()][0];
       }
-      const [id, kind] = [...claims.entries()][0];
       perLang[lang] = id;
       kindByLang[lang] = kind;
     }
@@ -198,7 +236,7 @@ export function buildIndex(teams, aliases = []) {
   // Longest first: the span resolver relies on this order to let "inter milan"
   // beat "milan", and "independiente rivadavia" beat "independiente".
   entries.sort((a, b) => b.key.length - a.key.length || a.key.localeCompare(b.key));
-  return { entries, leagueOf, dropped };
+  return { entries, leagueOf, dropped, established };
 }
 
 function escapeRe(s) {
@@ -269,6 +307,14 @@ export function tagText(index, title, summary, lang) {
       } else if (e.single && !/^[A-Z]/.test(seg)) {
         // A one-word club name must be capitalised to be a name at all.
         continue;
+      }
+
+      // English place rule for the clubs added on 18 Nov 2026 (most are named
+      // after their town): "in Cardiff" is the city ("Fury will fight Joshua in
+      // Cardiff", the measured check). The original clubs keep their old rules.
+      if (lang === 'en' && e.single && index.established && index.established.get(teamId) === false) {
+        const pw = prevToken(text, at);
+        if (pw && pw.toLowerCase() === 'in') continue;
       }
 
       if (rule) {

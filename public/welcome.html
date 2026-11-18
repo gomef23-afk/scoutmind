@@ -57,7 +57,7 @@
 <meta property="og:image:alt" content="ScoutMind — Your club. Everything around it.">
 <meta name="twitter:card" content="summary_large_image">
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
-<script src="/i18n.js?v=e7350d813d"></script>
+<script src="/i18n.js?v=167b7042bf"></script>
 <script src="/club_names.js?v=25627f760c"></script>
 <script src="/league-names.js?v=3b0efd81e7"></script>
 <script src="/home-band.js?v=61368b2af2"></script>
@@ -223,7 +223,7 @@ a{color:var(--navy-ink);}
   <div class="wrap">
     <h2 data-i18n="land.game.h">The Scout Game</h2>
     <ol class="steps">
-      <li class="step"><span class="step-ic" data-icon="target"></span><div class="step-t" data-i18n="land.game.s1t">Pick five and a captain</div><p class="step-d" data-i18n="land.game.s1d">Before each round's deadline, choose five players from the competitions we cover and name one captain.</p></li>
+      <li class="step"><span class="step-ic" data-icon="target"></span><div class="step-t" data-i18n="land.game.s1t">Pick five and a captain</div><p class="step-d" id="s1d" data-i18n="land.game.s1dPlain">Before each round's deadline, choose five players from the Scout Game's competitions and name one captain.</p></li>
       <li class="step"><span class="step-ic" data-icon="ball"></span><div class="step-t" data-i18n="land.game.s2t">Real match stats score</div><p class="step-d" data-i18n="land.game.s2d">Goals, assists, saves and the rest, from the real matches. Your captain earns extra.</p></li>
       <li class="step"><span class="step-ic" data-icon="users"></span><div class="step-t" data-i18n="land.game.s3t">Private leagues with friends</div><p class="step-d" data-i18n="land.game.s3d">Start a league, share the join link, and see who reads the game best each round.</p></li>
     </ol>
@@ -241,9 +241,17 @@ a{color:var(--navy-ink);}
       <li class="get"><span class="get-ic" data-icon="news"></span><div><div class="get-t" data-i18n="land.get.news">News with reactions</div><p class="get-d" data-i18n="land.get.newsD">Headlines from the outlets that cover your club, with a link to every story.</p></div></li>
       <li class="get"><span class="get-ic" data-icon="table"></span><div><div class="get-t" data-i18n="land.get.tables">Tables and matches</div><p class="get-d" data-i18n="land.get.tablesD">League tables, fixtures and results in your own time zone.</p></div></li>
     </ul>
+    <!-- Every league we hold, from the leagues table, in two groups: playable
+         in the Scout Game, and covered only. Each group hidden without rows. -->
     <div id="comps-box" hidden>
-      <h3 data-i18n="land.get.comps">Every competition we hold</h3>
-      <ul class="comps" id="comps"></ul>
+      <div id="comps-game-box" hidden>
+        <h3 data-i18n="land.get.compsGame">In the Scout Game</h3>
+        <ul class="comps" id="comps-game"></ul>
+      </div>
+      <div id="comps-also-box" hidden>
+        <h3 data-i18n="land.get.compsAlso">Also covered: matches, tables, club pages and rooms</h3>
+        <ul class="comps" id="comps"></ul>
+      </div>
     </div>
   </div>
 </section>
@@ -362,12 +370,22 @@ function renderPicker(){
   }).join('');
 }
 
-// ── Competitions ──
+// ── Competitions: covered vs playable, from the leagues table ──
+/** In the Scout Game: the row's `playable` (035), else the generated list (league-names.js). */
+function isPlayable(l){ return typeof l.playable==='boolean'?l.playable:LeagueNames.playable(l); }
 function renderComps(){
-  var ul=document.getElementById('comps');
-  if(!ul) return;
-  ul.innerHTML=LAND.leagues.map(function(l){ return '<li>'+esc(LeagueNames.label(l))+'</li>'; }).join('');
+  var ul=document.getElementById('comps'), ug=document.getElementById('comps-game');
+  if(!ul||!ug) return;
+  var game=LeagueNames.sort(LAND.leagues.filter(isPlayable)), also=LeagueNames.sort(LAND.leagues.filter(function(l){ return !isPlayable(l); }));
+  var li=function(l){ return '<li>'+esc(LeagueNames.label(l))+'</li>'; };
+  ug.innerHTML=game.map(li).join(''); ul.innerHTML=also.map(li).join('');
+  document.getElementById('comps-game-box').hidden=!game.length;
+  document.getElementById('comps-also-box').hidden=!also.length;
   document.getElementById('comps-box').hidden=!LAND.leagues.length;
+  // The Scout Game step names how many competitions are playable, from the
+  // database; without rows it keeps the wording with no number.
+  var s1d=document.getElementById('s1d');
+  if(s1d&&game.length) s1d.textContent=t('land.game.s1d',{n:game.length});
 }
 
 // ── The Scout Game example: the last finished round's top score and five ──
@@ -436,7 +454,10 @@ async function landStart(){
   // Competitions and clubs (rule 20: the teams→leagues embed is not needed here).
   try{
     var res=await Promise.all([
-      landGet('leagues?select=id,slug,name,country,current_season&active=is.true&order=id.asc'),
+      // playable (035) splits "in the Scout Game" from "also covered"; without
+      // the column the generated list decides (rule 21).
+      landGet('leagues?select=id,slug,name,country,country_code,current_season,playable&active=is.true&order=id.asc')
+        .catch(function(){ return landGet('leagues?select=id,slug,name,country,current_season&active=is.true&order=id.asc'); }),
       landGet('teams?select=id,api_team_id,name,logo_url,league_id&limit=1000')
     ]);
     LAND.leagues=res[0]||[];

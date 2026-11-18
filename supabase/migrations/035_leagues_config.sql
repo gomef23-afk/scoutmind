@@ -59,16 +59,16 @@ select * from (values
     (61, 'ligue_1', 'Ligue 1', 'France', 'FRA', 2026, '2026-08-21', '2027-05-29', true, true, null, 'europe'),
     (128, 'argentina', 'Liga Profesional', 'Argentina', 'ARG', 2026, '2026-01-22', '2026-11-22', true, true, null, null),
     (40, 'championship', 'Championship', 'England', 'ENG', 2026, '2026-08-14', '2027-05-01', true, false, null, 'europe'),
-    (88, 'eredivisie', 'Eredivisie', 'Netherlands', 'NED', 2026, '2026-08-07', '2027-05-23', false, false, null, 'europe'),
-    (94, 'primeira_liga', 'Primeira Liga', 'Portugal', 'POR', 2026, '2026-08-07', '2027-05-16', false, false, null, 'europe'),
-    (144, 'belgian_pro_league', 'Jupiler Pro League', 'Belgium', 'BEL', 2026, '2026-08-07', '2027-05-22', false, false, null, 'europe'),
-    (179, 'scottish_premiership', 'Premiership', 'Scotland', 'SCO', 2026, '2026-07-31', '2027-04-10', false, false, null, 'europe'),
-    (203, 'super_lig', 'Süper Lig', 'Turkey', 'TUR', 2026, '2026-08-14', '2027-05-23', false, false, null, 'europe'),
-    (307, 'saudi_pro_league', 'Saudi Pro League', 'Saudi Arabia', 'KSA', 2026, '2026-08-13', '2027-05-29', false, false, null, null),
-    (253, 'mls', 'MLS', 'USA', 'USA', 2026, '2026-02-21', '2026-11-29', false, false, null, null),
-    (262, 'liga_mx', 'Liga MX', 'Mexico', 'MEX', 2026, '2026-07-17', '2026-11-23', false, false, null, null),
-    (72, 'serie_b', 'Série B', 'Brazil', 'BRA', 2026, '2026-03-21', '2026-11-28', false, false, null, 'brazil'),
-    (75, 'serie_c', 'Série C', 'Brazil', 'BRA', 2026, '2026-04-04', '2026-10-25', false, false, false, 'brazil')
+    (88, 'eredivisie', 'Eredivisie', 'Netherlands', 'NED', 2026, '2026-08-07', '2027-05-23', true, false, null, 'europe'),
+    (94, 'primeira_liga', 'Primeira Liga', 'Portugal', 'POR', 2026, '2026-08-07', '2027-05-16', true, false, null, 'europe'),
+    (144, 'belgian_pro_league', 'Jupiler Pro League', 'Belgium', 'BEL', 2026, '2026-08-07', '2027-05-22', true, false, null, 'europe'),
+    (179, 'scottish_premiership', 'Premiership', 'Scotland', 'SCO', 2026, '2026-07-31', '2027-04-10', true, false, null, 'europe'),
+    (203, 'super_lig', 'Süper Lig', 'Turkey', 'TUR', 2026, '2026-08-14', '2027-05-23', true, false, null, 'europe'),
+    (307, 'saudi_pro_league', 'Saudi Pro League', 'Saudi Arabia', 'KSA', 2026, '2026-08-13', '2027-05-29', true, false, null, null),
+    (253, 'mls', 'MLS', 'USA', 'USA', 2026, '2026-02-21', '2026-11-29', true, false, null, null),
+    (262, 'liga_mx', 'Liga MX', 'Mexico', 'MEX', 2026, '2026-07-17', '2026-11-23', true, false, null, null),
+    (72, 'serie_b', 'Série B', 'Brazil', 'BRA', 2026, '2026-03-21', '2026-11-28', true, false, null, 'brazil'),
+    (75, 'serie_c', 'Série C', 'Brazil', 'BRA', 2026, '2026-04-04', '2026-10-25', true, false, false, 'brazil')
 ) as s(api_league_id, slug, name, country, country_code, current_season, season_start, season_end, active, playable, stats_coverage, region);
 -- END SEED
 
