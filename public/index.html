@@ -93,7 +93,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=e609c2ea31"></script>
+<script src="/i18n.js?v=e7350d813d"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=61368b2af2"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -814,6 +814,8 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .mx-empty{padding:14px 4px;font-size:13px;color:var(--muted);}
 .mx-week{display:flex;align-items:center;gap:10px;margin:30px 4px 0;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
 .mx-week::before,.mx-week::after{content:"";flex:1;height:1px;background:var(--border);}
+/* Nothing near today (commit 2): why the list opened on another week. Ink on card, a navy-ink bar (not colour alone: it is words). */
+.mx-note{margin:12px 0 0;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-left:3px solid var(--navy-ink);border-radius:8px;font-size:13px;line-height:1.45;color:var(--ink);}
 .mx-earlier{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px;border:1px solid var(--border);border-radius:22px;background:var(--card);color:var(--navy-ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer;}
 .mx-earlier:hover{background:var(--field);}
 /* The date strip: 3 back to 10 ahead; today ringed, the day in view pressed. */
@@ -868,6 +870,8 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .tb .tb-wide{display:none;}
 @media (min-width:700px){ .tb .tb-wide{display:table-cell;} }
 .tb-note{padding:10px 8px;font-size:11px;color:var(--muted);}
+/* "2026 · final" above a finished season's table (commit 2): the number face, ink. */
+.tb-final{display:inline-flex;align-items:center;margin:4px 0 10px;padding:4px 10px;border:1px solid var(--border-strong);border-radius:6px;font-family:var(--font-num);font-weight:700;font-size:14px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink);}
 /* The match panel's band (spec v1.2 §7): crests on white discs, the score in
    the 44px number face, the status line. LIVE in --live-on-band. */
 .mo-band{background:var(--navy);color:var(--on-navy);border-radius:12px;padding:14px 12px 16px;}
@@ -3384,6 +3388,37 @@ async function mxBounds(){
   MX.first=a&&a[0]?mxMidnight(a[0].kickoff_utc):null;
   MX.last=b&&b[0]?mxAddDays(mxMidnight(b[0].kickoff_utc),1):null;
 }
+/**
+ * Has the chosen league's season ended? season_end (035) has passed. Before
+ * 035 there is no season_end and nothing is ever "over" (rule 21).
+ */
+function mxSeasonOver(L,now){
+  if(!L||!L.season_end) return false;
+  return (now||Date.now())>new Date(L.season_end+'T23:59:59').getTime();
+}
+/** "2026" for a calendar-year season, "2026-27" for one that crosses New Year. */
+function mxSeasonLabel(L){
+  const s=Number(L&&L.current_season);
+  if(!s) return '';
+  const endY=L.season_end?Number(String(L.season_end).slice(0,4)):s;
+  return endY>s?s+'-'+String(endY).slice(2):String(s);
+}
+/**
+ * Where to open a league with nothing near today: the week ending on its last
+ * match day (a finished season: Série C), else the week from its next one (a
+ * season not begun). Real days only, from mxBounds(); null when we hold none.
+ */
+function mxFarWindow(){
+  if(MX.last&&MX.last<=MX.from){
+    const day=mxAddDays(MX.last,-1);       // MX.last is the day after the last kick-off
+    return {from:mxAddDays(day,-6),to:MX.last,key:localDayKey(day),
+      note:{key:mxSeasonOver(MX.league)?'fx.seasonOver':'fx.lastDay',date:mxDate(day,true)}};
+  }
+  if(MX.first&&MX.first>=MX.to){
+    return {from:MX.first,to:mxAddDays(MX.first,7),key:localDayKey(MX.first),note:{key:'fx.nextDay',date:mxDate(MX.first,true)}};
+  }
+  return null;
+}
 /** Fixtures kicking off in [from, to), for the chosen league or all. */
 async function mxFetch(from,to){
   const q=new URLSearchParams({select:FX_SELECT,order:'kickoff_utc.asc',limit:'500'});
@@ -3427,7 +3462,9 @@ function mxDayHtml(key){
         +'<div class="fx-list">'+g.map(mxRow).join('')+'</div>'; }).join('');
   }
   // "Today · Wed 18 Nov": the word, a dot, the date (4b-5b). The day's rows sit in one block.
-  return '<section class="mx-day'+(today?' today':'')+'" data-day="'+sanitize(key)+'"'+(today?' id="mx-today-day"':'')+'>'
+  // The day the list opens on when nothing is near today (mxFarWindow).
+  const open=!today&&key===MX.openKey;
+  return '<section class="mx-day'+(today?' today':'')+'" data-day="'+sanitize(key)+'"'+(today?' id="mx-today-day"':open?' id="mx-open-day"':'')+'>'
     +'<h2 class="mx-day-h">'+(h.word?'<span class="mx-word">'+sanitize(h.word)+'</span><span class="mx-dot" aria-hidden="true">·</span>':'')
     +'<span class="mx-date">'+sanitize(h.date)+'</span></h2><div class="mx-day-body">'+body+'</div></section>';
 }
@@ -3473,7 +3510,9 @@ function mxEdge(dir){
 function mxRenderStrip(){
   const el=document.getElementById('mx-strip');
   if(!el) return;
-  el.hidden=MX.view==='table';
+  // The strip is today's neighbourhood: hidden when the list opened elsewhere
+  // because nothing is near today (mxFarWindow).
+  el.hidden=MX.view==='table'||!!MX.openKey;
   el.innerHTML=mxStripKeys().map(k=>{
     const d=new Date(k+'T12:00:00'), today=k===MX.todayKey, n=(MX.days.get(k)||[]).length;
     const wd=today?t('fx.today'):mxDate(d,true).split(' ')[0];
@@ -3520,7 +3559,8 @@ function mxMeasure(){
   return n+b;
 }
 function mxAnchorToday(smooth){
-  const el=document.getElementById('mx-today-day');
+  // Today, or the day the list opened on when nothing is near today.
+  const el=document.getElementById('mx-today-day')||document.getElementById('mx-open-day');
   if(!el||MX.view==='table') return;
   const top=el.getBoundingClientRect().top+window.scrollY-mxMeasure();
   window.scrollTo({top:Math.max(0,top),behavior:smooth?'smooth':'auto'});
@@ -3577,7 +3617,10 @@ async function mxStart(){
   list.innerHTML='<div class="mx-edge">'+sanitize(t('fx.loading'))+'</div>';
   try{
     if(!MX.leagues){
-      MX.leagues=(await apiGet('leagues?select=id,slug,name,country,current_season&active=is.true&order=id.asc'))||[];
+      // season_end (035) says when a league's season is over; before 035 the
+      // column is missing and every league reads as in season (rule 21).
+      MX.leagues=(await apiGet('leagues?select=id,slug,name,country,country_code,current_season,season_end&active=is.true&order=id.asc')
+        .catch(()=>apiGet('leagues?select=id,slug,name,country,current_season&active=is.true&order=id.asc')))||[];
       // A choice saved before 4b-2 is the league's name; now it is its slug.
       const p=mxPref(), known=p&&LeagueNames.find(p);
       MX.league=p?(MX.leagues.find(l=>l.slug===p||(known&&l.slug===known.slug))||null):null;
@@ -3588,10 +3631,22 @@ async function mxStart(){
     const today=mxMidnight(new Date());
     MX.from=mxAddDays(today,-MX_BACK);
     MX.to=mxAddDays(today,MX_AHEAD+1);
-    const [,rows]=await Promise.all([mxBounds(),mxFetch(MX.from,MX.to)]);
+    MX.openKey=null; MX.note=null;
+    let [,rows]=await Promise.all([mxBounds(),mxFetch(MX.from,MX.to)]);
     if(gen!==MX.gen) return;
+    // Nothing near today for this league (its season is over, or not begun):
+    // open on the week of its last match day, or its next one (commit 2).
+    if(MX.league&&!rows.length){
+      const far=mxFarWindow();
+      if(far){
+        MX.from=far.from; MX.to=far.to; MX.openKey=far.key; MX.note=far.note;
+        rows=await mxFetch(MX.from,MX.to);
+        if(gen!==MX.gen) return;
+      }
+    }
     mxAdd(rows);
-    list.innerHTML='<div id="mx-top" class="mx-edge"></div><div id="mx-days">'+mxAllDaysHtml()+'</div>'
+    list.innerHTML=(MX.note?'<div class="mx-note" role="status">'+sanitize(t(MX.note.key,{date:MX.note.date}))+'</div>':'')
+      +'<div id="mx-top" class="mx-edge"></div><div id="mx-days">'+mxAllDaysHtml()+'</div>'
       +'<div id="mx-bottom" class="mx-edge mx-end"></div>';
     mxEdge('past'); mxEdge('future');
     mxRenderStrip();
@@ -3716,7 +3771,7 @@ function mxShowView(){
   if(list) list.hidden=table;
   if(tb) tb.hidden=!table;
   const strip=document.getElementById('mx-strip');   // the date strip belongs to the match list
-  if(strip){ strip.hidden=table; if(!table){ MX.stripDay=null; } }
+  if(strip){ strip.hidden=table||!!MX.openKey; if(!table){ MX.stripDay=null; } }
   if(table){
     if(btn) btn.hidden=true;
     window.scrollTo(0,0);
@@ -3808,7 +3863,10 @@ function mxTableHtml(data){
     :'';
   let when='';
   try{ when=data.updated?new Date(data.updated).toLocaleString(smLocale()||[],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch(e){}
-  return chipHtml
+  // Once the season's last day (season_end, 035) has passed, the table is
+  // final: "2026 · final" / "2026-27 · final" above it (commit 2).
+  const final=mxSeasonOver(MX.league)?'<div class="tb-final">'+sanitize(t('tb.final',{season:mxSeasonLabel(MX.league)}))+'</div>':'';
+  return final+chipHtml
     +cur.groups.map(g=>{ const p=mxPhaseOf(g.label); return mxGroupHtml(g,p?t('tb.groupN',{n:p.letter}):''); }).join('')
     +(when?'<div class="tb-note">'+sanitize(t('tb.updated',{when:when}))+'</div>':'');
 }
