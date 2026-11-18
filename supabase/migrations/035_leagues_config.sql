@@ -195,7 +195,7 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_group bigint;
+  v_group uuid;   -- groups.id is a uuid (011), like 019's v_room. It was bigint here until 035b.
 begin
   select g.id into v_group from public.groups g where g.club_id = new.id and g.is_official limit 1;
   if v_group is null then
