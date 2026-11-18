@@ -23,16 +23,23 @@
 
 import { createClient } from '../_lib/apifootball.js';
 import { activeLeagues, upsert, update, select } from '../_lib/supabase.js';
-import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
+import { withCron, RUN_BUDGET_MS, leaguesFromQuery } from '../_lib/cron.js';
 
 export const TIME_BUDGET_MS = RUN_BUDGET_MS;   // 20 s: cron-job.org gives up at 30 s
 export const REFRESH_DAYS = 6;          // a finished cycle waits this long before the next
 const nowIso = () => new Date(Date.now()).toISOString();   // one clock for every stamp and age
 
-/** Teams + venues for every active league. Returns rows written. */
-async function refreshTeams(api, leagues) {
+/**
+ * Teams + venues for the given leagues. Returns rows written. Stops starting a
+ * league once `started` is TIME_BUDGET_MS old (18 leagues no longer fit every
+ * morning: rule 16); the leagues it did not reach are picked up by the next
+ * coaches cycle or a ?league= call. A club inserted here gets its room from
+ * the database (035's teams_ensure_club_room trigger).
+ */
+async function refreshTeams(api, leagues, started = Date.now()) {
   let rows = 0;
   for (const lg of leagues) {
+    if (Date.now() - started > TIME_BUDGET_MS) break;
     const json = await api.get('teams', { league: lg.api_league_id, season: lg.current_season });
     // teams.name is NOT NULL: an entry without one would fail the whole batch.
     const teamRows = (json.response || []).filter((r) => r.team?.id && r.team?.name).map((r) => ({
@@ -62,9 +69,11 @@ export default withCron('teams', async ({ req }) => {
   const leagues = await activeLeagues();
 
   if (!withCoaches) {
-    const rows = await refreshTeams(api, leagues);
+    // ?league=championship: that league only (its clubs, crests, venues).
+    const chosen = leaguesFromQuery(req, leagues) || leagues;
+    const rows = await refreshTeams(api, chosen, started);
     const s = api.stats();
-    return { rows_written: rows, requests_used: s.used, quota_remaining: s.remaining, leagues: leagues.length };
+    return { rows_written: rows, requests_used: s.used, quota_remaining: s.remaining, leagues: chosen.map((l) => l.slug) };
   }
 
   // ── Coaches, resumable ──
@@ -85,7 +94,7 @@ export default withCron('teams', async ({ req }) => {
   let rows = 0;
   if (!cursor) {
     // A new cycle starts with fresh teams and venues.
-    rows += await refreshTeams(api, leagues);
+    rows += await refreshTeams(api, leagues, started);
     cursor = { after_team_id: 0, cycle_started_at: nowIso() };
   }
 

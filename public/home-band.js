@@ -116,11 +116,27 @@
   }
 
   /**
-   * Slot 3, ROUND. round: the picked round or null; me: { entered, compRank,
-   * roundTotal, roundRank } (any may be null); league: the competition's name.
+   * The round the band shows for a club: its own league's (pickRound), or,
+   * when its league has no round at all (a tracked-only league, 035, or a
+   * playable league between seasons), the next round of any playable
+   * competition, marked foreign so the slot names that competition.
+   * Returns { round, foreign }.
    */
-  function roundSlot(round, me, league) {
+  function bandRound(rounds, leagueSlug, entered, inPlay, now) {
+    var own = leagueSlug && (rounds || []).some(function (r) { return r.league_slug === leagueSlug; });
+    var round = pickRound(rounds, own ? leagueSlug : null, entered, inPlay, now);
+    return { round: round, foreign: !!(round && leagueSlug && round.league_slug !== leagueSlug) };
+  }
+
+  /**
+   * Slot 3, ROUND. round: the picked round or null; me: { entered, compRank,
+   * roundTotal, roundRank } (any may be null); league: the competition's name;
+   * opts.foreign: the round is another competition's (bandRound), so an open
+   * round I have not entered names it ("No picks yet · Série A · BRA").
+   */
+  function roundSlot(round, me, league, opts) {
     me = me || {};
+    var foreign = !!(opts && opts.foreign);
     if (!round) return { label: { key: 'hb.nextRound' }, big: { kind: 'dash' }, line: { key: 'hb.noRound' }, tone: 'normal' };
     var n = round.round_no != null ? round.round_no : (round.round_label || '');
     var rank = function (r) { return num(r) == null ? (league ? { key: 'hb.inLeagueName', vars: { league: league } } : null)
@@ -129,7 +145,7 @@
       return {
         label: { key: 'hb.roundCloses', vars: { n: n } },
         big: { kind: 'countdown', at: new Date(round.deadline_utc).getTime() },
-        line: me.entered ? rank(me.compRank) : { key: 'hb.noPicks' },
+        line: me.entered ? rank(me.compRank) : (foreign && league ? { key: 'hb.noPicksIn', vars: { league: league } } : { key: 'hb.noPicks' }),
         tone: 'gold', roundId: round.id
       };
     }
@@ -242,7 +258,7 @@
       + '</div>';
   }
 
-  var api = { tableSlot: tableSlot, matchSlot: matchSlot, pickRound: pickRound, roundSlot: roundSlot,
+  var api = { tableSlot: tableSlot, matchSlot: matchSlot, pickRound: pickRound, bandRound: bandRound, roundSlot: roundSlot,
     picksRow: picksRow, countdownText: countdownText, formChips: formChips,
     bigText: bigText, lineText: lineText, slotHtml: slotHtml, clubHtml: clubHtml };
   root.HomeBand = api;

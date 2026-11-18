@@ -1,17 +1,31 @@
 // R4 — league tables.
-// Cost: 1 request per active league.
+// Cost: 1 request per active league a day. A league whose season ended more
+// than 8 days ago is skipped: its final table is already held.
 //
-// `standings` also supplies the league position that Scout Mode shows next to
-// each team, replacing the hardcoded `pos:"3rd"` in leagues_data.js.
+// Paced like fixtures.js (rule 16): stops STARTING a league at RUN_BUDGET_MS,
+// saves { day, after_id } in ingest_runs.cursor, and a call after the day's
+// pass is complete does nothing. ?league=championship runs that league only
+// (no cursor touched; a finished season is fetched too, for its final table).
 
 import { createClient } from '../_lib/apifootball.js';
 import { activeLeagues, teamIdMap, upsert } from '../_lib/supabase.js';
-import { withCron, isoDate } from '../_lib/cron.js';
+import { withCron, isoDate, RUN_BUDGET_MS, leaguesFromQuery, seasonOver, dailyPass } from '../_lib/cron.js';
 
-export default withCron('standings', async () => {
+export const TIME_BUDGET_MS = RUN_BUDGET_MS;   // 20 s: cron-job.org gives up at 30 s
+
+export default withCron('standings', async ({ req }) => {
+  const started = Date.now();
   const api = createClient();
-  const leagues = await activeLeagues();
+  const all = await activeLeagues();
+  const chosen = leaguesFromQuery(req, all);
+  const pass = chosen ? null : await dailyPass('standings');
+  if (pass && pass.complete) {
+    return { rows_written: 0, requests_used: 0, note: 'today\'s pass is complete', cursor: { day: pass.today, complete: true } };
+  }
+  const leagues = chosen || all.filter((l) => l.id > pass.afterId && !seasonOver(l));
   const teams = await teamIdMap(leagues.map((l) => l.id));
+  let lastDone = pass ? pass.afterId : 0;
+  let stopped = false;
 
   // Fixed once per run, so a run that crosses midnight UTC stays on one date.
   const snapshotDate = isoDate();
@@ -23,6 +37,7 @@ export default withCron('standings', async () => {
   const byLeague = [];
 
   for (const lg of leagues) {
+    if (Date.now() - started > TIME_BUDGET_MS) { stopped = true; break; }
     const json = await api.get('standings', {
       league: lg.api_league_id,
       season: lg.current_season,
@@ -151,9 +166,10 @@ export default withCron('standings', async () => {
     };
     byLeague.push(diag);
     console.log('[standings]', JSON.stringify(diag));
+    lastDone = lg.id;
   }
 
-  // Every league's table is written by now. Fail the run so cron-job.org goes
+  // Every league's table this run reached is written by now. Fail the run so cron-job.org goes
   // red: a missed snapshot is a day of history that cannot be recovered.
   if (snapshotFailures.length) {
     throw new Error(`standings_snapshots failed — ${snapshotFailures.join(' | ')}`);
@@ -168,5 +184,8 @@ export default withCron('standings', async () => {
     quota_remaining: s.remaining,
     skipped_unknown_teams: skipped.length,
     by_league: byLeague,
+    stopped_on: stopped ? 'time_budget' : null,
+    // A one-league run (?league=) leaves the daily pass alone.
+    cursor: pass ? (stopped ? { day: pass.today, after_id: lastDone } : { day: pass.today, complete: true }) : null,
   };
 });

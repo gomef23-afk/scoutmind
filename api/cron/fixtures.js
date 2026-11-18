@@ -9,22 +9,44 @@
 // football, and a +7 day window returned literally nothing for six of the
 // seven leagues. A ~29 day span always straddles a break.
 //
-// Cost: 1 request per active league (7/day), plus one season-less retry for
-// any league that returns nothing at all.
+// Cost: 1 request per active league a day, plus one season-less retry for
+// any league that returns nothing at all. A league whose season ended more
+// than 8 days ago is skipped (its results are final and already held).
+//
+// Paced (rule 16, commit 1 of the 18-league work): the run stops STARTING a
+// league at RUN_BUDGET_MS and saves { day, after_id } in ingest_runs.cursor;
+// the next call continues from there, and a call after the day's pass is
+// complete does nothing. cron-job.org can therefore call every 30 minutes.
+//
+//   ?league=championship        that league only (no cursor touched)
+//   ?league=serie_c&full=1      its whole current season in one request
+//                               (a backfill: no from / to)
+//   ?back=30&ahead=60           a wider window, for a backfill
 
 import { createClient } from '../_lib/apifootball.js';
 import { activeLeagues, teamIdMap, upsert } from '../_lib/supabase.js';
-import { withCron, isoDate } from '../_lib/cron.js';
+import { withCron, isoDate, RUN_BUDGET_MS, leaguesFromQuery, seasonOver, dailyPass } from '../_lib/cron.js';
+
+export const TIME_BUDGET_MS = RUN_BUDGET_MS;   // 20 s: cron-job.org gives up at 30 s
 
 export default withCron('fixtures', async ({ req }) => {
+  const started = Date.now();
   const api = createClient();
   const url = new URL(req.url, 'http://localhost');
   // back=8 is "yesterday minus 7": a full week of results behind yesterday.
   // Both are overridable per call, e.g. ?back=30&ahead=60 for a backfill.
   const back = Number(url.searchParams.get('back') ?? 8);
   const ahead = Number(url.searchParams.get('ahead') ?? 21);
+  const full = url.searchParams.get('full') === '1';
 
-  const leagues = await activeLeagues();
+  const all = await activeLeagues();
+  const chosen = leaguesFromQuery(req, all);
+  // The daily pass: every league not yet done today, minus finished seasons.
+  const pass = chosen ? null : await dailyPass('fixtures');
+  if (pass && pass.complete) {
+    return { rows_written: 0, requests_used: 0, note: 'today\'s pass is complete', cursor: { day: pass.today, complete: true } };
+  }
+  const leagues = chosen || all.filter((l) => l.id > pass.afterId && !seasonOver(l));
   const teams = await teamIdMap(leagues.map((l) => l.id));
 
   const from = isoDate(-back);
@@ -35,14 +57,14 @@ export default withCron('fixtures', async ({ req }) => {
   // Per-league diagnostics. `rows_written` alone cannot distinguish "the API
   // returned nothing" from "we dropped everything", so report both ends.
   const byLeague = [];
+  let lastDone = pass ? pass.afterId : 0;
+  let stopped = false;
 
   for (const lg of leagues) {
-    const params = {
-      league: lg.api_league_id,
-      season: lg.current_season,
-      from,
-      to,
-    };
+    if (Date.now() - started > TIME_BUDGET_MS) { stopped = true; break; }
+    const params = full
+      ? { league: lg.api_league_id, season: lg.current_season }
+      : { league: lg.api_league_id, season: lg.current_season, from, to };
     let json = await api.get('fixtures', params);
     const requestUrl = api.lastUrl();
     let fallbackUrl = null;
@@ -53,7 +75,7 @@ export default withCron('fixtures', async ({ req }) => {
     // calendar year). Retry once without it: from/to alone is enough to scope
     // the query, and this both self-heals and tells us which league is
     // mis-seeded. Guarded so a rejected retry cannot fail the whole run.
-    if ((json.results ?? 0) === 0) {
+    if ((json.results ?? 0) === 0 && !full) {
       try {
         const retry = await api.get('fixtures', {
           league: lg.api_league_id,
@@ -140,6 +162,7 @@ export default withCron('fixtures', async ({ req }) => {
     };
     byLeague.push(diag);
     console.log('[fixtures]', JSON.stringify(diag));
+    lastDone = lg.id;
   }
 
   const s = api.stats();
@@ -147,8 +170,11 @@ export default withCron('fixtures', async ({ req }) => {
     rows_written: rows,
     requests_used: s.used,
     quota_remaining: s.remaining,
-    window: `${from} .. ${to}`,
+    window: full ? 'whole season' : `${from} .. ${to}`,
     skipped_unknown_teams: skipped.length,
     by_league: byLeague,
+    stopped_on: stopped ? 'time_budget' : null,
+    // A one-league run (?league=) leaves the daily pass alone.
+    cursor: pass ? (stopped ? { day: pass.today, after_id: lastDone } : { day: pass.today, complete: true }) : null,
   };
 });

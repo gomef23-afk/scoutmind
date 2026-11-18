@@ -57,10 +57,10 @@
 <meta property="og:image:alt" content="ScoutMind — Your club. Everything around it.">
 <meta name="twitter:card" content="summary_large_image">
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
-<script src="/i18n.js?v=44a314714c"></script>
+<script src="/i18n.js?v=e609c2ea31"></script>
 <script src="/club_names.js?v=25627f760c"></script>
-<script src="/league-names.js?v=cdddf511b0"></script>
-<script src="/home-band.js?v=9e053cf892"></script>
+<script src="/league-names.js?v=3b0efd81e7"></script>
+<script src="/home-band.js?v=61368b2af2"></script>
 <script src="/icons.js?v=012882672d"></script>
 <style>
 /* The landing page (design spec v1.2, "Scoreboard"): tokens from theme.css by
@@ -318,7 +318,7 @@ function renderMock(){
   document.getElementById('m-club').innerHTML=HomeBand.clubHtml({label:club.label,logo_url:club.logo_url},b.form,ctx);
   var lg=LAND.leagues.filter(function(l){ return l.id===club.league_id; })[0]||null;
   var s1=HomeBand.tableSlot(b.form), s2=HomeBand.matchSlot(b.clubId,b.fixtures,ctx.now);
-  var s3=HomeBand.roundSlot(b.round,{},LeagueNames.label(b.round&&b.round.leagues?b.round.leagues:lg));
+  var s3=HomeBand.roundSlot(b.round,{},LeagueNames.label(b.round&&b.round.leagues?b.round.leagues:lg),{foreign:!!b.foreign});
   document.getElementById('m-slots').innerHTML=HomeBand.slotHtml(s1,'',ctx)+HomeBand.slotHtml(s2,'',ctx)+HomeBand.slotHtml(s3,'',ctx);
   document.getElementById('m-note').hidden=!(LAND.mostFollowed&&b.clubId===LAND.mostFollowed);
   box.hidden=false;
@@ -333,8 +333,10 @@ async function loadBand(clubId){
     lg?landRpc('match_form',{p_team_id:clubId,p_league_id:lg.id,p_season:lg.current_season,p_before:new Date(now).toISOString()}).catch(function(){ return null; }):null,
     landGet('fixtures?select=id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id'
       +'&or=(home_team_id.eq.'+clubId+',away_team_id.eq.'+clubId+')&kickoff_utc=gte.'+from+'&kickoff_utc=lte.'+to+'&order=kickoff_utc.asc&limit=12').catch(function(){ return []; }),
-    lg?landGet('game_rounds?select=id,league_id,season,round_label,round_no,deadline_utc,closes_utc,status,leagues(slug,name,country)'
-      +'&league_id=eq.'+lg.id+'&or=(status.in.(open,locked),and(status.eq.final,closes_utc.gte.'+since+'))&order=deadline_utc.asc&limit=50').catch(function(){ return []; }):[]
+    // Every competition's rounds (only playable leagues have any): a club in a
+    // tracked-only league shows the next round of another, named (bandRound).
+    landGet('game_rounds?select=id,league_id,season,round_label,round_no,deadline_utc,closes_utc,status,leagues(slug,name,country)'
+      +'&or=(status.in.(open,locked),and(status.eq.final,closes_utc.gte.'+since+'))&order=deadline_utc.asc&limit=200').catch(function(){ return []; })
   ]);
   if(LAND.clubId!==clubId) return;      // another club was picked meanwhile
   var fixtures=(res[1]||[]).map(function(f){
@@ -343,7 +345,8 @@ async function loadBand(clubId){
       home_goals:f.home_goals,away_goals:f.away_goals,opponent:opp?opp.label:'—'};
   });
   var rounds=(res[2]||[]).map(function(r){ var x={},k; for(k in r) x[k]=r[k]; x.league_slug=r.leagues&&r.leagues.slug; return x; });
-  LAND.band={clubId:clubId,form:res[0]||null,fixtures:fixtures,round:HomeBand.pickRound(rounds,lg?lg.slug:null,new Set(),null,now)};
+  var br=HomeBand.bandRound(rounds,lg?lg.slug:null,new Set(),null,now);
+  LAND.band={clubId:clubId,form:res[0]||null,fixtures:fixtures,round:br.round,foreign:br.foreign};
   renderMock();
 }
 function mockPick(id){ LAND.clubId=Number(id); loadBand(LAND.clubId).catch(function(e){ console.warn('landing band:',e.message); }); }

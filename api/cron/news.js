@@ -13,6 +13,7 @@ import { select, upsert, upsertReturning, update } from '../_lib/supabase.js';
 import { parseFeed } from '../_lib/rss.js';
 import { buildIndex, tagText, clipSummary, normalise } from '../_lib/tagger.js';
 import { isFootball } from '../_lib/football-filter.js';
+import { TAGGED_SLUGS } from '../_lib/leagues.js';
 
 const FETCH_TIMEOUT_MS = 8000;
 const WALL_CLOCK_BUDGET_MS = RUN_BUDGET_MS; // rule 16: cron-job.org gives up at 30s
@@ -94,10 +95,14 @@ export default withCron('news', async ({ req }) => {
   // The tagger works in API-Football ids and league slugs; the database works
   // in our own ids. Translate once, here.
   const leagueSlug = new Map(leagues.map((l) => [l.id, l.slug]));
-  const ourId = new Map(teams.map((t) => [t.api_team_id, t.id]));
-  const apiId = new Map(teams.map((t) => [t.id, t.api_team_id]));
+  // Only the clubs of leagues that tag news (api/_lib/leagues.js tagNews): a
+  // new league's clubs join the index after the measured check of commit 3,
+  // so a shared name can never cost an existing club its tags meanwhile.
+  const tagged = teams.filter((t) => TAGGED_SLUGS.has(leagueSlug.get(t.league_id)));
+  const ourId = new Map(tagged.map((t) => [t.api_team_id, t.id]));
+  const apiId = new Map(tagged.map((t) => [t.id, t.api_team_id]));
   const index = buildIndex(
-    teams.map((t) => ({
+    tagged.map((t) => ({
       api_team_id: t.api_team_id,
       name: t.name,
       league: leagueSlug.get(t.league_id),

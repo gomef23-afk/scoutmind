@@ -205,7 +205,7 @@ check('034: a read-only verification query', /-- VERIFY/.test(sql) && /mismatche
 // ── The band, shared ──
 check('index.html draws the band through HomeBand (no copy of its own)', /function hbSlot\(s,act\)\{ return HomeBand\.slotHtml\(s,act,hbCtx\(\)\); \}/.test(idx) && /HomeBand\.clubHtml\(club,HBD\.form,hbCtx\(\)\)/.test(idx));
 check('the band\'s styles live in theme.css, not twice', /\.hb-slot\{/.test(read('public/theme.css')) && !/\n\.hb-slot\{/.test(idx) && /\.hb-chip\.W\{/.test(read('public/theme.css')));
-check('the landing draws the band with the same functions', /HomeBand\.clubHtml\(/.test(MAIN) && /HomeBand\.slotHtml\(/.test(MAIN) && /HomeBand\.pickRound\(/.test(MAIN));
+check('the landing draws the band with the same functions', /HomeBand\.clubHtml\(/.test(MAIN) && /HomeBand\.slotHtml\(/.test(MAIN) && /HomeBand\.bandRound\(/.test(MAIN));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);

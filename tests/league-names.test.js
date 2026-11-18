@@ -29,8 +29,22 @@ vm.runInContext(read('public/icons.js'), ctx);
 const LN = ctx.LeagueNames, Icons = ctx.Icons;
 
 // ── League labels ──
-eq('the seven leagues, with their codes', LN.LEAGUES.map((l) => LN.label(l)), [
-  'Série A · BRA', 'Premier League · ENG', 'La Liga · ESP', 'Bundesliga · GER', 'Serie A · ITA', 'Ligue 1 · FRA', 'Liga Profesional · ARG']);
+// The list is generated from api/_lib/leagues.js (tests/leagues-config.test.js
+// checks the generation); here, how the labels read (decision of 17 Nov 2026).
+eq('every league, with its code', LN.LEAGUES.map((l) => LN.label(l)), [
+  'Série A · BRA', 'Premier League · ENG', 'La Liga · ESP', 'Bundesliga · GER', 'Serie A · ITA', 'Ligue 1 · FRA', 'Liga Profesional · ARG',
+  'Championship · ENG', 'Eredivisie · NED', 'Primeira Liga · POR', 'Jupiler Pro League · BEL', 'Premiership · SCO', 'Süper Lig · TUR',
+  'Saudi Pro League · KSA', 'MLS · USA', 'Liga MX · MEX', 'Série B · BRA', 'Série C · BRA']);
+eq('only the seven are playable', LN.LEAGUES.filter((l) => LN.playable(l)).map((l) => l.slug),
+  ['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina']);
+eq('look-alikes are told apart by the code', [LN.label('serie_b'), LN.label('scottish_premiership'), LN.label('premier_league')],
+  ['Série B · BRA', 'Premiership · SCO', 'Premier League · ENG']);
+eq('an API-Football embed is named right (name + country)', [LN.label({ name: 'Premiership', country: 'Scotland' }), LN.label({ name: 'Liga MX', country: 'Mexico' }),
+  LN.label({ name: 'Pro League', country: 'Saudi-Arabia' })], ['Premiership · SCO', 'Liga MX · MEX', 'Pro League · KSA']);
+eq('the row\'s own country_code wins', LN.label({ name: 'Série C', country: 'Brazil', country_code: 'BRA' }), 'Série C · BRA');
+eq('sort: my leagues first, then alphabetical', LN.sort(['serie_a', 'championship', 'mls', 'bundesliga'], new Set(['mls'])),
+  ['mls', 'bundesliga', 'championship', 'serie_a']);
+eq('regions follow the config', [LN.region('serie_b'), LN.region('championship'), LN.region('mls')], ['brazil', 'europe', null]);
 const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const labels = LN.LEAGUES.map((l) => fold(LN.label(l)));
 check('no two labels read the same, accents ignored', new Set(labels).size === labels.length, labels.join(' | '));
@@ -38,14 +52,14 @@ check('without the code, two names collide (why the code is always there)', fold
 eq('by slug', [LN.label('serie_a'), LN.label('serie_a_it')], ['Série A · BRA', 'Serie A · ITA']);
 eq('by exact name (accents count)', [LN.label('Série A'), LN.label('Serie A')], ['Série A · BRA', 'Serie A · ITA']);
 eq('an embed {slug,name,flag} (no country)', LN.label({ slug: 'argentina', name: 'Liga Profesional', flag: '🇦🇷' }), 'Liga Profesional · ARG');
-eq('a leagues row with its country wins', LN.label({ name: 'Eredivisie', country: 'Netherlands' }), 'Eredivisie · NET');
+eq('a league we do not list, with its country → the first three letters', LN.label({ name: 'Allsvenskan', country: 'Sweden' }), 'Allsvenskan · SWE');
 eq('a competition with no country → the name alone', LN.label('UEFA Champions League'), 'UEFA Champions League');
 eq('nothing → empty', [LN.label(null), LN.label(''), LN.label({})], ['', '', '']);
 check('no flag in any label', LN.LEAGUES.every((l) => !/[\u{1F1E6}-\u{1F1FF}\u{1F3F4}]/u.test(LN.label(l))));
 const db = { 1: ['Série A', 'Brazil', 'serie_a'], 2: ['Premier League', 'England', 'premier_league'], 3: ['La Liga', 'Spain', 'la_liga'],
   4: ['Bundesliga', 'Germany', 'bundesliga'], 5: ['Serie A', 'Italy', 'serie_a_it'], 6: ['Ligue 1', 'France', 'ligue_1'], 7: ['Liga Profesional', 'Argentina', 'argentina'] };
 check('the list matches the leagues table (name, country, slug, Nov 2026)',
-  Object.values(db).every(([n, c, s]) => LN.LEAGUES.some((l) => l.name === n && l.country === c && l.slug === s)) && LN.LEAGUES.length === 7);
+  Object.values(db).every(([n, c, s]) => LN.LEAGUES.some((l) => l.name === n && l.country === c && l.slug === s)) && LN.LEAGUES.length === 18);
 
 // ── Icons ──
 check('icons: the tab set and the marks exist', ['home', 'shield', 'search', 'calendar', 'message', 'user', 'ball', 'users', 'thumb', 'x', 'check', 'eye'].every((n) => Icons.names.includes(n)));

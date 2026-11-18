@@ -67,6 +67,30 @@ check('players.js: entries without a name are skipped (players.name is NOT NULL)
 const pl = read('api/_lib/players.js');
 check('player-stats creates players with a name fallback', /name: player\.name \|\| `Player \$\{player\.id\}`/.test(pl));
 
+// ── 5. Requests per day against the plan's 7,500 (18 leagues, 17 Nov 2026) ──
+// A model, not a measurement (the measured numbers are in ingest_runs /
+// /api/cron/health): per active league, from api/_lib/leagues.js
+// requestsPerDay(), plus the jobs that do not scale with leagues: live
+// (one live=all call every 10 minutes) and the hourly squads pass's
+// fixed overhead are inside requestsPerDay or below.
+const { LEAGUES, requestsPerDay } = await import('../api/_lib/leagues.js');
+const LIVE_PER_DAY = 144;
+const active = LEAGUES.filter((l) => l.active);
+const perLeague = active.reduce((s, l) => s + requestsPerDay(l), 0);
+const allEighteen = LEAGUES.reduce((s, l) => s + requestsPerDay({ ...l, active: true }), 0);
+const PLAN = 7_500, CEILING = PLAN * 0.25;
+check(`today's leagues (${active.length}): ${Math.round(perLeague + LIVE_PER_DAY)} requests a day, under a quarter of ${PLAN}`, perLeague + LIVE_PER_DAY < CEILING);
+check(`all 18 active: ${Math.round(allEighteen + LIVE_PER_DAY)} requests a day, still under a quarter of ${PLAN}`, allEighteen + LIVE_PER_DAY < CEILING);
+check('a tracked-only league costs no squad pages (players.js runs for playable leagues only)',
+  requestsPerDay({ active: true, playable: false }) + 5 === requestsPerDay({ active: true, playable: true }));
+check('Série C (no stats coverage) costs no fixture-stats requests', requestsPerDay({ active: true, playable: false, statsCoverage: false }) < requestsPerDay({ active: true, playable: false, statsCoverage: null }));
+// The two daily jobs that loop over every league are paced (they were not
+// before 18 leagues): budget, cursor, and a no-op once the day is done.
+for (const f of ['fixtures', 'standings']) {
+  const src = read(`api/cron/${f}.js`);
+  check(`${f}.js: time-boxed and resumable (rule 16)`, /export const TIME_BUDGET_MS = RUN_BUDGET_MS;/.test(src) && /dailyPass\('/.test(src) && /stopped_on: stopped \? 'time_budget' : null/.test(src));
+}
+
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);
 process.exit(failures.length ? 1 : 0);

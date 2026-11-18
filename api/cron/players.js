@@ -19,7 +19,7 @@
 // their bio the next time this job reaches their league's page.
 
 import { createClient, cmToNumber } from '../_lib/apifootball.js';
-import { select, upsert, activeLeagues } from '../_lib/supabase.js';
+import { select, upsert, playableLeagues } from '../_lib/supabase.js';
 import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 import { bioRow } from '../_lib/players.js';
 
@@ -31,8 +31,11 @@ export default withCron('players', async () => {
   const api = createClient();
   const started = Date.now();
 
-  const leagues = (await activeLeagues()).sort((a, b) => a.id - b.id);
-  if (!leagues.length) return { rows_written: 0, requests_used: 0, note: 'no active leagues' };
+  // Squads feed the Scout Game's player picker only: playable leagues (035).
+  // A tracked-only league's players still arrive from its matches
+  // (player-stats), with the line-ups and ratings the match panel shows.
+  const leagues = (await playableLeagues()).sort((a, b) => a.id - b.id);
+  if (!leagues.length) return { rows_written: 0, requests_used: 0, note: 'no playable leagues' };
 
   // The last cursor a SUCCESSFUL run saved. withCron writes it only on success,
   // so a run that failed halfway is simply retried from where the last good one

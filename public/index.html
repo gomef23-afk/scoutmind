@@ -93,14 +93,14 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=44a314714c"></script>
+<script src="/i18n.js?v=e609c2ea31"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
-<script src="/home-band.js?v=9e053cf892"></script>
+<script src="/home-band.js?v=61368b2af2"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
 <script src="/news-card.js?v=b8aff44b00"></script>
 <!-- 4b shared pieces: league names with the country code, the one fixture
      row (also on community.html), line icons. -->
-<script src="/league-names.js?v=cdddf511b0"></script>
+<script src="/league-names.js?v=3b0efd81e7"></script>
 <script src="/fx-row.js?v=2a5a74a713"></script>
 <script src="/icons.js?v=012882672d"></script>
 <style>
@@ -2761,9 +2761,10 @@ const POPULAR_CLUBS=[
   {name:'River Plate',       match:['river plate']},
 ];
 
-// Fixed league order. The reader's own league is hoisted in front of it.
-const PICKER_LEAGUE_ORDER=['serie_a','premier_league','la_liga','serie_a_it',
-                           'bundesliga','ligue_1','argentina'];
+// Fixed league order for the club picker: alphabetical by "Name · CODE", from
+// the one league list (league-names.js), so every tracked league's clubs can
+// be a main club too. Fixed on purpose (see popularClubs' caller).
+const PICKER_LEAGUE_ORDER=LeagueNames.sort(LeagueNames.LEAGUES.map(l=>l.slug));
 
 /** Lowercase, unaccent, collapse punctuation — so "Grêmio" matches "gremio". */
 function pickerNorm(s){
@@ -3347,11 +3348,11 @@ function mxStripKeys(){
 function mxPref(){ try{ return localStorage.getItem('sm_matches_league')||null; }catch(e){ return null; } }
 function mxSavePref(slug){ try{ if(slug) localStorage.setItem('sm_matches_league',slug); else localStorage.removeItem('sm_matches_league'); }catch(e){} }
 
-/** My clubs' leagues first, then the usual order (COMP_TIER). */
+/** My clubs' leagues first, then alphabetical (LeagueNames.sort). */
 function mxChipOrder(){
   const mine=new Set(myClubIds().map(id=>(CLUB_DATA.get(id)||{}).league).filter(Boolean));
-  return (MX.leagues||[]).slice().sort((a,b)=>(mine.has(b.slug)-mine.has(a.slug))
-    ||((COMP_TIER[a.name]||8)-(COMP_TIER[b.name]||8))||String(a.name).localeCompare(String(b.name)));
+  // My clubs' leagues first, then alphabetical by "Name · CODE" (18 leagues; the row scrolls).
+  return LeagueNames.sort(MX.leagues||[],mine);
 }
 function mxRenderChips(){
   const el=document.getElementById('matches-league-chips');
@@ -3863,13 +3864,11 @@ function fxRow(o){
 // here. Both were invented numbers. We do not put a percentage next to a real
 // headline, so they are gone rather than hidden.
 
-// Which half of the world a league belongs to, for the Brazil/Europe filters.
-const LEAGUE_REGION={
-  serie_a:'brazil',
-  premier_league:'europe',la_liga:'europe',bundesliga:'europe',
-  serie_a_it:'europe',ligue_1:'europe',
-  // Argentina is neither; those items appear under All News.
-};
+// Which half of the world a league belongs to, for the Brazil/Europe filters:
+// from the one league list (api/_lib/leagues.js `region`, via league-names.js).
+// Argentina, MLS, Liga MX and Saudi Arabia are neither; their items appear
+// under All News.
+const LEAGUE_REGION=Object.fromEntries(LeagueNames.LEAGUES.filter(l=>l.region).map(l=>[l.slug,l.region]));
 const COUNTRY_REGION={BR:'brazil',GB:'europe',ES:'europe',IT:'europe',DE:'europe',FR:'europe'};
 
 // Category labels on cards: NewsCard.category() in public/news-card.js
@@ -3914,9 +3913,10 @@ async function loadClubData(){
   };
   try{
     const [teams,standings,stats]=await Promise.all([
-      get('teams?select=id,api_team_id,name,logo_url,leagues!teams_league_id_fkey(slug)&limit=500'),
-      get('standings?select=team_id,rank,points,played&limit=500'),
-      get('team_season_stats?select=team_id,matches,gs,gc,pa&limit=500'),
+      // Limits sized for 18 leagues (~360 clubs, the standings of every season held).
+      get('teams?select=id,api_team_id,name,logo_url,leagues!teams_league_id_fkey(slug)&limit=1000'),
+      get('standings?select=team_id,rank,points,played&limit=3000'),
+      get('team_season_stats?select=team_id,matches,gs,gc,pa&limit=1000'),
     ]);
     for(const t of teams){
       const row={
@@ -4027,8 +4027,8 @@ function setClubsLeague(i){
 function clubsLeagueOrder(){
   const mine=new Set(myClubIds().map(id=>(CLUB_DATA.get(id)||{}).league).filter(Boolean));
   const slugs=[...new Set([...CLUB_DATA.values()].map(c=>c.league).filter(Boolean))];
-  return slugs.sort((a,b)=>(mine.has(b)-mine.has(a))
-    ||((COMP_TIER[LeagueNames.name(a)]||8)-(COMP_TIER[LeagueNames.name(b)]||8))||a.localeCompare(b));
+  // My clubs' leagues first, then alphabetical (LeagueNames.sort, the one order).
+  return LeagueNames.sort(slugs,mine);
 }
 /** Every club we carry (4b-5): chips by league, my clubs first, a card opens the club page. */
 function renderClubsGrid(){
@@ -7665,7 +7665,10 @@ async function loadHomeBand(force){
     const rounds=(SG.rounds||[]).map(r=>Object.assign({},r,{league_slug:r.leagues&&r.leagues.slug}));
     const entered=new Set([...SG.entries.keys()]);
     const club=clubId&&CLUB_DATA.get(clubId);
-    HBD.round=HomeBand.pickRound(rounds,club?club.league:null,entered,SG.playing||null,Date.now());
+    // A club in a tracked-only league (035) has no rounds of its own: the band
+    // shows the next round of any playable competition, named (bandRound).
+    const br=HomeBand.bandRound(rounds,club?club.league:null,entered,SG.playing||null,Date.now());
+    HBD.round=br.round; HBD.foreign=br.foreign;
     HBD.me={entered:!!(HBD.round&&entered.has(HBD.round.id))};
     const e=HBD.round&&SG.entries.get(HBD.round.id);
     HBD.entry=e?{picks:(e.game_picks||[]).map(p=>({slot:p.slot,is_captain:p.is_captain,
@@ -7727,7 +7730,7 @@ function renderHomeBand(){
     const s1=club?HomeBand.tableSlot(HBD.form):null;
     const s2=club?HomeBand.matchSlot(clubId,HBD.fixtures,now):null;
     const lgName=LeagueNames.label(HBD.round&&HBD.round.leagues?HBD.round.leagues:HBD.league);
-    const s3=HomeBand.roundSlot(HBD.round,HBD.me,lgName);
+    const s3=HomeBand.roundSlot(HBD.round,HBD.me,lgName,{foreign:!!HBD.foreign});
     // Before the first load there is nothing true to say yet: no slots at all.
     slotsEl.innerHTML=HBD.loadedAt?(hbSlot(s1,'showPage(\'communities\')')
       +hbSlot(s2,s2&&s2.fixtureId?'openMatch('+Number(s2.fixtureId)+')':'')
@@ -7744,8 +7747,9 @@ function renderHomeBand(){
         '<span class="hb-pav">'+(p.photo_url?'<img src="'+sanitize(p.photo_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">':sanitize((p.name||'?').slice(0,1)))
         +(p.is_captain?'<span class="hb-cap">C</span>':'')+'</span>').join('')+'</div>':'';
       const go='hbOpenRound('+Number(row.roundId)+')';
-      // With no club the round could be any competition's: name it.
-      const rName=sgRoundName(HBD.round)+(club?'':(HBD.round.leagues&&HBD.round.leagues.name?' · '+LeagueNames.label(HBD.round.leagues):''));
+      // With no club, or a club whose league is not in the game, the round is
+      // another competition's: name it.
+      const rName=sgRoundName(HBD.round)+(club&&!HBD.foreign?'':(HBD.round.leagues&&HBD.round.leagues.name?' · '+LeagueNames.label(HBD.round.leagues):''));
       if(row.state==='in'){
         picksEl.innerHTML='<div class="hb-card">'+avs+'<div class="hb-card-body"><div class="hb-card-t">'+sanitize(t('hb.picksIn'))+'</div>'
           +(row.captain?'<div class="hb-card-s wrap">'+sanitize(t('hb.captain',{name:row.captain}))+'</div>':'')+'</div>'
@@ -7792,15 +7796,17 @@ function renderBandSide(){
   const row=HBD.loadedAt?HomeBand.picksRow(HBD.round,HBD.entry):null;
   if(!row){ el.innerHTML=''; return; }
   const go='hbOpenRound('+Number(row.roundId)+')';
+  // Another competition's round (a tracked-only club): say which.
+  const rn=sgRoundName(HBD.round)+(HBD.foreign&&HBD.round.leagues?' · '+LeagueNames.label(HBD.round.leagues):'');
   if(row.state==='none'){
-    el.innerHTML='<div class="hb-side-t"><b>'+sanitize(t('hb.roundOpen',{round:sgRoundName(HBD.round)}))+'</b>'
+    el.innerHTML='<div class="hb-side-t"><b>'+sanitize(t('hb.roundOpen',{round:rn}))+'</b>'
       +sanitize(t('hb.noPicks'))+'</div><button class="hb-btn-w" onclick="'+go+'">'+sanitize(t('hb.pickYour5'))+'</button>';
     return;
   }
   el.innerHTML='<div class="hb-avs" aria-hidden="true">'+row.picks.map(p=>
       '<span class="hb-pav">'+(p.photo_url?'<img src="'+sanitize(p.photo_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">':sanitize((p.name||'?').slice(0,1)))
       +(p.is_captain?'<span class="hb-cap">C</span>':'')+'</span>').join('')+'</div>'
-    +'<div class="hb-side-t"><b>'+sanitize(t(row.state==='in'?'hb.picksIn':'hb.yourPicks',{round:sgRoundName(HBD.round)}))+'</b>'
+    +'<div class="hb-side-t"><b>'+sanitize(t(row.state==='in'?'hb.picksIn':'hb.yourPicks',{round:rn}))+'</b>'
     +(row.captain?sanitize(t('hb.captain',{name:row.captain})):'')+'</div>'
     +'<button class="hb-btn-w" onclick="'+go+'">'+sanitize(t(row.state==='in'?'hb.editPicks':'hb.seePicks'))+'</button>';
 }

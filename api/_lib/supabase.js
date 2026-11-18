@@ -191,12 +191,26 @@ export async function insertReturning(table, row) {
   return created;
 }
 
-/** Active leagues, oldest-updated first. */
-export function activeLeagues() {
-  return select(
-    'leagues',
-    'select=id,api_league_id,slug,name,current_season,stats_coverage&active=is.true&order=id'
-  );
+/**
+ * Active leagues, by id. Since 035 each carries `playable` (in the Scout Game)
+ * and `season_end`. Before 035 has run those columns do not exist (rule 21:
+ * code ships first), so the read falls back to the old columns and every
+ * active league counts as playable, which is what was true then (the seven).
+ */
+export async function activeLeagues() {
+  try {
+    return await select('leagues',
+      'select=id,api_league_id,slug,name,current_season,stats_coverage,playable,season_end&active=is.true&order=id');
+  } catch (e) {
+    if (!/42703|PGRST204|column/i.test(e.message)) throw e;
+    const rows = await select('leagues', 'select=id,api_league_id,slug,name,current_season,stats_coverage&active=is.true&order=id');
+    return rows.map((l) => ({ ...l, playable: true, season_end: null }));
+  }
+}
+
+/** Active AND playable leagues: the Scout Game's (squads, the backtest). */
+export async function playableLeagues() {
+  return (await activeLeagues()).filter((l) => l.playable);
 }
 
 /**

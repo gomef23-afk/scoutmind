@@ -8,18 +8,15 @@
 // Pure and dependency-free on purpose — the cron job feeds it rows from
 // Supabase, the tests feed it rows from fixtures, and both must agree.
 
+import { LEAGUE_LANG as CONFIG_LEAGUE_LANG } from './leagues.js';
+
 export const LANGS = ['pt-BR', 'en', 'es', 'it', 'de', 'fr'];
 
-/** Language(s) the domestic press of each league writes in. */
-export const LEAGUE_LANG = {
-  serie_a: ['pt-BR'],
-  argentina: ['es'],
-  la_liga: ['es'],
-  serie_a_it: ['it'],
-  bundesliga: ['de'],
-  ligue_1: ['fr'],
-  premier_league: ['en'],
-};
+/**
+ * Language(s) the domestic press of each league writes in: from the one
+ * league list (api/_lib/leagues.js, `langs` of the leagues that tag news).
+ */
+export const LEAGUE_LANG = CONFIG_LEAGUE_LANG;
 
 // Club names and nicknames that are also ordinary words or place names in the
 // listed languages. Rule (a): a common word that is FOREIGN to the source's

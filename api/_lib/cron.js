@@ -4,7 +4,7 @@
 // only thing standing between the internet and our write path. Treat it as a
 // credential: rotate it if it ever appears in a log or a screenshot.
 
-import { insertReturning, update } from './supabase.js';
+import { insertReturning, update, select } from './supabase.js';
 import { QuotaExhausted } from './apifootball.js';
 
 import { timingSafeEqual } from 'node:crypto';
@@ -121,4 +121,45 @@ export function isoDate(days = 0) {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+// ── Leagues per run (commit 1 of the 18-league work) ──────────────────────
+
+/**
+ * ?league=championship (or a comma list): only those active leagues, for a
+ * one-league run or a backfill. Returns null when the parameter is absent
+ * (the run covers every league). An unknown slug is simply not there.
+ */
+export function leaguesFromQuery(req, leagues) {
+  const url = new URL(req.url, 'http://localhost');
+  const q = url.searchParams.get('league');
+  if (!q) return null;
+  const want = new Set(q.split(',').map((s) => s.trim()).filter(Boolean));
+  return leagues.filter((l) => want.has(l.slug));
+}
+
+/** True 8 days after a league's season ended: its tables and results are final. */
+export const SEASON_GRACE_DAYS = 8;
+export function seasonOver(league, now = Date.now()) {
+  if (!league || !league.season_end) return false;
+  return now > new Date(league.season_end + 'T23:59:59Z').getTime() + SEASON_GRACE_DAYS * 86_400_000;
+}
+
+/**
+ * A once-a-day pass over the leagues, resumable (rule 16): the cursor a
+ * successful run of `job` saved says how far today's pass got
+ * ({ day, after_id } or { day, complete: true }). A call after a complete
+ * pass does nothing, so cron-job.org can call every 30 minutes and only the
+ * first calls of the day spend requests.
+ */
+export async function dailyPass(job) {
+  const today = isoDate();
+  let last = null;
+  try {
+    const rows = await select('ingest_runs',
+      `select=cursor&job=eq.${encodeURIComponent(job)}&ok=is.true&cursor=not.is.null&order=started_at.desc&limit=1`);
+    last = rows[0]?.cursor || null;
+  } catch (e) { console.warn(`[${job}] cursor read failed:`, e.message); }
+  if (!last || last.day !== today) return { today, complete: false, afterId: 0 };
+  return { today, complete: !!last.complete, afterId: Number(last.after_id) || 0 };
 }

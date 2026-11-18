@@ -129,7 +129,8 @@ eq('the first load is three days back to ten ahead (the strip); a further load a
 
 // ── Chips ──
 MX.leagues = [ENG, BRA, ITA, { name: 'Liga Profesional', slug: 'argentina', country: 'Argentina' }].map((l, i) => Object.assign({ id: i + 1 }, l));
-eq('chips: my clubs\' leagues first, then the usual order', ctx.mxChipOrder().map((l) => l.slug), ['serie_a', 'premier_league', 'serie_a_it', 'argentina']);
+// 18 leagues since 035: my clubs' leagues first, then alphabetical by "Name · CODE".
+eq('chips: my clubs\' leagues first, then alphabetical', ctx.mxChipOrder().map((l) => l.slug), ['serie_a', 'argentina', 'premier_league', 'serie_a_it']);
 const chips = fn('mxRenderChips');
 check('chips: by index, never a name in onclick; labelled with the country', /onclick="mxSetLeague\('\+i\+'\)"/.test(chips) && /LeagueNames\.label\(l\)/.test(chips) && /chip\(-1,t\('fx\.all'\),!MX\.league\)/.test(chips));
 check('chips come from the leagues table, not from the loaded fixtures', /apiGet\('leagues\?select=id,slug,name,country,current_season&active=is\.true&order=id\.asc'\)/.test(fn('mxStart')));
