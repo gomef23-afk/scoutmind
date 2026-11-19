@@ -93,7 +93,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=c47a9f8f91"></script>
+<script src="/i18n.js?v=2af3f2999c"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=61368b2af2"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -479,7 +479,7 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .picker-badge.b{color:var(--navy-ink);}
 .picker-empty{grid-column:1/-1;font-size:11px;color:var(--muted);padding:10px 0;}
 /* Sticky search: the list is 46vh of scrolling and the box must not leave with
-   it, or filtering 146 clubs means scrolling back up to retype. */
+   it, or filtering hundreds of clubs means scrolling back up to retype. */
 .picker-search-wrap{position:sticky;top:0;z-index:2;background:var(--card);padding-bottom:8px;}
 /* .club-search had no rule at all — the onboarding search box was rendering as
    a browser-default input next to the modal's styled one. 16px on the font
@@ -1291,7 +1291,7 @@ if(!_cu){
     <div class="feed-title" data-i18n="fx.title">Matches</div>
     <div class="mx-sub" data-i18n="fx.sub">Scroll up for results, down for what is coming. Times are your local time.</div>
   </div>
-  <!-- League filter: All + our seven leagues, sticky under the nav, filters
+  <!-- League filter: All + every league we track, sticky under the nav, filters
        the whole list; remembered on this device (localStorage
        sm_matches_league = the slug, a UI preference, rule 10). -->
   <div class="mx-bar" id="mx-bar">
@@ -2736,8 +2736,8 @@ async function saveTeamSelection(){
 // ── THE CLUB PICKER ──────────────────────────────────────────────────────
 // One component behind four call sites: the team modal (which is also the
 // Profile route), onboarding step 1, and onboarding step 2. They used to be
-// three different orderings of the same 146 clubs — the modal grouped by
-// league, onboarding step 1 was one flat alphabetical run of all 146, and step
+// three different orderings of the same clubs — the modal grouped by
+// league, onboarding step 1 was one flat alphabetical run of all of them, and step
 // 2 showed an 18-club suggestion list with no sections at all.
 //
 // Popular is matched BY NAME, not by API id. The ids would have to be typed in
@@ -2830,7 +2830,7 @@ function popularClubs(){
  *   handler   global function name called with a club id
  */
 // Whether the main-club chooser is expanded. Collapsed by default once a club
-// is set: 146 rows of single-select above 146 rows of multi-select is a lot of
+// is set: every club as single-select above every club as multi-select is a lot of
 // scrolling to change something most people set once.
 let pickerMainOpen=false;
 
@@ -3026,7 +3026,7 @@ function pickOnboardMain(id){
   selectedMainClub=(selectedMainClub===id)?null:id;
   followingClubs=followingClubs.filter(x=>x!==selectedMainClub);
   // Choosing collapses the main chooser, so the follow list is in view rather
-  // than 146 rows below the fold.
+  // than hundreds of rows below the fold.
   if(selectedMainClub)pickerMainOpen=false;
   renderOnboardPicker();
 }
@@ -3041,7 +3041,7 @@ function toggleOnboardFollow(id){
 }
 
 // suggestClubs() and BIG_CLUBS lived here. They built the 18-club step-2 list
-// from API-Football ids; clubPickerHtml({mode:'follow'}) shows all 146 with the
+// from API-Football ids; clubPickerHtml({mode:'follow'}) shows every club with the
 // main club's league first, so both are gone rather than left to rot.
 
 // One screen, so one button. It used to advance to step 2 first; the follow
@@ -3357,7 +3357,7 @@ function mxSavePref(slug){ try{ if(slug) localStorage.setItem('sm_matches_league
 /** My clubs' leagues first, then alphabetical (LeagueNames.sort). */
 function mxChipOrder(){
   const mine=new Set(myClubIds().map(id=>(CLUB_DATA.get(id)||{}).league).filter(Boolean));
-  // My clubs' leagues first, then alphabetical by "Name · CODE" (18 leagues; the row scrolls).
+  // My clubs' leagues first, then alphabetical by "Name · CODE" (the row scrolls).
   return LeagueNames.sort(MX.leagues||[],mine);
 }
 function mxRenderChips(){
@@ -3979,7 +3979,7 @@ function clubsByLeague(){
   return out;
 }
 
-/** Real crests and real numbers for all 146 clubs. */
+/** Real crests and real numbers for every club we hold. */
 async function loadClubData(){
   const get=async(path)=>{
     const res=await fetch(`${SUPA_URL}/rest/v1/${path}`,{
@@ -3990,7 +3990,7 @@ async function loadClubData(){
   };
   try{
     const [teams,standings,stats]=await Promise.all([
-      // Limits sized for 18 leagues (~360 clubs, the standings of every season held).
+      // Limits sized with room to spare over every club of every tracked league (and the standings of every season held).
       get('teams?select=id,api_team_id,name,logo_url,leagues!teams_league_id_fkey(slug)&limit=1000'),
       get('standings?select=team_id,rank,points,played&limit=3000'),
       get('team_season_stats?select=team_id,matches,gs,gc,pa&limit=1000'),
@@ -4265,7 +4265,7 @@ function clubStats(id){
  * The images are hotlinked from media.api-sports.io: CORS is `*`, they are
  * cached for 48h, and no page that shows a crest sets a CSP. (auth.html does
  * set one with `img-src 'self' data:` — add the host there before putting a
- * crest on that page.) Lazy-loaded and sized so 146 of them cannot shift the
+ * crest on that page.) Lazy-loaded and sized so hundreds of them cannot shift the
  * layout, with the club's initials as the fallback when an image 404s.
  */
 function clubCrest(team,size){

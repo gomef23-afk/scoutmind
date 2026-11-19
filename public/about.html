@@ -37,7 +37,8 @@
 <meta name="apple-mobile-web-app-title" content="ScoutMind">
 <script src="/pwa.js?v=4801f83526" defer></script>
 <!-- 4b-5: this page in the reader's language (the device's until they choose). -->
-<script src="/i18n.js?v=c47a9f8f91"></script>
+<script src="/i18n.js?v=2af3f2999c"></script>
+<script src="/league-names.js?v=3dbe9a7b46"></script>
 <meta property="og:site_name" content="ScoutMind">
 <meta property="og:type" content="website">
 <meta property="og:title" content="About ScoutMind — Your club. Everything around it.">
@@ -290,22 +291,24 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
         <a class="btn-primary" href="/" data-i18n="about.hero.open">Open the app</a>
         <a class="btn-ghost" onclick="scrollToSection('how')" data-i18n="about.hero.see">See how it works</a>
       </div>
-      <div class="hero-stats">
-        <div>
-          <div class="hero-stat-num">19</div>
+      <!-- Every number here is read from the database (rule 22; aboutStart()
+           below). A tile stays hidden until its own query answers. -->
+      <div class="hero-stats" id="hero-stats" hidden>
+        <div id="st-leagues-box" hidden>
+          <div class="hero-stat-num" id="st-leagues"></div>
           <div class="hero-stat-lbl" data-i18n="about.stat.leagues">Leagues covered</div>
         </div>
-        <div>
-          <div class="hero-stat-num">7</div>
+        <div id="st-game-box" hidden>
+          <div class="hero-stat-num" id="st-game"></div>
           <div class="hero-stat-lbl" data-i18n="about.stat.playable">In the Scout Game</div>
         </div>
-        <div>
-          <div class="hero-stat-num">376</div>
+        <div id="st-clubs-box" hidden>
+          <div class="hero-stat-num" id="st-clubs"></div>
           <div class="hero-stat-lbl" data-i18n="about.stat.clubs">Clubs to follow</div>
         </div>
-        <div>
-          <div class="hero-stat-num">10</div>
-          <div class="hero-stat-lbl" data-i18n="about.stat.outlets">News outlets, 6 languages</div>
+        <div id="st-outlets-box" hidden>
+          <div class="hero-stat-num" id="st-outlets"></div>
+          <div class="hero-stat-lbl" id="st-outlets-lbl"></div>
         </div>
       </div>
     </div>
@@ -329,7 +332,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
             <div class="live-item">
               <span class="live-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg></span>
               <div><div class="live-t" data-i18n="about.live.news">Around 500 stories a day</div>
-              <div class="live-s">ge, ESPN, BBC, Sky, Olé, AS, Marca, Gazzetta, kicker, RMC</div></div>
+              <div class="live-s" id="live-outlets" hidden></div></div>
             </div>
             <div class="live-item">
               <span class="live-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span>
@@ -354,38 +357,20 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
 </section>
 
 <!-- SOCIAL PROOF -->
-<div class="proof-section">
-    <!-- The 19 leagues in the database (api/_lib/leagues.js; 036, Uruguay 037),
-         in two groups: the seven in the Scout Game, and the eleven covered
-         only (matches, live scores, tables, club pages, rooms). Rule 22: every
-         number here is checkable in Supabase (see the commit of 18 Nov 2026). -->
-    <div class="proof-label" data-i18n="about.proof">19 leagues, 376 clubs · 7 in the Scout Game</div>
+<div class="proof-section" id="proof" hidden>
+    <!-- Every league in the leagues table (active), in two groups: in the
+         Scout Game (playable) and covered only (matches, live scores, tables,
+         club pages, rooms). Names with the country code (league-names.js), no
+         flags. Filled by aboutStart(); hidden until the leagues answer. -->
+    <div class="proof-label" id="proof-label" hidden></div>
     <div class="proof-groups">
+    <div id="proof-game-box" hidden>
     <div class="proof-group-label" data-i18n="about.proof.game">In the Scout Game</div>
-    <div class="proof-leagues">
-    <!-- 4b-7: names with the country code, as everywhere in the app (league-names.js); no flags. -->
-    <div class="proof-league">Série A · BRA</div>
-    <div class="proof-league">Premier League · ENG</div>
-    <div class="proof-league">La Liga · ESP</div>
-    <div class="proof-league">Serie A · ITA</div>
-    <div class="proof-league">Bundesliga · GER</div>
-    <div class="proof-league">Ligue 1 · FRA</div>
-    <div class="proof-league">Liga Profesional · ARG</div>
+    <div class="proof-leagues" id="proof-game"></div>
     </div>
+    <div id="proof-also-box" hidden>
     <div class="proof-group-label" data-i18n="about.proof.also">Also covered</div>
-    <div class="proof-leagues">
-    <div class="proof-league">Championship · ENG</div>
-    <div class="proof-league">Série B · BRA</div>
-    <div class="proof-league">Série C · BRA</div>
-    <div class="proof-league">Eredivisie · NED</div>
-    <div class="proof-league">Primeira Liga · POR</div>
-    <div class="proof-league">Jupiler Pro League · BEL</div>
-    <div class="proof-league">Premiership · SCO</div>
-    <div class="proof-league">Süper Lig · TUR</div>
-    <div class="proof-league">Saudi Pro League · KSA</div>
-    <div class="proof-league">MLS · USA</div>
-    <div class="proof-league">Liga MX · MEX</div>
-    <div class="proof-league">Primera División · URU</div>
+    <div class="proof-leagues" id="proof-also"></div>
     </div>
     </div>
 </div>
@@ -400,12 +385,12 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
     <div class="step">
       <div class="step-num">01</div>
       <div class="step-title" data-i18n="about.s1.t">Pick your clubs</div>
-      <div class="step-desc" data-i18n="about.s1.d">Choose from 376 clubs across 19 leagues: the top divisions of Brazil, England, Spain, Italy, Germany, France and Argentina, plus the Championship, Série B, Série C, the Eredivisie, Primeira Liga, Jupiler Pro League, Scottish Premiership, Süper Lig, Saudi Pro League, MLS, Liga MX and Uruguay's Primera División. One main club, as many others as you like.</div>
+      <div class="step-desc" id="s1d" data-i18n="about.s1.d">Choose from every club in the leagues we cover. One main club, as many others as you like.</div>
     </div>
     <div class="step">
       <div class="step-num">02</div>
       <div class="step-title" data-i18n="about.s2.t">Get their news</div>
-      <div class="step-desc" data-i18n="about.s2.d">Around 500 stories a day from ten outlets in six languages, tagged to the clubs they are actually about. Read in the languages you choose — and anything about your clubs reaches you whatever language it is written in.</div>
+      <div class="step-desc" id="s2d" data-i18n="about.s2.d">Around 500 stories a day from established outlets, tagged to the clubs they are actually about. Read in the languages you choose — and anything about your clubs reaches you whatever language it is written in.</div>
     </div>
     <div class="step">
       <div class="step-num">03</div>
@@ -475,11 +460,11 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
         <div class="faq-list">
           <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q1">Where does the data come from?</div>
-            <div class="faq-a" data-i18n="about.faq.a1">Fixtures, results, league tables and season statistics come from API-Football. News headlines come from the public RSS feeds of ten outlets — ge, ESPN Brasil, BBC Sport, Sky Sports, Olé, AS, Marca, La Gazzetta dello Sport, kicker and RMC Sport. We store a headline, a short summary and a link, and every story links back to the publisher.</div>
+            <div class="faq-a" id="faq-a1" data-i18n="about.faq.a1">Fixtures, results, league tables and season statistics come from API-Football. News headlines come from the public RSS feeds of established outlets. We store a headline, a short summary and a link, and every story links back to the publisher.</div>
           </div>
           <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q2">Which leagues do you cover?</div>
-            <div class="faq-a" data-i18n="about.faq.a2">Nineteen, with 376 clubs. Seven are in the Scout Game: Brazil's Série A, the Premier League, La Liga, Italy's Serie A, the Bundesliga, Ligue 1 and Argentina's Liga Profesional. The other twelve are covered (matches, live scores, tables, club pages and rooms) but not playable in the game: the Championship, Série B, Série C, the Eredivisie, Primeira Liga, Jupiler Pro League, Scottish Premiership, Süper Lig, Saudi Pro League, MLS, Liga MX and Uruguay's Primera División. If a club is not in one of those, you will not find it yet.</div>
+            <div class="faq-a" id="faq-a2" data-i18n="about.faq.a2">The leagues listed above. Those in the Scout Game are playable in the game; the others are covered (matches, live scores, tables, club pages and rooms) but not playable. If a club is not in one of them, you will not find it yet.</div>
           </div>
           <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q3">Is ScoutMind really free?</div>
@@ -491,7 +476,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
           </div>
           <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q5">What is the Scout Game?</div>
-            <div class="faq-a" data-i18n="about.faq.a5">A free game that runs alongside the season. Before each round's deadline you pick five players from the seven leagues in the game and name one of them captain. When the matches are played, each player scores from real match stats, and your captain earns extra. Rankings show how you compare with everyone, and private leagues let you play against a group of friends with a join link. No prizes, just fun.</div>
+            <div class="faq-a" id="faq-a5" data-i18n="about.faq.a5">A free game that runs alongside the season. Before each round's deadline you pick five players from the leagues in the game and name one of them captain. When the matches are played, each player scores from real match stats, and your captain earns extra. Rankings show how you compare with everyone, and private leagues let you play against a group of friends with a join link. No prizes, just fun.</div>
           </div>
           <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q6">Which languages does the feed speak?</div>
@@ -547,6 +532,84 @@ const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── THE NUMBERS ──────────────────────────────────────────────────────────
+// Rule 22: every count on this page is read from the database with the
+// public (anon) key, as the landing page does: leagues (active; `playable`
+// splits the Scout Game from "also covered"), clubs in those leagues, and
+// the news outlets (active sources, their languages). Nothing is written
+// into the page: until a query answers, its tile, chips or sentence stay
+// hidden or keep the wording with no number. tests/no-hardcoded-counts.test.js
+// fails if a count comes back as a literal.
+const ABOUT_REST = 'https://kdhbpzooyjxcglbxbuya.supabase.co/rest/v1/';
+const ABOUT_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaGJwem9veWp4Y2dsYnhidXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTEwNTMsImV4cCI6MjA5MzMyNzA1M30.mcflbqGij3Kzm_Ooe5yMw-fMUBWe25-y6TRiChFuekw';
+const ABOUT = { leagues: null, clubs: null, sources: null };
+function aboutGet(path) {
+  return fetch(ABOUT_REST + path, { headers: { apikey: ABOUT_ANON, Authorization: 'Bearer ' + ABOUT_ANON } }).then((r) => {
+    if (!r.ok) return r.text().then((b) => { throw new Error(path.split('?')[0] + ' ' + r.status + ' ' + b.slice(0, 200)); });
+    return r.json();
+  });
+}
+function aboutList(items) {
+  try { return new Intl.ListFormat(smLocale(), { style: 'long', type: 'conjunction' }).format(items); } catch (e) { return items.join(', '); }
+}
+function aboutPlayable(l) { return typeof l.playable === 'boolean' ? l.playable : LeagueNames.playable(l); }
+/** Sets a sentence that carries numbers; the data-i18n fallback (no number) stays until then. */
+function aboutSay(id, key, vars) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.removeAttribute('data-i18n');      // applyI18n() must not put the plain wording back
+  el.textContent = t(key, vars);
+}
+function aboutShow(id, on) { const el = document.getElementById(id); if (el) el.hidden = !on; }
+function aboutPaint() {
+  const L = ABOUT.leagues;
+  if (L && L.length) {
+    const game = LeagueNames.sort(L.filter(aboutPlayable)), also = LeagueNames.sort(L.filter((l) => !aboutPlayable(l)));
+    const chip = (l) => { const d = document.createElement('div'); d.className = 'proof-league'; d.textContent = LeagueNames.label(l); return d; };
+    document.getElementById('proof-game').replaceChildren(...game.map(chip));
+    document.getElementById('proof-also').replaceChildren(...also.map(chip));
+    aboutShow('proof-game-box', game.length); aboutShow('proof-also-box', also.length); aboutShow('proof', true);
+    document.getElementById('st-leagues').textContent = L.length; aboutShow('st-leagues-box', true);
+    document.getElementById('st-game').textContent = game.length; aboutShow('st-game-box', game.length);
+    aboutShow('hero-stats', true);
+    const names = (ls) => aboutList(ls.map((l) => LeagueNames.label(l)));
+    if (game.length) aboutSay('faq-a5', 'about.faq.a5N', { game: game.length });
+    if (ABOUT.clubs) {
+      document.getElementById('st-clubs').textContent = ABOUT.clubs; aboutShow('st-clubs-box', true);
+      const v = { leagues: L.length, clubs: ABOUT.clubs, game: game.length, also: also.length, gameList: names(game), alsoList: names(also) };
+      const pl = document.getElementById('proof-label'); pl.textContent = t('about.proofN', v); pl.hidden = false;
+      aboutSay('s1d', 'about.s1.dN', v);
+      aboutSay('faq-a2', also.length ? 'about.faq.a2N' : 'about.faq.a2AllN', v);
+    }
+  }
+  const S = ABOUT.sources;
+  if (S && S.length) {
+    const langs = new Set(S.map((s) => String(s.lang || '').split('-')[0]).filter(Boolean)).size;
+    document.getElementById('st-outlets').textContent = S.length;
+    document.getElementById('st-outlets-lbl').textContent = t('about.stat.outletsN', { langs });
+    aboutShow('st-outlets-box', true); aboutShow('hero-stats', true);
+    const list = aboutList(S.map((s) => s.name));
+    const lo = document.getElementById('live-outlets'); lo.textContent = list; lo.hidden = false;
+    aboutSay('faq-a1', 'about.faq.a1N', { n: S.length, list });
+    aboutSay('s2d', 'about.s2.dN', { n: S.length, langs });
+  }
+}
+async function aboutStart() {
+  const [leagues, teams, sources] = await Promise.all([
+    // playable (035) splits the two groups; without the column the generated list decides (rule 21).
+    aboutGet('leagues?select=id,slug,name,country,country_code,playable&active=is.true&order=id.asc')
+      .catch(() => aboutGet('leagues?select=id,slug,name,country&active=is.true&order=id.asc')).catch((e) => { console.warn('about leagues:', e.message); return null; }),
+    aboutGet('teams?select=league_id&limit=5000').catch((e) => { console.warn('about clubs:', e.message); return null; }),
+    aboutGet('news_sources?select=name,lang&active=is.true&order=id.asc').catch((e) => { console.warn('about outlets:', e.message); return null; }),
+  ]);
+  ABOUT.leagues = leagues;
+  if (leagues && teams) { const on = new Set(leagues.map((l) => l.id)); ABOUT.clubs = teams.filter((x) => on.has(x.league_id)).length || null; }
+  ABOUT.sources = sources;
+  aboutPaint();
+}
+window.addEventListener('sm-lang', aboutPaint);
+aboutStart();
 
 // The showLegal() Privacy/Terms modals lived here. They claimed things that
 // were no longer true ("community posts are stored locally in your browser",

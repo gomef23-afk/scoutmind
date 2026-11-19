@@ -74,17 +74,12 @@ eq('the tagger\'s LEAGUE_LANG is the config\'s: unchanged for the seven, our sou
 const { LEAGUE_LANG: TAGGER_LANG } = await import('../api/_lib/tagger.js');
 check('tagger.js reads it from the config', TAGGER_LANG === LEAGUE_LANG);
 
-// ── about.html says what the database holds (rule 22, commit 3) ──
+// ── about.html says what the database holds (rule 22) ──
+// Since 19 Nov 2026 its counts and league chips are read from leagues / teams /
+// news_sources at load (tests/no-hardcoded-counts.test.js), so a new league
+// needs no edit there. Its chips go through LeagueNames.label (generated above).
 const about = readFileSync(new URL('../public/about.html', import.meta.url), 'utf8');
-const stats = [...about.matchAll(/<div class="hero-stat-num">(\d+)<\/div>\s*<div class="hero-stat-lbl" data-i18n="([\w.]+)"/g)].map((m) => [m[2], Number(m[1])]);
-const clubs = JSON.parse(readFileSync(new URL('./fixtures/teams.json', import.meta.url), 'utf8')).length
-  + JSON.parse(readFileSync(new URL('./fixtures/teams-new-leagues.json', import.meta.url), 'utf8')).length
-  + JSON.parse(readFileSync(new URL('./fixtures/teams-uruguay.json', import.meta.url), 'utf8')).length;
-eq('about.html: leagues covered, in the game, clubs = the config and the frozen club lists',
-  stats.filter(([k]) => k !== 'about.stat.outlets'), [['about.stat.leagues', LEAGUES.filter((l) => l.active).length], ['about.stat.playable', LEAGUES.filter((l) => l.playable).length], ['about.stat.clubs', clubs]]);
-const chips = [...about.matchAll(/<div class="proof-league">([^<]+)<\/div>/g)].map((m) => m[1]);
-eq('about.html: one chip per league, the seven playable first', [chips.length, chips.slice(0, 7).every((c) => LEAGUES.filter((l) => l.playable).some((l) => `${l.name} · ${l.code}` === c))], [LEAGUES.length, true]);
-check('about.html: every chip is a config league, "Name · CODE"', chips.every((c) => LEAGUES.some((l) => `${l.name} · ${l.code}` === c)));
+check('about.html: no written league chip or count left to drift from the config', !/<div class="proof-league">/.test(about) && !/<div class="hero-stat-num">\d/.test(about));
 
 // ── Generated blocks ──
 const sync = spawnSync(process.execPath, [new URL('../scripts/sync-leagues.mjs', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'), '--check'], { encoding: 'utf8' });
