@@ -93,14 +93,14 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=167b7042bf"></script>
+<script src="/i18n.js?v=c47a9f8f91"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=61368b2af2"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
 <script src="/news-card.js?v=b8aff44b00"></script>
 <!-- 4b shared pieces: league names with the country code, the one fixture
      row (also on community.html), line icons. -->
-<script src="/league-names.js?v=3b0efd81e7"></script>
+<script src="/league-names.js?v=3dbe9a7b46"></script>
 <script src="/fx-row.js?v=2a5a74a713"></script>
 <script src="/icons.js?v=012882672d"></script>
 <style>
@@ -3839,12 +3839,29 @@ function mxTableChips(data){
   }
   return out;
 }
+/** "Primera: Apertura" → "Apertura": the API's "Prefix: Name" tables (Uruguay) read by their own name. */
+function mxTableName(label){ return String(label||'').replace(/^[^:]{1,30}:\s+/,''); }
+/** Aggregate tables (the annual table, the relegation averages) are never the default chip. */
+function mxIsAggregate(label){ return /tabla anual|annual|^promedios$|averages/i.test(mxTableName(label)); }
 /** A table that is not a group, in a league with phases, named after the league: the annual table. */
 function mxTableChipLabel(c,chips){
   if(c.phase) return c.label;
   const lg=MX.league&&MX.league.name;
   if(chips.some(x=>x.phase)&&lg&&c.label.indexOf(lg)>=0) return t('tb.annual');
-  return c.label;
+  const name=mxTableName(c.label);
+  if(/^tabla anual$/i.test(name)) return t('tb.annual');
+  if(/^promedios$/i.test(name)) return t('tb.averages');
+  return name;
+}
+/**
+ * The chip a league without group phases opens on: its last-listed TOURNAMENT
+ * table (Apertura / Clausura / Torneo …: the one in play, Uruguay lists
+ * Clausura last), never an aggregate; any other league, its first table
+ * (MLS: Western Conference), as before.
+ */
+function mxDefaultPlainChip(chips){
+  const tourn=chips.filter(c=>!mxIsAggregate(c.label)&&/apertura|clausura|torneo|intermedio/i.test(mxTableName(c.label)));
+  return tourn.length?tourn.reduce((a,b)=>b.order>a.order?b:a):chips[0];
 }
 function mxTableHtml(data){
   if(!data.groups.length) return '<div class="mx-empty">'+sanitize(t('tb.none'))+'</div>';
@@ -3854,7 +3871,7 @@ function mxTableHtml(data){
   if(!chips.some(c=>c.key===key)){
     // The current phase: the one the API lists last.
     const phases=chips.filter(c=>c.phase);
-    key=(phases.length?phases.reduce((a,b)=>b.order>a.order?b:a):chips[0]).key;
+    key=(phases.length?phases.reduce((a,b)=>b.order>a.order?b:a):mxDefaultPlainChip(chips)).key;
   }
   const cur=chips.find(c=>c.key===key);
   MX.tableChips=chips;

@@ -47,7 +47,7 @@ const ctx = {
   MX: { league: null, tablePick: new Map(), tableChips: [] },
 };
 vm.createContext(ctx);
-vm.runInContext([fn('mxFetchTable'), fn('mxPhaseOf'), fn('mxTableChips'), fn('mxTableChipLabel'), fn('mxSeasonOver'), fn('mxSeasonLabel'), fn('mxTableHtml'), fn('mxGroupHtml'),
+vm.runInContext([fn('mxFetchTable'), fn('mxPhaseOf'), fn('mxTableChips'), fn('mxTableName'), fn('mxIsAggregate'), fn('mxTableChipLabel'), fn('mxDefaultPlainChip'), fn('mxSeasonOver'), fn('mxSeasonLabel'), fn('mxTableHtml'), fn('mxGroupHtml'),
   "const TB_COLS='group_label,team_id,rank,points,played,win,draw,lose,goals_for,goals_against,goal_diff,form,updated_at';",
   'this.mxFetchTable=mxFetchTable;this.mxTableHtml=mxTableHtml;this.mxGroupHtml=mxGroupHtml;this.mxPhaseOf=mxPhaseOf;'].join('\n'), ctx);
 check('the column list in the test matches the page', idx.includes("const TB_COLS='group_label,team_id,rank,points,played,win,draw,lose,goals_for,goals_against,goal_diff,form,updated_at';"));

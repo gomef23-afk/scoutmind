@@ -97,6 +97,23 @@ export const COMMON = {
  */
 export const NEEDS_QUALIFIER = new Set(['derby']);
 
+/**
+ * Club names that are too ambiguous on their own, matched only through the
+ * unambiguous forms listed (Uruguay's Primera División, 19 Nov 2026). We hold
+ * no Uruguayan source, so "only in Uruguayan press" cannot be told from the
+ * feed; the full names can. Club Nacional never matches a bare "Nacional"
+ * (CD Nacional's, and "Atlético Nacional" is a third club); Wanderers never
+ * "Bolton Wanderers"; Cerro never "Cerro Porteño" or a hill; Juventud and
+ * Progreso are ordinary Spanish words.
+ */
+export const QUALIFIED_NAMES = {
+  'club nacional': ['Club Nacional de Football', 'Nacional de Montevideo'],
+  wanderers: ['Montevideo Wanderers'],
+  cerro: ['Club Atlético Cerro', 'Cerro de Montevideo'],
+  juventud: ['Juventud de Las Piedras'],
+  progreso: ['Club Atlético Progreso'],
+};
+
 // Portuguese context rules. Brazilian press writes the bare club name
 // constantly ("Santos acerta venda"), so we cannot require a qualifier — we
 // reject the specific shapes that mean something else instead.
@@ -167,14 +184,17 @@ export function buildIndex(teams, aliases = []) {
     return old.length === 1 ? old[0] : null;
   };
 
+  // A club's own name is an implicit alias, unless it is in QUALIFIED_NAMES:
+  // then only its unambiguous full forms are.
+  const nameRows = (t) => (QUALIFIED_NAMES[normalise(t.name)] || [t.name]).map((alias) => ({
+    api_team_id: t.api_team_id,
+    alias,
+    kind: 'o',
+    langs: null,
+    short_ok: false,
+  }));
   const rows = [
-    ...teams.map((t) => ({
-      api_team_id: t.api_team_id,
-      alias: t.name,
-      kind: 'o',
-      langs: null,
-      short_ok: false,
-    })),
+    ...teams.flatMap(nameRows),
     ...aliases,
   ];
 

@@ -34,7 +34,7 @@ const LN = ctx.LeagueNames, Icons = ctx.Icons;
 eq('every league, with its code', LN.LEAGUES.map((l) => LN.label(l)), [
   'Série A · BRA', 'Premier League · ENG', 'La Liga · ESP', 'Bundesliga · GER', 'Serie A · ITA', 'Ligue 1 · FRA', 'Liga Profesional · ARG',
   'Championship · ENG', 'Eredivisie · NED', 'Primeira Liga · POR', 'Jupiler Pro League · BEL', 'Premiership · SCO', 'Süper Lig · TUR',
-  'Saudi Pro League · KSA', 'MLS · USA', 'Liga MX · MEX', 'Série B · BRA', 'Série C · BRA']);
+  'Saudi Pro League · KSA', 'MLS · USA', 'Liga MX · MEX', 'Série B · BRA', 'Série C · BRA', 'Primera División · URU']);
 eq('only the seven are playable', LN.LEAGUES.filter((l) => LN.playable(l)).map((l) => l.slug),
   ['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina']);
 eq('look-alikes are told apart by the code', [LN.label('serie_b'), LN.label('scottish_premiership'), LN.label('premier_league')],
@@ -59,7 +59,7 @@ check('no flag in any label', LN.LEAGUES.every((l) => !/[\u{1F1E6}-\u{1F1FF}\u{1
 const db = { 1: ['Série A', 'Brazil', 'serie_a'], 2: ['Premier League', 'England', 'premier_league'], 3: ['La Liga', 'Spain', 'la_liga'],
   4: ['Bundesliga', 'Germany', 'bundesliga'], 5: ['Serie A', 'Italy', 'serie_a_it'], 6: ['Ligue 1', 'France', 'ligue_1'], 7: ['Liga Profesional', 'Argentina', 'argentina'] };
 check('the list matches the leagues table (name, country, slug, Nov 2026)',
-  Object.values(db).every(([n, c, s]) => LN.LEAGUES.some((l) => l.name === n && l.country === c && l.slug === s)) && LN.LEAGUES.length === 18);
+  Object.values(db).every(([n, c, s]) => LN.LEAGUES.some((l) => l.name === n && l.country === c && l.slug === s)) && LN.LEAGUES.length === 19);
 
 // ── Icons ──
 check('icons: the tab set and the marks exist', ['home', 'shield', 'search', 'calendar', 'message', 'user', 'ball', 'users', 'thumb', 'x', 'check', 'eye'].every((n) => Icons.names.includes(n)));

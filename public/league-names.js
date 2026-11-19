@@ -41,6 +41,7 @@
     { slug: 'liga_mx', name: 'Liga MX', country: 'Mexico', code: 'MEX', region: null, playable: false },
     { slug: 'serie_b', name: 'Série B', country: 'Brazil', code: 'BRA', region: 'brazil', playable: false },
     { slug: 'serie_c', name: 'Série C', country: 'Brazil', code: 'BRA', region: 'brazil', playable: false },
+    { slug: 'uruguay', name: 'Primera División', country: 'Uruguay', code: 'URU', region: null, playable: false },
   ];
   // END LEAGUES
 

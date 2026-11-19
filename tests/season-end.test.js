@@ -39,7 +39,7 @@ const ctx = {
 };
 vm.createContext(ctx);
 vm.runInContext([fn('localDayKey'), fn('mxMidnight'), fn('mxAddDays'), fn('mxDate'), fn('mxSeasonOver'), fn('mxSeasonLabel'), fn('mxFarWindow'),
-  fn('mxPhaseOf'), fn('mxTableChips'), fn('mxTableChipLabel'), fn('mxGroupHtml'), fn('mxTableHtml')].join('\n'), ctx);
+  fn('mxPhaseOf'), fn('mxTableChips'), fn('mxTableName'), fn('mxIsAggregate'), fn('mxTableChipLabel'), fn('mxDefaultPlainChip'), fn('mxGroupHtml'), fn('mxTableHtml')].join('\n'), ctx);
 const MX = ctx.MX;
 const NOW = new Date(2026, 10, 17, 12);    // 17 Nov 2026, local noon
 const today = ctx.mxMidnight(NOW);

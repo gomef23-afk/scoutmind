@@ -35,7 +35,8 @@ const old = JSON.parse(read('tests/fixtures/teams.json'));
 const fresh = JSON.parse(read('tests/fixtures/teams-new-leagues.json')).map((t) => ({ ...t, established: false }));
 const nameOf = new Map([...old, ...fresh].map((t) => [t.api_team_id, t.name]));
 const isNew = new Set(fresh.map((t) => t.api_team_id));
-const NEW_SLUGS = LEAGUES.filter((l) => !l.playable).map((l) => l.slug);
+// The eleven of 18 Nov 2026 (Uruguay, 19 Nov, has its own check: tests/tagger-uruguay.test.js).
+const NEW_SLUGS = ['championship', 'eredivisie', 'primeira_liga', 'belgian_pro_league', 'scottish_premiership', 'super_lig', 'saudi_pro_league', 'mls', 'liga_mx', 'serie_b', 'serie_c'];
 
 // ── The frozen teams ──
 check('214 new clubs, from exactly the 11 tracked leagues', fresh.length === 214

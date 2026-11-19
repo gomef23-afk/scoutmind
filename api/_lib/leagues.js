@@ -79,6 +79,14 @@ export const LEAGUES = [
     active: true, playable: false, statsCoverage: null, region: 'brazil', langs: ['pt-BR'], tagNews: true },
   { slug: 'serie_c', apiId: 75, name: 'Série C', country: 'Brazil', code: 'BRA', season: 2026, seasonStart: '2026-04-04', seasonEnd: '2026-10-25',
     active: true, playable: false, statsCoverage: false, region: 'brazil', langs: ['pt-BR'], tagNews: true },
+  // Added 19 Nov 2026 (migration 037). API-Football 268, verified: season 2026
+  // (6 Feb - 23 Nov), standings and team match stats, NO player stats (the
+  // match panel shows score, events and team stats only). Its table comes as
+  // five groups: Tabla Anual, Promedios, Torneo Intermedio, Apertura,
+  // Clausura. Club names that are ordinary words or other clubs' names match
+  // only in full (QUALIFIED_NAMES in tagger.js: Club Nacional, Wanderers...).
+  { slug: 'uruguay', apiId: 268, name: 'Primera División', country: 'Uruguay', code: 'URU', season: 2026, seasonStart: '2026-02-06', seasonEnd: '2026-11-23',
+    active: true, playable: false, statsCoverage: null, region: null, langs: ['es'], tagNews: true },
 ];
 
 /** By slug. */

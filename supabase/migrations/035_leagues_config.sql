@@ -68,7 +68,8 @@ select * from (values
     (253, 'mls', 'MLS', 'USA', 'USA', 2026, '2026-02-21', '2026-11-29', true, false, null, null),
     (262, 'liga_mx', 'Liga MX', 'Mexico', 'MEX', 2026, '2026-07-17', '2026-11-23', true, false, null, null),
     (72, 'serie_b', 'Série B', 'Brazil', 'BRA', 2026, '2026-03-21', '2026-11-28', true, false, null, 'brazil'),
-    (75, 'serie_c', 'Série C', 'Brazil', 'BRA', 2026, '2026-04-04', '2026-10-25', true, false, false, 'brazil')
+    (75, 'serie_c', 'Série C', 'Brazil', 'BRA', 2026, '2026-04-04', '2026-10-25', true, false, false, 'brazil'),
+    (268, 'uruguay', 'Primera División', 'Uruguay', 'URU', 2026, '2026-02-06', '2026-11-23', true, false, null, null)
 ) as s(api_league_id, slug, name, country, country_code, current_season, season_start, season_end, active, playable, stats_coverage, region);
 -- END SEED
 
