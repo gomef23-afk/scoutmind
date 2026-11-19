@@ -61,11 +61,11 @@ vm.runInContext(read('public/league-names.js'), ctx);
 vm.runInContext(read('public/fx-row.js'), ctx);
 const src = [decl('COMP_TIER'), decl('FX_SELECT'), fn('fixtureFromRow'), fn('localDayKey'), fn('fxRow'),
   decl('MX_WEEK'), decl('MX_BACK'), decl('MX_AHEAD'), decl('MX'),
-  fn('mxMidnight'), fn('mxAddDays'), fn('mxDate'), fn('mxDayTitle'), fn('mxWeekKey'), fn('mxStripKeys'), fn('mxChipOrder'), fn('mxBounds'), fn('mxFetch'), fn('mxAdd'),
+  fn('mxMidnight'), fn('mxAddDays'), fn('mxDate'), fn('mxDayTitle'), fn('mxWeekKey'), fn('mxStripKeys'), fn('mxLeagueFilter'), fn('mxBounds'), fn('mxFetch'), fn('mxAdd'),
   fn('mxIsMine'), fn('mxRow'), fn('mxDayHtml'), fn('mxAllDaysHtml'), fn('mxAtEdge'),
   'this.MX=MX;this.fixtureFromRow=fixtureFromRow;this.mxDayHtml=mxDayHtml;this.mxAllDaysHtml=mxAllDaysHtml;this.mxAdd=mxAdd;this.mxFetch=mxFetch;',
   'this.mxStripKeys=mxStripKeys;this.mxWeekKey=mxWeekKey;this.mxDate=mxDate;',
-  'this.mxBounds=mxBounds;this.mxAtEdge=mxAtEdge;this.mxChipOrder=mxChipOrder;this.mxDayTitle=mxDayTitle;this.localDayKey=localDayKey;this.mxAddDays=mxAddDays;this.mxMidnight=mxMidnight;'].join('\n');
+  'this.mxBounds=mxBounds;this.mxAtEdge=mxAtEdge;this.mxDayTitle=mxDayTitle;this.localDayKey=localDayKey;this.mxAddDays=mxAddDays;this.mxMidnight=mxMidnight;'].join('\n');
 vm.runInContext(src, ctx);
 
 const today = ctx.mxMidnight(new Date());
@@ -127,16 +127,17 @@ MX.to = MX.last; check('at the last fixture: no more loading downward', ctx.mxAt
 MX.first = null; check('nothing held at all: both edges', ctx.mxAtEdge('past'));
 eq('the first load is three days back to ten ahead (the strip); a further load a week', [ctx.MX && /const MX_BACK = 3;/.test(idx), /const MX_AHEAD = 10;/.test(idx), /const MX_WEEK = 7;/.test(idx)], [true, true, true]);
 
-// ── Chips ──
-MX.leagues = [ENG, BRA, ITA, { name: 'Liga Profesional', slug: 'argentina', country: 'Argentina' }].map((l, i) => Object.assign({ id: i + 1 }, l));
-// 18 leagues since 035: my clubs' leagues first, then alphabetical by "Name · CODE".
-eq('chips: my clubs\' leagues first, then alphabetical', ctx.mxChipOrder().map((l) => l.slug), ['serie_a', 'argentina', 'premier_league', 'serie_a_it']);
-const chips = fn('mxRenderChips');
-check('chips: by index, never a name in onclick; labelled with the country', /onclick="mxSetLeague\('\+i\+'\)"/.test(chips) && /LeagueNames\.label\(l\)/.test(chips) && /chip\(-1,t\('fx\.all'\),!MX\.league\)/.test(chips));
+// ── "My leagues": several leagues filter IN the query (19 Nov 2026) ──
+MX.league = null; MX.mineIds = [1, 7];
+calls.length = 0; ctx.__answer = () => [];
+await ctx.mxFetch(today, ctx.mxAddDays(today, 7));
+check('My leagues (several) filters IN the query with league_id=in.(…)', /&league_id=in\.%281%2C7%29$/.test(calls[0]) || /&league_id=in\.\(1,7\)$/.test(calls[0]), calls[0]);
+MX.mineIds = [];
+
+// ── Chips (the LEAGUE PICKER; tests/league-picker.test.js runs it) ──
 check('chips come from the leagues table, not from the loaded fixtures', /apiGet\('leagues\?select=id,slug,name,country,current_season&active=is\.true&order=id\.asc'\)/.test(fn('mxStart')));
-check('the choice is the slug; a name saved before 4b-2 still finds its league', /mxSavePref\(l\?l\.slug:null\)/.test(fn('mxSetLeague'))
-  && /const p=mxPref\(\), known=p&&LeagueNames\.find\(p\);/.test(fn('mxStart')) && /l\.slug===p\|\|\(known&&l\.slug===known\.slug\)/.test(fn('mxStart')));
-check('a new league chosen reloads the list from today', /mxRenderChips\(\);\s*mxRenderView\(\);\s*mxStart\(\);/.test(fn('mxSetLeague')));
+check('the list resolves the picker\'s choice on every start, then draws the row', /mxApplySel\(\);\s*lpRender\('mx'\);/.test(fn('mxStart')));
+check('a new choice reloads the list from today', /mxRenderView\(\);\s*mxStart\(\);/.test(fn('mxOnPick')));
 
 // ── Scrolling, anchoring, Today ──
 const more = fn('mxMore');

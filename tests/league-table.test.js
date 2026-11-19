@@ -113,7 +113,7 @@ check('the toggle sits in the sticky bar, under the chips', /<div id="matches-le
 const show = fn('mxShowView');
 check('Table hides the list and the Today button; Matches anchors on today again', /list\.hidden=table/.test(show) && /tb\.hidden=!table/.test(show) && /btn\.hidden=true/.test(show) && /mxAnchorToday\(false\)/.test(show));
 check('in Table view nothing loads more days and nothing scrolls to today', /if\(MX\.view==='table'\) return;/.test(fn('mxCheckEdges')) && /if\(!el\|\|MX\.view==='table'\) return;/.test(fn('mxAnchorToday')));
-check('a new league while on Table shows that league\'s table', /if\(MX\.view==='table'\) mxShowView\(\);/.test(fn('mxSetLeague')));
+check('a new league while on Table shows that league\'s table', /if\(MX\.view==='table'\) mxShowView\(\);/.test(fn('mxOnPick')));
 check('the season comes with the leagues', /leagues\?select=id,slug,name,country,current_season&active=is\.true/.test(fn('mxStart')));
 check('a failed load offers a retry', /onclick="mxLoadTable\(\)"/.test(fn('mxLoadTable')));
 

@@ -29,7 +29,7 @@ const ALLOW = new Set([
   // The wordmark (two spans) and the EN / PT switch labels, which name languages.
   'Scout', 'Mind', 'EN', 'PT',
   // Technical: key names, HTTP headers.
-  'Escape', 'Content-Type', 'Prefer', 'Bearer ',
+  'Escape', 'Tab', 'Content-Type', 'Prefer', 'Bearer ',
   // Proper names: clubs the club picker suggests (matched by name), competitions
   // (COMP_TIER keys, compared with the API's names), languages named in
   // themselves (CONTENT_LANGS, App language).

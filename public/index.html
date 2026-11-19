@@ -93,7 +93,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=2af3f2999c"></script>
+<script src="/i18n.js?v=b2f94f548c"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=61368b2af2"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -256,6 +256,28 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .chip-group{display:flex;gap:6px;}
 .chip-group:empty{display:none;}
 @media (min-width: 900px){ .chip-scroll{margin:0 0 16px;padding:0;} }
+/* LEAGUE PICKER: the chips scroll, the Leagues button stays on the right. */
+.lp-row{display:flex;align-items:center;gap:8px;margin:0 0 16px;min-width:0;}
+.lp-row .lp-chips{flex:1 1 auto;min-width:0;margin:0 0 0 -16px;padding:0 4px 2px 16px;}
+.lp-more{flex:0 0 auto;position:relative;display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 10px 0 12px;border:1px solid var(--border-strong);border-radius:20px;background:var(--card);color:var(--navy-ink);font:600 12px/1 var(--font-sans);cursor:pointer;}
+.lp-more::after{content:'';position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%);}
+.lp-more:hover{background:var(--tint);}
+@media (min-width: 900px){ .lp-row .lp-chips{margin:0;padding:0 0 2px;} }
+.lp-overlay{position:fixed;inset:0;z-index:650;background:var(--scrim);display:none;flex-direction:column;justify-content:flex-end;}
+.lp-panel{background:var(--card);color:var(--ink);border-radius:16px 16px 0 0;max-height:85vh;display:flex;flex-direction:column;padding:8px 16px calc(12px + env(safe-area-inset-bottom));box-sizing:border-box;width:100%;}
+.lp-overlay.drop{background:transparent;}
+.lp-overlay.drop .lp-panel{position:fixed;width:360px;max-height:min(70vh,560px);border-radius:12px;border:1px solid var(--border);padding:8px 12px 12px;box-shadow:0 12px 32px var(--scrim);}
+.lp-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;}
+.lp-title{font:700 16px/1.2 var(--font-sans);margin:0;color:var(--ink);}
+.lp-x{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin-right:-10px;border:0;background:none;color:var(--ink);cursor:pointer;border-radius:22px;}
+.lp-panel .lp-q{flex:0 0 auto;width:100%;box-sizing:border-box;min-height:44px;font-size:16px;padding:0 12px;border:1px solid var(--border-strong);border-radius:10px;background:var(--field);color:var(--ink);font-family:var(--font-sans);margin:4px 0 8px;}
+.lp-list{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;margin:0 -4px;padding:0 4px;}
+.lp-country{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 0 4px;}
+.lp-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:44px;padding:0 10px 0 12px;border:0;border-left:3px solid transparent;border-radius:6px;background:none;color:var(--ink);font:500 14px/1.2 var(--font-sans);text-align:left;cursor:pointer;}
+.lp-item:hover{background:var(--field);}
+.lp-item.on{border-left-color:var(--navy-ink);background:var(--field);color:var(--navy-ink);font-weight:700;}
+.lp-empty{padding:16px 0;color:var(--muted);font-size:14px;}
+.cl-league-h{grid-column:1/-1;font:700 12px/1.2 var(--font-sans);letter-spacing:.04em;color:var(--muted);margin:10px 0 2px;}
 .news-meta{display:flex;align-items:center;gap:6px;min-width:0;margin-bottom:8px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;}
 .news-meta .nm-text{min-width:0;overflow:hidden;text-overflow:ellipsis;}
 .news-meta .nm-crests{display:inline-flex;gap:3px;flex:0 0 auto;}
@@ -1291,11 +1313,12 @@ if(!_cu){
     <div class="feed-title" data-i18n="fx.title">Matches</div>
     <div class="mx-sub" data-i18n="fx.sub">Scroll up for results, down for what is coming. Times are your local time.</div>
   </div>
-  <!-- League filter: All + every league we track, sticky under the nav, filters
-       the whole list; remembered on this device (localStorage
-       sm_matches_league = the slug, a UI preference, rule 10). -->
+  <!-- League filter (the LEAGUE PICKER): All · My leagues · my leagues' chips,
+       and a Leagues button that opens every league we track. Sticky under the
+       nav, filters the whole list; kept for the session (sessionStorage
+       sm_league_matches, a UI preference, rule 10). lpRender('mx') fills it. -->
   <div class="mx-bar" id="mx-bar">
-    <div id="matches-league-chips" class="chip-scroll" role="group" aria-label="League" data-i18n-aria="fx.leagueFilter"></div>
+    <div id="matches-league-chips" class="lp-row"></div>
     <!-- 4b-3b: Matches / Table, only while one league is chosen. -->
     <div id="mx-view" class="mx-view" role="group" hidden></div>
     <!-- 4b-5b: the date strip, 3 days back to 10 ahead; follows the scroll. -->
@@ -1321,7 +1344,8 @@ if(!_cu){
   <div class="cl-section" data-i18n="clubs.yours">Your club</div>
   <div id="clubs-my-card"></div>
   <div class="cl-section" data-i18n="clubs.all">All clubs</div>
-  <div id="clubs-chips" class="chip-scroll" role="group" aria-label="League" data-i18n-aria="fx.leagueFilter"></div>
+  <!-- The same LEAGUE PICKER as Matches, with its own choice (sm_league_clubs). -->
+  <div id="clubs-chips" class="lp-row"></div>
   <div class="clubs-grid" id="clubs-grid"></div>
 </div>
 </div>
@@ -1742,6 +1766,20 @@ async function confirmDeleteAccount(){
 <!-- ── TEAM SELECTION MODAL ── -->
 <!-- ONBOARDING — shown once, to a signed-in user with no club. display:flex is
      set only in JS (rule 6). Both steps are skippable. -->
+<!-- LEAGUE PICKER sheet: every league we track, by country, searchable
+     (lpOpen / lpFilter). A bottom sheet on a phone, a dropdown from 900px.
+     Rule 6: hidden here, shown only from JS. -->
+<div id="lp-sheet" class="lp-overlay" style="display:none;" onclick="if(event.target===this)lpClose()">
+  <div class="lp-panel" role="dialog" aria-modal="true" aria-labelledby="lp-title">
+    <div class="lp-head">
+      <h2 id="lp-title" class="lp-title" data-i18n="lp.title">Leagues</h2>
+      <button type="button" id="lp-x" class="lp-x" onclick="lpClose()" aria-label="Close" data-i18n-aria="lp.close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
+    </div>
+    <input id="lp-q" class="lp-q" type="search" autocomplete="off" placeholder="Search leagues or countries" data-i18n-ph="lp.search" aria-label="Search leagues or countries" data-i18n-aria="lp.search" oninput="lpFilter()">
+    <div id="lp-list" class="lp-list"></div>
+  </div>
+</div>
+
 <div id="onboard-modal" style="display:none;position:fixed;inset:0;background:var(--scrim);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
   <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;width:min(560px,92vw);max-height:88vh;overflow-y:auto;">
     <div id="onboard-title" style="font-family:var(--font-num);font-weight:700;text-transform:uppercase;font-size:24px;letter-spacing:0.5px;margin-bottom:4px;" data-i18n="onb.title">Pick your clubs</div>
@@ -3299,6 +3337,145 @@ function dayHeading(key){
   return d.toLocaleDateString(smLocale()||[], {weekday:'long',day:'numeric',month:'short'});
 }
 
+// ── LEAGUE PICKER (19 Nov 2026) ──
+// Nineteen chips stopped fitting. One picker, on Matches ('mx') and Clubs
+// ('cl'), each with its own choice: 'all' | 'mine' | a league's slug, kept for
+// the session (sessionStorage; a UI preference, rule 10). The row is
+// All · My leagues · a chip per league of mine (+ the chosen league when it is
+// not one of mine), then a Leagues button that opens EVERY league we track,
+// grouped by country with its code, searchable, the chosen one marked: no
+// league is ever out of reach. All is always the first chip. "My leagues" =
+// the leagues of my main club and the clubs I follow; it is the default when
+// I have any, else All (guests). Chips go by index into p.shown, never a name
+// in an onclick (rule 4's spirit). The sheet follows rule 6.
+const LP={};
+function lpDefine(cfg){ LP[cfg.key]=cfg; }
+lpDefine({key:'mx', el:'matches-league-chips', store:'sm_league_matches', leagues:()=>MX.leagues||[], onPick:()=>mxOnPick()});
+lpDefine({key:'cl', el:'clubs-chips', store:'sm_league_clubs', leagues:()=>clubsLeagues(), onPick:()=>renderClubsGrid()});
+function lpSaved(key){ try{ return sessionStorage.getItem(LP[key].store)||null; }catch(e){ return null; } }
+function lpSave(key,v){ try{ sessionStorage.setItem(LP[key].store,v); }catch(e){} }
+/** The slugs of my clubs' leagues (main club and follows). */
+function myLeagueSlugs(){ return new Set(myClubIds().map(id=>(CLUB_DATA.get(id)||{}).league).filter(Boolean)); }
+/** My leagues among this picker's, alphabetical by "Name · CODE". */
+function lpMine(key){ const m=myLeagueSlugs(); return LeagueNames.sort(LP[key].leagues().filter(l=>m.has(l.slug))); }
+/** The choice in force: the saved one while it still applies, else My leagues when I have any, else All. */
+function lpResolve(key){
+  const s=lpSaved(key), mine=lpMine(key);
+  if(s==='all') return 'all';
+  if(s&&s!=='mine'&&LP[key].leagues().some(l=>l.slug===s)) return s;
+  return mine.length?'mine':'all';
+}
+function lpRender(key){
+  const p=LP[key], el=document.getElementById(p.el);
+  if(!el) return;
+  const sel=lpResolve(key), mine=lpMine(key);
+  const shown=['all'];
+  if(mine.length) shown.push('mine');
+  for(const l of mine) shown.push(l.slug);
+  if(sel!=='all'&&sel!=='mine'&&shown.indexOf(sel)<0) shown.push(sel);
+  p.shown=shown;
+  const by=new Map(p.leagues().map(l=>[l.slug,l]));
+  const label=v=>v==='all'?t('fx.all'):v==='mine'?t('lp.mine'):LeagueNames.label(by.get(v)||v);
+  el.innerHTML='<div class="chip-scroll lp-chips" role="group" aria-label="'+sanitize(t('fx.leagueFilter'))+'">'
+    +shown.map((v,i)=>{ const on=v===sel;
+      return '<button type="button" class="filter-btn'+(on?' active':'')+'" aria-pressed="'+on+'" onclick="lpPick(\''+key+'\','+i+')">'+sanitize(label(v))+'</button>'; }).join('')
+    +'</div><button type="button" class="lp-more" aria-haspopup="dialog" onclick="lpOpen(\''+key+'\',this)">'
+    +'<span>'+sanitize(t('lp.button'))+'</span>'+Icons.svg('chevronDown',16)+'</button>';
+  // The chosen chip in view (a league picked from the sheet lands at the end of the row).
+  const sc=el.querySelector&&el.querySelector('.lp-chips'), on=sc&&sc.querySelector('.active');
+  if(on&&on.offsetLeft+on.offsetWidth>sc.scrollLeft+sc.clientWidth) sc.scrollLeft=on.offsetLeft+on.offsetWidth-sc.clientWidth+16;
+}
+function lpPick(key,i){
+  const p=LP[key], v=p&&p.shown?p.shown[i]:null;
+  if(v==null) return;
+  lpSave(key,v);
+  p.onPick(v);
+}
+
+// The sheet: a bottom sheet on a phone, a dropdown under the button from 900px.
+let LP_OPEN=null;
+function lpNorm(s){ return String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+/** The country's name in the reader's language (country.<CODE>), else the row's own. */
+function lpCountry(l){ const c=LeagueNames.code(l)||''; return (c&&t('country.'+c))||l.country||c; }
+function lpOpen(key,btn){
+  const ov=document.getElementById('lp-sheet');
+  if(!ov||!LP[key]) return;
+  LP_OPEN=key;
+  const q=document.getElementById('lp-q');
+  q.value='';
+  lpFilter();
+  const panel=ov.querySelector('.lp-panel');
+  const wide=!!(window.matchMedia&&matchMedia('(min-width: 900px)').matches&&btn);
+  ov.classList.toggle('drop',wide);
+  if(wide){
+    const r=btn.getBoundingClientRect();
+    panel.style.top=Math.round(r.bottom+6)+'px';
+    panel.style.left=Math.round(Math.max(16,Math.min(r.right-360,window.innerWidth-376)))+'px';
+  }else{ panel.style.top=''; panel.style.left=''; }
+  ov.style.display='flex';
+  document.addEventListener('keydown',lpKey);
+  // The search box takes focus on a laptop; on a phone the keyboard would cover the list.
+  setTimeout(()=>{ try{ (wide?q:document.getElementById('lp-x')).focus(); }catch(e){} },0);
+}
+function lpClose(){
+  const ov=document.getElementById('lp-sheet'), key=LP_OPEN;
+  if(ov) ov.style.display='none';
+  document.removeEventListener('keydown',lpKey);
+  LP_OPEN=null;
+  const b=key&&document.querySelector('#'+LP[key].el+' .lp-more');
+  if(b) try{ b.focus(); }catch(e){}
+}
+function lpKey(e){
+  if(e.key==='Escape'){ e.preventDefault(); lpClose(); return; }
+  if(e.key!=='Tab') return;
+  // Focus stays in the sheet while it is open.
+  const f=[...document.querySelectorAll('#lp-sheet button, #lp-sheet input')].filter(x=>x.offsetParent!==null);
+  if(!f.length) return;
+  const first=f[0], last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); }
+}
+/** Every league of this picker, grouped by country (mine first, then by name), filtered by the search. */
+function lpFilter(){
+  const key=LP_OPEN, list=document.getElementById('lp-list');
+  if(!key||!list) return;
+  const p=LP[key], raw=document.getElementById('lp-q').value.trim(), q=lpNorm(raw);
+  const sel=lpResolve(key), mineSet=myLeagueSlugs();
+  const dict=window.I18N||{};
+  const hit=l=>{
+    if(!q) return true;
+    const c=LeagueNames.code(l)||'';
+    return [LeagueNames.label(l),l.name,l.country,c,(dict.en||{})['country.'+c],(dict['pt-BR']||{})['country.'+c]].some(s=>lpNorm(s).indexOf(q)>-1);
+  };
+  const groups=new Map();
+  for(const l of LeagueNames.sort(p.leagues(),mineSet).filter(hit)){
+    const c=LeagueNames.code(l)||l.country||'';
+    if(!groups.has(c)) groups.set(c,[]);
+    groups.get(c).push(l);
+  }
+  const isMine=c=>groups.get(c).some(l=>mineSet.has(l.slug));
+  const order=[...groups.keys()].sort((a,b)=>(isMine(b)-isMine(a))||lpCountry(groups.get(a)[0]).localeCompare(lpCountry(groups.get(b)[0]),smLocale()||undefined));
+  p.sheet=[];
+  let html='';
+  for(const c of order){
+    const cname=lpCountry(groups.get(c)[0]);
+    html+='<div class="lp-country">'+sanitize(cname)+(c&&c!==cname?' · '+sanitize(c):'')+'</div>';
+    for(const l of groups.get(c)){
+      const i=p.sheet.push(l)-1, on=l.slug===sel;
+      html+='<button type="button" class="lp-item'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="lpPickSheet('+i+')">'
+        +'<span>'+sanitize(LeagueNames.label(l))+'</span>'+(on?Icons.svg('check',18):'')+'</button>';
+    }
+  }
+  list.innerHTML=html||'<div class="lp-empty">'+sanitize(t('lp.none',{q:raw}))+'</div>';
+}
+function lpPickSheet(i){
+  const key=LP_OPEN, l=key&&LP[key].sheet?LP[key].sheet[i]:null;
+  if(!l) return;
+  lpSave(key,l.slug);
+  LP[key].onPick(l.slug);   // redraws the row first, so focus returns to the new button
+  lpClose();
+}
+
 // ── MATCHES TAB (Sequence 2 commit 4b-2, reworked in 4b-5b) ──
 // ONE list grouped by day, each day its own block under a large heading
 // ("Today · Wed 18 Nov"), a thin divider at each new week ("Week of 23 Nov").
@@ -3310,12 +3487,12 @@ function dayHeading(key){
 // follows the scroll. A "Today" button jumps back. The league chips filter in
 // the query itself, so every loaded day is complete for that league. The
 // Home sidebar keeps its own small load (loadSidebarFixtures). UI state only,
-// in memory (rule 10); the chosen league is a device preference
-// (localStorage sm_matches_league = the league's slug).
+// in memory (rule 10); the league filter is the LEAGUE PICKER's, kept for
+// the session (sessionStorage sm_league_matches: 'all' | 'mine' | a slug).
 const MX_WEEK = 7;      // one more load = a week
 const MX_BACK = 3;      // the first load: three days back ...
 const MX_AHEAD = 10;    // ... to ten ahead: the whole date strip is loaded at once
-const MX = { leagues:null, chips:[], league:null, days:new Map(), ids:new Set(), from:null, to:null,
+const MX = { leagues:null, sel:'all', mineIds:[], selKey:'', league:null, days:new Map(), ids:new Set(), from:null, to:null,
   first:null, last:null, started:false, err:false, busy:{past:false,future:false}, failed:{past:false,future:false},
   gen:0, todayKey:null, stripDay:null };
 
@@ -3351,38 +3528,41 @@ function mxStripKeys(){
   return out;
 }
 
-function mxPref(){ try{ return localStorage.getItem('sm_matches_league')||null; }catch(e){ return null; } }
-function mxSavePref(slug){ try{ if(slug) localStorage.setItem('sm_matches_league',slug); else localStorage.removeItem('sm_matches_league'); }catch(e){} }
-
-/** My clubs' leagues first, then alphabetical (LeagueNames.sort). */
-function mxChipOrder(){
-  const mine=new Set(myClubIds().map(id=>(CLUB_DATA.get(id)||{}).league).filter(Boolean));
-  // My clubs' leagues first, then alphabetical by "Name · CODE" (the row scrolls).
-  return LeagueNames.sort(MX.leagues||[],mine);
+/**
+ * The league filter comes from the LEAGUE PICKER (MX.sel = 'all' | 'mine' |
+ * a slug, sessionStorage sm_league_matches). MX.league = the one league the
+ * list is about: the chosen one, or "My leagues" when that is a single league
+ * (so its table and its far window work as for a chosen league); MX.mineIds =
+ * the leagues of "My leagues" when there are several. MX.selKey says whether
+ * anything changed.
+ */
+function mxApplySel(){
+  const sel=lpResolve('mx'), mine=lpMine('mx');
+  MX.sel=sel;
+  MX.league=sel==='all'?null:sel==='mine'?(mine.length===1?mine[0]:null):((MX.leagues||[]).find(l=>l.slug===sel)||null);
+  MX.mineIds=sel==='mine'&&!MX.league?mine.map(l=>Number(l.id)):[];
+  MX.selKey=sel+':'+(MX.league?MX.league.id:'')+':'+MX.mineIds.join(',');
 }
-function mxRenderChips(){
-  const el=document.getElementById('matches-league-chips');
-  if(!el) return;
-  MX.chips=mxChipOrder();
-  // By index into MX.chips: a name never goes inside an onclick string.
-  const chip=(i,label,on)=>'<button class="filter-btn'+(on?' active':'')+'" aria-pressed="'+on+'" onclick="mxSetLeague('+i+')">'+sanitize(label)+'</button>';
-  el.innerHTML=chip(-1,t('fx.all'),!MX.league)
-    +MX.chips.map((l,i)=>chip(i,LeagueNames.label(l),!!MX.league&&MX.league.id===l.id)).join('');
+/** The query's league filter: one league, my leagues, or none (All). */
+function mxLeagueFilter(){
+  if(MX.league) return 'eq.'+Number(MX.league.id);
+  if(MX.mineIds&&MX.mineIds.length) return 'in.('+MX.mineIds.map(Number).join(',')+')';
+  return null;
 }
-function mxSetLeague(i){
-  const l=i<0?null:(MX.chips[i]||null);
-  if((l&&l.id)===(MX.league&&MX.league.id)) return;
-  MX.league=l;
-  mxSavePref(l?l.slug:null);
-  mxRenderChips();
+/** A choice in the picker: reload the list from today if the filter changed. */
+function mxOnPick(){
+  const key=MX.selKey;
+  mxApplySel();
+  lpRender('mx');
+  if(MX.selKey===key) return;
   mxRenderView();
   mxStart();
   if(MX.view==='table') mxShowView();   // the table of the newly chosen league
 }
 
-/** The first and last kick-off we hold (for this league): where loading stops. */
+/** The first and last kick-off we hold (for this filter): where loading stops. */
 async function mxBounds(){
-  const f=MX.league?'&league_id=eq.'+Number(MX.league.id):'';
+  const lf=mxLeagueFilter(), f=lf?'&league_id='+lf:'';
   const [a,b]=await Promise.all([
     apiGet('fixtures?select=kickoff_utc&kickoff_utc=not.is.null&order=kickoff_utc.asc&limit=1'+f),
     apiGet('fixtures?select=kickoff_utc&kickoff_utc=not.is.null&order=kickoff_utc.desc&limit=1'+f)
@@ -3426,7 +3606,8 @@ async function mxFetch(from,to){
   const q=new URLSearchParams({select:FX_SELECT,order:'kickoff_utc.asc',limit:'500'});
   q.append('kickoff_utc','gte.'+from.toISOString());
   q.append('kickoff_utc','lt.'+to.toISOString());
-  if(MX.league) q.append('league_id','eq.'+Number(MX.league.id));
+  const lf=mxLeagueFilter();
+  if(lf) q.append('league_id',lf);
   return ((await apiGet('fixtures?'+q))||[]).map(fixtureFromRow);
 }
 function mxAdd(list){
@@ -3623,12 +3804,13 @@ async function mxStart(){
       // column is missing and every league reads as in season (rule 21).
       MX.leagues=(await apiGet('leagues?select=id,slug,name,country,country_code,current_season,season_end&active=is.true&order=id.asc')
         .catch(()=>apiGet('leagues?select=id,slug,name,country,current_season&active=is.true&order=id.asc')))||[];
-      // A choice saved before 4b-2 is the league's name; now it is its slug.
-      const p=mxPref(), known=p&&LeagueNames.find(p);
-      MX.league=p?(MX.leagues.find(l=>l.slug===p||(known&&l.slug===known.slug))||null):null;
+      // The choice was a device preference until 19 Nov 2026; it is now kept
+      // for the session only (the picker), so the old key goes.
+      try{ localStorage.removeItem('sm_matches_league'); }catch(e){}
     }
     if(gen!==MX.gen) return;
-    mxRenderChips();
+    mxApplySel();
+    lpRender('mx');
     mxRenderView();
     const today=mxMidnight(new Date());
     MX.from=mxAddDays(today,-MX_BACK);
@@ -3713,10 +3895,23 @@ function mxRepaint(){
   mxWatchToday();
 }
 
-/** Re-draw the loaded days (my clubs or the language changed), keeping the reader's place. */
+/**
+ * Re-draw the loaded days (my clubs or the language changed), keeping the
+ * reader's place. If my clubs changed what "My leagues" means (or the clubs
+ * arrived after the list opened on its default), the list reloads instead.
+ */
 function mxRefresh(){
+  if(!MX.leagues) return;
+  const key=MX.selKey;
+  mxApplySel();
+  lpRender('mx');
+  if(MX.started&&!MX.err&&MX.selKey!==key){
+    mxRenderView();
+    mxStart();
+    if(MX.view==='table') mxShowView();
+    return;
+  }
   if(!MX.started||MX.err||!document.getElementById('mx-days')) return;
-  mxRenderChips();
   mxRepaint();
   mxEdge('past'); mxEdge('future');
 }
@@ -4093,48 +4288,52 @@ function renderMyClubCard(){
     +'</div>';
 }
 
-// The league chosen over "All clubs" (in memory, rule 10): a slug, or null for all.
-let CLUBS_LEAGUE=null;
-function setClubsLeague(i){
-  const order=clubsLeagueOrder();
-  CLUBS_LEAGUE=i<0?null:(order[i]||null);
-  renderClubsGrid();
-}
-/** The leagues we carry: my clubs' first, then the usual order. */
-function clubsLeagueOrder(){
-  const mine=new Set(myClubIds().map(id=>(CLUB_DATA.get(id)||{}).league).filter(Boolean));
+/** The leagues the Clubs tab carries (those we hold clubs for), as LeagueNames entries. */
+function clubsLeagues(){
   const slugs=[...new Set([...CLUB_DATA.values()].map(c=>c.league).filter(Boolean))];
-  // My clubs' leagues first, then alphabetical (LeagueNames.sort, the one order).
-  return LeagueNames.sort(slugs,mine);
+  return slugs.map(s=>LeagueNames.find(s)||{slug:s,name:s});
 }
-/** Every club we carry (4b-5): chips by league, my clubs first, a card opens the club page. */
+/**
+ * Every club we carry (4b-5), filtered by the LEAGUE PICKER (its own choice,
+ * sessionStorage sm_league_clubs): All = every club, my clubs first; My
+ * leagues = a section per league of mine; one league = its clubs. A card
+ * opens the club page.
+ */
 function renderClubsGrid(){
   const el=document.getElementById('clubs-grid');
   if(!el)return;
-  const order=clubsLeagueOrder();
-  if(CLUBS_LEAGUE&&order.indexOf(CLUBS_LEAGUE)<0) CLUBS_LEAGUE=null;
-  const chipsEl=document.getElementById('clubs-chips');
-  if(chipsEl){
-    // By index into the order: a league never goes inside an onclick string.
-    const chip=(i,label,on)=>'<button class="filter-btn'+(on?' active':'')+'" aria-pressed="'+on+'" onclick="setClubsLeague('+i+')">'+sanitize(label)+'</button>';
-    chipsEl.innerHTML=chip(-1,t('fx.all'),!CLUBS_LEAGUE)+order.map((s,i)=>chip(i,LeagueNames.label(s),CLUBS_LEAGUE===s)).join('');
-  }
+  lpRender('cl');
+  const sel=lpResolve('cl'), mineL=lpMine('cl');
+  const order=LeagueNames.sort(clubsLeagues(),new Set(mineL.map(l=>l.slug))).map(l=>l.slug);
+  const mineSet=new Set(mineL.map(l=>l.slug));
+  const pass=c=>sel==='all'||(sel==='mine'?mineSet.has(c.league):c.league===sel);
   const mine=myClubIds(), main=mainClubId();
-  const all=[...CLUB_DATA.values()].filter(c=>!CLUBS_LEAGUE||c.league===CLUBS_LEAGUE).sort((a,b)=>{
+  const all=[...CLUB_DATA.values()].filter(pass).sort((a,b)=>{
     const am=mine.indexOf(a.id)>-1, bm=mine.indexOf(b.id)>-1;
-    if(am!==bm)return am?-1:1;
-    return (order.indexOf(a.league)-order.indexOf(b.league))||a.label.localeCompare(b.label);
+    if(sel!=='mine'&&am!==bm)return am?-1:1;
+    return (order.indexOf(a.league)-order.indexOf(b.league))||(sel==='mine'&&am!==bm?(am?-1:1):0)||a.label.localeCompare(b.label);
   });
-  el.innerHTML=all.map(function(c){
+  const tile=function(c){
     const s=clubStats(c.id)||{};
-    const sub=[CLUBS_LEAGUE?null:(LEAGUE_LABEL[c.league]||null),(s.rank!=null?t('clubs.place',{rank:tOrd(s.rank)}):null)].filter(Boolean).join(' · ');
+    const sub=[sel==='all'?(LEAGUE_LABEL[c.league]||null):null,(s.rank!=null?t('clubs.place',{rank:tOrd(s.rank)}):null)].filter(Boolean).join(' · ');
     const tag=c.id===main?t('clubs.main'):mine.indexOf(c.id)>-1?t('clubs.following'):'';
     return '<a class="cl-tile'+(tag?' mine':'')+'" href="/community.html?club='+Number(c.id)+'">'
       +clubCrestById(c.id,32)
       +'<span class="cl-name-wrap"><span class="cl-tile-name">'+sanitize(c.label)+'</span>'
       +(sub?'<span class="cl-sub">'+sanitize(sub)+'</span>':'')
       +(tag?'<span class="sg-tag">'+sanitize(tag)+'</span>':'')+'</span></a>';
-  }).join('');
+  };
+  if(sel==='mine'){
+    // A heading per league of mine (it spans the grid), then its clubs.
+    let html='', at=null;
+    for(const c of all){
+      if(c.league!==at){ at=c.league; html+='<h3 class="cl-league-h">'+sanitize(LeagueNames.label(LeagueNames.find(at)||at))+'</h3>'; }
+      html+=tile(c);
+    }
+    el.innerHTML=html;
+  }else{
+    el.innerHTML=all.map(tile).join('');
+  }
 }
 
 /**
@@ -4668,7 +4867,8 @@ let currentFeedFilter='all';
 
 function filterFeed(type,btn){
   currentFeedFilter=type;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  // Only this row's buttons: the league pickers' chips are .filter-btn too.
+  ((btn&&btn.parentElement)||document).querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   renderFeedNews();
 }

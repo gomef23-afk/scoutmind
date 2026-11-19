@@ -49,7 +49,7 @@ const ph = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().
 const phDiff = enKeys.filter((k) => k in pt && ph(en[k]) !== ph(pt[k]));
 check('the same {placeholders} in both languages', phDiff.length === 0, phDiff.map((k) => `${k}: en {${ph(en[k])}} pt {${ph(pt[k])}}`).join('; '));
 const untranslated = enKeys.filter((k) => en[k] === pt[k] && /[a-z]{4,}/i.test(en[k])
-  && !/^(sg\.title|sg\.tab\.rankings|badge\.top_ten_percent\.name|auth\.ph\.email|sg\.base|pg\.pts|mo\.rankPts|sg\.dur\.dh|cm\.deletedUser|nav\.scout|cmt\.r\.spam|land\.install\.ios|land\.install\.android)$/.test(k));   // device names
+  && !/^(sg\.title|sg\.tab\.rankings|badge\.top_ten_percent\.name|auth\.ph\.email|sg\.base|pg\.pts|mo\.rankPts|sg\.dur\.dh|cm\.deletedUser|nav\.scout|cmt\.r\.spam|land\.install\.ios|land\.install\.android|country\.ARG|country\.POR)$/.test(k));   // device names; countries spelled the same in both
 check('nothing left in English in pt-BR (beyond names that stay)', untranslated.length === 0, untranslated.join(', '));
 // A key written twice in one dictionary: the later silently wins (4b-5 found three).
 {

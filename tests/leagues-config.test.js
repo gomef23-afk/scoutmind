@@ -172,7 +172,9 @@ const idx = read('public/index.html');
 check('Home uses bandRound and passes foreign to the slot and the picks text', /HomeBand\.bandRound\(rounds,club\?club\.league:null/.test(idx) && /\{foreign:!!HBD\.foreign\}/.test(idx) && /club&&!HBD\.foreign\?''/.test(idx));
 check('the landing mock does the same, over every competition\'s rounds', /HomeBand\.bandRound\(rounds,lg\?lg\.slug:null/.test(read('public/welcome.html')) && !/game_rounds[^\n]*league_id=eq\./.test(read('public/welcome.html')));
 check('chips, the club picker, the Clubs tab and the club page order leagues through LeagueNames.sort (no hard-coded seven)',
-  /return LeagueNames\.sort\(MX\.leagues\|\|\[\],mine\)/.test(idx) && /const PICKER_LEAGUE_ORDER=LeagueNames\.sort\(/.test(idx) && /return LeagueNames\.sort\(slugs,mine\)/.test(idx)
+  // the league picker (19 Nov 2026): my leagues and the sheet, for Matches and Clubs alike
+  /return LeagueNames\.sort\(LP\[key\]\.leagues\(\)\.filter\(l=>m\.has\(l\.slug\)\)\)/.test(idx) && /LeagueNames\.sort\(p\.leagues\(\),mineSet\)/.test(idx)
+  && /const PICKER_LEAGUE_ORDER=LeagueNames\.sort\(/.test(idx) && /LeagueNames\.sort\(clubsLeagues\(\),/.test(idx)
   && !/'serie_a','premier_league','la_liga'/.test(idx) && !/LEAGUE_ORDER=\[/.test(read('public/community.html')));
 check('news regions come from the config', /const LEAGUE_REGION=Object\.fromEntries\(LeagueNames\.LEAGUES/.test(idx));
 check('Home loads enough clubs for 18 leagues', /teams\?select=id,api_team_id,name,logo_url,leagues!teams_league_id_fkey\(slug\)&limit=1000/.test(idx));
