@@ -8,10 +8,34 @@
 // (no cursor touched; a finished season is fetched too, for its final table).
 
 import { createClient } from '../_lib/apifootball.js';
-import { activeLeagues, teamIdMap, upsert } from '../_lib/supabase.js';
+import { activeLeagues, teamIdMap, upsert, select } from '../_lib/supabase.js';
 import { withCron, isoDate, RUN_BUDGET_MS, leaguesFromQuery, seasonOver, dailyPass } from '../_lib/cron.js';
 
 export const TIME_BUDGET_MS = RUN_BUDGET_MS;   // 20 s: cron-job.org gives up at 30 s
+
+/**
+ * A club name reduced to what identifies it: accents, case, punctuation and
+ * the club-form words dropped ("Club Leon" → "leon", "Club América" →
+ * "america", "CF Monterrey" → "monterrey").
+ */
+const FORM_WORDS = new Set(['club', 'cf', 'fc', 'sc', 'ac', 'cd', 'afc', 'the', 'de', 'deportivo']);
+export function clubKey(name) {
+  return String(name || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter((w) => w && !FORM_WORDS.has(w)).join(' ');
+}
+
+/**
+ * A standings row that carries no team id (19 Nov 2026: Liga MX lists León as
+ * { id: null, name: "Club Leon" }; /teams has it as 2289 "Leon"): the one club
+ * of THAT league whose name reduces to the same key, else null. Never a guess
+ * between two clubs, never a club of another league.
+ */
+export function matchByName(name, leagueClubs) {
+  const k = clubKey(name);
+  if (!k) return null;
+  const hits = leagueClubs.filter((c) => clubKey(c.name) === k);
+  return hits.length === 1 ? hits[0] : null;
+}
 
 export default withCron('standings', async ({ req }) => {
   const started = Date.now();
@@ -61,13 +85,29 @@ export default withCron('standings', async ({ req }) => {
     // Every table whole, for standings_groups (032): one row per (group, club).
     const groupRows = new Map();    // `${label}|${team_id}` -> row
 
+    // This league's clubs by name, read only if a row arrives without an id.
+    let leagueClubs = null;
+    const byName = async (name) => {
+      if (!leagueClubs) {
+        try { leagueClubs = await select('teams', `select=id,api_team_id,name&league_id=eq.${Number(lg.id)}`); }
+        catch (e) { console.warn('[standings] clubs by name', lg.slug, e.message); leagueClubs = []; }
+      }
+      return matchByName(name, leagueClubs);
+    };
+    let matchedByName = 0;
+
     for (const [order, group] of groups.entries()) {
       for (const s of group || []) {
         seen++;
-        const apiTeamId = s.team?.id;
-        const teamId = teams.get(apiTeamId);
+        let apiTeamId = s.team?.id;
+        let teamId = teams.get(apiTeamId);
+        if (!teamId && apiTeamId == null && s.team?.name) {
+          // No id in the API's table: the same club by name, in this league only.
+          const club = await byName(s.team.name);
+          if (club) { apiTeamId = club.api_team_id; teamId = club.id; matchedByName++; }
+        }
         if (!teamId) {
-          skipped.push(apiTeamId);
+          skipped.push(apiTeamId ?? `null:${s.team?.name || '?'}`);
           continue;
         }
 
@@ -159,6 +199,7 @@ export default withCron('standings', async ({ req }) => {
       rows_seen: seen,
       unique_teams: standingRows.length,
       duplicates_collapsed: collapsed,
+      matched_by_name: matchedByName,
       written,
       group_rows: groupsWritten,
       ...(groupsError ? { groups_error: groupsError } : {}),

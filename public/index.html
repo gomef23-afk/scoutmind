@@ -1004,6 +1004,8 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .gl-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
 .gl-x{flex:0 0 auto;min-width:44px;min-height:44px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;}
 .gl-x:hover{color:var(--loss-ink);}
+/* The same column, empty, on a row with no remove button: the points stay aligned. */
+.gl-x-slot{flex:0 0 auto;min-width:44px;min-height:44px;}
 .gl-list-row{cursor:pointer;}
 .gl-field{display:block;width:100%;min-height:44px;font-size:16px;background:var(--field);border:1px solid var(--border);color:var(--ink);border-radius:8px;padding:0 12px;font-family:'DM Sans',sans-serif;margin-bottom:10px;outline:none;}
 .gl-field:focus{border-color:var(--navy-ink);}
@@ -7435,6 +7437,10 @@ async function glRenderLeague(out,id){
   const closed=!!L.closed_at;
   let when='';
   try{ when=closed?new Date(L.closed_at).toLocaleDateString(smLocale(),{day:'numeric',month:'short',year:'numeric'}):''; }catch(e){}
+  // The owner of an open league sees a remove button on every other member's
+  // row; their own row (and any row without one) keeps the same 44px column
+  // empty, so the points line up down the table (19 Nov 2026).
+  const xCol=L.is_owner&&!closed;
   const line=x=>'<div class="sg-rank-row'+(x.user_id===me?' me':'')+'"'+sgFiveTap(x,{leagueId:L.league_id,season:L.season})+'>'
     +'<span class="sg-rank-n">'+(x.rank!=null?sanitize(String(x.rank)):'—')+'</span>'
     +(x.main_club_id?clubCrestById(x.main_club_id,16):'<span style="width:16px;display:inline-block;"></span>')
@@ -7442,8 +7448,9 @@ async function glRenderLeague(out,id){
       +(x.is_owner?' <span class="sg-tag">'+t('gl.owner')+'</span>':'')+'</span>'
     +'<span class="sg-rank-x">'+sanitize(t('sg.rk.rd',{n:x.rounds_played||0}))+'</span>'
     +'<span class="sg-rank-pts">'+(x.total!=null?sgPts(x.total):'—')+'</span>'
-    +(L.is_owner&&!closed&&x.user_id!==me
-      ?'<button class="gl-x" onclick="event.stopPropagation();glRemove(\''+sanitize(x.user_id)+'\')" aria-label="'+sanitize(t('gl.remove',{name:x.name||t('sg.deletedUser')}))+'">'+Icons.svg('x',16)+'</button>':'')
+    +(xCol&&x.user_id!==me
+      ?'<button class="gl-x" onclick="event.stopPropagation();glRemove(\''+sanitize(x.user_id)+'\')" aria-label="'+sanitize(t('gl.remove',{name:x.name||t('sg.deletedUser')}))+'">'+Icons.svg('x',16)+'</button>'
+      :xCol?'<span class="gl-x-slot" aria-hidden="true"></span>':'')
     +'</div>';
   out.innerHTML='<button class="back-btn" onclick="glBack()">'+t('gl.back')+'</button>'
     +'<div class="gl-head"><div class="gl-name">'+sanitize(L.name)+'</div>'
