@@ -10,6 +10,7 @@
 import { createClient } from '../_lib/apifootball.js';
 import { activeLeagues, teamIdMap, upsert, select } from '../_lib/supabase.js';
 import { withCron, isoDate, RUN_BUDGET_MS, leaguesFromQuery, seasonOver, dailyPass } from '../_lib/cron.js';
+import { isCupRow } from '../_lib/cups.js';
 
 export const TIME_BUDGET_MS = RUN_BUDGET_MS;   // 20 s: cron-job.org gives up at 30 s
 
@@ -72,7 +73,8 @@ export default withCron('standings', async ({ req }) => {
     return { rows_written: 0, requests_used: 0, note: 'today\'s pass is complete', cursor: { day: pass.today, complete: true } };
   }
   const leagues = chosen || all.filter((l) => l.id > pass.afterId && !seasonOver(l));
-  const teams = await teamIdMap(leagues.map((l) => l.id));
+  // Every tracked club: a cup's table holds clubs of other leagues (C-1).
+  const teams = await teamIdMap(all.map((l) => l.id));
   let lastDone = pass ? pass.afterId : 0;
   let stopped = false;
 
@@ -105,6 +107,7 @@ export default withCron('standings', async ({ req }) => {
     // (no main table) the best (lowest) rank, remembering which table it came from.
     const groups = json.response?.[0]?.league?.standings || [];
     const main = mainTable(groups, json.response?.[0]?.league?.name || lg.name);
+    const cup = isCupRow(lg);
 
     const bestByTeam = new Map();   // api_team_id -> row
     let seen = 0;
@@ -160,7 +163,11 @@ export default withCron('standings', async ({ req }) => {
         // club twice in one table (never seen) keeps its first row.
         const label = s.group || lg.name || lg.slug;
         const gk = `${label}|${teamId}`;
-        if (!groupRows.has(gk)) groupRows.set(gk, { ...candidate, group_label: label, group_order: order });
+        // A cup's qualification zone as the API words it ("Promotion -
+        // Champions League (Play Offs: 1/8-finals)"); the table shows it as text.
+        // Only for a cup: standings_groups.description arrives with 039, which
+        // is also what makes a cup active (rule 21).
+        if (!groupRows.has(gk)) groupRows.set(gk, { ...candidate, group_label: label, group_order: order, ...(cup ? { description: s.description || null } : {}) });
 
         const inMain = main !== null && order === main;
         candidate._main = inMain;

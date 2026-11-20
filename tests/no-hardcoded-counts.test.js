@@ -69,7 +69,9 @@ check('about.html reads leagues (with playable, falling back without it), clubs 
   /aboutGet\('leagues\?select=id,slug,name,country,country_code,playable&active=is\.true/.test(about)
   && /\.catch\(\(\) => aboutGet\('leagues\?select=id,slug,name,country&active=is\.true/.test(about)
   && /aboutGet\('teams\?select=league_id&limit=5000'\)/.test(about) && /aboutGet\('news_sources\?select=name,lang&active=is\.true/.test(about));
-check('clubs = teams in an active league only', /const on = new Set\(leagues\.map\(\(l\) => l\.id\)\); ABOUT\.clubs = teams\.filter\(\(x\) => on\.has\(x\.league_id\)\)\.length \|\| null;/.test(about));
+check('clubs = teams in an active LEAGUE only (a cup\'s cup-only clubs are not clubs to follow, C-1)', /const on = new Set\(leagues\.filter\(\(l\) => !LeagueNames\.isCup\(l\)\)\.map\(\(l\) => l\.id\)\); ABOUT\.clubs = teams\.filter\(\(x\) => on\.has\(x\.league_id\)\)\.length \|\| null;/.test(about));
+check('leagues and cups are counted apart ("19 leagues + 3 cups", C-1)', /const L = ALL && ALL\.filter\(\(l\) => !LeagueNames\.isCup\(l\)\);/.test(about)
+  && /t\(C\.length \? 'about\.proofCupsN' : 'about\.proofN', v\)/.test(about) && /<div id="st-cups-box" hidden>/.test(about));
 check('no hero tile carries a literal number; each is hidden until filled', !/<div class="hero-stat-num">\d/.test(about)
   && ['st-leagues', 'st-game', 'st-clubs', 'st-outlets'].every((id) => new RegExp(`<div id="${id}-box" hidden>`).test(about)) && /<div class="hero-stats" id="hero-stats" hidden>/.test(about));
 check('the league chips are drawn from the rows, not written into the page', !/<div class="proof-league">/.test(about) && /<div class="proof-section" id="proof" hidden>/.test(about)

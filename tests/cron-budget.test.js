@@ -58,8 +58,10 @@ check('news: least recently fetched source first, so a tight budget rotates', /o
 
 // ── 4. No partial rows into NOT NULL tables (the 23502 of 16 Nov 2026) ──
 const teams = read('api/cron/teams.js');
-check("teams.js: only refreshTeams upserts teams", (teams.match(/upsert\('teams'/g) || []).length === 1
-  && /async function refreshTeams[\s\S]*?upsert\('teams', teamRows/.test(teams));
+// C-1: a cup's cup-only clubs are created INSERT-ONLY (ignoreDuplicates), never overwriting a club we hold.
+check("teams.js: only refreshTeams upserts teams; a cup's clubs insert-only", (teams.match(/upsert\('teams'/g) || []).length === 2
+  && /async function refreshTeams[\s\S]*?upsert\('teams', teamRows/.test(teams)
+  && /async function cupOnlyClubs[\s\S]*?upsert\('teams', rows, 'api_team_id', \{ ignoreDuplicates: true \}\)/.test(teams));
 check('teams.js: refreshTeams skips API teams without an id or a name', /filter\(\(r\) => r\.team\?\.id && r\.team\?\.name\)/.test(teams));
 check('teams.js: the coach is a PATCH by teams.id', /await update\('teams', `id=eq\.\$\{Number\(t\.id\)\}`, \{ coach_name:/.test(teams));
 const players = read('api/cron/players.js');

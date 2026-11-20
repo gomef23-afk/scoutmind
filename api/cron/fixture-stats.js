@@ -17,6 +17,7 @@
 import { createClient, pctToNumber, statsArrayToObject } from '../_lib/apifootball.js';
 import { select, upsert, update, activeLeagues, teamIdMap, count } from '../_lib/supabase.js';
 import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
+import { isCupRow } from '../_lib/cups.js';
 
 const FINISHED = ['FT', 'AET', 'PEN'];
 
@@ -210,6 +211,16 @@ async function aggregateTeams(touched, leagues) {
   if (!touched.size) return 0;
 
   const leagueOf = new Map(leagues.map((l) => [l.id, l]));
+  // A club's season row is its OWN league's (C-1): a Champions League match
+  // never enters a Premier League club's numbers, and a cup-only club (its
+  // league is the cup) has no season row at all.
+  const homeLeague = new Map();
+  for (const t of await select('teams', `select=id,league_id&id=in.(${[...touched.keys()].join(',')})`)) homeLeague.set(t.id, t.league_id);
+  for (const id of [...touched.keys()]) {
+    const lg = leagueOf.get(homeLeague.get(id));
+    if (!lg || isCupRow(lg)) touched.delete(id);
+  }
+  if (!touched.size) return 0;
   const teamIds = [...touched.keys()];
 
   // 1. Every finished fixture for these teams, in the seasons we touched.
@@ -243,7 +254,7 @@ async function aggregateTeams(touched, leagues) {
   const out = [];
   for (const [teamId, season] of touched) {
     const mine = fixtures.filter(
-      (f) => f.season === season && (f.home_team_id === teamId || f.away_team_id === teamId)
+      (f) => f.season === season && f.league_id === homeLeague.get(teamId) && (f.home_team_id === teamId || f.away_team_id === teamId)
     );
     if (!mine.length) continue;
     out.push(computeTeamRow(teamId, season, mine, statsByFixture));

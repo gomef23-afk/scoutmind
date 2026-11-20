@@ -37,8 +37,8 @@
 <meta name="apple-mobile-web-app-title" content="ScoutMind">
 <script src="/pwa.js?v=4801f83526" defer></script>
 <!-- 4b-5: this page in the reader's language (the device's until they choose). -->
-<script src="/i18n.js?v=5d43382c2c"></script>
-<script src="/league-names.js?v=3dbe9a7b46"></script>
+<script src="/i18n.js?v=fc8ff48179"></script>
+<script src="/league-names.js?v=a07be7d3bd"></script>
 <meta property="og:site_name" content="ScoutMind">
 <meta property="og:type" content="website">
 <meta property="og:title" content="About ScoutMind — Your club. Everything around it.">
@@ -302,6 +302,10 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
           <div class="hero-stat-num" id="st-game"></div>
           <div class="hero-stat-lbl" data-i18n="about.stat.playable">In the Scout Game</div>
         </div>
+        <div id="st-cups-box" hidden>
+          <div class="hero-stat-num" id="st-cups"></div>
+          <div class="hero-stat-lbl" data-i18n="about.stat.cups">Cups</div>
+        </div>
         <div id="st-clubs-box" hidden>
           <div class="hero-stat-num" id="st-clubs"></div>
           <div class="hero-stat-lbl" data-i18n="about.stat.clubs">Clubs to follow</div>
@@ -371,6 +375,10 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
     <div id="proof-also-box" hidden>
     <div class="proof-group-label" data-i18n="about.proof.also">Also covered</div>
     <div class="proof-leagues" id="proof-also"></div>
+    </div>
+    <div id="proof-cups-box" hidden>
+    <div class="proof-group-label" data-i18n="about.proof.cups">Cups</div>
+    <div class="proof-leagues" id="proof-cups"></div>
     </div>
     </div>
 </div>
@@ -563,22 +571,27 @@ function aboutSay(id, key, vars) {
 }
 function aboutShow(id, on) { const el = document.getElementById(id); if (el) el.hidden = !on; }
 function aboutPaint() {
-  const L = ABOUT.leagues;
+  // Leagues and cups counted apart (C-1): "19 leagues + 3 cups".
+  const ALL = ABOUT.leagues;
+  const L = ALL && ALL.filter((l) => !LeagueNames.isCup(l));
+  const C = ALL ? LeagueNames.sort(ALL.filter((l) => LeagueNames.isCup(l))) : [];
   if (L && L.length) {
     const game = LeagueNames.sort(L.filter(aboutPlayable)), also = LeagueNames.sort(L.filter((l) => !aboutPlayable(l)));
     const chip = (l) => { const d = document.createElement('div'); d.className = 'proof-league'; d.textContent = LeagueNames.label(l); return d; };
     document.getElementById('proof-game').replaceChildren(...game.map(chip));
     document.getElementById('proof-also').replaceChildren(...also.map(chip));
-    aboutShow('proof-game-box', game.length); aboutShow('proof-also-box', also.length); aboutShow('proof', true);
+    document.getElementById('proof-cups').replaceChildren(...C.map(chip));
+    aboutShow('proof-game-box', game.length); aboutShow('proof-also-box', also.length); aboutShow('proof-cups-box', C.length); aboutShow('proof', true);
     document.getElementById('st-leagues').textContent = L.length; aboutShow('st-leagues-box', true);
     document.getElementById('st-game').textContent = game.length; aboutShow('st-game-box', game.length);
+    document.getElementById('st-cups').textContent = C.length; aboutShow('st-cups-box', C.length);
     aboutShow('hero-stats', true);
     const names = (ls) => aboutList(ls.map((l) => LeagueNames.label(l)));
     if (game.length) aboutSay('faq-a5', 'about.faq.a5N', { game: game.length });
     if (ABOUT.clubs) {
       document.getElementById('st-clubs').textContent = ABOUT.clubs; aboutShow('st-clubs-box', true);
-      const v = { leagues: L.length, clubs: ABOUT.clubs, game: game.length, also: also.length, gameList: names(game), alsoList: names(also) };
-      const pl = document.getElementById('proof-label'); pl.textContent = t('about.proofN', v); pl.hidden = false;
+      const v = { leagues: L.length, cups: C.length, clubs: ABOUT.clubs, game: game.length, also: also.length, gameList: names(game), alsoList: names(also) };
+      const pl = document.getElementById('proof-label'); pl.textContent = t(C.length ? 'about.proofCupsN' : 'about.proofN', v); pl.hidden = false;
       aboutSay('s1d', 'about.s1.dN', v);
       aboutSay('faq-a2', also.length ? 'about.faq.a2N' : 'about.faq.a2AllN', v);
     }
@@ -606,7 +619,8 @@ async function aboutStart() {
     aboutGet('news_sources?select=name,lang&active=is.true&order=id.asc').catch((e) => { console.warn('about outlets:', e.message); return null; }),
   ]);
   ABOUT.leagues = leagues;
-  if (leagues && teams) { const on = new Set(leagues.map((l) => l.id)); ABOUT.clubs = teams.filter((x) => on.has(x.league_id)).length || null; }
+  // Clubs to follow: those of an active LEAGUE (a cup's cup-only clubs are not followable, C-1).
+  if (leagues && teams) { const on = new Set(leagues.filter((l) => !LeagueNames.isCup(l)).map((l) => l.id)); ABOUT.clubs = teams.filter((x) => on.has(x.league_id)).length || null; }
   ABOUT.sources = sources;
   aboutPaint();
 }

@@ -32,23 +32,35 @@
 //   langs         its domestic press languages, for the tagger
 //   tagNews       its clubs are tagged in news headlines. Off for the new
 //                 leagues until the measured check (commit 3, decision 5).
+//   type          'league' | 'cup' | 'mixed' (C-1, 22 Nov 2026; leagues.type,
+//                 migration 039). A cup is tracked like a league (matches,
+//                 live, table, match panels) but never playable, never feeds a
+//                 club's season stats, form or position, and its clubs that
+//                 play in no tracked league are CUP-ONLY clubs: a row with name
+//                 and crest under the cup, a page, no room, never offered as a
+//                 club to follow, never tagged in news. A cup is not in 035's
+//                 seed: its own migration inserts it (039, 040).
+//   fromRound     cups: the first round we load ('League Stage'); qualifying
+//                 rounds before it are skipped (api/_lib/cups.js).
+//   seasonEnd     for a cup: the date of its FINAL (UEFA), never the API's
+//                 season end (which stops at the league phase).
 
 export const LEAGUES = [
   // ── The seven of the Scout Game ──
   { slug: 'serie_a', apiId: 71, name: 'Série A', country: 'Brazil', code: 'BRA', season: 2026, seasonStart: '2026-01-28', seasonEnd: '2026-12-02',
-    active: true, playable: true, statsCoverage: null, region: 'brazil', langs: ['pt-BR'], tagNews: true },
+    active: true, playable: true, statsCoverage: null, region: 'brazil', langs: ['pt-BR'], tagNews: true, type: 'league' },
   { slug: 'premier_league', apiId: 39, name: 'Premier League', country: 'England', code: 'ENG', season: 2026, seasonStart: '2026-08-21', seasonEnd: '2027-05-30',
-    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true },
+    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true, type: 'league' },
   { slug: 'la_liga', apiId: 140, name: 'La Liga', country: 'Spain', code: 'ESP', season: 2026, seasonStart: '2026-08-15', seasonEnd: '2027-05-30',
-    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['es'], tagNews: true },
+    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['es'], tagNews: true, type: 'league' },
   { slug: 'bundesliga', apiId: 78, name: 'Bundesliga', country: 'Germany', code: 'GER', season: 2026, seasonStart: '2026-08-28', seasonEnd: '2027-05-22',
-    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['de'], tagNews: true },
+    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['de'], tagNews: true, type: 'league' },
   { slug: 'serie_a_it', apiId: 135, name: 'Serie A', country: 'Italy', code: 'ITA', season: 2026, seasonStart: '2026-08-22', seasonEnd: '2027-05-30',
-    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['it'], tagNews: true },
+    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['it'], tagNews: true, type: 'league' },
   { slug: 'ligue_1', apiId: 61, name: 'Ligue 1', country: 'France', code: 'FRA', season: 2026, seasonStart: '2026-08-21', seasonEnd: '2027-05-29',
-    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['fr'], tagNews: true },
+    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['fr'], tagNews: true, type: 'league' },
   { slug: 'argentina', apiId: 128, name: 'Liga Profesional', country: 'Argentina', code: 'ARG', season: 2026, seasonStart: '2026-01-22', seasonEnd: '2026-11-22',
-    active: true, playable: true, statsCoverage: null, region: null, langs: ['es'], tagNews: true },
+    active: true, playable: true, statsCoverage: null, region: null, langs: ['es'], tagNews: true, type: 'league' },
 
   // ── Tracked only: matches, live, tables, clubs, rooms; not in the Scout Game ──
   // Championship switched on in 035 (17 Nov 2026), the other ten in 036
@@ -60,27 +72,27 @@ export const LEAGUES = [
   // French and Dutch for Belgium, Turkish for the Süper Lig, English for the
   // Saudi Pro League (our Saudi press is English; Arabic sources are skipped).
   { slug: 'championship', apiId: 40, name: 'Championship', country: 'England', code: 'ENG', season: 2026, seasonStart: '2026-08-14', seasonEnd: '2027-05-01',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true, type: 'league' },
   { slug: 'eredivisie', apiId: 88, name: 'Eredivisie', country: 'Netherlands', code: 'NED', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-23',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['nl'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['nl'], tagNews: true, type: 'league' },
   { slug: 'primeira_liga', apiId: 94, name: 'Primeira Liga', country: 'Portugal', code: 'POR', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-16',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['pt-PT'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['pt-PT'], tagNews: true, type: 'league' },
   { slug: 'belgian_pro_league', apiId: 144, name: 'Jupiler Pro League', country: 'Belgium', code: 'BEL', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-22',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['fr', 'nl'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['fr', 'nl'], tagNews: true, type: 'league' },
   { slug: 'scottish_premiership', apiId: 179, name: 'Premiership', country: 'Scotland', code: 'SCO', season: 2026, seasonStart: '2026-07-31', seasonEnd: '2027-04-10',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true, type: 'league' },
   { slug: 'super_lig', apiId: 203, name: 'Süper Lig', country: 'Turkey', code: 'TUR', season: 2026, seasonStart: '2026-08-14', seasonEnd: '2027-05-23',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['tr'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['tr'], tagNews: true, type: 'league' },
   { slug: 'saudi_pro_league', apiId: 307, name: 'Saudi Pro League', country: 'Saudi Arabia', code: 'KSA', season: 2026, seasonStart: '2026-08-13', seasonEnd: '2027-05-29',
-    active: true, playable: false, statsCoverage: null, region: null, langs: ['en'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: null, langs: ['en'], tagNews: true, type: 'league' },
   { slug: 'mls', apiId: 253, name: 'MLS', country: 'USA', code: 'USA', season: 2026, seasonStart: '2026-02-21', seasonEnd: '2026-11-29',
-    active: true, playable: false, statsCoverage: null, region: null, langs: ['en'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: null, langs: ['en'], tagNews: true, type: 'league' },
   { slug: 'liga_mx', apiId: 262, name: 'Liga MX', country: 'Mexico', code: 'MEX', season: 2026, seasonStart: '2026-07-17', seasonEnd: '2026-11-23',
-    active: true, playable: false, statsCoverage: null, region: null, langs: ['es'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: null, langs: ['es'], tagNews: true, type: 'league' },
   { slug: 'serie_b', apiId: 72, name: 'Série B', country: 'Brazil', code: 'BRA', season: 2026, seasonStart: '2026-03-21', seasonEnd: '2026-11-28',
-    active: true, playable: false, statsCoverage: null, region: 'brazil', langs: ['pt-BR'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'brazil', langs: ['pt-BR'], tagNews: true, type: 'league' },
   { slug: 'serie_c', apiId: 75, name: 'Série C', country: 'Brazil', code: 'BRA', season: 2026, seasonStart: '2026-04-04', seasonEnd: '2026-10-25',
-    active: true, playable: false, statsCoverage: false, region: 'brazil', langs: ['pt-BR'], tagNews: true },
+    active: true, playable: false, statsCoverage: false, region: 'brazil', langs: ['pt-BR'], tagNews: true, type: 'league' },
   // Added 19 Nov 2026 (migration 037). API-Football 268, verified: season 2026
   // (6 Feb - 23 Nov), standings and team match stats, NO player stats (the
   // match panel shows score, events and team stats only). Its table comes as
@@ -88,8 +100,19 @@ export const LEAGUES = [
   // Clausura. Club names that are ordinary words or other clubs' names match
   // only in full (QUALIFIED_NAMES in tagger.js: Club Nacional, Wanderers...).
   { slug: 'uruguay', apiId: 268, name: 'Primera División', country: 'Uruguay', code: 'URU', season: 2026, seasonStart: '2026-02-06', seasonEnd: '2026-11-23',
-    active: true, playable: false, statsCoverage: null, region: null, langs: ['es'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: null, langs: ['es'], tagNews: true, type: 'league' },
+
+  // ── Cups (C-1, 22 Nov 2026; migration 039) ──
+  // API-Football 2, season 2026: one 36-club league-phase table (8 matchdays,
+  // 8 Sep 2026 – 27 Jan 2027), then knockout ties. Final: 5 June 2027,
+  // Estadio Metropolitano, Madrid (UEFA). The API's own season end
+  // (2027-01-27) is the end of the league phase only.
+  { slug: 'champions_league', apiId: 2, name: 'Champions League', country: 'Europe', code: 'UEFA', season: 2026, seasonStart: '2026-09-08', seasonEnd: '2027-06-05',
+    active: true, playable: false, statsCoverage: true, region: null, langs: [], tagNews: false, type: 'cup', fromRound: 'League Stage' },
 ];
+
+/** The cups among them (type 'cup'). */
+export const CUPS = LEAGUES.filter((l) => l.type === 'cup');
 
 /** By slug. */
 export const BY_SLUG = Object.fromEntries(LEAGUES.map((l) => [l.slug, l]));

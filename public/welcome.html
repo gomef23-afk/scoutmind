@@ -57,10 +57,10 @@
 <meta property="og:image:alt" content="ScoutMind — Your club. Everything around it.">
 <meta name="twitter:card" content="summary_large_image">
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
-<script src="/i18n.js?v=5d43382c2c"></script>
+<script src="/i18n.js?v=fc8ff48179"></script>
 <script src="/club_names.js?v=25627f760c"></script>
-<script src="/league-names.js?v=3dbe9a7b46"></script>
-<script src="/home-band.js?v=61368b2af2"></script>
+<script src="/league-names.js?v=a07be7d3bd"></script>
+<script src="/home-band.js?v=21106714cb"></script>
 <script src="/icons.js?v=012882672d"></script>
 <style>
 /* The landing page (design spec v1.2, "Scoreboard"): tokens from theme.css by
@@ -252,6 +252,11 @@ a{color:var(--navy-ink);}
         <h3 data-i18n="land.get.compsAlso">Also covered: matches, tables, club pages and rooms</h3>
         <ul class="comps" id="comps"></ul>
       </div>
+      <!-- C-1: the cups we track (Champions League…), apart from the leagues. -->
+      <div id="comps-cups-box" hidden>
+        <h3 data-i18n="land.get.compsCups">Cups: matches, tables and club pages</h3>
+        <ul class="comps" id="comps-cups"></ul>
+      </div>
     </div>
   </div>
 </section>
@@ -376,11 +381,16 @@ function isPlayable(l){ return typeof l.playable==='boolean'?l.playable:LeagueNa
 function renderComps(){
   var ul=document.getElementById('comps'), ug=document.getElementById('comps-game');
   if(!ul||!ug) return;
-  var game=LeagueNames.sort(LAND.leagues.filter(isPlayable)), also=LeagueNames.sort(LAND.leagues.filter(function(l){ return !isPlayable(l); }));
+  // Leagues apart from cups (C-1).
+  var lgs=LAND.leagues.filter(function(l){ return !LeagueNames.isCup(l); });
+  var cups=LeagueNames.sort(LAND.leagues.filter(function(l){ return LeagueNames.isCup(l); }));
+  var game=LeagueNames.sort(lgs.filter(isPlayable)), also=LeagueNames.sort(lgs.filter(function(l){ return !isPlayable(l); }));
   var li=function(l){ return '<li>'+esc(LeagueNames.label(l))+'</li>'; };
   ug.innerHTML=game.map(li).join(''); ul.innerHTML=also.map(li).join('');
+  var uc=document.getElementById('comps-cups'); if(uc) uc.innerHTML=cups.map(li).join('');
   document.getElementById('comps-game-box').hidden=!game.length;
   document.getElementById('comps-also-box').hidden=!also.length;
+  var cb=document.getElementById('comps-cups-box'); if(cb) cb.hidden=!cups.length;
   document.getElementById('comps-box').hidden=!LAND.leagues.length;
   // The Scout Game step names how many competitions are playable, from the
   // database; without rows it keeps the wording with no number.
@@ -461,7 +471,8 @@ async function landStart(){
       landGet('teams?select=id,api_team_id,name,logo_url,league_id&limit=1000')
     ]);
     LAND.leagues=res[0]||[];
-    var active={}; LAND.leagues.forEach(function(l){ active[l.id]=true; });
+    // The club picker shows clubs of our LEAGUES: a cup's cup-only clubs are not followable (C-1).
+    var active={}; LAND.leagues.forEach(function(l){ if(!LeagueNames.isCup(l)) active[l.id]=true; });
     (res[1]||[]).forEach(function(row){ if(active[row.league_id]) LAND.teams[row.id]={id:row.id,label:clubName(row),logo_url:row.logo_url||null,league_id:row.league_id}; });
     LAND.order=Object.keys(LAND.teams).map(Number).sort(function(a,b){ return LAND.teams[a].label.localeCompare(LAND.teams[b].label); });
   }catch(e){ console.warn('landing clubs:',e.message); }

@@ -21,6 +21,7 @@
 
 import { createClient } from '../_lib/apifootball.js';
 import { activeLeagues, teamIdMap, upsert, select, update } from '../_lib/supabase.js';
+import { isCupRow, keepRound, penalties } from '../_lib/cups.js';
 import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 
 /** Statuses API-Football uses while a match is on (or paused within it). */
@@ -51,7 +52,7 @@ export async function staleFixtures(leagueIds, liveApiIds, now = Date.now()) {
 }
 
 /** Fetch the stale fixtures by id and write what the API says now. */
-export async function finalise(api, stale, started) {
+export async function finalise(api, stale, started, withPens = false) {
   let requests = 0, written = 0;
   const changed = [];
   for (let i = 0; i < stale.length && requests < FINALISE_MAX_REQUESTS; i += IDS_PER_REQUEST) {
@@ -70,6 +71,8 @@ export async function finalise(api, stale, started) {
         elapsed: r.fixture?.status?.elapsed ?? null,
         home_goals: r.goals?.home ?? null,
         away_goals: r.goals?.away ?? null,
+        // A match decided on penalties (a cup tie, C-1): only once 039 has run.
+        ...(withPens ? penalties(r) : {}),
         updated_at: new Date().toISOString(),
       });
       written++;
@@ -87,7 +90,9 @@ export default withCron('live', async () => {
 
   const json = await api.get('fixtures', { live: 'all' });
   const all = json.response || [];
-  const mine = all.filter((r) => byApiId.has(r.league?.id));
+  const mine = all.filter((r) => byApiId.has(r.league?.id) && keepRound(byApiId.get(r.league.id), r.league?.round));
+  // Penalty columns only once a cup is active, i.e. 039 has run (rule 21).
+  const withPens = leagues.some(isCupRow);
 
   let rows = 0;
   if (mine.length) {
@@ -113,6 +118,7 @@ export default withCron('live', async () => {
         home_goals: r.goals?.home ?? null,
         away_goals: r.goals?.away ?? null,
         venue_name: r.fixture?.venue?.name || null,
+        ...(withPens ? penalties(r) : {}),
         updated_at: new Date().toISOString(),
       });
     }
@@ -125,7 +131,7 @@ export default withCron('live', async () => {
   try {
     const stale = await staleFixtures(leagues.map((l) => l.id), liveIds);
     staleCount = stale.length;
-    if (stale.length) fin = await finalise(api, stale, started);
+    if (stale.length) fin = await finalise(api, stale, started, withPens);
   } catch (e) {
     // The live scores above are already written; a failed finalise is retried next run.
     console.error('[live] finalise:', e.message);

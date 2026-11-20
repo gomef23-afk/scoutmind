@@ -44,8 +44,10 @@ const B = buildIndex(teams, [...TEAM_ALIASES, ...TRACKED_ALIASES]);
 check('new source languages: Dutch, European Portuguese, Turkish', ['nl', 'pt-PT', 'tr'].every((l) => LANGS.includes(l)));
 eq('press languages of the tracked leagues', ['eredivisie', 'primeira_liga', 'belgian_pro_league', 'super_lig', 'saudi_pro_league', 'mls', 'liga_mx', 'uruguay'].map((s) => LEAGUE_LANG[s]),
   [['nl'], ['pt-PT'], ['fr', 'nl'], ['tr'], ['en'], ['en'], ['es'], ['es']]);
-check('every league has its press country (ISO alpha-2, as news_sources.country)', LEAGUES.every((l) => /^[A-Z]{2}$/.test(LEAGUE_COUNTRY[l.slug] || '')),
-  LEAGUES.filter((l) => !LEAGUE_COUNTRY[l.slug]).map((l) => l.slug).join(', '));
+// A cup (C-1) has no press of its own: its clubs are tagged through their league.
+check('every league has its press country (ISO alpha-2, as news_sources.country); a cup none', LEAGUES.filter((l) => l.type !== 'cup').every((l) => /^[A-Z]{2}$/.test(LEAGUE_COUNTRY[l.slug] || ''))
+  && LEAGUES.filter((l) => l.type === 'cup').every((l) => LEAGUE_COUNTRY[l.slug] === null),
+  LEAGUES.filter((l) => l.type !== 'cup' && !LEAGUE_COUNTRY[l.slug]).map((l) => l.slug).join(', '));
 eq('…England and Scotland are GB, as the BBC is', [LEAGUE_COUNTRY.premier_league, LEAGUE_COUNTRY.scottish_premiership, LEAGUE_COUNTRY.uruguay, LEAGUE_COUNTRY.liga_mx], ['GB', 'GB', 'UY', 'MX']);
 check('every tracked alias points at a club we hold, of a tracked (not original) league', TRACKED_ALIASES.every((a) => leagueOf.has(a.api_team_id)
   && !['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina'].includes(leagueOf.get(a.api_team_id))),

@@ -118,11 +118,13 @@ ctx.lpFilter();
 let list = el('lp-list').innerHTML;
 const countries = [...list.matchAll(/<div class="lp-country">([^<]+)<\/div>/g)].map((m) => m[1]);
 const items = [...list.matchAll(/<button type="button" class="lp-item( on)?"[^>]*><span>([^<]+)<\/span>/g)].map((m) => m[2]);
-check('a "My leagues" section at the top: my two leagues, before the first country', /^<div class="lp-country lp-mine-h">My leagues<\/div><button[^>]*><span>Premier League · ENG<\/span><\/button><button[^>]*><span>Série A · BRA<\/span><\/button><div class="lp-country">Brazil · BRA/.test(list),
-  list.slice(0, 300));
-eq('then every tracked league by country, once each', [items.length - 2, new Set(items).size], [LEAGUES.length, LEAGUES.length]);
+// C-1: then "Cups" (the Champions League…), then the countries.
+check('a "My leagues" section at the top: my two leagues, then Cups, then the first country', /^<div class="lp-country lp-mine-h">My leagues<\/div><button[^>]*><span>Premier League · ENG<\/span><\/button><button[^>]*><span>Série A · BRA<\/span><\/button><div class="lp-country lp-cups-h">Cups<\/div><button[^>]*><span>Champions League · UEFA<\/span><\/button><div class="lp-country">Brazil · BRA/.test(list),
+  list.slice(0, 400));
+eq('then every tracked league by country, once each (cups in their own section)', [items.length - 2, new Set(items).size], [LEAGUES.length, LEAGUES.length]);
 eq('grouped by country with its code: my countries first, then by name', countries.slice(0, 3), ['Brazil · BRA', 'England · ENG', 'Argentina · ARG']);
-eq('one heading per country (Brazil has three leagues, England two)', countries.length, new Set(LEAGUES.map((l) => l.country_code)).size);
+const LEAGUES_ONLY = LEAGUES.filter((l) => !ctx.LeagueNames.isCup(l));
+eq('one heading per country (Brazil has three leagues, England two); a cup is under Cups, not a country', countries.length, new Set(LEAGUES_ONLY.map((l) => l.country_code)).size);
 check('a country\'s leagues sit under it: my league first', /Brazil · BRA<\/div><button[^>]*><span>Série A · BRA<\/span>[\s\S]*?Série B · BRA[\s\S]*?Série C · BRA[\s\S]*?England · ENG<\/div><button[^>]*><span>Premier League · ENG<\/span>[\s\S]*?Championship · ENG/.test(list));
 check('while searching, no "My leagues" section (the search lists by country)', (() => { el('lp-q').value = 'serie'; ctx.lpFilter(); const h = el('lp-list').innerHTML; el('lp-q').value = ''; return !/lp-mine-h/.test(h); })());
 check('nothing is chosen in the sheet while My leagues is', !/lp-item on/.test(list));
@@ -190,8 +192,8 @@ check('Matches keeps the strip, Today and "Show earlier results"', /<div id="mx-
 // ── Strings ──
 const KEYS = ['lp.mine', 'lp.button', 'lp.title', 'lp.search', 'lp.close', 'lp.none'];
 check('the picker\'s strings in both languages, translated', KEYS.every((k) => I.en[k] && I['pt-BR'][k] && I.en[k] !== I['pt-BR'][k]), KEYS.filter((k) => !(I.en[k] && I['pt-BR'][k])).join(', '));
-const codes = [...new Set(LEAGUES.map((l) => l.country_code))];
-check('every league\'s country has a name in both languages', codes.every((c) => I.en['country.' + c] && I['pt-BR']['country.' + c]), codes.filter((c) => !I.en['country.' + c]).join(', '));
+const codes = [...new Set(LEAGUES.filter((l) => !ctx.LeagueNames.isCup(l)).map((l) => l.country_code))];
+check('every league\'s country has a name in both languages; the Cups section heading too', I.en['lp.cups'] && I['pt-BR']['lp.cups'] && codes.every((c) => I.en['country.' + c] && I['pt-BR']['country.' + c]), codes.filter((c) => !I.en['country.' + c]).join(', '));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);

@@ -48,9 +48,16 @@
   /**
    * Slot 2, MATCH. fixtures: the club's fixtures, any order, each
    * { id, kickoff (ms), status_short, elapsed, home_id, away_id, home_goals,
-   *   away_goals, opponent }. Live beats finished-today beats next.
+   *   away_goals, opponent, comp }. Live beats finished-today beats next.
+   * comp (C-1): the competition's name when it is not the club's own league
+   * ("Champions League · UEFA"); the slot carries it and its label names it.
    */
   function matchSlot(clubId, fixtures, now) {
+    var s = matchSlotOf(clubId, fixtures, now);
+    if (s.comp === undefined) s.comp = null;
+    return s;
+  }
+  function matchSlotOf(clubId, fixtures, now) {
     var list = (fixtures || []).filter(function (f) { return f && (f.home_id === clubId || f.away_id === clubId); })
       .slice().sort(function (a, b) { return a.kickoff - b.kickoff; });
     var live = list.filter(function (f) { return LIVE.indexOf(f.status_short) >= 0; })[0];
@@ -59,7 +66,7 @@
         label: { key: 'hb.live', vars: { m: num(live.elapsed) } },
         big: score(live),
         line: { key: 'hb.vs', vars: { opp: live.opponent } },
-        tone: 'live', fixtureId: live.id
+        tone: 'live', fixtureId: live.id, comp: live.comp || null
       };
     }
     var ft = list.filter(function (f) { return DONE.indexOf(f.status_short) >= 0 && sameLocalDay(f.kickoff, now); }).pop();
@@ -68,7 +75,7 @@
         label: { key: 'hb.ft' },
         big: score(ft),
         line: { key: 'hb.vs', vars: { opp: ft.opponent } },
-        tone: 'normal', fixtureId: ft.id
+        tone: 'normal', fixtureId: ft.id, comp: ft.comp || null
       };
     }
     var next = list.filter(function (f) { return f.kickoff > now && LIVE.indexOf(f.status_short) < 0 && DONE.indexOf(f.status_short) < 0
@@ -78,7 +85,7 @@
         label: { key: 'hb.next' },
         big: { kind: 'time', at: next.kickoff },
         line: { key: 'hb.dayVs', vars: { at: next.kickoff, opp: next.opponent } },
-        tone: 'normal', fixtureId: next.id
+        tone: 'normal', fixtureId: next.id, comp: next.comp || null
       };
     }
     return { label: { key: 'hb.next' }, big: { kind: 'dash' }, line: { key: 'hb.noMatch' }, tone: 'normal' };
@@ -237,7 +244,8 @@
     if (!s) return '';
     var live = s.tone === 'live', gold = s.tone === 'gold', esc = ctx.esc;
     return '<div class="hb-slot"' + (act ? ' role="button" tabindex="0" onclick="' + act + '" onkeydown="if(event.key===\'Enter\'){this.click();}"' : '') + '>'
-      + '<div class="hb-lab' + (live ? ' live' : '') + '">' + esc(lineText(s.label, ctx)) + '</div>'
+      // "NEXT · Champions League · UEFA": a match outside the club's league names its competition (C-1).
+      + '<div class="hb-lab' + (live ? ' live' : '') + '">' + esc(lineText(s.label, ctx) + (s.comp ? ' · ' + s.comp : '')) + '</div>'
       + '<div class="hb-big' + (gold ? ' gold' : '') + '"' + (s.big && s.big.kind === 'countdown' ? ' data-at="' + s.big.at + '"' : '') + '>' + esc(bigText(s.big, ctx)) + '</div>'
       + (s.line ? '<div class="hb-line">' + esc(lineText(s.line, ctx)) + '</div>' : '')
       + '</div>';

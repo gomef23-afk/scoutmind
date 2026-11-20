@@ -8,7 +8,7 @@
 //   not finished (from 3 h ago, so a live match is "next"); embeds named;
 // - every row is FxRow.render (the Matches tab's row), date + "League · CODE"
 //   above it, a tap opens /?match=<fixtures.id> in the app;
-// - the note that only league matches are shown; empty and failed states;
+// - every competition we track, each row labelled (C-1: the 'league matches
 // - a club picked meanwhile drops the late reply; a language switch redraws
 //   from what is held, without a second read;
 // - index.html opens the match panel for ?match=<id> and drops the parameter;
@@ -97,13 +97,13 @@ check('each row carries its date and "League · CODE" (the country code, 4b)', (
 check('the date as the Matches tab writes it: weekday day month, no comma', /<div class="cf-meta">\w{3} \d{1,2} \w{3} · /.test(html) && !/<div class="cf-meta">[^<]*,/.test(html), (/<div class="cf-meta">[^<]+/.exec(html) || [''])[0]);
 check('a club we list uses its crest; one we do not shows initials, never a hole',
   html.includes('src="https://media.api-sports.io/football/teams/127.png"') && /<span class="cf-crest"[^>]*>BAH<\/span>|<span class="cf-crest"[^>]*>B<\/span>/.test(html));
-check('the note: league matches only', html.includes('<p class="cf-note">League matches only. Cup games are not in our data.</p>'));
+check('no "league matches only" note any more: every competition is listed (C-1)', !/cf-note/.test(html) && !/cf-note/.test(comm));
 check('headed "Fixtures & results" (escaped), "Next 5" and "Last 5"', html.includes('<h2 class="cf-h" id="cf-h">Fixtures &amp; results</h2>') && html.includes('>Next 5<') && html.includes('>Last 5<'));
 
 // ── Language: redrawn from what is held ──
 lang = 'pt-BR';
 ctx.renderClubFixtures();
-check('in Portuguese, with no second read', calls.length === 2 && box.innerHTML.includes('Jogos e resultados') && box.innerHTML.includes('Só jogos de liga.') && box.innerHTML.includes('Próximos 5'));
+check('in Portuguese, with no second read', calls.length === 2 && box.innerHTML.includes('Jogos e resultados') && box.innerHTML.includes('Próximos 5'));
 check('the same club picked again is not read again', (await ctx.loadClubFixtures(club), calls.length === 2));
 lang = 'en';
 
@@ -116,7 +116,7 @@ check('no matches: says so for each list, no blank', box.innerHTML.includes('No 
 reply = () => { throw new Error('fixtures 500'); };
 ctx.getCFX().id = null;
 await ctx.loadClubFixtures(other);
-check('a failed read says so, with the note still there', box.innerHTML.includes('Couldn’t load the matches.') && box.innerHTML.includes('cf-note'));
+check('a failed read says so, under the heading', box.innerHTML.includes('Couldn’t load the matches.') && box.innerHTML.includes('cf-h'));
 const waiting = [];
 const release = () => waiting.forEach((r) => r(PAST));
 reply = () => new Promise((r) => { waiting.push(r); });
@@ -131,7 +131,7 @@ check('a reply for a club no longer on screen is dropped', box.innerHTML === 'ke
 check('community.html loads fx-row.js (stamped) and the section sits under the header, before the club features',
   /<script src="\/fx-row\.js\?v=[0-9a-f]+"><\/script>/.test(comm)
   && /\+'<section id="club-fx" class="cf" aria-labelledby="cf-h"><\/section>'[\s\S]*?\+'<div id="club-feat"><\/div>'/.test(fn(comm, 'renderTeamPage'))
-  && /loadClubFixtures\(c\);\s*loadFeatures\(c\);/.test(fn(comm, 'renderTeamPage')));
+  && /loadClubFixtures\(c\);\s*if\(!c\.cupOnly\) loadFeatures\(c\);/.test(fn(comm, 'renderTeamPage')));
 check('the styles use tokens only', (() => { const css = (/\/\* Fixtures & results \(4b-6\)[\s\S]*?\.ctabs\{scrollbar/.exec(comm) || [''])[0]; return css.length > 0 && !/#[0-9a-fA-F]{3,8}\b|rgba?\(/.test(css); })());
 const link = (/\/\/ \/\?match=<fixtures\.id>[\s\S]*?catch\(e\)\{ console\.error\('match link:',e\); \}/.exec(idx) || [''])[0];
 check('index.html: ?match=<id> shows Matches and opens the panel, after the clubs are in',
@@ -140,7 +140,7 @@ check('…and drops the parameter so a reload does not reopen it', /u\.searchPar
 
 // ── Strings ──
 const I = ctx.I18N;
-const KEYS = ['comm.fx.title', 'comm.fx.note', 'comm.fx.next', 'comm.fx.last', 'comm.fx.noNext', 'comm.fx.noLast', 'comm.fx.loading', 'comm.fx.fail'];
+const KEYS = ['comm.fx.title', 'comm.fx.next', 'comm.fx.last', 'comm.fx.noNext', 'comm.fx.noLast', 'comm.fx.loading', 'comm.fx.fail'];
 check('every new string in both languages, translated', KEYS.every((k) => I.en[k] && I['pt-BR'][k] && I.en[k] !== I['pt-BR'][k]), KEYS.filter((k) => !I.en[k] || !I['pt-BR'][k]).join(', '));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);

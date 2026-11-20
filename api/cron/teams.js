@@ -24,6 +24,7 @@
 import { createClient } from '../_lib/apifootball.js';
 import { activeLeagues, upsert, update, select } from '../_lib/supabase.js';
 import { withCron, RUN_BUDGET_MS, leaguesFromQuery } from '../_lib/cron.js';
+import { isCupRow } from '../_lib/cups.js';
 
 export const TIME_BUDGET_MS = RUN_BUDGET_MS;   // 20 s: cron-job.org gives up at 30 s
 export const REFRESH_DAYS = 6;          // a finished cycle waits this long before the next
@@ -40,6 +41,7 @@ async function refreshTeams(api, leagues, started = Date.now()) {
   let rows = 0;
   for (const lg of leagues) {
     if (Date.now() - started > TIME_BUDGET_MS) break;
+    if (isCupRow(lg)) { rows += await cupOnlyClubs(api, lg); continue; }
     const json = await api.get('teams', { league: lg.api_league_id, season: lg.current_season });
     // teams.name is NOT NULL: an entry without one would fail the whole batch.
     const teamRows = (json.response || []).filter((r) => r.team?.id && r.team?.name).map((r) => ({
@@ -59,6 +61,34 @@ async function refreshTeams(api, leagues, started = Date.now()) {
     rows += await upsert('teams', teamRows, 'api_team_id');
   }
   return rows;
+}
+
+/**
+ * A cup's clubs that play in no league we track (C-1): Bodø/Glimt, Qarabağ,
+ * Pafos… They are created from the cup's league-phase table (its 36 clubs,
+ * with name and crest; qualifying-only clubs never get a row), under the cup,
+ * INSERT-ONLY: a club we already hold keeps its own league (Arsenal stays a
+ * Premier League club) and nothing of it is overwritten. A cup-only club gets
+ * no room (039's ensure_club_room skips cups) and is never offered as a club
+ * to follow. If we later track its league, that league's pass moves it there.
+ */
+async function cupOnlyClubs(api, lg) {
+  const json = await api.get('standings', { league: lg.api_league_id, season: lg.current_season });
+  const seen = new Map();
+  for (const g of json.response?.[0]?.league?.standings || []) {
+    for (const s of g || []) {
+      if (s.team?.id && s.team?.name && !seen.has(s.team.id)) seen.set(s.team.id, s.team);
+    }
+  }
+  const rows = [...seen.values()].map((t) => ({
+    api_team_id: t.id,
+    league_id: lg.id,
+    slug: slugify(t.name),
+    name: t.name,
+    logo_url: t.logo || null,
+    updated_at: new Date().toISOString(),
+  }));
+  return upsert('teams', rows, 'api_team_id', { ignoreDuplicates: true });
 }
 
 export default withCron('teams', async ({ req }) => {
@@ -98,9 +128,11 @@ export default withCron('teams', async ({ req }) => {
     cursor = { after_team_id: 0, cycle_started_at: nowIso() };
   }
 
+  // Cup-only clubs have no coach line on their page: never spend requests on them.
+  const coachLeagues = leagues.filter((l) => !isCupRow(l));
   const teams = await select(
     'teams',
-    `select=id,api_team_id&league_id=in.(${leagues.map((l) => l.id).join(',')})`
+    `select=id,api_team_id&league_id=in.(${coachLeagues.map((l) => l.id).join(',')})`
       + `&id=gt.${Number(cursor.after_team_id) || 0}&order=id.asc`
   );
 

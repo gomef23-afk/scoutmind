@@ -93,16 +93,18 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=5d43382c2c"></script>
+<script src="/i18n.js?v=fc8ff48179"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
-<script src="/home-band.js?v=61368b2af2"></script>
+<script src="/home-band.js?v=21106714cb"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
 <script src="/news-card.js?v=b8aff44b00"></script>
 <!-- 4b shared pieces: league names with the country code, the one fixture
      row (also on community.html), line icons. -->
-<script src="/league-names.js?v=3dbe9a7b46"></script>
+<script src="/league-names.js?v=a07be7d3bd"></script>
 <script src="/fx-row.js?v=2a5a74a713"></script>
 <script src="/icons.js?v=012882672d"></script>
+<!-- C-1: cup rounds and knockout ties from the fixtures we hold (tests/cups.test.js). -->
+<script src="/cup-ties.js?v=74e60245b6"></script>
 <style>
 /* The v1.2 tokens (/theme.css) by their own names; the pre-Sequence-2 aliases
    (--bg, --accent, --text…) were renamed and removed in 4b-8. Navy as TEXT or
@@ -872,6 +874,17 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 .tb-chips{margin:12px 0 4px;}
 .tb-group{margin:16px 0 2px;padding:0 8px;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);}
 .tb{width:100%;border-collapse:collapse;font-size:13px;color:var(--ink);}
+/* Cups (C-1): a row's qualification zone as text, and the knockout ties. */
+.tb-zone{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:1px;}
+.tb-ties{list-style:none;margin:0 0 12px;padding:0;}
+.tb-tie{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+.tb-tie-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;min-width:0;}
+.tb-tie-t{display:flex;align-items:center;gap:6px;min-width:0;color:var(--ink);font-size:13px;}
+.tb-tie-t span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tb-tie-t:last-child{justify-content:flex-end;flex-direction:row-reverse;}
+.tb-tie-t.win{font-weight:700;}
+.tb-tie-v{font-family:var(--font-num);font-size:18px;color:var(--ink);}
+.tb-tie-sub{font-size:12px;color:var(--muted);margin-top:6px;text-align:center;}
 .tb th{padding:8px 4px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);text-align:right;white-space:nowrap;}
 .tb th abbr{text-decoration:none;cursor:help;}
 .tb td{height:44px;padding:0 4px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;}
@@ -2808,7 +2821,8 @@ const POPULAR_CLUBS=[
 // Fixed league order for the club picker: alphabetical by "Name · CODE", from
 // the one league list (league-names.js), so every tracked league's clubs can
 // be a main club too. Fixed on purpose (see popularClubs' caller).
-const PICKER_LEAGUE_ORDER=LeagueNames.sort(LeagueNames.LEAGUES.map(l=>l.slug));
+// Leagues only: a cup's clubs are never offered as clubs to follow (C-1).
+const PICKER_LEAGUE_ORDER=LeagueNames.sort(LeagueNames.LEAGUES.filter(l=>l.type!=='cup').map(l=>l.slug));
 
 /** Lowercase, unaccent, collapse punctuation — so "Grêmio" matches "gremio". */
 function pickerNorm(s){
@@ -2827,6 +2841,7 @@ function popularClubs(){
   const rows=[],misses=[];
   const index=new Map();
   for(const c of CLUB_DATA.values()){
+    if(c.cupOnly) continue;          // never suggested as a club to follow (C-1)
     for(const cand of [c.label,c.name]){
       const k=pickerNorm(cand);
       if(!k)continue;
@@ -3356,8 +3371,15 @@ function lpSaved(key){ try{ return sessionStorage.getItem(LP[key].store)||null; 
 function lpSave(key,v){ try{ sessionStorage.setItem(LP[key].store,v); }catch(e){} }
 /** The slugs of my clubs' leagues (main club and follows). */
 function myLeagueSlugs(){ return new Set(myClubIds().map(id=>(CLUB_DATA.get(id)||{}).league).filter(Boolean)); }
-/** My leagues among this picker's, alphabetical by "Name · CODE". */
-function lpMine(key){ const m=myLeagueSlugs(); return LeagueNames.sort(LP[key].leagues().filter(l=>m.has(l.slug))); }
+/**
+ * My leagues among this picker's, alphabetical by "Name · CODE". On Matches
+ * this includes a cup one of my clubs plays in this season (MX.myCups, C-1).
+ */
+function lpMine(key){
+  const m=myLeagueSlugs();
+  if(key==='mx') for(const s of (MX.myCups||[])) m.add(s);
+  return LeagueNames.sort(LP[key].leagues().filter(l=>m.has(l.slug)));
+}
 /** The choice in force: the saved one while it still applies, else My leagues when I have any, else All. */
 function lpResolve(key){
   const s=lpSaved(key), mine=lpMine(key);
@@ -3451,7 +3473,9 @@ function lpFilter(){
     return [LeagueNames.label(l),l.name,l.country,c,(dict.en||{})['country.'+c],(dict['pt-BR']||{})['country.'+c]].some(s=>lpNorm(s).indexOf(q)>-1);
   };
   const groups=new Map();
+  const cups=[];
   for(const l of LeagueNames.sort(p.leagues(),mineSet).filter(hit)){
+    if(LeagueNames.isCup(l)){ cups.push(l); continue; }   // their own "Cups" section (C-1)
     const c=LeagueNames.code(l)||l.country||'';
     if(!groups.has(c)) groups.set(c,[]);
     groups.get(c).push(l);
@@ -3466,6 +3490,9 @@ function lpFilter(){
   // My leagues first, on their own (not while searching: the search lists by country).
   const mineL=q?[]:lpMine(key);
   if(mineL.length) html+='<div class="lp-country lp-mine-h">'+sanitize(t('lp.mine'))+'</div>'+mineL.map(row).join('');
+  // Cups (C-1): after my leagues, before the countries; Libertadores and the
+  // domestic cups will join them here.
+  if(cups.length) html+='<div class="lp-country lp-cups-h">'+sanitize(t('lp.cups'))+'</div>'+cups.map(row).join('');
   for(const c of order){
     const cname=lpCountry(groups.get(c)[0]);
     html+='<div class="lp-country">'+sanitize(cname)+(c&&c!==cname?' · '+sanitize(c):'')+'</div>'+groups.get(c).map(row).join('');
@@ -3496,7 +3523,7 @@ function lpPickSheet(i){
 const MX_WEEK = 7;      // one more load = a week
 const MX_BACK = 3;      // the first load: three days back ...
 const MX_AHEAD = 10;    // ... to ten ahead: the whole date strip is loaded at once
-const MX = { leagues:null, sel:'all', mineIds:[], selKey:'', league:null, days:new Map(), ids:new Set(), from:null, to:null,
+const MX = { leagues:null, myCups:[], sel:'all', mineIds:[], selKey:'', league:null, days:new Map(), ids:new Set(), from:null, to:null,
   first:null, last:null, started:false, err:false, busy:{past:false,future:false}, failed:{past:false,future:false},
   gen:0, todayKey:null, stripDay:null };
 
@@ -3546,6 +3573,25 @@ function mxApplySel(){
   MX.league=sel==='all'?null:sel==='mine'?(mine.length===1?mine[0]:null):((MX.leagues||[]).find(l=>l.slug===sel)||null);
   MX.mineIds=sel==='mine'&&!MX.league?mine.map(l=>Number(l.id)):[];
   MX.selKey=sel+':'+(MX.league?MX.league.id:'')+':'+MX.mineIds.join(',');
+}
+/**
+ * The cups my clubs play in this season (C-1): a cup whose table has one of my
+ * clubs. "My leagues" on Matches includes them. Read once per set of clubs;
+ * nothing (no cup yet, signed out, an error) leaves it empty.
+ */
+async function mxLoadMyCups(){
+  const cups=(MX.leagues||[]).filter(l=>LeagueNames.isCup(l));
+  const mine=myClubIds();
+  const key=cups.map(l=>l.id).join(',')+'|'+mine.join(',');
+  if(MX.myCupsKey===key) return;
+  MX.myCupsKey=key; MX.myCups=[];
+  if(!cups.length||!mine.length) return;
+  try{
+    const rows=await apiGet('standings?select=league_id&league_id=in.('+cups.map(l=>Number(l.id)).join(',')
+      +')&team_id=in.('+mine.map(Number).join(',')+')&limit=50');
+    const ids=new Set((rows||[]).map(r=>r.league_id));
+    MX.myCups=cups.filter(l=>ids.has(l.id)).map(l=>l.slug);
+  }catch(e){ console.warn('my cups:',e.message); }
 }
 /** The query's league filter: one league, my leagues, or none (All). */
 function mxLeagueFilter(){
@@ -3812,6 +3858,7 @@ async function mxStart(){
       // for the session only (the picker), so the old key goes.
       try{ localStorage.removeItem('sm_matches_league'); }catch(e){}
     }
+    await mxLoadMyCups();
     if(gen!==MX.gen) return;
     mxApplySel();
     lpRender('mx');
@@ -3906,6 +3953,9 @@ function mxRepaint(){
  */
 function mxRefresh(){
   if(!MX.leagues) return;
+  // My clubs may have changed which cups are "mine": re-read, then redraw.
+  if(MX.myCupsKey!==(MX.leagues||[]).filter(l=>LeagueNames.isCup(l)).map(l=>l.id).join(',')+'|'+myClubIds().join(','))
+    mxLoadMyCups().then(()=>{ if(MX.leagues) mxRefresh(); });
   const key=MX.selKey;
   mxApplySel();
   lpRender('mx');
@@ -3986,9 +4036,20 @@ const TB_COLS='group_label,team_id,rank,points,played,win,draw,lose,goals_for,go
 /** The league's tables: standings_groups, else `standings` (before 032 / before the job fills it). */
 async function mxFetchTable(L){
   const q='&league_id=eq.'+Number(L.id)+'&season=eq.'+Number(L.current_season);
-  let rows=null, fallback=false;
-  try{ rows=await apiGet('standings_groups?select=group_order,'+TB_COLS+q+'&order=group_order.asc,rank.asc&limit=300'); }
+  // A cup (C-1): its zone text (039) and its knockout ties, built from the
+  // fixtures we hold (public/cup-ties.js). A cup row exists only after 039.
+  const cup=LeagueNames.isCup(L);
+  let rows=null, fallback=false, ties=[];
+  try{ rows=await apiGet('standings_groups?select=group_order,'+TB_COLS+(cup?',description':'')+q+'&order=group_order.asc,rank.asc&limit=300'); }
   catch(e){ console.warn('standings_groups (before 032?):',e.message); }
+  if(cup){
+    try{
+      const fx=await apiGet('fixtures?select=id,round,kickoff_utc,status_short,home_team_id,away_team_id,home_goals,away_goals,pen_home,pen_away,venue_name'
+        +q+'&round=not.like.League*&order=kickoff_utc.asc&limit=200');
+      ties=CupTies.build((fx||[]).map(f=>({id:f.id,round:f.round,kickoff:f.kickoff_utc,status_short:f.status_short,home_id:f.home_team_id,away_id:f.away_team_id,
+        home_goals:f.home_goals,away_goals:f.away_goals,pen_home:f.pen_home,pen_away:f.pen_away,venue_name:f.venue_name})));
+    }catch(e){ console.warn('cup ties:',e.message); }
+  }
   if(!rows||!rows.length){
     fallback=true;
     rows=((await apiGet('standings?select='+TB_COLS+q+'&order=rank.asc&limit=300'))||[]).map(r=>Object.assign({group_order:0},r));
@@ -4001,7 +4062,7 @@ async function mxFetchTable(L){
   }
   const groups=[...by.values()].sort((a,b)=>a.order-b.order);
   for(const g of groups) g.rows.sort((a,b)=>(a.rank==null?999:a.rank)-(b.rank==null?999:b.rank));
-  return {groups:groups, fallback:fallback, updated:rows.reduce((m,r)=>r.updated_at&&r.updated_at>m?r.updated_at:m,'')};
+  return {groups:groups, fallback:fallback, updated:rows.reduce((m,r)=>r.updated_at&&r.updated_at>m?r.updated_at:m,''), cup:cup, ties:ties};
 }
 async function mxLoadTable(){
   const L=MX.league, el=document.getElementById('mx-table');
@@ -4063,9 +4124,15 @@ function mxDefaultPlainChip(chips){
   return tourn.length?tourn.reduce((a,b)=>b.order>a.order?b:a):chips[0];
 }
 function mxTableHtml(data){
-  if(!data.groups.length) return '<div class="mx-empty">'+sanitize(t('tb.none'))+'</div>';
+  if(!data.groups.length&&!(data.ties&&data.ties.length)) return '<div class="mx-empty">'+sanitize(t('tb.none'))+'</div>';
   if(data.fallback&&data.groups.length>1) return '<div class="mx-empty">'+sanitize(t('tb.groupsSoon'))+'</div>';
-  const chips=mxTableChips(data);
+  // A cup (C-1): "League phase" (its one table, zones as text) and, once
+  // knockout fixtures exist, "Knockouts" (the ties), which it then opens on.
+  const chips=data.cup
+    ?[...(data.groups.length?[{key:'cup:table',label:t('tb.leaguePhase'),groups:data.groups,order:0,phase:false,fixed:true}]:[]),
+      ...(data.ties&&data.ties.length?[{key:'cup:ko',label:t('tb.knockouts'),groups:[],order:1,phase:false,fixed:true,ko:true}]:[])]
+    :mxTableChips(data);
+  if(data.cup&&!chips.some(c=>c.key===MX.tablePick.get(MX.league.id))) MX.tablePick.set(MX.league.id,chips[chips.length-1].key);
   let key=MX.tablePick.get(MX.league.id);
   if(!chips.some(c=>c.key===key)){
     // The current phase: the one the API lists last.
@@ -4077,16 +4144,67 @@ function mxTableHtml(data){
   const chipHtml=chips.length>1
     ?'<div class="chip-scroll tb-chips" role="group" aria-label="'+sanitize(t('tb.which'))+'">'
       +chips.map((c,i)=>'<button class="filter-btn'+(c.key===key?' active':'')+'" aria-pressed="'+(c.key===key)+'" onclick="mxPickTable('+i+')">'
-        +sanitize(mxTableChipLabel(c,chips))+'</button>').join('')+'</div>'
+        +sanitize(c.fixed?c.label:mxTableChipLabel(c,chips))+'</button>').join('')+'</div>'
     :'';
   let when='';
   try{ when=data.updated?new Date(data.updated).toLocaleString(smLocale()||[],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch(e){}
   // Once the season's last day (season_end, 035) has passed, the table is
   // final: "2026 · final" / "2026-27 · final" above it (commit 2).
   const final=mxSeasonOver(MX.league)?'<div class="tb-final">'+sanitize(t('tb.final',{season:mxSeasonLabel(MX.league)}))+'</div>':'';
+  if(cur.ko) return final+chipHtml+mxTiesHtml(data.ties);
   return final+chipHtml
     +cur.groups.map(g=>{ const p=mxPhaseOf(g.label); return mxGroupHtml(g,p?t('tb.groupN',{n:p.letter}):''); }).join('')
     +(when?'<div class="tb-note">'+sanitize(t('tb.updated',{when:when}))+'</div>':'');
+}
+/**
+ * A cup row's zone, as text (never colour alone): from the API's description
+ * ("… (Play Offs: 1/8-finals)" → Round of 16, "1/16-finals" → Knockout
+ * play-off); a row without one is not in a qualifying place (as it stands).
+ * Any other wording is shown as the API sends it.
+ */
+function mxZone(desc){
+  if(desc==null||desc==='') return t('tb.zone.out');
+  if(/1\/8/.test(desc)) return t('tb.zone.r16');
+  if(/1\/16/.test(desc)) return t('tb.zone.kpo');
+  return String(desc);
+}
+/**
+ * The knockout ties (C-1, not a graphical bracket): by round, each as
+ * "Galatasaray 7–5 Juventus · agg (5–2, 2–3 aet)", the winner in bold and
+ * named ("Galatasaray advances"), "pens 4–3" when it came to that, the final's
+ * neutral venue; a tie not yet played shows its first leg's date. Every score
+ * is read from A's side (A = home in the first leg). A tap opens the first leg.
+ */
+function mxTiesHtml(ties){
+  const by=new Map();
+  for(const tie of ties){ if(!by.has(tie.stage)) by.set(tie.stage,[]); by.get(tie.stage).push(tie); }
+  const name=id=>sanitize(clubLabel(id)||'—');
+  const team=(id,win)=>'<span class="tb-tie-t'+(win?' win':'')+'">'+clubCrestById(id,18)+'<span>'+name(id)+'</span></span>';
+  let html='';
+  for(const st of CupTies.STAGES){
+    const list=by.get(st); if(!list) continue;
+    html+='<div class="tb-group">'+sanitize(t('tb.ko.'+st))+'</div><ul class="tb-ties">';
+    for(const tie of list){
+      const legs=tie.legs.filter(l=>['FT','AET','PEN'].indexOf(l.status_short)>=0&&l.home_goals!=null&&l.away_goals!=null).map(l=>{
+        const a=l.home_id===tie.a?l.home_goals:l.away_goals, b=l.home_id===tie.a?l.away_goals:l.home_goals;
+        return a+'–'+b+(l.status_short==='AET'||l.status_short==='PEN'?' '+t('tb.aet'):'');
+      });
+      const score=tie.aggA==null?'<span class="tb-tie-v">'+sanitize(t('tb.vs'))+'</span>'
+        :'<b class="tb-tie-v num">'+tie.aggA+'–'+tie.aggB+'</b>';
+      const sub=[];
+      if(tie.played&&!tie.single) sub.push(tie.done?t('tb.agg')+' ('+legs.join(', ')+')':t('tb.firstLeg')+' '+legs[0]);
+      if(tie.single&&tie.played&&legs[0]&&/ /.test(legs[0])) sub.push(t('tb.aet'));
+      if(tie.penA!=null) sub.push(t('tb.pens',{a:tie.penA,b:tie.penB}));
+      if(tie.neutral&&tie.legs[0].venue_name) sub.push(t('tb.neutralAt',{venue:tie.legs[0].venue_name}));
+      if(!tie.played) sub.push(mxDate(new Date(tie.legs[0].kickoff),true));
+      if(tie.winner) sub.push(t('tb.advances',{club:clubLabel(tie.winner)||''}));
+      html+='<li class="tb-tie" role="button" tabindex="0" onclick="openMatch('+Number(tie.legs[0].id)+')" onkeydown="if(event.key===\'Enter\'){this.click();}">'
+        +'<div class="tb-tie-row">'+team(tie.a,tie.winner===tie.a)+score+team(tie.b,tie.winner===tie.b)+'</div>'
+        +(sub.length?'<div class="tb-tie-sub">'+sanitize(sub.join(' · '))+'</div>':'')+'</li>';
+    }
+    html+='</ul>';
+  }
+  return html;
 }
 function mxPickTable(i){
   const c=MX.tableChips[i];
@@ -4110,7 +4228,9 @@ function mxGroupHtml(g,title){
     const id=Number(r.team_id), href='/community.html?club='+id;
     return '<tr'+(mine.has(id)?' class="mine"':'')+' onclick="location.href=\''+href+'\'">'
       +'<td class="tb-pos num">'+n(r.rank)+'</td>'
-      +'<td class="tb-club"><a href="'+href+'" onclick="event.stopPropagation()">'+clubCrestById(id,18)+'<span>'+sanitize(clubLabel(id)||'—')+'</span></a></td>'
+      +'<td class="tb-club"><a href="'+href+'" onclick="event.stopPropagation()">'+clubCrestById(id,18)+'<span>'+sanitize(clubLabel(id)||'—')+'</span></a>'
+      // A cup's qualification zone, as text (C-1).
+      +('description' in r?'<span class="tb-zone">'+sanitize(mxZone(r.description))+'</span>':'')+'</td>'
       +'<td class="num">'+n(r.played)+'</td>'
       +'<td class="num tb-wide">'+n(r.win)+'</td><td class="num tb-wide">'+n(r.draw)+'</td><td class="num tb-wide">'+n(r.lose)+'</td>'
       +'<td class="num tb-wide">'+n(r.goals_for)+'</td><td class="num tb-wide">'+n(r.goals_against)+'</td>'
@@ -4169,10 +4289,11 @@ const CLUB_BY_API=new Map();    // api_team_id   -> row
 // avg" then simply does not render.
 const LEAGUE_AVG=new Map();
 
-/** Every club we hold, grouped by league slug, for the picker. */
+/** Every club we hold, grouped by league slug, for the picker. Never a cup-only club (C-1). */
 function clubsByLeague(){
   const out=new Map();
   for(const row of CLUB_DATA.values()){
+    if(row.cupOnly) continue;
     const k=row.league||'other';
     if(!out.has(k))out.set(k,[]);
     out.get(k).push(row);
@@ -4193,8 +4314,8 @@ async function loadClubData(){
   try{
     const [teams,standings,stats]=await Promise.all([
       // Limits sized with room to spare over every club of every tracked league (and the standings of every season held).
-      get('teams?select=id,api_team_id,name,logo_url,leagues!teams_league_id_fkey(slug)&limit=1000'),
-      get('standings?select=team_id,rank,points,played&limit=3000'),
+      get('teams?select=id,api_team_id,name,logo_url,league_id,leagues!teams_league_id_fkey(slug)&limit=1000'),
+      get('standings?select=team_id,league_id,rank,points,played&limit=3000'),
       get('team_season_stats?select=team_id,matches,gs,gc,pa&limit=1000'),
     ]);
     for(const t of teams){
@@ -4209,14 +4330,19 @@ async function loadClubData(){
           : t.name,
         logo_url:t.logo_url,
         league:t.leagues&&t.leagues.slug,
+        leagueId:t.league_id,
+        // A club of a cup that plays in no league we track (C-1): a name and a
+        // crest for its fixtures, a page, never a club to follow, no room.
+        cupOnly:LeagueNames.isCup(t.leagues&&t.leagues.slug),
       };
       CLUB_DATA.set(t.id,row);
       CLUB_BY_API.set(t.api_team_id,row);
     }
     for(const s of standings){
       const row=CLUB_DATA.get(s.team_id);
-      // Argentina holds two tournaments; keep the better position.
-      if(row&&(row.rank==null||(s.rank!=null&&s.rank<row.rank))){
+      // The club's OWN league only: a cup's table (C-1) never sets its position.
+      if(!row||row.cupOnly||s.league_id!==row.leagueId) continue;
+      if(row.rank==null||(s.rank!=null&&s.rank<row.rank)){
         row.rank=s.rank; row.points=s.points; row.played=s.played;
       }
     }
@@ -4297,7 +4423,8 @@ function renderMyClubCard(){
 
 /** The leagues the Clubs tab carries (those we hold clubs for), as LeagueNames entries. */
 function clubsLeagues(){
-  const slugs=[...new Set([...CLUB_DATA.values()].map(c=>c.league).filter(Boolean))];
+  // Leagues only: cup-only clubs are not in the Clubs grid (C-1).
+  const slugs=[...new Set([...CLUB_DATA.values()].filter(c=>!c.cupOnly).map(c=>c.league).filter(Boolean))];
   return slugs.map(s=>LeagueNames.find(s)||{slug:s,name:s});
 }
 /**
@@ -4315,7 +4442,7 @@ function renderClubsGrid(){
   const mineSet=new Set(mineL.map(l=>l.slug));
   const pass=c=>sel==='all'||(sel==='mine'?mineSet.has(c.league):c.league===sel);
   const mine=myClubIds(), main=mainClubId();
-  const all=[...CLUB_DATA.values()].filter(pass).sort((a,b)=>{
+  const all=[...CLUB_DATA.values()].filter(c=>!c.cupOnly&&pass(c)).sort((a,b)=>{
     const am=mine.indexOf(a.id)>-1, bm=mine.indexOf(b.id)>-1;
     if(sel!=='mine'&&am!==bm)return am?-1:1;
     return (order.indexOf(a.league)-order.indexOf(b.league))||(sel==='mine'&&am!==bm?(am?-1:1):0)||a.label.localeCompare(b.label);
@@ -7943,14 +8070,19 @@ async function loadHomeBand(force){
     }
     if(clubId){
       const from=new Date(now-36*3600000).toISOString(), to=new Date(now+30*86400000).toISOString();
-      jobs.push(apiGet('fixtures?select=id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id'
+      // Every competition (C-1): the next match may be a Champions League one;
+      // the slot then names the competition. The TABLE slot stays domestic.
+      jobs.push(apiGet('fixtures?select=id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id,league_id,'
+          +'league:leagues!fixtures_league_id_fkey(name,slug,country)'
           +'&or=(home_team_id.eq.'+clubId+',away_team_id.eq.'+clubId+')'
           +'&kickoff_utc=gte.'+from+'&kickoff_utc=lte.'+to+'&order=kickoff_utc.asc&limit=12')
         .then(rows=>{ HBD.fixtures=(rows||[]).map(f=>{
           const opp=f.home_team_id===clubId?f.away_team_id:f.home_team_id;
           const c=CLUB_DATA.get(opp);
+          const own=HBD.league&&f.league_id===HBD.league.id;
           return {id:f.id,kickoff:new Date(f.kickoff_utc).getTime(),status_short:f.status_short,elapsed:f.elapsed,
-            home_id:f.home_team_id,away_id:f.away_team_id,home_goals:f.home_goals,away_goals:f.away_goals,opponent:c?c.label:'—'};
+            home_id:f.home_team_id,away_id:f.away_team_id,home_goals:f.home_goals,away_goals:f.away_goals,opponent:c?c.label:'—',
+            comp:own||!f.league?null:LeagueNames.label(f.league)};
         }); }).catch(e=>{ console.warn('home band fixtures:',e.message); HBD.fixtures=[]; }));
     }
     // The Scout Game: the same rounds and entries the Scout tab reads.

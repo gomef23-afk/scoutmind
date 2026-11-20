@@ -192,7 +192,6 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 2
 /* Fixtures & results (4b-6): rows are .fx-* from theme.css. */
 .cf{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 16px 8px;margin-bottom:16px;}
 .cf-h{font-size:16px;font-weight:800;color:var(--ink);margin:0;}
-.cf-note{font-size:12px;color:var(--muted);margin:4px 0 12px;}
 .cf-cols{display:grid;grid-template-columns:1fr;gap:12px;}
 .cf-sub{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:0 0 4px;}
 .cf-list{list-style:none;margin:0;padding:0;}
@@ -395,8 +394,8 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
      in the app now: one official room per club. -->
 <script src="/club_names.js?v=25627f760c"></script>
 <script src="/sm_auth.js?v=2a7db71965"></script>
-<script src="/i18n.js?v=5d43382c2c"></script>
-<script src="/league-names.js?v=3dbe9a7b46"></script>
+<script src="/i18n.js?v=fc8ff48179"></script>
+<script src="/league-names.js?v=a07be7d3bd"></script>
 <!-- 4b-6: the fixture row the Matches tab draws, for Fixtures & results. -->
 <script src="/icons.js?v=012882672d"></script>
 <script src="/fx-row.js?v=2a5a74a713"></script>
@@ -498,8 +497,8 @@ async function loadClubs(){
   var get=async function(p){var r=await SMAuth.rest(p);if(!r.ok)throw new Error(p+' '+r.status+' '+(await r.text()).slice(0,200));return r.json();};
   var res=await Promise.all([
     // `leagues` is disambiguated: standings also joins teams to leagues (rule 20).
-    get('teams?select=id,api_team_id,name,founded,venue_name,venue_city,logo_url,coach_name,leagues!teams_league_id_fkey(slug,name)&limit=1000'),
-    get('standings?select=team_id,rank,points,played&limit=2000'),
+    get('teams?select=id,api_team_id,name,founded,venue_name,venue_city,logo_url,coach_name,league_id,leagues!teams_league_id_fkey(slug,name)&limit=1000'),
+    get('standings?select=team_id,league_id,rank,points,played&limit=2000'),
     get('team_season_stats?select=team_id,gs,gc,pa&limit=1000').catch(function(e){ console.warn('team_season_stats:',e.message); return []; })
   ]);
   var teams=res[0],standings=res[1],stats=res[2];
@@ -521,17 +520,22 @@ async function loadClubs(){
       logo:row.logo_url||null, coach:row.coach_name||null,
       // "Série A · BRA": the country code everywhere a league is named (4b).
       league:lg.slug, leagueName:(window.LeagueNames?LeagueNames.label(lg):lg.name)||lg.slug,
+      leagueId:row.league_id,
+      // A club of a cup that plays in no league we track (C-1): its page shows
+      // who it is and its matches with us; no position, no room, not in the list.
+      cupOnly:!!(window.LeagueNames&&LeagueNames.isCup(lg.slug)),
       rank:null, points:null, played:null, gs:null, gc:null, pa:null,
       avg:avgBySlug[lg.slug]||null
     };
     CLUB_BY_ID[row.id]=club;
+    if(club.cupOnly)return;
     (CLUBS[lg.slug]=CLUBS[lg.slug]||[]).push(club);
     names[lg.slug]=club.leagueName;
   });
-  // Standings by team_id. A league split into groups (Argentina) has one row
-  // per group a team sits in; keep the best, as the app does.
+  // Standings by team_id, the club's OWN league only: a cup's table (C-1)
+  // never sets the position in the header.
   standings.forEach(function(s){
-    var c=CLUB_BY_ID[s.team_id]; if(!c||s.rank==null)return;
+    var c=CLUB_BY_ID[s.team_id]; if(!c||c.cupOnly||s.rank==null||s.league_id!==c.leagueId)return;
     if(c.rank==null||s.rank<c.rank){ c.rank=s.rank; c.points=s.points; c.played=s.played; }
   });
   stats.forEach(function(s){ var c=CLUB_BY_ID[s.team_id]; if(c){ c.gs=s.gs; c.gc=s.gc; c.pa=s.pa; } });
@@ -625,9 +629,10 @@ function renderTeamPage(){
     // The coach only when the teams job has named one (teams.coach_name).
     +(c.coach?'<div style="background:var(--field);border-radius:8px;padding:10px 14px;margin-bottom:14px;">'
       +'<div style="font-size:11px;color:var(--muted)">'+escH(t('comm.coach'))+'</div><div style="font-size:13px;font-weight:600">'+escH(c.coach)+'</div></div>':'')
-    // Five real numbers from standings + team_season_stats, by team_id.
-    +realStatsRow(c)
-    +'<div style="margin-top:16px;"><a class="pfbtn" href="/?room='+Number(c.id)+'" style="display:inline-block;text-decoration:none;">'+escH(t('comm.openRoom'))+'</a></div>'
+    // Five real numbers from standings + team_season_stats, by team_id. A
+    // cup-only club (C-1) has none, no room and no club features.
+    +(c.cupOnly?'':realStatsRow(c))
+    +(c.cupOnly?'':'<div style="margin-top:16px;"><a class="pfbtn" href="/?room='+Number(c.id)+'" style="display:inline-block;text-decoration:none;">'+escH(t('comm.openRoom'))+'</a></div>')
     +'</div></div>'
     // Fixtures & results (4b-6): filled by loadClubFixtures().
     +'<section id="club-fx" class="cf" aria-labelledby="cf-h"></section>'
@@ -637,15 +642,15 @@ function renderTeamPage(){
     +'<div id="club-feat"></div>';
   document.getElementById('comm-main').innerHTML=html;
   loadClubFixtures(c);
-  loadFeatures(c);
+  if(!c.cupOnly) loadFeatures(c);
 }
 
 // ── CLUB FIXTURES (4b-6) ──────────────────────────────────────────────────
 // The club's last 5 results and next 5 fixtures from `fixtures`, by teams.id,
 // drawn with the shared row (FxRow.render, public/fx-row.js) so they look
 // exactly like the Matches tab. A tap opens the match panel in the app
-// (/?match=<id>). We only ingest the leagues we carry, so cups never appear:
-// the section says so.
+// (/?match=<id>). Every competition we track (C-1: the Champions League too),
+// each row labelled with its competition.
 var CFX={id:null,past:null,next:null,err:false};
 var CFX_SELECT='id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id,'
   +'home_team:teams!fixtures_home_team_id_fkey(name,api_team_id,logo_url),'
@@ -682,8 +687,7 @@ async function loadClubFixtures(c){
 }
 
 function cfHead(){
-  return '<h2 class="cf-h" id="cf-h">'+escH(t('comm.fx.title'))+'</h2>'
-    +'<p class="cf-note">'+escH(t('comm.fx.note'))+'</p>';
+  return '<h2 class="cf-h" id="cf-h">'+escH(t('comm.fx.title'))+'</h2>';
 }
 
 /** A crest tile by teams.id: the club list's logo, else the embedded one, else initials. */

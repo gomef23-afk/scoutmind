@@ -38,6 +38,7 @@ import { createClient } from '../_lib/apifootball.js';
 import { activeLeagues, teamIdMap, upsert, select } from '../_lib/supabase.js';
 import { withCron, isoDate, RUN_BUDGET_MS, leaguesFromQuery, seasonOver, dailyPass } from '../_lib/cron.js';
 import { BY_SLUG } from '../_lib/leagues.js';
+import { isCupRow, keepRound, penalties } from '../_lib/cups.js';
 
 /**
  * Does this league lack the part of its season before the window? Its season
@@ -78,7 +79,13 @@ export default withCron('fixtures', async ({ req }) => {
     return { rows_written: 0, requests_used: 0, note: 'today\'s pass is complete', cursor: { day: pass.today, complete: true } };
   }
   const leagues = chosen || all.filter((l) => l.id > pass.afterId && !seasonOver(l));
-  const teams = await teamIdMap(leagues.map((l) => l.id));
+  // Every tracked club, whatever league it belongs to: a cup's fixtures are
+  // between clubs of other leagues (C-1), and its cup-only clubs sit under it.
+  const teams = await teamIdMap(all.map((l) => l.id));
+  // A cup can only be active once 039 has run (it inserts the cup), and 039
+  // adds fixtures.pen_home / pen_away: before that no row may carry them, or
+  // PostgREST refuses the batch (rule 21). Every row of a batch has the same keys.
+  const withPens = all.some(isCupRow);
 
   const from = isoDate(-back);
   const to = isoDate(ahead);
@@ -139,9 +146,12 @@ export default withCron('fixtures', async ({ req }) => {
       );
     }
     let leagueSkipped = 0;
+    let qualifyingSkipped = 0;
 
     const fixtureRows = [];
     for (const r of json.response || []) {
+      // A cup from its league phase on: its qualifying rounds are not ours.
+      if (!keepRound(lg, r.league?.round)) { qualifyingSkipped++; continue; }
       const home = teams.get(r.teams?.home?.id);
       const away = teams.get(r.teams?.away?.id);
 
@@ -169,11 +179,18 @@ export default withCron('fixtures', async ({ req }) => {
         home_goals: r.goals?.home ?? null,
         away_goals: r.goals?.away ?? null,
         venue_name: r.fixture?.venue?.name || null,
+        ...(withPens ? penalties(r) : {}),
         updated_at: new Date().toISOString(),
       });
     }
 
     const written = await upsert('fixtures', fixtureRows, 'api_fixture_id');
+    // A cup's season_end is its final's date (config); a fixture we hold after
+    // it would make the daily jobs stop early. Say so loudly (tests/cups.test.js
+    // checks the config against the frozen payload).
+    const lastKick = fixtureRows.reduce((m, f) => (f.kickoff_utc && f.kickoff_utc > m ? f.kickoff_utc : m), '');
+    const seasonEndBehind = isCupRow(lg) && lg.season_end && lastKick && lastKick.slice(0, 10) > lg.season_end;
+    if (seasonEndBehind) console.warn(`[fixtures] ${lg.slug}: a fixture on ${lastKick.slice(0, 10)} is after season_end ${lg.season_end}`);
     rows += written;
 
     const diag = {
@@ -191,6 +208,8 @@ export default withCron('fixtures', async ({ req }) => {
       season_fallback_used: seasonFallback,
       // true when this request loaded the whole season (?full=1, or a league missing its history)
       whole_season: wholeSeason,
+      qualifying_skipped: qualifyingSkipped,
+      ...(seasonEndBehind ? { season_end_before_last_fixture: lastKick.slice(0, 10) } : {}),
       // Exact URLs sent. The API key is a header, so nothing here is secret.
       request_url: requestUrl,
       fallback_url: fallbackUrl,

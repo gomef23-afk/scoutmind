@@ -23,7 +23,7 @@ const fn = (name) => { const m = new RegExp('(?:async )?function ' + name + '\\(
 
 // ── 1. Header from teams ──
 const load = fn('loadClubs');
-check('loadClubs reads the header fields from teams', /teams\?select=id,api_team_id,name,founded,venue_name,venue_city,logo_url,coach_name,leagues!teams_league_id_fkey\(slug,name\)/.test(load));
+check('loadClubs reads the header fields from teams (and the club\'s league id: its position is its own league\'s, C-1)', /teams\?select=id,api_team_id,name,founded,venue_name,venue_city,logo_url,coach_name,league_id,leagues!teams_league_id_fkey\(slug,name\)/.test(load));
 check('the leagues embed is disambiguated (rule 20)', /leagues!teams_league_id_fkey/.test(load) && !/[^!]leagues\(/.test(load.replace(/leagues!teams_league_id_fkey\(/g, '')));
 const page = fn('renderTeamPage');
 check('the header uses the club row: name, city, stadium, founded', /escH\(c\.label\)/.test(page) && /\[c\.city,c\.venue,c\.founded\?t\('comm\.est',\{year:c\.founded\}\):null\]/.test(page));

@@ -34,18 +34,20 @@ process.env.API_FOOTBALL_KEY = 'af_test';
 const { LEAGUES, BY_SLUG, LEAGUE_LANG, TAGGED_SLUGS, requestsPerDay } = await import('../api/_lib/leagues.js');
 
 // ── The config ──
-check('19 leagues (Uruguay added 19 Nov 2026)', LEAGUES.length === 19);
+// C-1 (22 Nov 2026): cups sit in the same list with type 'cup' (tests/cups.test.js).
+const LG = LEAGUES.filter((l) => l.type !== 'cup');
+check('19 leagues (Uruguay added 19 Nov 2026), and every entry has a type', LG.length === 19 && LEAGUES.every((l) => ['league', 'cup', 'mixed'].includes(l.type)));
 check('slugs and API ids are unique', new Set(LEAGUES.map((l) => l.slug)).size === LEAGUES.length && new Set(LEAGUES.map((l) => l.apiId)).size === LEAGUES.length);
-check('every code is three capital letters', LEAGUES.every((l) => /^[A-Z]{3}$/.test(l.code)), LEAGUES.filter((l) => !/^[A-Z]{3}$/.test(l.code)).map((l) => l.slug).join(','));
+check('every league code is three capital letters (a UEFA cup: UEFA)', LG.every((l) => /^[A-Z]{3}$/.test(l.code)) && LEAGUES.filter((l) => l.type === 'cup').every((l) => /^[A-Z]{3,4}$/.test(l.code)), LG.filter((l) => !/^[A-Z]{3}$/.test(l.code)).map((l) => l.slug).join(','));
 eq('the seven playable, and only they', LEAGUES.filter((l) => l.playable).map((l) => l.slug), ['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina']);
 check('playable implies active', LEAGUES.every((l) => !l.playable || l.active));
-eq('commit 3: all eleven tracked leagues switched on, none playable', LEAGUES.filter((l) => l.active && !l.playable).map((l) => l.slug),
+eq('commit 3: all eleven tracked leagues switched on, none playable', LG.filter((l) => l.active && !l.playable).map((l) => l.slug),
   ['championship', 'eredivisie', 'primeira_liga', 'belgian_pro_league', 'scottish_premiership', 'super_lig', 'saudi_pro_league', 'mls', 'liga_mx', 'serie_b', 'serie_c', 'uruguay']);
 // 036 switches on exactly the ten that 035 inserted dormant (Championship was active from 035).
 const sql036 = readFileSync(new URL('../supabase/migrations/036_switch_on_ten_leagues.sql', import.meta.url), 'utf8').replace(/--[^\n]*/g, '');
 const slugs036 = [...((/set active = true[\s\S]*?where slug in \(([^)]*)\)/.exec(sql036) || [])[1] || '').matchAll(/'(\w+)'/g)].map((m) => m[1]);
 eq('036 switches on exactly the config\'s tracked leagues except Championship', slugs036.sort(),
-  LEAGUES.filter((l) => l.active && !l.playable && l.slug !== 'championship' && l.slug !== 'uruguay').map((l) => l.slug).sort());
+  LG.filter((l) => l.active && !l.playable && l.slug !== 'championship' && l.slug !== 'uruguay').map((l) => l.slug).sort());
 // 037 adds Uruguay (data only): its values are the config's.
 const sql037 = readFileSync(new URL('../supabase/migrations/037_uruguay_primera.sql', import.meta.url), 'utf8').replace(/--[^\n]*/g, '');
 const U = BY_SLUG.uruguay;
@@ -66,7 +68,8 @@ check('Série C: no stats coverage, season over (25 Oct 2026)', BY_SLUG.serie_c.
 eq('display names (decision 2)', ['belgian_pro_league', 'saudi_pro_league', 'mls', 'scottish_premiership'].map((s) => BY_SLUG[s].name + ' · ' + BY_SLUG[s].code),
   ['Jupiler Pro League · BEL', 'Saudi Pro League · KSA', 'MLS · USA', 'Premiership · SCO']);
 check('the existing seven keep their database names and slugs', [['serie_a', 'Série A'], ['serie_a_it', 'Serie A'], ['argentina', 'Liga Profesional']].every(([s, n]) => BY_SLUG[s].name === n));
-check('news: since commit 3 every league tags its clubs (after the measured check, tests/tagger-new-leagues.test.js)', TAGGED_SLUGS.size === LEAGUES.length);
+check('news: since commit 3 every league tags its clubs (after the measured check, tests/tagger-new-leagues.test.js); a cup never (its clubs are tagged by their league, cup-only clubs never)',
+  TAGGED_SLUGS.size === LG.length && LEAGUES.filter((l) => l.type === 'cup').every((l) => !TAGGED_SLUGS.has(l.slug)));
 // C1 (21 Nov 2026): Dutch, European Portuguese, Turkish and Saudi-English press (tests/tagger-press.test.js).
 eq('the tagger\'s LEAGUE_LANG is the config\'s: unchanged for the seven, our sources\' languages for the others', LEAGUE_LANG, {
   serie_a: ['pt-BR'], premier_league: ['en'], la_liga: ['es'], bundesliga: ['de'], serie_a_it: ['it'], ligue_1: ['fr'], argentina: ['es'],
@@ -180,8 +183,8 @@ check('chips, the club picker, the Clubs tab and the club page order leagues thr
   && /const PICKER_LEAGUE_ORDER=LeagueNames\.sort\(/.test(idx) && /LeagueNames\.sort\(clubsLeagues\(\),/.test(idx)
   && !/'serie_a','premier_league','la_liga'/.test(idx) && !/LEAGUE_ORDER=\[/.test(read('public/community.html')));
 check('news regions come from the config', /const LEAGUE_REGION=Object\.fromEntries\(LeagueNames\.LEAGUES/.test(idx));
-check('Home loads enough clubs for 18 leagues', /teams\?select=id,api_team_id,name,logo_url,leagues!teams_league_id_fkey\(slug\)&limit=1000/.test(idx));
-check('a tracked-league club can be a main club: the picker lists every league in the config', /LeagueNames\.LEAGUES\.map\(l=>l\.slug\)/.test(idx));
+check('Home loads enough clubs for every league (and each club\'s league id, C-1)', /teams\?select=id,api_team_id,name,logo_url,league_id,leagues!teams_league_id_fkey\(slug\)&limit=1000/.test(idx));
+check('a tracked-league club can be a main club: the picker lists every LEAGUE in the config (never a cup, C-1)', /LeagueNames\.LEAGUES\.filter\(l=>l\.type!=='cup'\)\.map\(l=>l\.slug\)/.test(idx));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);
