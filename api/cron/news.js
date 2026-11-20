@@ -10,7 +10,7 @@
 
 import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 import { select, upsert, upsertReturning, update } from '../_lib/supabase.js';
-import { parseFeed } from '../_lib/rss.js';
+import { parseFeed, decodeFeed } from '../_lib/rss.js';
 import { buildIndex, tagText, clipSummary, normalise } from '../_lib/tagger.js';
 import { isFootball } from '../_lib/football-filter.js';
 import { TAGGED_SLUGS, ESTABLISHED_SLUGS } from '../_lib/leagues.js';
@@ -71,7 +71,8 @@ async function fetchFeed(url) {
       headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, application/xml, text/xml, */*' },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
+    // In the feed's own encoding (ISO-8859-1 for Record PT), not always UTF-8.
+    return decodeFeed(new Uint8Array(await res.arrayBuffer()), res.headers.get('content-type') || '');
   } finally {
     clearTimeout(timer);
   }
@@ -195,7 +196,9 @@ export default withCron('news', async ({ req }) => {
       // One snippet, used for tagging either way. Stored only when the source
       // is not headline_only.
       const snippet = clipSummary(item.summary, 300);
-      const hits = tagText(index, item.title, snippet, source.lang);
+      // The source's country decides name clashes in favour of its own league's
+      // clubs, and unlocks names meant only in that press (tagger.js PRESS_ONLY).
+      const hits = tagText(index, item.title, snippet, source.lang, source.country);
       // item.link matters: a source's exclude_patterns are matched against the
       // URL too, which is the only thing separating a BBC Sounds episode from
       // a BBC article.

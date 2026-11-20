@@ -53,24 +53,26 @@ export const LEAGUES = [
   // ── Tracked only: matches, live, tables, clubs, rooms; not in the Scout Game ──
   // Championship switched on in 035 (17 Nov 2026), the other ten in 036
   // (18 Nov 2026). News tagging for all eleven since the measured check of
-  // 18 Nov (tests/tagger-new-leagues.test.js). langs: only the press
-  // languages our sources write in (LANGS in tagger.js): none for the Dutch,
-  // Turkish and Saudi leagues, and none for Portugal either: our Portuguese
-  // sources are Brazilian, where "nacional" is an ordinary word.
+  // 18 Nov (tests/tagger-new-leagues.test.js). langs: the press languages our
+  // sources write in for that league (LANGS in tagger.js). Since C1 (21 Nov
+  // 2026, tests/tagger-press.test.js): Dutch for the Eredivisie, European
+  // Portuguese (pt-PT, never the Brazilian sources) for the Primeira Liga,
+  // French and Dutch for Belgium, Turkish for the Süper Lig, English for the
+  // Saudi Pro League (our Saudi press is English; Arabic sources are skipped).
   { slug: 'championship', apiId: 40, name: 'Championship', country: 'England', code: 'ENG', season: 2026, seasonStart: '2026-08-14', seasonEnd: '2027-05-01',
     active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true },
   { slug: 'eredivisie', apiId: 88, name: 'Eredivisie', country: 'Netherlands', code: 'NED', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-23',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: [], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['nl'], tagNews: true },
   { slug: 'primeira_liga', apiId: 94, name: 'Primeira Liga', country: 'Portugal', code: 'POR', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-16',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: [], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['pt-PT'], tagNews: true },
   { slug: 'belgian_pro_league', apiId: 144, name: 'Jupiler Pro League', country: 'Belgium', code: 'BEL', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-22',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['fr'], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['fr', 'nl'], tagNews: true },
   { slug: 'scottish_premiership', apiId: 179, name: 'Premiership', country: 'Scotland', code: 'SCO', season: 2026, seasonStart: '2026-07-31', seasonEnd: '2027-04-10',
     active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true },
   { slug: 'super_lig', apiId: 203, name: 'Süper Lig', country: 'Turkey', code: 'TUR', season: 2026, seasonStart: '2026-08-14', seasonEnd: '2027-05-23',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: [], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['tr'], tagNews: true },
   { slug: 'saudi_pro_league', apiId: 307, name: 'Saudi Pro League', country: 'Saudi Arabia', code: 'KSA', season: 2026, seasonStart: '2026-08-13', seasonEnd: '2027-05-29',
-    active: true, playable: false, statsCoverage: null, region: null, langs: [], tagNews: true },
+    active: true, playable: false, statsCoverage: null, region: null, langs: ['en'], tagNews: true },
   { slug: 'mls', apiId: 253, name: 'MLS', country: 'USA', code: 'USA', season: 2026, seasonStart: '2026-02-21', seasonEnd: '2026-11-29',
     active: true, playable: false, statsCoverage: null, region: null, langs: ['en'], tagNews: true },
   { slug: 'liga_mx', apiId: 262, name: 'Liga MX', country: 'Mexico', code: 'MEX', season: 2026, seasonStart: '2026-07-17', seasonEnd: '2026-11-23',
@@ -94,6 +96,16 @@ export const BY_SLUG = Object.fromEntries(LEAGUES.map((l) => [l.slug, l]));
 
 /** The press languages of each league, for the tagger (only leagues that tag news). */
 export const LEAGUE_LANG = Object.fromEntries(LEAGUES.filter((l) => l.tagNews).map((l) => [l.slug, l.langs.slice()]));
+
+/**
+ * The country of each league's domestic press, as news_sources.country writes
+ * it (ISO 3166-1 alpha-2; England and Scotland are both GB, as the BBC is).
+ * The tagger lets a source's own country decide a name clash and unlocks the
+ * names meant only in that press (tagger.js, C1, 21 Nov 2026).
+ */
+export const COUNTRY_ISO = { Brazil: 'BR', England: 'GB', Scotland: 'GB', Spain: 'ES', Italy: 'IT', Germany: 'DE', France: 'FR', Argentina: 'AR',
+  Netherlands: 'NL', Portugal: 'PT', Belgium: 'BE', Turkey: 'TR', 'Saudi Arabia': 'SA', USA: 'US', Mexico: 'MX', Uruguay: 'UY' };
+export const LEAGUE_COUNTRY = Object.fromEntries(LEAGUES.map((l) => [l.slug, COUNTRY_ISO[l.country] || null]));
 
 /** Slugs whose clubs the news tagger indexes. */
 export const TAGGED_SLUGS = new Set(LEAGUES.filter((l) => l.tagNews).map((l) => l.slug));

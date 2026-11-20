@@ -73,7 +73,9 @@ eq('"Montevideo Wanderers" is', who('Montevideo Wanderers suma tres puntos', 'es
 eq('"Cerro Porteño" and "la Juventud" tag nobody', [who('Cerro Porteño goleó', 'es'), who('La Juventud uruguaya', 'es')], [[], []]);
 eq('"Liverpool Montevideo" is the Uruguayan club; "Liverpool" alone is still Liverpool FC',
   [who('Liverpool Montevideo lidera el Clausura', 'es'), who('Liverpool win at Anfield', 'en')], [['Liverpool Montevideo'], ['Liverpool']]);
-check('the qualified names touch no club we already held', [...old, ...eleven].every((t) => !Object.keys(QUALIFIED_NAMES).includes(t.name.toLowerCase())));
+// C1 (21 Nov 2026) added Liga MX's León on purpose ("Leon" is a first name; the bare
+// form counts in Mexican press only), with no earlier tag lost (tests/tagger-press.test.js).
+check('the Uruguayan qualified names touch no club we already held', [...old, ...eleven].every((t) => t.name.toLowerCase() === 'leon' || !Object.keys(QUALIFIED_NAMES).includes(t.name.toLowerCase())));
 
 // ── 2. The five tables ──
 const idx = read('public/index.html');

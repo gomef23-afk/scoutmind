@@ -8,9 +8,13 @@
 // Pure and dependency-free on purpose — the cron job feeds it rows from
 // Supabase, the tests feed it rows from fixtures, and both must agree.
 
-import { LEAGUE_LANG as CONFIG_LEAGUE_LANG } from './leagues.js';
+import { LEAGUE_LANG as CONFIG_LEAGUE_LANG, LEAGUE_COUNTRY } from './leagues.js';
 
-export const LANGS = ['pt-BR', 'en', 'es', 'it', 'de', 'fr'];
+// C1 (21 Nov 2026): Dutch, European Portuguese and Turkish sources. pt-PT is its
+// own language (a Brazilian nickname or scoped alias never applies to Record),
+// but shares Portuguese's common words and grammar rules (COMMON, PT_CONTEXT).
+export const LANGS = ['pt-BR', 'en', 'es', 'it', 'de', 'fr', 'nl', 'pt-PT', 'tr'];
+const PORTUGUESE = new Set(['pt-BR', 'pt-PT']);
 
 /**
  * Language(s) the domestic press of each league writes in: from the one
@@ -95,13 +99,85 @@ export const COMMON = {
  * 18 Nov 2026 found "the derby" in English and "Debüt im Derby" in German).
  * Such a name never enters the index by itself; an alias with more words does.
  */
-export const NEEDS_QUALIFIER = new Set(['derby']);
+export const NEEDS_QUALIFIER = new Set([
+  'derby',
+  // C1: "Al-Shabab" is also the militant group (Arab News), "NEOM" the city
+  // project, "estrela" a star. Only "Al Shabab FC", "NEOM SC", "Estrela da
+  // Amadora" match (aliases-tracked.js).
+  'al shabab', 'neom', 'estrela',
+]);
+
+/**
+ * Names that mean the club only in its own country's press (C1, 21 Nov 2026).
+ * Keyed by the club's normalised name; the country is its league's
+ * (LEAGUE_COUNTRY). From any other source they tag nobody (or keep meaning
+ * what they meant before): a bare "Nacional" in a Uruguayan source is Club
+ * Nacional, in a Portuguese one CD Nacional; "Santos" in a Mexican source is
+ * Santos Laguna, everywhere else Santos FC; "América" and "Pumas" only in
+ * Mexico (a continent; Argentina's rugby team). Uruguay's bare names were
+ * QUALIFIED_NAMES only, since we held no Uruguayan source.
+ */
+export const PRESS_NAMES = {
+  'club nacional': ['Nacional'],
+  wanderers: ['Wanderers'],
+  cerro: ['Cerro'],
+  juventud: ['Juventud'],
+  progreso: ['Progreso'],
+  'santos laguna': ['Santos'],
+  'club america': ['América'],
+  'u n a m pumas': ['Pumas'],
+  // The measured check of C1 (Tenfield, DH, Infobae, Arab News):
+  'liverpool montevideo': ['Liverpool'],   // "Danubio-Liverpool" in Uruguay is not Liverpool FC
+  'racing montevideo': ['Racing'],         // nor "Racing" Racing Club
+  charleroi: ['Sporting'],                 // "le Sporting" in Belgium is Charleroi, not Sporting CP
+  leon: ['León'],                          // a first name elsewhere ("Leon Smith", Arab News)
+};
+
+/**
+ * Aliases that mean the club only in the listed countries' press, whoever's
+ * alias they are. River Plate's nickname "Millonarios" is also a Colombian
+ * club's name: Spanish papers covering Colombian football ("Atlético Nacional
+ * enfrenta a Millonarios") tagged River Plate.
+ */
+export const PRESS_ONLY = {
+  millonarios: ['AR'],
+  // Athletic Club's nickname; in Mexico "Leones Negros" is another club (Infobae).
+  leones: ['ES'],
+};
+
+/**
+ * Words around a name that make it something else, in every language (C1).
+ * Tokens are compared folded and lowercased.
+ */
+export const AROUND = {
+  america: { blockPrev: ['copa', 'sud', 'norte', 'centro', 'latino'], blockNext: ['latina', 'central', 'do', 'del', 'mineiro', 'mg', 'de'] },
+  sporting: { blockNext: ['gijon', 'kansas', 'kc', 'cristal', 'san', 'clube', 'braga', 'charleroi'] },
+  'al ahli': { blockPrev: ['shabab'] },
+  'al ittihad': { blockNext: ['kalba', 'alexandria'] },
+  // Surnames: "Antonio Carlos Santos", "Armando León" (Infobae).
+  santos: { blockPrevCapitalised: true },
+  leon: { blockPrevCapitalised: true },
+  // College American football in Mexico (ONEFA, Infobae): "Auténticos Tigres",
+  // "Pumas CU", "Borregos del TEC de Monterrey / de Puebla".
+  tigres: { blockPrev: ['autenticos'] },
+  pumas: { blockNext: ['cu'] },
+  monterrey: { blockPrev: ['de', 'tec'] },
+  puebla: { blockPrev: ['de', 'tec'] },
+  leones: { blockNext: ['negros'] },
+};
+
+/**
+ * "in <town>" means the town (C1 extends the English rule of 18 Nov to the new
+ * languages): a one-word name of a club added after the original seven, right
+ * after one of these words, is a place, not the club.
+ */
+const TOWN_PREV = { en: ['in'], nl: ['in', 'uit'], 'pt-PT': ['em'] };
 
 /**
  * Club names that are too ambiguous on their own, matched only through the
- * unambiguous forms listed (Uruguay's Primera División, 19 Nov 2026). We hold
- * no Uruguayan source, so "only in Uruguayan press" cannot be told from the
- * feed; the full names can. Club Nacional never matches a bare "Nacional"
+ * unambiguous forms listed (Uruguay's Primera División, 19 Nov 2026). Since
+ * C1 the bare forms also count in the club's own country's press
+ * (PRESS_NAMES, from the source's country). Elsewhere Club Nacional never matches a bare "Nacional"
  * (CD Nacional's, and "Atlético Nacional" is a third club); Wanderers never
  * "Bolton Wanderers"; Cerro never "Cerro Porteño" or a hill; Juventud and
  * Progreso are ordinary Spanish words.
@@ -112,6 +188,8 @@ export const QUALIFIED_NAMES = {
   cerro: ['Club Atlético Cerro', 'Cerro de Montevideo'],
   juventud: ['Juventud de Las Piedras'],
   progreso: ['Club Atlético Progreso'],
+  // C1: "Leon" is a first name; the bare "León" counts in Mexican press only (PRESS_NAMES).
+  leon: ['Club León', 'León FC'],
 };
 
 // Portuguese context rules. Brazilian press writes the bare club name
@@ -133,9 +211,14 @@ export const PT_CONTEXT = {
 /** Shortest alias we will match unless the seed marks it short_ok. */
 const MIN_ALIAS_LEN = 4;
 
-/** Lowercase, strip diacritics, collapse punctuation to single spaces. */
+/**
+ * Lowercase, strip diacritics, collapse punctuation to single spaces. Turkish
+ * dotless ı has no decomposition, so it is folded by hand ("Kasımpaşa" →
+ * "kasimpasa"), one character for one so offsets stay put.
+ */
 export function normalise(s) {
   return (s || '')
+    .replace(/ı/g, 'i')
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
@@ -145,7 +228,7 @@ export function normalise(s) {
 
 /** Diacritics stripped but case and offsets preserved, for the case rules. */
 function foldKeepCase(s) {
-  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+  return (s || '').replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
 /**
@@ -193,12 +276,21 @@ export function buildIndex(teams, aliases = []) {
     langs: null,
     short_ok: false,
   }));
+  // Names meant only in the club's own country's press (PRESS_NAMES).
+  const pressRows = (t) => (PRESS_NAMES[normalise(t.name)] || []).map((alias) => ({
+    api_team_id: t.api_team_id,
+    alias,
+    kind: 'o',
+    countries: [LEAGUE_COUNTRY[t.league]].filter(Boolean),
+  }));
   const rows = [
     ...teams.flatMap(nameRows),
+    ...teams.flatMap(pressRows),
     ...aliases,
   ];
 
-  // key -> { unscoped: Map<teamId,kind>, scoped: Map<lang, Map<teamId,kind>> }
+  // key -> { unscoped: Map<teamId,kind>, scoped: Map<lang, Map<teamId,kind>>,
+  //          byCountry: Map<country, Set<teamId>> }
   const staging = new Map();
   for (const r of rows) {
     const key = normalise(r.alias);
@@ -208,9 +300,14 @@ export function buildIndex(teams, aliases = []) {
     if (!leagueOf.has(r.api_team_id)) continue; // alias for a team we do not hold
 
     let slot = staging.get(key);
-    if (!slot) staging.set(key, (slot = { unscoped: new Map(), scoped: new Map() }));
+    if (!slot) staging.set(key, (slot = { unscoped: new Map(), scoped: new Map(), byCountry: new Map() }));
 
-    if (r.langs && r.langs.length) {
+    if (r.countries) {
+      for (const c of r.countries) {
+        if (!slot.byCountry.has(c)) slot.byCountry.set(c, new Set());
+        slot.byCountry.get(c).add(r.api_team_id);
+      }
+    } else if (r.langs && r.langs.length) {
       for (const lang of r.langs) {
         let m = slot.scoped.get(lang);
         if (!m) slot.scoped.set(lang, (m = new Map()));
@@ -226,11 +323,15 @@ export function buildIndex(teams, aliases = []) {
   for (const [key, slot] of staging) {
     const perLang = {};
     const kindByLang = {};
+    // A clash, kept whole: the source's country may decide it at tag time
+    // (tagText). lang -> [[teamId, kind], ...]
+    const claimsByLang = {};
     for (const lang of LANGS) {
       const claims = slot.scoped.get(lang) || slot.unscoped;
       if (claims.size === 0) continue;
       let id, kind;
       if (claims.size > 1) {
+        claimsByLang[lang] = [...claims.entries()];
         const pick = resolve(lang, [...claims.keys()]);
         if (pick == null) {
           dropped.push({ key, lang, teams: [...claims.keys()] });
@@ -243,11 +344,16 @@ export function buildIndex(teams, aliases = []) {
       perLang[lang] = id;
       kindByLang[lang] = kind;
     }
-    if (Object.keys(perLang).length === 0) continue;
+    // country -> teamId, for PRESS_NAMES (one club per country, else none)
+    const perCountry = {};
+    for (const [c, ids] of slot.byCountry) if (ids.size === 1) perCountry[c] = [...ids][0];
+    if (Object.keys(perLang).length === 0 && Object.keys(claimsByLang).length === 0 && Object.keys(perCountry).length === 0) continue;
     entries.push({
       key,
       perLang,
       kindByLang,
+      claimsByLang,
+      perCountry,
       single: !key.includes(' '),
       words: key.split(' '),
     });
@@ -283,11 +389,25 @@ function nextToken(text, at) {
   return text.slice(start, i) || null;
 }
 
+/** Token starting right after position `end` (after a whole, possibly multi-word, match). */
+function tokenAfter(text, end) {
+  let i = end;
+  while (i < text.length && /[\s–—"'\-)\]]/.test(text[i])) i++;
+  const start = i;
+  while (i < text.length && /[A-Za-z0-9]/.test(text[i])) i++;
+  return text.slice(start, i) || null;
+}
+
 /**
  * Tag one item. Returns [{ api_team_id, via }] — `via` is the alias that hit,
  * which is what makes a surprising tag debuggable from the database.
+ *
+ * `country` is the source's (news_sources.country, ISO alpha-2; C1). It decides
+ * a name clash in favour of the one claimant whose league is that country's,
+ * unlocks PRESS_NAMES for that country, and gates PRESS_ONLY aliases. Without
+ * it (and from a country no claimant plays in) everything is as before.
  */
-export function tagText(index, title, summary, lang) {
+export function tagText(index, title, summary, lang, country = null) {
   const text = foldKeepCase(`${title || ''} . ${summary || ''}`);
   const low = text.toLowerCase();
   // Stripping diacritics preserves length, so offsets in `text` line up with
@@ -296,20 +416,37 @@ export function tagText(index, title, summary, lang) {
   const candidates = [];
 
   for (const e of index.entries) {
-    const teamId = e.perLang[lang];
+    let teamId = e.perLang[lang];
+    let kind = e.kindByLang[lang];
+    if (country) {
+      if (e.perCountry && e.perCountry[country] !== undefined) {
+        // A name meant only in this country's press (PRESS_NAMES).
+        teamId = e.perCountry[country];
+        kind = 'o';
+      } else if (e.claimsByLang && e.claimsByLang[lang]) {
+        // A clash: the one claimant whose league is this source's country wins.
+        const home = e.claimsByLang[lang].filter(([id]) => LEAGUE_COUNTRY[index.leagueOf.get(id)] === country);
+        if (home.length === 1) [teamId, kind] = home[0];
+      }
+    }
     if (teamId === undefined) continue;
-    const kind = e.kindByLang[lang];
+    const only = PRESS_ONLY[e.key];
+    if (only && !only.includes(country)) continue;
     const league = index.leagueOf.get(teamId);
     const homeLangs = LEAGUE_LANG[league] || [];
 
     // Nicknames are domestic: "Mengão" appears in Brazilian copy, not German.
     if (kind === 'n' && !homeLangs.includes(lang)) continue;
 
-    // Rule (a): a common word foreign to this language never matches.
+    // Rule (a): a common word foreign to this language never matches. European
+    // Portuguese shares Brazilian Portuguese's common words.
     const commonIn = COMMON[e.key];
-    if (commonIn && commonIn.includes(lang) && !homeLangs.includes(lang)) continue;
+    const isCommon = commonIn && (commonIn.includes(lang) || (lang === 'pt-PT' && commonIn.includes('pt-BR')));
+    if (isCommon && !homeLangs.includes(lang)) continue;
 
-    const rule = lang === 'pt-BR' ? PT_CONTEXT[e.key] : null;
+    const rule = PORTUGUESE.has(lang) ? PT_CONTEXT[e.key] : null;
+    const around = AROUND[e.key];
+    const townWords = TOWN_PREV[lang];
     const re = new RegExp(
       `(^|[^A-Za-z0-9])${e.words.map(escapeRe).join('[^A-Za-z0-9]+')}(?![A-Za-z0-9])`,
       'g'
@@ -329,12 +466,22 @@ export function tagText(index, title, summary, lang) {
         continue;
       }
 
-      // English place rule for the clubs added on 18 Nov 2026 (most are named
-      // after their town): "in Cardiff" is the city ("Fury will fight Joshua in
-      // Cardiff", the measured check). The original clubs keep their old rules.
-      if (lang === 'en' && e.single && index.established && index.established.get(teamId) === false) {
+      // Place rule for the clubs added on 18 Nov 2026 (most are named after
+      // their town): "in Cardiff" is the city ("Fury will fight Joshua in
+      // Cardiff", the measured check); C1 adds Dutch "in / uit" and European
+      // Portuguese "em". The original clubs keep their old rules.
+      if (townWords && e.single && index.established && index.established.get(teamId) === false) {
         const pw = prevToken(text, at);
-        if (pw && pw.toLowerCase() === 'in') continue;
+        if (pw && townWords.includes(pw.toLowerCase())) continue;
+      }
+
+      // Words around the name that make it something else ("Copa América").
+      if (around) {
+        const pw = prevToken(text, at);
+        if (around.blockPrev && pw && around.blockPrev.includes(pw.toLowerCase())) continue;
+        if (around.blockPrevCapitalised && pw && /^[A-Z]/.test(pw)) continue;
+        const nw = tokenAfter(text, end);
+        if (around.blockNext && nw && around.blockNext.includes(nw.toLowerCase())) continue;
       }
 
       if (rule) {

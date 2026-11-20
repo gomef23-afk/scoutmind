@@ -67,9 +67,10 @@ eq('display names (decision 2)', ['belgian_pro_league', 'saudi_pro_league', 'mls
   ['Jupiler Pro League · BEL', 'Saudi Pro League · KSA', 'MLS · USA', 'Premiership · SCO']);
 check('the existing seven keep their database names and slugs', [['serie_a', 'Série A'], ['serie_a_it', 'Serie A'], ['argentina', 'Liga Profesional']].every(([s, n]) => BY_SLUG[s].name === n));
 check('news: since commit 3 every league tags its clubs (after the measured check, tests/tagger-new-leagues.test.js)', TAGGED_SLUGS.size === LEAGUES.length);
-eq('the tagger\'s LEAGUE_LANG is the config\'s: unchanged for the seven, our sources\' languages for the eleven', LEAGUE_LANG, {
+// C1 (21 Nov 2026): Dutch, European Portuguese, Turkish and Saudi-English press (tests/tagger-press.test.js).
+eq('the tagger\'s LEAGUE_LANG is the config\'s: unchanged for the seven, our sources\' languages for the others', LEAGUE_LANG, {
   serie_a: ['pt-BR'], premier_league: ['en'], la_liga: ['es'], bundesliga: ['de'], serie_a_it: ['it'], ligue_1: ['fr'], argentina: ['es'],
-  championship: ['en'], eredivisie: [], primeira_liga: [], belgian_pro_league: ['fr'], scottish_premiership: ['en'], super_lig: [], saudi_pro_league: [],
+  championship: ['en'], eredivisie: ['nl'], primeira_liga: ['pt-PT'], belgian_pro_league: ['fr', 'nl'], scottish_premiership: ['en'], super_lig: ['tr'], saudi_pro_league: ['en'],
   mls: ['en'], liga_mx: ['es'], serie_b: ['pt-BR'], serie_c: ['pt-BR'], uruguay: ['es'] });
 const { LEAGUE_LANG: TAGGER_LANG } = await import('../api/_lib/tagger.js');
 check('tagger.js reads it from the config', TAGGER_LANG === LEAGUE_LANG);

@@ -46,6 +46,9 @@ function cleanText(raw) {
   v = v.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
   v = v.replace(/<[^>]*>/g, ' ');
   v = decodeEntities(v);
+  // A CDATA section escaped as text (Record PT: "&lt;![CDATA[ FC Porto-Paredes
+  // ]]&gt;") only becomes visible after decoding; unwrap it then too.
+  v = v.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
   v = v.replace(/\s+/g, ' ').trim();
   // ESPN ships the literal string "null" as a description. Serialising a
   // missing value is the feed's bug; do not print it on a card.
@@ -64,6 +67,25 @@ function pickAttr(block, tag, attr, requireAttr) {
     if (a) return decodeEntities(a[1]).trim();
   }
   return '';
+}
+
+/**
+ * A feed's bytes as text, in the encoding it declares: the Content-Type
+ * charset, else the XML prolog's encoding, else UTF-8. `res.text()` always
+ * reads UTF-8, which turned every accented letter of an ISO-8859-1 feed
+ * (Record PT, 21 Nov 2026) into "�". An unknown label falls back to UTF-8.
+ */
+export function decodeFeed(bytes, contentType = '') {
+  const buf = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  const fromHeader = (/charset\s*=\s*["']?([\w-]+)/i.exec(contentType || '') || [])[1];
+  const head = new TextDecoder('latin1').decode(buf.subarray(0, 200));
+  const fromProlog = (/<\?xml[^>]*encoding\s*=\s*["']([\w-]+)["']/i.exec(head) || [])[1];
+  const label = (fromHeader || fromProlog || 'utf-8').toLowerCase();
+  try {
+    return new TextDecoder(label).decode(buf);
+  } catch {
+    return new TextDecoder('utf-8').decode(buf);
+  }
 }
 
 /**
