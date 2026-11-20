@@ -37,7 +37,7 @@
 <meta name="apple-mobile-web-app-title" content="ScoutMind">
 <script src="/pwa.js?v=4801f83526" defer></script>
 <!-- 4b-5: this page in the reader's language (the device's until they choose). -->
-<script src="/i18n.js?v=b2f94f548c"></script>
+<script src="/i18n.js?v=5d43382c2c"></script>
 <script src="/league-names.js?v=3dbe9a7b46"></script>
 <meta property="og:site_name" content="ScoutMind">
 <meta property="og:type" content="website">
@@ -480,7 +480,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 16px; display: flex;
           </div>
           <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)" data-i18n="about.faq.q6">Which languages does the feed speak?</div>
-            <div class="faq-a" data-i18n="about.faq.a6">Six: Portuguese, English, Spanish, Italian, German and French. You choose which ones your feed shows, and anything about a club you follow reaches you whatever language it was written in.</div>
+            <div class="faq-a" data-i18n="about.faq.a6">Portuguese (from Brazil and Portugal), English, Spanish, Italian, German, French, Dutch and Turkish. You choose which ones your feed shows, and anything about a club you follow reaches you whatever language it was written in.</div>
           </div>
         </div>
   </div>
@@ -586,13 +586,15 @@ function aboutPaint() {
   const S = ABOUT.sources;
   if (S && S.length) {
     const langs = new Set(S.map((s) => String(s.lang || '').split('-')[0]).filter(Boolean)).size;
-    document.getElementById('st-outlets').textContent = S.length;
+    // An outlet with several feeds (BBC Sport, The Guardian) counts once.
+    const outlets = [...new Set(S.map((s) => s.name))];
+    document.getElementById('st-outlets').textContent = outlets.length;
     document.getElementById('st-outlets-lbl').textContent = t('about.stat.outletsN', { langs });
     aboutShow('st-outlets-box', true); aboutShow('hero-stats', true);
-    const list = aboutList(S.map((s) => s.name));
+    const list = aboutList(outlets);
     const lo = document.getElementById('live-outlets'); lo.textContent = list; lo.hidden = false;
-    aboutSay('faq-a1', 'about.faq.a1N', { n: S.length, list });
-    aboutSay('s2d', 'about.s2.dN', { n: S.length, langs });
+    aboutSay('faq-a1', 'about.faq.a1N', { n: outlets.length, list });
+    aboutSay('s2d', 'about.s2.dN', { n: outlets.length, langs });
   }
 }
 async function aboutStart() {

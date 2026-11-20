@@ -36,7 +36,7 @@ const ALLOW = new Set([
   'Flamengo', 'Corinthians', 'Palmeiras', 'Botafogo', 'Vasco da Gama', 'Fluminense', 'Internacional', 'Real Madrid',
   'Barcelona', 'Manchester United', 'Manchester City', 'Liverpool', 'Arsenal', 'Bayern', 'Juventus', 'Boca Juniors', 'River Plate',
   'UEFA Champions League', 'Premier League', 'La Liga', 'Bundesliga', 'Serie A', 'Liga Profesional',
-  'English', 'Italiano', 'Deutsch',
+  'English', 'Italiano', 'Deutsch', 'Nederlands',
   // Values compared with what the API / database sends, never shown as such.
   'Own Goal', 'Penalty', 'Invalid login credentials', 'That competition is not in the Scout Game.',
   // A console message for whoever debugs.

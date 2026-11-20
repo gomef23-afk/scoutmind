@@ -93,7 +93,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=b2f94f548c"></script>
+<script src="/i18n.js?v=5d43382c2c"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=61368b2af2"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -4145,7 +4145,10 @@ function fxRow(o){
 // Argentina, MLS, Liga MX and Saudi Arabia are neither; their items appear
 // under All News.
 const LEAGUE_REGION=Object.fromEntries(LeagueNames.LEAGUES.filter(l=>l.region).map(l=>[l.slug,l.region]));
-const COUNTRY_REGION={BR:'brazil',GB:'europe',ES:'europe',IT:'europe',DE:'europe',FR:'europe'};
+// An untagged item's region from its source's country. C2 adds the Dutch,
+// Belgian, Portuguese and Turkish press to Europe; Saudi, Mexican and
+// Uruguayan sources stay in neither bucket, like Olé (AR).
+const COUNTRY_REGION={BR:'brazil',GB:'europe',ES:'europe',IT:'europe',DE:'europe',FR:'europe',NL:'europe',BE:'europe',PT:'europe',TR:'europe'};
 
 // Category labels on cards: NewsCard.category() in public/news-card.js
 // (spec v1.2 §6: transfer + contract → Transfer, rumour → Rumour, match →
@@ -4502,7 +4505,18 @@ const CONTENT_LANGS=[
   {code:'it',   short:'IT',label:'Italiano'},
   {code:'de',   short:'DE',label:'Deutsch'},
   {code:'fr',   short:'FR',label:'Français'},
+  // C2 (21 Nov 2026): the Dutch and Turkish press of the tracked leagues.
+  {code:'nl',   short:'NL',label:'Nederlands'},
+  {code:'tr',   short:'TR',label:'Türkçe'},
 ];
+
+/**
+ * An item's language as the reader chooses it: European Portuguese (Record,
+ * pt-PT) is read under "Português" with the Brazilian sources, so a reader
+ * who picked Portuguese gets both and nobody has to choose between two
+ * Portuguese boxes. Every other code is itself.
+ */
+function feedLang(code){ return code==='pt-PT'?'pt-BR':code; }
 
 /** Browser language reduced to one of our source languages. */
 function browserLang(){
@@ -4512,6 +4526,8 @@ function browserLang(){
   if(raw.startsWith('it'))return 'it';
   if(raw.startsWith('de'))return 'de';
   if(raw.startsWith('fr'))return 'fr';
+  if(raw.startsWith('nl'))return 'nl';
+  if(raw.startsWith('tr'))return 'tr';
   return 'en';
 }
 
@@ -4994,8 +5010,8 @@ function renderNewsCard(n,lead){
   // opt-in club exception, so the hint is pointless unless that is on. When it
   // is, say so and let the browser's own translator do the work — we never
   // translate anything ourselves.
-  const foreign=showClubNewsAllLangs()&&myLangs().indexOf(n.lang)<0;
-  const lm=CONTENT_LANGS.find(l=>l.code===n.lang);
+  const foreign=showClubNewsAllLangs()&&myLangs().indexOf(feedLang(n.lang))<0;
+  const lm=CONTENT_LANGS.find(l=>l.code===feedLang(n.lang));
   const hint=foreign?'<span class="nc-hint">'+sanitize((lm&&lm.short)||n.lang)+' · '+sanitize(t('news.translate'))+'</span>':'';
   // One line: category label (only when the tagger gave one) · source · age.
   const meta='<div class="nc-meta">'
@@ -5723,8 +5739,11 @@ let SEARCH_QUERY='';
 let SEARCH_RESULTS=null;     // null = not searching, [] = searched, no hits
 let searchTimer=null;
 
+// news_items.search_vector (009) is built with these configs, and 'simple' for
+// any other language (Dutch, Turkish, pt-PT since C2): search those with
+// 'simple' too, so the query is tokenised the way the rows were.
 const TSCONFIG={'pt-BR':'portuguese',en:'english',es:'spanish',
-  it:'italian',de:'german',fr:'french'};
+  it:'italian',de:'german',fr:'french',nl:'simple',tr:'simple'};
 
 function onSearchInput(value){
   clearTimeout(searchTimer);
@@ -5922,13 +5941,13 @@ function visibleFeedItems(opts){
   const out=FEED_ITEMS.filter(function(n){
     // Your chosen languages only — unless you opted in to seeing news about
     // your own clubs in other languages, in which case those pass too.
-    if(langs.indexOf(n.lang)<0){
+    if(langs.indexOf(feedLang(n.lang))<0){
       if(!crossLang)return false;
       if(!n.teamIds.some(id=>mine.indexOf(id)>-1))return false;
     }
     // The chips filter strictly, so the feed never mixes languages when the
     // reader has said which one they want.
-    if(currentLangFilter!=='all' && n.lang!==currentLangFilter)return false;
+    if(currentLangFilter!=='all' && feedLang(n.lang)!==currentLangFilter)return false;
     // Trending ranks across every category; the category chips belong to the
     // News tab.
     if(opts&&opts.ignoreCategory)return true;
@@ -5993,11 +6012,11 @@ function searchResultsHtml(){
   const crossLang=showClubNewsAllLangs();
   // Results obey the same language and club rules as the feed.
   const rows=SEARCH_RESULTS.filter(function(n){
-    if(langs.indexOf(n.lang)<0){
+    if(langs.indexOf(feedLang(n.lang))<0){
       if(!crossLang)return false;
       if(!n.teamIds.some(id=>mine.indexOf(id)>-1))return false;
     }
-    if(currentLangFilter!=='all'&&n.lang!==currentLangFilter)return false;
+    if(currentLangFilter!=='all'&&feedLang(n.lang)!==currentLangFilter)return false;
     if(currentFeedFilter==='transfers')return ['transfer','rumor','contract'].indexOf(n.category)>-1;
     if(currentFeedFilter==='brazil')return n.region==='brazil';
     if(currentFeedFilter==='europe')return n.region==='europe';
@@ -6057,7 +6076,7 @@ function renderForYou(){
     .filter(n=>n.teamIds.some(id=>mine.indexOf(id)>-1))
     // Same language rule as All News: your languages, unless you opted in to
     // seeing your clubs in other languages too.
-    .filter(n=>langs.indexOf(n.lang)>-1||crossLang)
+    .filter(n=>langs.indexOf(feedLang(n.lang))>-1||crossLang)
     .sort(function(a,b){
       const ah=a.headlineTeamIds.some(id=>mine.indexOf(id)>-1);
       const bh=b.headlineTeamIds.some(id=>mine.indexOf(id)>-1);

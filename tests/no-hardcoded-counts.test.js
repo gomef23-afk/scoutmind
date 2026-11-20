@@ -74,6 +74,8 @@ check('no hero tile carries a literal number; each is hidden until filled', !/<d
   && ['st-leagues', 'st-game', 'st-clubs', 'st-outlets'].every((id) => new RegExp(`<div id="${id}-box" hidden>`).test(about)) && /<div class="hero-stats" id="hero-stats" hidden>/.test(about));
 check('the league chips are drawn from the rows, not written into the page', !/<div class="proof-league">/.test(about) && /<div class="proof-section" id="proof" hidden>/.test(about)
   && /LeagueNames\.label\(l\)/.test(about) && /<script src="\/league-names\.js(\?v=[0-9a-f]+)?"><\/script>/.test(about));
+check('outlets count once however many feeds they have (BBC Sport, The Guardian: C2)', /const outlets = \[\.\.\.new Set\(S\.map\(\(s\) => s\.name\)\)\];/.test(about)
+  && /textContent = outlets\.length;/.test(about) && /\{ n: outlets\.length, list \}/.test(about));
 check('the outlet names come from news_sources, not a written list', /<div class="live-s" id="live-outlets" hidden><\/div>/.test(about) && !/Gazzetta, kicker, RMC/.test(about));
 check('a filled sentence drops data-i18n, so the language switch does not put the plain wording back; the switch repaints',
   /el\.removeAttribute\('data-i18n'\);/.test(about) && /window\.addEventListener\('sm-lang', aboutPaint\);/.test(about));
