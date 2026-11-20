@@ -37,6 +37,31 @@ export function matchByName(name, leagueClubs) {
   return hits.length === 1 ? hits[0] : null;
 }
 
+/**
+ * Which of a league's tables is its MAIN one: the table a club's position
+ * means (the club header, the Clubs grid, the Home band). Returns its index in
+ * `groups`, or null when there is none (MLS: two conferences, each club in one).
+ *   1. a table named as the annual one ("Primera: Tabla Anual", "Annual"), or
+ *      named after the league itself (Argentina: "Liga Profesional Argentina");
+ *   2. never a relegation-averages table ("Promedios");
+ *   3. else the one table strictly larger than every other (Série C's first
+ *      stage, 20 clubs, against its groups of 4).
+ * Until 22 Nov 2026 a club took its BEST rank across all tables: 1st in
+ * Uruguay's Clausura read as "1st" while 6th in the annual table.
+ */
+export function mainTable(groups, leagueName) {
+  const label = (g) => String((g && g[0] && g[0].group) || '');
+  const lname = String(leagueName || '').trim().toLowerCase();
+  const usable = (groups || []).map((g, i) => ({ i, g, l: label(g) })).filter((x) => x.g && x.g.length && !/promedio/i.test(x.l));
+  if (usable.length <= 1) return usable.length ? usable[0].i : null;
+  const named = usable.filter((x) => /\banual\b|\bannual\b/i.test(x.l) || (lname && x.l.trim().toLowerCase() === lname));
+  if (named.length === 1) return named[0].i;
+  const sizes = usable.map((x) => x.g.length);
+  const max = Math.max(...sizes);
+  const biggest = usable.filter((x) => x.g.length === max);
+  return biggest.length === 1 ? biggest[0].i : null;
+}
+
 export default withCron('standings', async ({ req }) => {
   const started = Date.now();
   const api = createClient();
@@ -76,8 +101,10 @@ export default withCron('standings', async ({ req }) => {
     // rejects the whole upsert with 21000 "ON CONFLICT DO UPDATE command cannot
     // affect row a second time". The primary key is (league_id, season,
     // team_id), so we must collapse to one row per team BEFORE writing:
-    // keep the best (lowest) rank and remember which table it came from.
+    // the club's row in the league's MAIN table (mainTable, 22 Nov 2026), else
+    // (no main table) the best (lowest) rank, remembering which table it came from.
     const groups = json.response?.[0]?.league?.standings || [];
+    const main = mainTable(groups, json.response?.[0]?.league?.name || lg.name);
 
     const bestByTeam = new Map();   // api_team_id -> row
     let seen = 0;
@@ -135,20 +162,25 @@ export default withCron('standings', async ({ req }) => {
         const gk = `${label}|${teamId}`;
         if (!groupRows.has(gk)) groupRows.set(gk, { ...candidate, group_label: label, group_order: order });
 
+        const inMain = main !== null && order === main;
+        candidate._main = inMain;
         const prev = bestByTeam.get(apiTeamId);
         if (!prev) {
           bestByTeam.set(apiTeamId, candidate);
           continue;
         }
         collapsed++;
-        // Lower rank wins; a null rank never beats a real one.
+        // The main table's row always wins; between two others (or with no
+        // main table) the lower rank wins, and a null rank never beats a real one.
+        if (prev._main) continue;
+        if (inMain) { bestByTeam.set(apiTeamId, candidate); continue; }
         const prevRank = prev.rank ?? Number.MAX_SAFE_INTEGER;
         const thisRank = candidate.rank ?? Number.MAX_SAFE_INTEGER;
         if (thisRank < prevRank) bestByTeam.set(apiTeamId, candidate);
       }
     }
 
-    const standingRows = [...bestByTeam.values()];
+    const standingRows = [...bestByTeam.values()].map(({ _main, ...r }) => r);
     const written = await upsert('standings', standingRows, 'league_id,season,team_id');
     rows += written;
 
@@ -196,6 +228,7 @@ export default withCron('standings', async ({ req }) => {
     const diag = {
       league: lg.slug,
       groups: groups.length,
+      main_table: main === null ? null : (groups[main]?.[0]?.group || lg.name),
       rows_seen: seen,
       unique_teams: standingRows.length,
       duplicates_collapsed: collapsed,

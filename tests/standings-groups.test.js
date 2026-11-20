@@ -11,7 +11,7 @@
 // readable). Checks:
 // - standings_groups gets every (group, club) row: nothing dropped, the
 //   group's order kept, a club in three tables three times;
-// - `standings` is unchanged: one row per club, the best rank;
+// - `standings`: one row per club, its place in the main (annual) table (A0);
 // - whole rows (rule 25), no DELETE (rule 13), a re-run is safe;
 // - before 032 runs (table missing) the league still gets its table and
 //   snapshot, and the run says why the groups were skipped;
@@ -110,7 +110,11 @@ const bra = g.filter((x) => x.league_id === 1);
 check('a one-table league is one group, named as the API names it', bra.length === 20 && new Set(bra.map((x) => x.group_label)).size === 1 && bra[0].group_label === 'Serie A' && bra.every((x) => x.group_order === 0));
 check('rows carry the numbers the table shows (P W D L GF GA GD Pts, form)', ['played', 'win', 'draw', 'lose', 'goals_for', 'goals_against', 'goal_diff', 'points', 'form'].every((c) => arg[0][c] != null));
 const st = (W.posts.standings || []).filter((x) => x.league_id === 7);
-check('`standings` is unchanged: one row per club, the best rank', st.length === 6 && st.find((x) => x.team_id === 200).rank === 1 && st.find((x) => x.team_id === 203).rank === 1);
+// Since A0 (22 Nov 2026, tests/standings-main-table.test.js) a club's row is its
+// place in the league's main table (Argentina: the annual one), not its best rank.
+const annual = new Map(arg.filter((x) => x.group_label === 'Liga Profesional Argentina').map((x) => [x.team_id, x.rank]));
+check('`standings`: one row per club, its rank in the annual table', st.length === 6 && st.every((x) => x.rank === annual.get(x.team_id) && x.group_label === 'Liga Profesional Argentina'),
+  JSON.stringify(st.map((x) => [x.team_id, x.rank, annual.get(x.team_id)])));
 check('no row rejected (whole rows, no duplicate key in a batch)', W.rejected.length === 0, JSON.stringify(W.rejected));
 check('the run reports the group rows', r.body.by_league.find((x) => x.league === 'argentina').group_rows === 18);
 check('nothing deleted (rule 13)', !W.methods.has('DELETE'));
