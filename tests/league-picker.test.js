@@ -67,7 +67,10 @@ vm.runInContext(['const LP={};', fn('lpDefine'),
   'this.LP=LP; this.setOpen=(k)=>{ LP_OPEN=k; }; let LP_OPEN=null; function lpClose(){ LP_OPEN=null; }'].join('\n'), ctx);
 
 const idOf = (slug) => LEAGUES.find((l) => l.slug === slug).id;
-const chips = (key) => { ctx.lpRender(key); const h = el(ctx.LP[key].el).innerHTML; return [...h.matchAll(/<button type="button" class="filter-btn( active)?"[^>]*>([^<]+)<\/button>/g)].map((m) => (m[1] ? '*' : '') + m[2]); };
+// The row as text: every button in order, "*" for the chosen one (the Leagues button shows a chosen league's name).
+const chips = (key) => { ctx.lpRender(key); const h = el(ctx.LP[key].el).innerHTML;
+  return [...h.matchAll(/<button type="button" class="filter-btn( lp-more)?( active)?"[^>]*>(?:<span class="lp-more-t">)?([^<]+)/g)].map((m) => (m[2] ? '*' : '') + m[3]); };
+const pickFromSheet = (key, slug) => { ctx.setOpen(key); el('lp-q').value = ''; ctx.lpFilter(); ctx.lpPickSheet(ctx.LP[key].sheet.findIndex((l) => l.slug === slug)); };
 const fan = (slugs) => {
   ctx.CLUB_DATA = new Map(slugs.map((s, i) => [100 + i, { id: 100 + i, league: s, label: 'Club ' + i }]));
   ctx.myClubIds = () => slugs.map((s, i) => 100 + i);
@@ -77,29 +80,34 @@ const withAllClubs = () => { for (const l of LEAGUES) if (![...ctx.CLUB_DATA.val
 
 // ── A guest: All and the Leagues button ──
 fan([]); store.clear();
-eq('a guest: All only, chosen (no "My leagues" without clubs)', chips('mx'), ['*All']);
-check('…and the Leagues button, which opens the sheet', /<button type="button" class="lp-more" aria-haspopup="dialog" onclick="lpOpen\('mx',this\)"><span>Leagues<\/span><svg data-icon="chevronDown"><\/svg><\/button>/.test(el('matches-league-chips').innerHTML));
-check('the chips scroll in a labelled group', /<div class="chip-scroll lp-chips" role="group" aria-label="League">/.test(el('matches-league-chips').innerHTML));
+eq('a guest: [All] [Leagues ⌄], All chosen (no "My leagues" without clubs)', chips('mx'), ['*All', 'Leagues']);
+check('the Leagues button opens the sheet', /<button type="button" class="filter-btn lp-more" aria-haspopup="dialog" aria-pressed="false" onclick="lpOpen\('mx',this\)"><span class="lp-more-t">Leagues<\/span><svg data-icon="chevronDown"><\/svg><\/button>/.test(el('matches-league-chips').innerHTML),
+  el('matches-league-chips').innerHTML);
+check('one labelled group, nothing that scrolls (no chip row)', /^<div class="lp-group" role="group" aria-label="League">/.test(el('matches-league-chips').innerHTML)
+  && !/chip-scroll/.test(fn('lpRender')));
 
 // ── A fan with clubs in two leagues ──
 fan(['serie_a', 'premier_league']); store.clear();
-eq('a fan: All · My leagues (chosen by default) · my two leagues, alphabetical', chips('mx'), ['All', '*My leagues', 'Premier League · ENG', 'Série A · BRA']);
+eq('a fan: [All] [My leagues] [Leagues ⌄], My leagues chosen by default; no per-league chips', chips('mx'), ['All', '*My leagues', 'Leagues']);
 ctx.mxApplySel();
 eq('My leagues filters the query to those leagues', [ctx.MX.league, ctx.mxLeagueFilter()], [null, `in.(${[idOf('premier_league'), idOf('serie_a')].join(',')})`]);
-check('chips go by index, never a name in an onclick', /onclick="lpPick\('mx',3\)"/.test(el('matches-league-chips').innerHTML) && !/onclick="[^"]*serie_a/.test(el('matches-league-chips').innerHTML));
+check('chips go by index, never a name in an onclick', /onclick="lpPick\('mx',1\)"/.test(el('matches-league-chips').innerHTML) && !/onclick="[^"]*serie_a/.test(el('matches-league-chips').innerHTML));
 ctx.lpPick('mx', 0);
-eq('All tapped: saved for the session, chosen, still every chip', [store.get('sm_league_matches'), chips('mx')], ['all', ['*All', 'My leagues', 'Premier League · ENG', 'Série A · BRA']]);
+eq('All tapped: saved for the session, chosen', [store.get('sm_league_matches'), chips('mx')], ['all', ['*All', 'My leagues', 'Leagues']]);
 ctx.mxApplySel();
 eq('All: no league filter', ctx.mxLeagueFilter(), null);
-ctx.lpPick('mx', 3);
-eq('one of my leagues tapped: that chip chosen', chips('mx'), ['All', 'My leagues', 'Premier League · ENG', '*Série A · BRA']);
+pickFromSheet('mx', 'serie_a');
+eq('a league from the sheet is shown ON the button, chosen', chips('mx'), ['All', 'My leagues', '*Série A · BRA']);
+check('…with its full name as the title (the button ends in an ellipsis when long)', /class="filter-btn lp-more active" aria-haspopup="dialog" aria-pressed="true" title="Série A · BRA"/.test(el('matches-league-chips').innerHTML));
 ctx.mxApplySel();
 eq('…the query asks for that league only', ctx.mxLeagueFilter(), `eq.${idOf('serie_a')}`);
-eq('every tap reaches the list', ctx.picks.map((p) => p.join(':')), ['mx:all', 'mx:serie_a']);
+ctx.lpPick('mx', 1);
+eq('My leagues clears it: the button reads "Leagues" again', chips('mx'), ['All', '*My leagues', 'Leagues']);
+eq('every tap reaches the list', ctx.picks.map((p) => p.join(':')), ['mx:all', 'mx:serie_a', 'mx:mine']);
 
 // ── A fan with clubs in one league never loses sight of All ──
 fan(['serie_c']); store.clear();
-eq('one league of mine: All is still the first chip', chips('mx'), ['All', '*My leagues', 'Série C · BRA']);
+eq('one league of mine: All is still there', chips('mx'), ['All', '*My leagues', 'Leagues']);
 ctx.mxApplySel();
 check('…and "My leagues" behaves as that league chosen (its table, its far window)', ctx.MX.league && ctx.MX.league.slug === 'serie_c' && ctx.mxLeagueFilter() === `eq.${idOf('serie_c')}`);
 
@@ -110,10 +118,13 @@ ctx.lpFilter();
 let list = el('lp-list').innerHTML;
 const countries = [...list.matchAll(/<div class="lp-country">([^<]+)<\/div>/g)].map((m) => m[1]);
 const items = [...list.matchAll(/<button type="button" class="lp-item( on)?"[^>]*><span>([^<]+)<\/span>/g)].map((m) => m[2]);
-eq('every tracked league is in the sheet, once', [items.length, new Set(items).size], [LEAGUES.length, LEAGUES.length]);
+check('a "My leagues" section at the top: my two leagues, before the first country', /^<div class="lp-country lp-mine-h">My leagues<\/div><button[^>]*><span>Premier League · ENG<\/span><\/button><button[^>]*><span>Série A · BRA<\/span><\/button><div class="lp-country">Brazil · BRA/.test(list),
+  list.slice(0, 300));
+eq('then every tracked league by country, once each', [items.length - 2, new Set(items).size], [LEAGUES.length, LEAGUES.length]);
 eq('grouped by country with its code: my countries first, then by name', countries.slice(0, 3), ['Brazil · BRA', 'England · ENG', 'Argentina · ARG']);
 eq('one heading per country (Brazil has three leagues, England two)', countries.length, new Set(LEAGUES.map((l) => l.country_code)).size);
 check('a country\'s leagues sit under it: my league first', /Brazil · BRA<\/div><button[^>]*><span>Série A · BRA<\/span>[\s\S]*?Série B · BRA[\s\S]*?Série C · BRA[\s\S]*?England · ENG<\/div><button[^>]*><span>Premier League · ENG<\/span>[\s\S]*?Championship · ENG/.test(list));
+check('while searching, no "My leagues" section (the search lists by country)', (() => { el('lp-q').value = 'serie'; ctx.lpFilter(); const h = el('lp-list').innerHTML; el('lp-q').value = ''; return !/lp-mine-h/.test(h); })());
 check('nothing is chosen in the sheet while My leagues is', !/lp-item on/.test(list));
 const search = (q) => { el('lp-q').value = q; ctx.lpFilter(); return [...el('lp-list').innerHTML.matchAll(/<span>([^<]+)<\/span>/g)].map((m) => m[1]); };
 eq('search "uru" → Uruguay', search('uru'), ['Primera División · URU']);
@@ -133,7 +144,7 @@ const uruIdx = ctx.LP.mx.sheet.findIndex((l) => l.slug === 'uruguay');
 ctx.picks.length = 0;
 ctx.lpPickSheet(uruIdx);
 eq('a league from the sheet: saved, and the list told', [store.get('sm_league_matches'), ctx.picks.map((p) => p.join(':'))], ['uruguay', ['mx:uruguay']]);
-eq('…it shows as its own chip, chosen, after my leagues', chips('mx'), ['All', 'My leagues', 'Premier League · ENG', 'Série A · BRA', '*Primera División · URU']);
+eq('…it shows on the button, chosen: [All] [My leagues] [Primera División · URU ⌄]', chips('mx'), ['All', 'My leagues', '*Primera División · URU']);
 ctx.setOpen('mx'); el('lp-q').value = ''; ctx.lpFilter();
 check('…and is marked in the sheet (bar + check)', /<button type="button" class="lp-item on" aria-pressed="true"[^>]*><span>Primera División · URU<\/span><svg data-icon="check"><\/svg><\/button>/.test(el('lp-list').innerHTML));
 ctx.mxApplySel();
@@ -141,14 +152,14 @@ eq('…the query asks for it', ctx.mxLeagueFilter(), `eq.${idOf('uruguay')}`);
 
 // ── Saved choices ──
 store.clear(); store.set('sm_league_matches', 'no_such_league');
-eq('a saved league we no longer track falls back to the default', chips('mx')[1], '*My leagues');
+eq('a saved league we no longer track falls back to the default', chips('mx'), ['All', '*My leagues', 'Leagues']);
 fan([]); store.set('sm_league_matches', 'mine');
-eq('a saved "My leagues" with no clubs (signed out) reads as All', chips('mx'), ['*All']);
+eq('a saved "My leagues" with no clubs (signed out) reads as All', chips('mx'), ['*All', 'Leagues']);
 
 // ── Clubs keeps its own choice ──
 fan(['serie_a', 'premier_league']); withAllClubs(); store.clear();
 store.set('sm_league_matches', 'uruguay');
-eq('Clubs has its own choice: My leagues by default while Matches is on Uruguay', chips('cl'), ['All', '*My leagues', 'Premier League · ENG', 'Série A · BRA']);
+eq('Clubs: the same row, its own choice (My leagues while Matches is on Uruguay)', chips('cl'), ['All', '*My leagues', 'Leagues']);
 ctx.lpPick('cl', 0);
 eq('…and saving it does not touch Matches', [store.get('sm_league_clubs'), store.get('sm_league_matches')], ['all', 'uruguay']);
 eq('the Clubs sheet carries every league we hold clubs for', ctx.clubsLeagues().length, LEAGUES.length);
@@ -161,7 +172,10 @@ check('from 900px it is a dropdown under the button; on a phone a bottom sheet',
   && /\.lp-overlay\{[^}]*justify-content:flex-end;/.test(idx) && /\.lp-overlay\.drop \.lp-panel\{position:fixed;width:360px;/.test(idx));
 check('the sheet clears the home indicator', /\.lp-panel\{[^}]*env\(safe-area-inset-bottom\)/.test(idx));
 check('focus returns to the Leagues button when it closes', /document\.querySelector\('#'\+LP\[key\]\.el\+' \.lp-more'\)/.test(fn('lpClose')));
-check('tap targets: the button and the rows are 44px', /\.lp-more::after\{[^}]*width:max\(100%,44px\);height:max\(100%,44px\)/.test(idx) && /\.lp-item\{[^}]*min-height:44px;/.test(idx) && /\.lp-x\{[^}]*width:44px;height:44px;/.test(idx));
+check('tap targets: the row\'s buttons are .filter-btn (44px hit area), the sheet\'s rows 44px', /\.filter-btn::after,[\s\S]*?width:max\(100%,44px\);height:max\(100%,44px\)/.test(idx)
+  && /class="filter-btn lp-more/.test(fn('lpRender')) && /\.lp-item\{[^}]*min-height:44px;/.test(idx) && /\.lp-x\{[^}]*width:44px;height:44px;/.test(idx));
+check('nothing in the row scrolls; a long name on the button ends in an ellipsis', /\.lp-group\{[^}]*flex-wrap:nowrap;/.test(idx) && !/\.lp-group\{[^}]*overflow-x/.test(idx)
+  && /\.lp-group>\.lp-more\{[^}]*min-width:0;/.test(idx) && /\.lp-more-t\{[^}]*text-overflow:ellipsis;white-space:nowrap;/.test(idx));
 // .lp-panel .lp-q outranks the desktop rule that sets every search field to min-height:0.
 check('the search field is 16px (no iOS zoom) and 44px tall at every width', /\.lp-panel \.lp-q\{[^}]*min-height:44px;font-size:16px;/.test(idx));
 check('the choice is kept for the session, not on the device; the old key is removed', /sessionStorage\.getItem\(LP\[key\]\.store\)/.test(fn('lpSaved'))

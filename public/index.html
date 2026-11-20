@@ -256,13 +256,13 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .chip-group{display:flex;gap:6px;}
 .chip-group:empty{display:none;}
 @media (min-width: 900px){ .chip-scroll{margin:0 0 16px;padding:0;} }
-/* LEAGUE PICKER: the chips scroll, the Leagues button stays on the right. */
-.lp-row{display:flex;align-items:center;gap:8px;margin:0 0 16px;min-width:0;}
-.lp-row .lp-chips{flex:1 1 auto;min-width:0;margin:0 0 0 -16px;padding:0 4px 2px 16px;}
-.lp-more{flex:0 0 auto;position:relative;display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 10px 0 12px;border:1px solid var(--border-strong);border-radius:20px;background:var(--card);color:var(--navy-ink);font:600 12px/1 var(--font-sans);cursor:pointer;}
-.lp-more::after{content:'';position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%);}
-.lp-more:hover{background:var(--tint);}
-@media (min-width: 900px){ .lp-row .lp-chips{margin:0;padding:0 0 2px;} }
+/* LEAGUE PICKER: one short row, nothing scrolls; a long league name on the button ends in an ellipsis. */
+.lp-row{margin:0 0 16px;min-width:0;}
+.lp-group{display:flex;align-items:center;gap:7px;flex-wrap:nowrap;min-width:0;}
+.lp-group>.filter-btn{flex:0 0 auto;white-space:nowrap;}
+.lp-group>.lp-more{flex:0 1 auto;min-width:0;max-width:100%;display:inline-flex;align-items:center;gap:4px;padding-right:10px;}
+.lp-more-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lp-more svg{flex:0 0 auto;}
 .lp-overlay{position:fixed;inset:0;z-index:650;background:var(--scrim);display:none;flex-direction:column;justify-content:flex-end;}
 .lp-panel{background:var(--card);color:var(--ink);border-radius:16px 16px 0 0;max-height:85vh;display:flex;flex-direction:column;padding:8px 16px calc(12px + env(safe-area-inset-bottom));box-sizing:border-box;width:100%;}
 .lp-overlay.drop{background:transparent;}
@@ -3340,11 +3340,11 @@ function dayHeading(key){
 // ── LEAGUE PICKER (19 Nov 2026) ──
 // Nineteen chips stopped fitting. One picker, on Matches ('mx') and Clubs
 // ('cl'), each with its own choice: 'all' | 'mine' | a league's slug, kept for
-// the session (sessionStorage; a UI preference, rule 10). The row is
-// All · My leagues · a chip per league of mine (+ the chosen league when it is
-// not one of mine), then a Leagues button that opens EVERY league we track,
-// grouped by country with its code, searchable, the chosen one marked: no
-// league is ever out of reach. All is always the first chip. "My leagues" =
+// the session (sessionStorage; a UI preference, rule 10). The row is short and
+// never scrolls: All · My leagues · a Leagues button that opens EVERY league we
+// track ("My leagues" on top, then by country with its code), searchable, the
+// chosen one marked: no league is ever out of reach. A league chosen there is
+// shown on the button itself. All is always the first chip. "My leagues" =
 // the leagues of my main club and the clubs I follow; it is the default when
 // I have any, else All (guests). Chips go by index into p.shown, never a name
 // in an onclick (rule 4's spirit). The sheet follows rule 6.
@@ -3365,25 +3365,28 @@ function lpResolve(key){
   if(s&&s!=='mine'&&LP[key].leagues().some(l=>l.slug===s)) return s;
   return mine.length?'mine':'all';
 }
+/**
+ * One short row, nothing scrolls (21 Nov 2026: a scrolling chip row under a
+ * pinned button cut chips in half): [All] [My leagues] [Leagues v]. A league
+ * chosen in the sheet is shown ON the button, in the chosen style
+ * ([Primera División · URU v], ellipsis when long); a tap reopens the sheet,
+ * All / My leagues clear it. Guests: [All] [Leagues v].
+ */
 function lpRender(key){
   const p=LP[key], el=document.getElementById(p.el);
   if(!el) return;
   const sel=lpResolve(key), mine=lpMine(key);
   const shown=['all'];
   if(mine.length) shown.push('mine');
-  for(const l of mine) shown.push(l.slug);
-  if(sel!=='all'&&sel!=='mine'&&shown.indexOf(sel)<0) shown.push(sel);
   p.shown=shown;
-  const by=new Map(p.leagues().map(l=>[l.slug,l]));
-  const label=v=>v==='all'?t('fx.all'):v==='mine'?t('lp.mine'):LeagueNames.label(by.get(v)||v);
-  el.innerHTML='<div class="chip-scroll lp-chips" role="group" aria-label="'+sanitize(t('fx.leagueFilter'))+'">'
+  const one=sel!=='all'&&sel!=='mine'?(p.leagues().find(l=>l.slug===sel)||null):null;
+  const btnLabel=one?LeagueNames.label(one):t('lp.button');
+  el.innerHTML='<div class="lp-group" role="group" aria-label="'+sanitize(t('fx.leagueFilter'))+'">'
     +shown.map((v,i)=>{ const on=v===sel;
-      return '<button type="button" class="filter-btn'+(on?' active':'')+'" aria-pressed="'+on+'" onclick="lpPick(\''+key+'\','+i+')">'+sanitize(label(v))+'</button>'; }).join('')
-    +'</div><button type="button" class="lp-more" aria-haspopup="dialog" onclick="lpOpen(\''+key+'\',this)">'
-    +'<span>'+sanitize(t('lp.button'))+'</span>'+Icons.svg('chevronDown',16)+'</button>';
-  // The chosen chip in view (a league picked from the sheet lands at the end of the row).
-  const sc=el.querySelector&&el.querySelector('.lp-chips'), on=sc&&sc.querySelector('.active');
-  if(on&&on.offsetLeft+on.offsetWidth>sc.scrollLeft+sc.clientWidth) sc.scrollLeft=on.offsetLeft+on.offsetWidth-sc.clientWidth+16;
+      return '<button type="button" class="filter-btn'+(on?' active':'')+'" aria-pressed="'+on+'" onclick="lpPick(\''+key+'\','+i+')">'+sanitize(t(v==='all'?'fx.all':'lp.mine'))+'</button>'; }).join('')
+    +'<button type="button" class="filter-btn lp-more'+(one?' active':'')+'" aria-haspopup="dialog" aria-pressed="'+!!one+'"'
+    +(one?' title="'+sanitize(btnLabel)+'"':'')+' onclick="lpOpen(\''+key+'\',this)">'
+    +'<span class="lp-more-t">'+sanitize(btnLabel)+'</span>'+Icons.svg('chevronDown',16)+'</button></div>';
 }
 function lpPick(key,i){
   const p=LP[key], v=p&&p.shown?p.shown[i]:null;
@@ -3457,14 +3460,15 @@ function lpFilter(){
   const order=[...groups.keys()].sort((a,b)=>(isMine(b)-isMine(a))||lpCountry(groups.get(a)[0]).localeCompare(lpCountry(groups.get(b)[0]),smLocale()||undefined));
   p.sheet=[];
   let html='';
+  const row=l=>{ const i=p.sheet.push(l)-1, on=l.slug===sel;
+    return '<button type="button" class="lp-item'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="lpPickSheet('+i+')">'
+      +'<span>'+sanitize(LeagueNames.label(l))+'</span>'+(on?Icons.svg('check',18):'')+'</button>'; };
+  // My leagues first, on their own (not while searching: the search lists by country).
+  const mineL=q?[]:lpMine(key);
+  if(mineL.length) html+='<div class="lp-country lp-mine-h">'+sanitize(t('lp.mine'))+'</div>'+mineL.map(row).join('');
   for(const c of order){
     const cname=lpCountry(groups.get(c)[0]);
-    html+='<div class="lp-country">'+sanitize(cname)+(c&&c!==cname?' · '+sanitize(c):'')+'</div>';
-    for(const l of groups.get(c)){
-      const i=p.sheet.push(l)-1, on=l.slug===sel;
-      html+='<button type="button" class="lp-item'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="lpPickSheet('+i+')">'
-        +'<span>'+sanitize(LeagueNames.label(l))+'</span>'+(on?Icons.svg('check',18):'')+'</button>';
-    }
+    html+='<div class="lp-country">'+sanitize(cname)+(c&&c!==cname?' · '+sanitize(c):'')+'</div>'+groups.get(c).map(row).join('');
   }
   list.innerHTML=html||'<div class="lp-empty">'+sanitize(t('lp.none',{q:raw}))+'</div>';
 }
