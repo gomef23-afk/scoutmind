@@ -22,10 +22,41 @@
 //   ?league=serie_c&full=1      its whole current season in one request
 //                               (a backfill: no from / to)
 //   ?back=30&ahead=60           a wider window, for a backfill
+//
+// A tracked league holds its WHOLE current season (21 Nov 2026). The ten
+// leagues switched on 18 Nov got only this window, which began on 10 Nov, the
+// first day of an international break: ~1,780 results of their seasons were
+// never loaded, so their match panels, club pages ("last 5") and season stats
+// had nothing to show, and the stats jobs (which take any finished fixture we
+// hold) had nothing to fetch. Now, when we hold none of a league's results
+// from before the window and its season began before it, that league's
+// request asks for the whole season instead (still ONE request), once: the
+// next day it holds its history and gets the window again. Adding a league,
+// or loading one back, therefore needs no manual ?full=1.
 
 import { createClient } from '../_lib/apifootball.js';
-import { activeLeagues, teamIdMap, upsert } from '../_lib/supabase.js';
+import { activeLeagues, teamIdMap, upsert, select } from '../_lib/supabase.js';
 import { withCron, isoDate, RUN_BUDGET_MS, leaguesFromQuery, seasonOver, dailyPass } from '../_lib/cron.js';
+import { BY_SLUG } from '../_lib/leagues.js';
+
+/**
+ * Does this league lack the part of its season before the window? Its season
+ * (config seasonStart) began before `from`, and we hold none of its fixtures
+ * of this season that kicked off before `from`. A failed check says no (the
+ * window as before), so it can never cost a run.
+ */
+export async function needsWholeSeason(lg, from) {
+  const start = BY_SLUG[lg.slug]?.seasonStart;
+  if (!start || start >= from) return false;
+  try {
+    const held = await select('fixtures',
+      `select=id&league_id=eq.${Number(lg.id)}&season=eq.${Number(lg.current_season)}&kickoff_utc=lt.${from}T00:00:00Z&limit=1`);
+    return held.length === 0;
+  } catch (e) {
+    console.warn(`[fixtures] ${lg.slug} history check failed:`, e.message.slice(0, 200));
+    return false;
+  }
+}
 
 export const TIME_BUDGET_MS = RUN_BUDGET_MS;   // 20 s: cron-job.org gives up at 30 s
 
@@ -62,7 +93,9 @@ export default withCron('fixtures', async ({ req }) => {
 
   for (const lg of leagues) {
     if (Date.now() - started > TIME_BUDGET_MS) { stopped = true; break; }
-    const params = full
+    // ?back= asks for a specific window: honour it; otherwise fill a missing season.
+    const wholeSeason = full || (!url.searchParams.has('back') && await needsWholeSeason(lg, from));
+    const params = wholeSeason
       ? { league: lg.api_league_id, season: lg.current_season }
       : { league: lg.api_league_id, season: lg.current_season, from, to };
     let json = await api.get('fixtures', params);
@@ -75,7 +108,7 @@ export default withCron('fixtures', async ({ req }) => {
     // calendar year). Retry once without it: from/to alone is enough to scope
     // the query, and this both self-heals and tells us which league is
     // mis-seeded. Guarded so a rejected retry cannot fail the whole run.
-    if ((json.results ?? 0) === 0 && !full) {
+    if ((json.results ?? 0) === 0 && !wholeSeason) {
       try {
         const retry = await api.get('fixtures', {
           league: lg.api_league_id,
@@ -156,6 +189,8 @@ export default withCron('fixtures', async ({ req }) => {
       skipped: leagueSkipped,
       written,
       season_fallback_used: seasonFallback,
+      // true when this request loaded the whole season (?full=1, or a league missing its history)
+      whole_season: wholeSeason,
       // Exact URLs sent. The API key is a header, so nothing here is secret.
       request_url: requestUrl,
       fallback_url: fallbackUrl,

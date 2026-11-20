@@ -146,7 +146,9 @@ for (const f of ['fixtures', 'standings']) {
     && /cursor: pass \? \(stopped \? \{ day: pass\.today, after_id: lastDone \} : \{ day: pass\.today, complete: true \}\) : null/.test(src));
   check(`${f}.js: ?league= runs alone; the daily pass skips finished seasons`, /leaguesFromQuery\(req, all\)/.test(src) && /!seasonOver\(l\)/.test(src) && /if \(pass && pass\.complete\)/.test(src));
 }
-check('fixtures.js: ?full=1 asks for the whole season (a backfill)', /full\s*\?\s*\{ league: lg\.api_league_id, season: lg\.current_season \}/.test(read('api/cron/fixtures.js')));
+// Since 21 Nov 2026 also when a league lacks its history (tests/fixtures-whole-season.test.js).
+check('fixtures.js: ?full=1 asks for the whole season (a backfill)', /const wholeSeason = full \|\|/.test(read('api/cron/fixtures.js'))
+  && /wholeSeason\s*\?\s*\{ league: lg\.api_league_id, season: lg\.current_season \}/.test(read('api/cron/fixtures.js')));
 check('teams.js: ?league= for the plain refresh; the refresh is time-boxed', /leaguesFromQuery\(req, leagues\) \|\| leagues/.test(read('api/cron/teams.js')) && /if \(Date\.now\(\) - started > TIME_BUDGET_MS\) break;/.test(read('api/cron/teams.js')));
 check('players.js: squads for playable leagues only', /await playableLeagues\(\)/.test(read('api/cron/players.js')) && !/activeLeagues/.test(read('api/cron/players.js')));
 check('player-stats.js: every active league (line-ups and ratings for the match panel)', /await activeLeagues\(\)/.test(read('api/cron/player-stats.js')));
