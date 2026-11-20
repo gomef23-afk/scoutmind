@@ -41,6 +41,19 @@
 //   * The events array is NOT strictly chronological ("45+7" before "45"), so
 //     the timeline sorts on (elapsed, extra) and uses array position only to
 //     break ties.
+//   * A match decided on penalties (status PEN; MLS play-offs, 1649492, 20 Nov
+//     2026) lists every shoot-out kick as a `Goal` event (detail "Penalty" or
+//     "Missed Penalty") with comments "Penalty Shootout", numbered on from the
+//     last minute (91'..97'). The final score (`goals`) leaves the shoot-out
+//     out, and so do the players' own stats (goals.total, penalty.scored). So
+//     shoot-out kicks never count as goals: not towards the score check, not
+//     as a goal conceded. They stay in the timeline. Extra-time goals DO count
+//     (they are in `goals`, AET).
+//   * The same player id can come twice in one fixture's players block for two
+//     different people (1520972, 14 Nov 2026: Ceará's goalkeeper Richard #1 and
+//     midfielder Richard #40, both 80184). The stat lines cannot be told apart,
+//     and two rows on one (fixture, player) key make the whole batch upsert
+//     fail, so both are skipped and counted in `unidentified` (`duplicateIds`).
 
 export const POSITION_NAMES = { G: 'Goalkeeper', D: 'Defender', M: 'Midfielder', F: 'Attacker' };
 
@@ -116,8 +129,10 @@ function toInt(v) {
 /** Sort key for an event: minute, then stoppage time. */
 const timeKey = (e) => (e.time?.elapsed ?? 0) * 100 + (e.time?.extra ?? 0);
 
-/** Goal events that can count towards the score. */
-const isGoal = (e) => e.type === 'Goal' && e.detail !== 'Missed Penalty';
+/** A kick in a penalty shoot-out (never part of the score). */
+export const isShootout = (e) => /penalty shoot-?out/i.test(e.comments || '');
+/** Goal events that can count towards the score: not a miss, not a shoot-out kick. */
+const isGoal = (e) => e.type === 'Goal' && e.detail !== 'Missed Penalty' && !isShootout(e);
 const hasPlayer = (e) => Boolean(e.player?.id);
 
 /**
@@ -148,7 +163,11 @@ export function parseFixture(fx) {
     }
   }
   const played = entries.filter((e) => (toInt(e.s.games?.minutes) ?? 0) > 0);
-  const appeared = played.filter((e) => Boolean(e.player?.id));
+  // An id given to two people in one fixture: neither line can be attributed.
+  const seen = new Map();
+  for (const e of played) if (e.player?.id) seen.set(e.player.id, (seen.get(e.player.id) || 0) + 1);
+  const duplicateIds = [...seen].filter(([, n]) => n > 1).map(([id]) => id);
+  const appeared = played.filter((e) => Boolean(e.player?.id) && seen.get(e.player.id) === 1);
   const unidentified = played.length - appeared.length;
 
   // ── reduced feed: decided by the goalkeepers, not by the fields ─────────
@@ -256,6 +275,8 @@ export function parseFixture(fx) {
     goalCheck,
     reduced,
     unidentified,
+    duplicateIds,
+    shootout: events.some(isShootout),
     events: events.map((e, seq) => ({
       seq,
       minute: e.time?.elapsed ?? null,

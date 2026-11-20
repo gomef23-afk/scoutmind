@@ -72,6 +72,9 @@ export default withCron('player-stats', async ({ req }) => {
   let unmappedTeams = 0;
   let stoppedOnClock = false;
   const goalMismatches = [];
+  const duplicateIds = [];      // [{ fixture, players }]: one id for two people, both skipped
+  const writeFailures = [];     // [{ fixture, error }]: backed off like an empty response
+  const refreshErrors = [];
   const ingestedFixtureIds = [];
 
   for (let i = 0; i < queue.length; i += IDS_PER_REQUEST) {
@@ -91,8 +94,6 @@ export default withCron('player-stats', async ({ req }) => {
     }
 
     const byApiId = new Map((json.response || []).map((r) => [r.fixture?.id, r]));
-    const done = [];
-    const fxPlayers = new Map();   // api_player_id -> { name, photo_url }
     const parsed = [];
 
     for (const fx of chunk) {
@@ -106,80 +107,64 @@ export default withCron('player-stats', async ({ req }) => {
       }
       const p = parseFixture(r);
       if (!p.goalCheck.ok) {
-        // Not an error: conceded and clean sheet stay null for this fixture.
+        // Not an error, and never a reason to stop: the fixture is ingested
+        // and marked done like any other (no retry); conceded and clean sheet
+        // stay null for it, and it is listed in the run's goal_mismatches.
         goalMismatches.push(fx.api_fixture_id);
         console.warn(`[player-stats] goal events do not match the score, fixture=${fx.api_fixture_id} ` +
           `events=${JSON.stringify(p.goalCheck.events)} score=${JSON.stringify(p.goalCheck.score)}`);
       }
+      if (p.duplicateIds.length) {
+        duplicateIds.push({ fixture: fx.api_fixture_id, players: p.duplicateIds });
+        console.warn(`[player-stats] one id for two players, both skipped, fixture=${fx.api_fixture_id} ids=${p.duplicateIds.join(',')}`);
+      }
       unidentified += p.unidentified;
-      for (const pl of p.players) fxPlayers.set(pl.api_player_id, pl);
       parsed.push({ fx, p });
     }
     if (!parsed.length) continue;
 
-    // ── players: create the ones we have never seen ────────────────────────
-    // Insert-only. The bio job (/api/cron/players) owns name, photo and bio,
-    // so a fixture's abbreviated name never overwrites a fuller one.
-    const apiIds = [...fxPlayers.keys()];
-    await upsert(
-      'players',
-      apiIds.map((id) => ({ api_player_id: id, name: fxPlayers.get(id).name, photo_url: fxPlayers.get(id).photo_url })),
-      'api_player_id',
-      { ignoreDuplicates: true }
-    );
-    const playerId = new Map();
-    for (let k = 0; k < apiIds.length; k += 200) {
-      const rows = await select('players', `select=id,api_player_id&api_player_id=in.(${apiIds.slice(k, k + 200).join(',')})`);
-      for (const r of rows) playerId.set(r.api_player_id, r.id);
-    }
-
-    // ── rows and events ────────────────────────────────────────────────────
-    const statRows = [];
-    const evRows = [];
-    for (const { fx, p } of parsed) {
-      for (const row of p.rows) {
-        const teamId = teams.get(row.api_team_id);
-        const pid = playerId.get(row.api_player_id);
-        if (!teamId || !pid) { unmappedTeams++; continue; }
-        const { api_player_id, api_team_id, ...stats } = row;
-        statRows.push({ fixture_id: fx.id, player_id: pid, team_id: teamId, season: fx.season, ...stats,
-          updated_at: new Date().toISOString() });
+    // One write for the chunk. If it fails, the chunk is written fixture by
+    // fixture, so one fixture the database refuses cannot hold back the others
+    // (19-20 Nov 2026: one duplicated id in a Série B match failed the whole
+    // batch upsert on every run, and no fixture behind it was scored for 14 h).
+    // A fixture that still fails is backed off like an empty response: retried
+    // after 2 h, then 24 h, then left out (MAX_ATTEMPTS).
+    let written;
+    try {
+      written = await writeFixtures(parsed);
+    } catch (e) {
+      console.warn(`[player-stats] chunk write failed (${parsed.length} fixtures), writing one by one: ${e.message.slice(0, 300)}`);
+      written = { done: [], playerRows: 0, eventRows: 0, unmapped: 0 };
+      for (const item of parsed) {
+        try {
+          const w = await writeFixtures([item]);
+          written.done.push(...w.done);
+          written.playerRows += w.playerRows; written.eventRows += w.eventRows; written.unmapped += w.unmapped;
+        } catch (e2) {
+          writeFailures.push({ fixture: item.fx.api_fixture_id, error: e2.message.slice(0, 200) });
+          console.error(`[player-stats] write failed, fixture=${item.fx.api_fixture_id}: ${e2.message.slice(0, 300)}`);
+          await recordAttempt(item.fx, 'write_failed');
+        }
       }
-      for (const e of p.events) {
-        const { api_team_id, ...rest } = e;
-        evRows.push({ fixture_id: fx.id, team_id: teams.get(api_team_id) ?? null, ...rest });
-      }
-      done.push({ fx, unidentified: p.unidentified });
     }
-
-    playerRows += await upsert('player_fixture_stats', statRows, 'fixture_id,player_id');
-    eventRows += await upsert('fixture_events', evRows, 'fixture_id,seq');
-
-    // Marked done only after its rows are written. One PATCH per distinct
-    // (attempts, unidentified) pair, not one per fixture.
-    const groups = new Map();
-    for (const d of done) {
-      const key = `${(d.fx.players_attempts ?? 0) + 1}:${d.unidentified}`;
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(d.fx.id);
-    }
-    for (const [key, ids] of groups) {
-      const [attempts, unid] = key.split(':').map(Number);
-      await update('fixtures', `id=in.(${ids.join(',')})`, {
-        players_fetched_at: new Date().toISOString(),
-        players_attempts: attempts,
-        players_last_attempt: new Date().toISOString(),
-        players_retry_after: null,
-        players_unidentified: unid,
-      });
-    }
-    ingested += done.length;
+    playerRows += written.playerRows;
+    eventRows += written.eventRows;
+    unmappedTeams += written.unmapped;
+    ingested += written.done.length;
+    if (!written.done.length) continue;
 
     // Season rows and team derivations, recomputed from scratch for everyone
-    // these fixtures touched, inside the database.
-    const fixtureIds = done.map((d) => d.fx.id);
-    await rpc('refresh_player_season_stats', { p_fixture_ids: fixtureIds });
-    await rpc('refresh_team_player_stats', { p_fixture_ids: fixtureIds });
+    // these fixtures touched, inside the database. The fixtures are already
+    // written and marked; a failure here is reported, and the next refresh of
+    // those players recomputes them.
+    const fixtureIds = written.done.map((d) => d.fx.id);
+    try {
+      await rpc('refresh_player_season_stats', { p_fixture_ids: fixtureIds });
+      await rpc('refresh_team_player_stats', { p_fixture_ids: fixtureIds });
+    } catch (e) {
+      refreshErrors.push(e.message.slice(0, 200));
+      console.error(`[player-stats] season refresh failed: ${e.message.slice(0, 300)}`);
+    }
     ingestedFixtureIds.push(...fixtureIds);
   }
 
@@ -204,6 +189,9 @@ export default withCron('player-stats', async ({ req }) => {
     unidentified_players: unidentified,
     unmapped_rows: unmappedTeams,
     goal_mismatches: goalMismatches,
+    duplicate_ids: duplicateIds,
+    write_failures: writeFailures,
+    refresh_errors: refreshErrors,
     backlog_remaining: backlog,
     stopped_on: stoppedOnClock
       ? 'time_budget'
@@ -212,6 +200,76 @@ export default withCron('player-stats', async ({ req }) => {
     game,
     cursor: { backlog_remaining: backlog, requests },
   };
+
+  /**
+   * Write parsed fixtures: new players (insert-only), their rows and events,
+   * then mark each fixture done. Throws on any refused write; nothing is
+   * marked done unless its rows are in.
+   */
+  async function writeFixtures(list) {
+    const fxPlayers = new Map();   // api_player_id -> { name, photo_url }
+    for (const { p } of list) for (const pl of p.players) fxPlayers.set(pl.api_player_id, pl);
+
+    // ── players: create the ones we have never seen ────────────────────────
+    // Insert-only. The bio job (/api/cron/players) owns name, photo and bio,
+    // so a fixture's abbreviated name never overwrites a fuller one.
+    const apiIds = [...fxPlayers.keys()];
+    await upsert(
+      'players',
+      apiIds.map((id) => ({ api_player_id: id, name: fxPlayers.get(id).name, photo_url: fxPlayers.get(id).photo_url })),
+      'api_player_id',
+      { ignoreDuplicates: true }
+    );
+    const playerId = new Map();
+    for (let k = 0; k < apiIds.length; k += 200) {
+      const rows = await select('players', `select=id,api_player_id&api_player_id=in.(${apiIds.slice(k, k + 200).join(',')})`);
+      for (const r of rows) playerId.set(r.api_player_id, r.id);
+    }
+
+    // ── rows and events ────────────────────────────────────────────────────
+    const statRows = [];
+    const evRows = [];
+    const done = [];
+    let unmapped = 0;
+    for (const { fx, p } of list) {
+      for (const row of p.rows) {
+        const teamId = teams.get(row.api_team_id);
+        const pid = playerId.get(row.api_player_id);
+        if (!teamId || !pid) { unmapped++; continue; }
+        const { api_player_id, api_team_id, ...stats } = row;
+        statRows.push({ fixture_id: fx.id, player_id: pid, team_id: teamId, season: fx.season, ...stats,
+          updated_at: new Date().toISOString() });
+      }
+      for (const e of p.events) {
+        const { api_team_id, ...rest } = e;
+        evRows.push({ fixture_id: fx.id, team_id: teams.get(api_team_id) ?? null, ...rest });
+      }
+      done.push({ fx, unidentified: p.unidentified });
+    }
+
+    const pr = await upsert('player_fixture_stats', statRows, 'fixture_id,player_id');
+    const er = await upsert('fixture_events', evRows, 'fixture_id,seq');
+
+    // Marked done only after its rows are written. One PATCH per distinct
+    // (attempts, unidentified) pair, not one per fixture.
+    const groups = new Map();
+    for (const d of done) {
+      const key = `${(d.fx.players_attempts ?? 0) + 1}:${d.unidentified}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(d.fx.id);
+    }
+    for (const [key, ids] of groups) {
+      const [attempts, unid] = key.split(':').map(Number);
+      await update('fixtures', `id=in.(${ids.join(',')})`, {
+        players_fetched_at: new Date().toISOString(),
+        players_attempts: attempts,
+        players_last_attempt: new Date().toISOString(),
+        players_retry_after: null,
+        players_unidentified: unid,
+      });
+    }
+    return { done, playerRows: pr, eventRows: er, unmapped };
+  }
 
   async function recordAttempt(fx, reason) {
     const attempts = (fx.players_attempts ?? 0) + 1;

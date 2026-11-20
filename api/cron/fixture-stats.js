@@ -74,6 +74,7 @@ export default withCron('fixture-stats', async ({ req }) => {
   let emptyCount = 0;
   let statRows = 0;
   let stoppedOnClock = false;
+  const writeFailures = [];  // [{ fixture, error }]: backed off like an empty response
   const touched = new Map(); // teamId -> season
 
   for (const fx of queue) {
@@ -90,10 +91,12 @@ export default withCron('fixture-stats', async ({ req }) => {
       continue;
     }
 
+    // One row per team: a team sent twice would put two rows on one
+    // (fixture_id, team_id) key, and Postgres refuses the whole upsert.
     const rows = [];
     for (const side of json.response || []) {
       const localId = teams.get(side.team?.id);
-      if (!localId) continue;
+      if (!localId || rows.some((r) => r.team_id === localId)) continue;
       rows.push(mapStats(fx.id, localId, side.statistics));
     }
 
@@ -106,13 +109,23 @@ export default withCron('fixture-stats', async ({ req }) => {
       continue;
     }
 
-    statRows += await upsert('fixture_stats', rows, 'fixture_id,team_id');
-    await update('fixtures', `id=eq.${fx.id}`, {
-      stats_fetched_at: new Date().toISOString(),
-      stats_attempts: (fx.stats_attempts ?? 0) + 1,
-      stats_last_attempt: new Date().toISOString(),
-      stats_retry_after: null,
-    });
+    // A write the database refuses must not abort the run either: the queue is
+    // oldest first, so the same fixture would be first again on every run and
+    // nothing behind it would ever be read (player-stats, 19-20 Nov 2026).
+    try {
+      statRows += await upsert('fixture_stats', rows, 'fixture_id,team_id');
+      await update('fixtures', `id=eq.${fx.id}`, {
+        stats_fetched_at: new Date().toISOString(),
+        stats_attempts: (fx.stats_attempts ?? 0) + 1,
+        stats_last_attempt: new Date().toISOString(),
+        stats_retry_after: null,
+      });
+    } catch (e) {
+      writeFailures.push({ fixture: fx.api_fixture_id, error: e.message.slice(0, 200) });
+      console.error(`[fixture-stats] write failed, fixture=${fx.api_fixture_id}: ${e.message.slice(0, 300)}`);
+      await recordAttempt(fx, 'write_failed');
+      continue;
+    }
     ingested++;
 
     if (fx.home_team_id) touched.set(fx.home_team_id, fx.season);
@@ -134,6 +147,7 @@ export default withCron('fixture-stats', async ({ req }) => {
     fixtures_ingested: ingested,
     empty_responses: emptyCount,
     teams_aggregated: aggregated,
+    write_failures: writeFailures,
     backlog_remaining: backlog,
     stopped_on: stoppedOnClock
       ? 'time_budget'
