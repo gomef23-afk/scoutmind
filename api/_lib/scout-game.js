@@ -23,6 +23,18 @@
  * Values are in quarters (foul drawn 0.75), so base_points is stored to two
  * decimals (migration 022).
  */
+/**
+ * The player_fixture_stats columns the job reads to score a pick (scoreRounds
+ * in api/cron/player-stats.js). Anything else that must agree with the game's
+ * points (the Round Recap) reads the same list. NOTE (21 Nov 2026): this is
+ * the list the job has always used, and it leaves out tackles, interceptions,
+ * shots_total, fouls_drawn, fouls_committed, offsides and pen_committed, which
+ * basePoints() scores: those events earn nothing live. Kept as it is until the
+ * fix is decided; changing it changes every fan's score.
+ */
+export const SCORED_COLUMNS = ['position', 'minutes', 'goals', 'assists', 'clean_sheet', 'goals_conceded', 'saves',
+  'pen_saved', 'shots_on', 'passes_key', 'pen_missed', 'yellow', 'red'];
+
 const ALL = (v) => ({ G: v, D: v, M: v, F: v });
 export const POINTS = {
   goal:           ALL(12),

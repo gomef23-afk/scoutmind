@@ -209,7 +209,7 @@ const { RUN_BUDGET_MS } = await import('../api/_lib/cron.js');
 check('the ingest stops GAME_RESERVE_MS before the window ends (rule 16: derived from RUN_BUDGET_MS)',
   mod.INGEST_BUDGET_MS === RUN_BUDGET_MS - mod.GAME_RESERVE_MS && mod.GAME_RESERVE_MS > 0 && /export const INGEST_BUDGET_MS = RUN_BUDGET_MS - [\d_]+;/.test(src)
   && /if \(Date\.now\(\) - started > INGEST_BUDGET_MS\) \{ stoppedOnClock = true; break; \}/.test(src));
-check('the scoring is never skipped on the clock', !/skipped: 'time_budget'/.test(src) && /const game = await gameScores\(ingestedFixtureIds, locks\);/.test(src)
+check('the scoring is never skipped on the clock', !/skipped: 'time_budget'/.test(src) && /const game = await gameScores\(ingestedFixtureIds, locks, /.test(src)
   && /const locks = await gameLocks\(\);/.test(src));
 check('a refused chunk is written fixture by fixture; a refused fixture is backed off, never thrown',
   /catch \(e\) \{\s*console\.warn\(`\[player-stats\] chunk write failed/.test(src) && /await recordAttempt\(item\.fx, 'write_failed'\);/.test(src));

@@ -24,8 +24,9 @@ import { withCron, RUN_BUDGET_MS } from '../_lib/cron.js';
 import { parseFixture } from '../_lib/players.js';
 import {
   scorePick, shadowScore, TIER_MULTIPLIER, UNRANKED_MULTIPLIER, CONTRARIAN, CAPTAIN_MODE, MAX_MULTIPLIER,
-  OWNERSHIP_LADDER, OWNERSHIP_MIN_PARTICIPANTS, OWNERSHIP_LIVE,
+  OWNERSHIP_LADDER, OWNERSHIP_MIN_PARTICIPANTS, OWNERSHIP_LIVE, SCORED_COLUMNS,
 } from '../_lib/scout-game.js';
+import { buildDueRecaps } from '../_lib/recap-job.js';
 
 const FINISHED = ['FT', 'AET', 'PEN'];
 
@@ -192,7 +193,9 @@ export default withCron('player-stats', async ({ req }) => {
   // The job runs every 15 minutes, so a deadline is locked within 15 minutes
   // of passing and a round is scored as soon as its fixtures have players.
   // No API cost.
-  const game = await gameScores(ingestedFixtureIds, locks);
+  // One recap a run at most (a backfill goes through /api/cron/recaps), and
+  // only while the window lasts.
+  const game = await gameScores(ingestedFixtureIds, locks, { recaps: { max: 1, until: started + RUN_BUDGET_MS } });
 
   const backlog = await count('fixtures', `${queueFilter}&${inLeagues(leagues.map((l) => l.id))}`);
   const s = api.stats();
@@ -227,6 +230,7 @@ export default withCron('player-stats', async ({ req }) => {
       game: {
         rounds_synced: game.rounds_synced, rounds_locked: game.rounds_locked, rounds_scored: game.rounds_scored,
         scores_written: game.scores_written, error: game.error || null,
+        recaps: game.recaps || null,
       },
     },
   };
@@ -386,7 +390,7 @@ export async function gameLocks() {
  * Steps 3-5: score the rounds this run touched (player rows arrived, or just
  * locked), then totals, finalising, badges and room posts. Never throws.
  */
-export async function gameScores(ingestedFixtureIds, locks) {
+export async function gameScores(ingestedFixtureIds, locks, { recaps = null } = {}) {
   const out = { rounds_synced: locks.rounds_synced, rounds_locked: locks.rounds_locked, rounds_scored: 0, scores_written: 0 };
   if (locks.error) out.error = locks.error;
   try {
@@ -411,6 +415,11 @@ export async function gameScores(ingestedFixtureIds, locks) {
     // Always: totals for the rounds scored, plus finalising and badges, which
     // depend on the clock as much as on new data.
     out.results_written = (await rpc('refresh_game_results', { p_round_ids: roundIds })) ?? 0;
+
+    // Round recaps (042) for rounds that just turned final, before the room
+    // posts, which read them once game_config.recap_posts is on. Never throws;
+    // its outcome is reported on its own, not as the game's error.
+    if (recaps) out.recaps = await buildDueRecaps(recaps);
 
     // Once per final round per club, and never for fewer than
     // max(3, torcida_min_members) fans: the function enforces both.
@@ -467,8 +476,7 @@ async function scoreRounds(roundIds) {
 
   const playerIds = picks.map((p) => p.player_id);
   const rows = (await selectIn('player_fixture_stats', 'fixture_id', fixtureIds,
-    'select=fixture_id,player_id,position,minutes,goals,assists,clean_sheet,goals_conceded,saves,'
-    + `pen_saved,shots_on,passes_key,pen_missed,yellow,red&player_id=in.(${inList(playerIds)})`));
+    `select=fixture_id,player_id,${SCORED_COLUMNS.join(',')}&player_id=in.(${inList(playerIds)})`));
   const rowOf = new Map(rows.map((r) => [`${r.fixture_id}:${r.player_id}`, r]));
 
   // Own goals: only fixture_events records them.
