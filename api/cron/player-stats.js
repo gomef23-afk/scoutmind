@@ -31,11 +31,18 @@ const FINISHED = ['FT', 'AET', 'PEN'];
 
 const IDS_PER_REQUEST = 20;     // the API's limit for /fixtures?ids=
 const MAX_FIXTURES = 60;        // 3 requests per run
-const TIME_BUDGET_MS = RUN_BUDGET_MS;  // stop STARTING requests at 20s; target <25s
 const MAX_ATTEMPTS = 3;
 const MIN_AGE_HOURS = 3;        // player stats are not published at the whistle
 const RETRY_AFTER_HOURS = [2, 24];
-const GAME_START_BY_MS = RUN_BUDGET_MS + 1_000; // 21 s: the Scout Game steps start only if there is time left
+// The Scout Game can never be starved by a backlog (20 Nov 2026: ~2,040
+// fixtures queued after the whole-season loads, a Premier League deadline the
+// next morning). Rounds are synced and locked FIRST, before any ingest; the
+// ingest stops starting chunks GAME_RESERVE_MS before the window ends, so the
+// scoring after it has its share of the 20 s; and scoring always runs (it used
+// to be skipped past 21 s, and a skipped run's fixtures were never scored,
+// because they are marked done and no later run touches them again).
+export const INGEST_BUDGET_MS = RUN_BUDGET_MS - 6_000;   // 14 s
+export const GAME_RESERVE_MS = RUN_BUDGET_MS - INGEST_BUDGET_MS;   // 6 s for the scoring
 
 export default withCron('player-stats', async ({ req }) => {
   const api = createClient();
@@ -46,22 +53,35 @@ export default withCron('player-stats', async ({ req }) => {
   const leagues = await activeLeagues();
   const teams = await teamIdMap(leagues.map((l) => l.id));
 
+  // ── Scout Game, part 1: sync and lock, before anything else ──────────────
+  // Needs no new rows: a round's tiers are taken from what kicked off before
+  // its deadline. A failure is reported and never stops the ingest.
+  const locks = await gameLocks();
+
   // ── Work queue ───────────────────────────────────────────────────────────
+  // Every finished fixture we hold without player rows; the Scout Game's
+  // leagues first (their rows are what gets scored), then the rest, each
+  // oldest first. Without this, Uruguay's February matches sat ahead of the
+  // Premier League's weekend.
   const cutoff = new Date(Date.now() - MIN_AGE_HOURS * 3600_000).toISOString();
   const nowIso = new Date().toISOString();
   const queueFilter = [
     `status_short=in.(${FINISHED.join(',')})`,
-    `league_id=in.(${leagues.map((l) => l.id).join(',')})`,
     'players_fetched_at=is.null',
     `players_attempts=lt.${MAX_ATTEMPTS}`,
     `kickoff_utc=lte.${cutoff}`,
     `or=(players_retry_after.is.null,players_retry_after.lte.${nowIso})`,
   ].join('&');
-
-  const queue = await select(
-    'fixtures',
-    `select=id,api_fixture_id,season,players_attempts&${queueFilter}&order=kickoff_utc.asc&limit=${limit}`
-  );
+  const inLeagues = (ids) => `league_id=in.(${ids.join(',')})`;
+  const queueOf = async (ids, n) => (ids.length && n > 0
+    ? select('fixtures', `select=id,api_fixture_id,season,players_attempts&${queueFilter}&${inLeagues(ids)}&order=kickoff_utc.asc&limit=${n}`)
+    : []);
+  const first = await queueOf(leagues.filter((l) => l.playable).map((l) => l.id), limit);
+  const taken = new Set(first.map((f) => f.id));
+  const rest = (await queueOf(leagues.filter((l) => !l.playable).map((l) => l.id), limit - first.length))
+    .filter((f) => !taken.has(f.id));
+  const queue = first.concat(rest);
+  const queuedPlayable = first.length;
 
   let requests = 0;
   let ingested = 0;
@@ -78,7 +98,7 @@ export default withCron('player-stats', async ({ req }) => {
   const ingestedFixtureIds = [];
 
   for (let i = 0; i < queue.length; i += IDS_PER_REQUEST) {
-    if (Date.now() - started > TIME_BUDGET_MS) { stoppedOnClock = true; break; }
+    if (Date.now() - started > INGEST_BUDGET_MS) { stoppedOnClock = true; break; }
     if (api.lowQuota(5)) break;
 
     const chunk = queue.slice(i, i + IDS_PER_REQUEST);
@@ -168,21 +188,22 @@ export default withCron('player-stats', async ({ req }) => {
     ingestedFixtureIds.push(...fixtureIds);
   }
 
-  // The Scout Game rides on this job: player rows only ever arrive here, and it
-  // runs every 15 minutes, so a deadline is locked within 15 minutes of passing
-  // and a round is scored as soon as its fixtures have players. No API cost.
-  const game = Date.now() - started > GAME_START_BY_MS
-    ? { skipped: 'time_budget' }
-    : await runScoutGame(ingestedFixtureIds);
+  // ── Scout Game, part 2: score what this run touched (always runs) ────────
+  // The job runs every 15 minutes, so a deadline is locked within 15 minutes
+  // of passing and a round is scored as soon as its fixtures have players.
+  // No API cost.
+  const game = await gameScores(ingestedFixtureIds, locks);
 
-  const backlog = await count('fixtures', queueFilter);
+  const backlog = await count('fixtures', `${queueFilter}&${inLeagues(leagues.map((l) => l.id))}`);
   const s = api.stats();
+  const elapsed = Date.now() - started;
 
   return {
     rows_written: playerRows,
     requests_used: s.used,
     quota_remaining: s.remaining,
     queued: queue.length,
+    queued_playable: queuedPlayable,
     fixtures_ingested: ingested,
     empty_responses: emptyCount,
     event_rows: eventRows,
@@ -196,9 +217,18 @@ export default withCron('player-stats', async ({ req }) => {
     stopped_on: stoppedOnClock
       ? 'time_budget'
       : queue.length < limit ? 'queue_empty' : 'batch_limit',
-    elapsed_ms: Date.now() - started,
+    elapsed_ms: elapsed,
     game,
-    cursor: { backlog_remaining: backlog, requests },
+    // ingest_runs keeps only the cursor, so the game's outcome rides in it: a
+    // morning query can show every run's locks, scores and errors (nothing
+    // reads this cursor back; the queue lives on fixtures).
+    cursor: {
+      backlog_remaining: backlog, requests, queued_playable: queuedPlayable, elapsed_ms: elapsed,
+      game: {
+        rounds_synced: game.rounds_synced, rounds_locked: game.rounds_locked, rounds_scored: game.rounds_scored,
+        scores_written: game.scores_written, error: game.error || null,
+      },
+    },
   };
 
   /**
@@ -303,8 +333,18 @@ async function selectIn(table, column, ids, rest) {
   return out;
 }
 
+/** Every step in one go (the two halves the job runs around its ingest). */
 export async function runScoutGame(ingestedFixtureIds) {
-  const out = { rounds_synced: 0, rounds_locked: 0, rounds_scored: 0, scores_written: 0 };
+  return gameScores(ingestedFixtureIds, await gameLocks());
+}
+
+/**
+ * Steps 0-2: publish the rules, sync rounds, lock rounds past their deadline.
+ * Run first in every invocation, so no backlog can delay a lock. Returns
+ * { rounds_synced, rounds_locked, locked: [round ids], error? }; never throws.
+ */
+export async function gameLocks() {
+  const out = { rounds_synced: 0, rounds_locked: 0, locked: [] };
   try {
     // The browser reads the multipliers from game_config, so it shows exactly
     // what lock_due_rounds() below is handed. scout-game.js stays the only
@@ -333,12 +373,26 @@ export async function runScoutGame(ingestedFixtureIds) {
 
     out.rounds_synced = (await rpc('sync_game_rounds')) ?? 0;
 
-    const locked = (await lockDueRounds()).map(scalar);
-    out.rounds_locked = locked.length;
+    out.locked = (await lockDueRounds()).map(scalar);
+    out.rounds_locked = out.locked.length;
+  } catch (e) {
+    console.error('[player-stats] scout game (sync/lock):', e.message);
+    out.error = e.message.slice(0, 300);
+  }
+  return out;
+}
 
+/**
+ * Steps 3-5: score the rounds this run touched (player rows arrived, or just
+ * locked), then totals, finalising, badges and room posts. Never throws.
+ */
+export async function gameScores(ingestedFixtureIds, locks) {
+  const out = { rounds_synced: locks.rounds_synced, rounds_locked: locks.rounds_locked, rounds_scored: 0, scores_written: 0 };
+  if (locks.error) out.error = locks.error;
+  try {
     // Rounds to score: those whose counting fixtures got player rows this run,
     // plus any just locked. Only rounds past their deadline are ever scored.
-    let roundIds = [...locked];
+    let roundIds = [...locks.locked];
     if (ingestedFixtureIds.length) {
       const links = await selectIn('game_round_fixtures', 'fixture_id', ingestedFixtureIds,
         'select=round_id&counts=is.true');
@@ -362,8 +416,8 @@ export async function runScoutGame(ingestedFixtureIds) {
     // max(3, torcida_min_members) fans: the function enforces both.
     out.room_posts = (await rpc('post_round_messages')) ?? 0;
   } catch (e) {
-    console.error('[player-stats] scout game:', e.message);
-    out.error = e.message.slice(0, 300);
+    console.error('[player-stats] scout game (scoring):', e.message);
+    out.error = out.error ? `${out.error} | ${e.message.slice(0, 300)}` : e.message.slice(0, 300);
   }
   return out;
 }

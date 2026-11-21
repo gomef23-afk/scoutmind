@@ -100,6 +100,7 @@ async function run(world = {}) {
     const table = (/\/rest\/v1\/([\w]+)/.exec(u) || [])[1];
     if (u.includes('/rest/v1/rpc/')) {
       const fn = (/rpc\/(\w+)/.exec(u) || [])[1];
+      if (fn === 'lock_due_rounds' && world.lockFail) return res({ code: 'XX000', message: 'lock refused for the test' }, 500);
       return res(fn === 'lock_due_rounds' ? [] : 0);
     }
     if (table === 'ingest_runs') return method === 'POST' ? res([{ id: 1 }], 201) : res(null, 204);
@@ -119,7 +120,15 @@ async function run(world = {}) {
     if (table === 'leagues') return res([{ id: 22, api_league_id: 253, slug: 'mls', current_season: 2026, playable: false }, { id: 18, api_league_id: 72, slug: 'serie_b', current_season: 2026, playable: false },
       { id: 1, api_league_id: 71, slug: 'serie_a', current_season: 2026, playable: true }]);
     if (table === 'teams') return res(TEAM_IDS.map((api, i) => ({ id: 500 + i, api_team_id: api })));
-    if (table === 'fixtures') return /select=id&limit=1/.test(u) ? res([], 200, `*/${world.backlog ?? 0}`) : res(QUEUE);
+    if (table === 'fixtures') {
+      if (/select=id&limit=1/.test(u)) return res([], 200, `*/${world.backlog ?? 0}`);
+      // world.byLeague: fixture id -> league id, so the queue answers per league.
+      if (world.byLeague) {
+        const ids = ((/league_id=in\.\(([^)]*)\)/.exec(u) || [])[1] || '').split(',').map(Number);
+        return res(QUEUE.filter((f) => ids.includes(world.byLeague[f.id])));
+      }
+      return res(QUEUE);
+    }
     if (table === 'players') {
       const ids = ((/api_player_id=in\.\(([^)]*)\)/.exec(u) || [])[1] || '').split(',').filter(Boolean).map(Number);
       if (ids.length) return res(ids.map((id) => ({ id, api_player_id: id })));
@@ -170,8 +179,38 @@ check('…and the Scout Game still scores the Série A round', (Bd.game || {}).r
 const raw = parseFixture(DUP);
 check('the stub refuses a repeated key like Postgres (the 19-20 Nov failure mode)', (() => { const rows = [{ fixture_id: 2, player_id: 80184 }, { fixture_id: 2, player_id: 80184 }]; return new Set(rows.map((r) => r.fixture_id + ':' + r.player_id)).size !== rows.length; })() && raw.rows.length > 0);
 
+// d) The Scout Game cannot be starved by a backlog (20 Nov 2026: ~2,040 queued,
+//    Uruguay's February matches ahead of a Premier League deadline).
+//    MLS and Série B fixtures queued before the Série A one, by kickoff:
+const d = await run({ byLeague: { 1: 22, 2: 18, 3: 1 } });
+const D = d.out.body || {};
+const apiCalls = d.calls.map((c, i) => ({ ...c, i })).filter((c) => c.url.includes('api-sports.io'));
+const at = (re) => d.calls.findIndex((c) => re.test(c.url));
+check('rounds are synced and locked BEFORE any ingest request', at(/rpc\/sync_game_rounds/) >= 0 && at(/rpc\/lock_due_rounds/) >= 0
+  && at(/rpc\/sync_game_rounds/) < apiCalls[0].i && at(/rpc\/lock_due_rounds/) < apiCalls[0].i, JSON.stringify(d.calls.map((c) => c.url.slice(0, 60))));
+check('the playable leagues\' queue is asked first, then the others\'',
+  (() => { const q = d.calls.filter((c) => c.method === 'GET' && /\/rest\/v1\/fixtures\?select=id,api_fixture_id/.test(c.url)); return q.length === 2 && /league_id=in\.\(1\)/.test(q[0].url) && /league_id=in\.\(22,18\)/.test(q[1].url); })());
+check('…so the Série A fixture leads the first request, ahead of older ones', /ids=1492458-/.test(apiCalls[0].url) && D.queued_playable === 1 && D.queued === 3, apiCalls[0].url);
+check('…and it is still scored after the ingest', (D.game || {}).rounds_scored === 1 && d.written.game_pick_scores.length === 1, JSON.stringify(D.game));
+check('the game\'s outcome is kept in ingest_runs (cursor), for the morning check',
+  (() => { const p = d.calls.find((c) => c.method === 'PATCH' && /ingest_runs/.test(c.url)); const g = p && p.body.cursor && p.body.cursor.game; return g && g.rounds_scored === 1 && g.error === null && 'rounds_locked' in g && p.body.cursor.queued_playable === 1; })());
+check('the backlog count still covers every league', d.calls.some((c) => /select=id&limit=1/.test(c.url) && /league_id=in\.\(22,18,1\)/.test(c.url)));
+
+// e) A lock that fails never stops the ingest, and the scoring still runs.
+const e = await run({ lockFail: true });
+const E = e.out.body || {};
+check('a failed lock: the run answers 200, ingests everything and reports the error', e.out.code === 200 && E.fixtures_ingested === 3 && /lock refused/.test((E.game || {}).error || ''), JSON.stringify(E.game));
+check('…and still scores and refreshes', (E.game || {}).rounds_scored === 1 && e.calls.some((c) => /rpc\/refresh_game_results/.test(c.url)));
+
 // ── 3. The code itself ──
 const src = read('api/cron/player-stats.js');
+const mod = await import('../api/cron/player-stats.js?budget');
+const { RUN_BUDGET_MS } = await import('../api/_lib/cron.js');
+check('the ingest stops GAME_RESERVE_MS before the window ends (rule 16: derived from RUN_BUDGET_MS)',
+  mod.INGEST_BUDGET_MS === RUN_BUDGET_MS - mod.GAME_RESERVE_MS && mod.GAME_RESERVE_MS > 0 && /export const INGEST_BUDGET_MS = RUN_BUDGET_MS - [\d_]+;/.test(src)
+  && /if \(Date\.now\(\) - started > INGEST_BUDGET_MS\) \{ stoppedOnClock = true; break; \}/.test(src));
+check('the scoring is never skipped on the clock', !/skipped: 'time_budget'/.test(src) && /const game = await gameScores\(ingestedFixtureIds, locks\);/.test(src)
+  && /const locks = await gameLocks\(\);/.test(src));
 check('a refused chunk is written fixture by fixture; a refused fixture is backed off, never thrown',
   /catch \(e\) \{\s*console\.warn\(`\[player-stats\] chunk write failed/.test(src) && /await recordAttempt\(item\.fx, 'write_failed'\);/.test(src));
 check('a failed season refresh is reported, never thrown', /refreshErrors\.push\(/.test(src));
