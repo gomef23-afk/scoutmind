@@ -35,8 +35,8 @@ eq('every league, with its code', LN.LEAGUES.map((l) => LN.label(l)), [
   'Série A · BRA', 'Premier League · ENG', 'La Liga · ESP', 'Bundesliga · GER', 'Serie A · ITA', 'Ligue 1 · FRA', 'Liga Profesional · ARG',
   'Championship · ENG', 'Eredivisie · NED', 'Primeira Liga · POR', 'Jupiler Pro League · BEL', 'Premiership · SCO', 'Süper Lig · TUR',
   'Saudi Pro League · KSA', 'MLS · USA', 'Liga MX · MEX', 'Série B · BRA', 'Série C · BRA', 'Primera División · URU',
-  // C-1: the cups, by their own code.
-  'Champions League · UEFA']);
+  // C-1 / C-2: the cups, by their own code.
+  'Champions League · UEFA', 'Europa League · UEFA', 'Conference League · UEFA']);
 check('a cup is a cup, a league is not (by slug, by row type)', LN.isCup('champions_league') && !LN.isCup('serie_a') && LN.isCup({ slug: 'x', type: 'cup' }) && !LN.isCup({ slug: 'champions_league', type: 'league' }));
 eq('only the seven are playable', LN.LEAGUES.filter((l) => LN.playable(l)).map((l) => l.slug),
   ['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina']);

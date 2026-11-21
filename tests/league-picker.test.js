@@ -119,7 +119,7 @@ let list = el('lp-list').innerHTML;
 const countries = [...list.matchAll(/<div class="lp-country">([^<]+)<\/div>/g)].map((m) => m[1]);
 const items = [...list.matchAll(/<button type="button" class="lp-item( on)?"[^>]*><span>([^<]+)<\/span>/g)].map((m) => m[2]);
 // C-1: then "Cups" (the Champions League…), then the countries.
-check('a "My leagues" section at the top: my two leagues, then Cups, then the first country', /^<div class="lp-country lp-mine-h">My leagues<\/div><button[^>]*><span>Premier League · ENG<\/span><\/button><button[^>]*><span>Série A · BRA<\/span><\/button><div class="lp-country lp-cups-h">Cups<\/div><button[^>]*><span>Champions League · UEFA<\/span><\/button><div class="lp-country">Brazil · BRA/.test(list),
+check('a "My leagues" section at the top: my two leagues, then Cups (the three UEFA cups, by name), then the first country', /^<div class="lp-country lp-mine-h">My leagues<\/div><button[^>]*><span>Premier League · ENG<\/span><\/button><button[^>]*><span>Série A · BRA<\/span><\/button><div class="lp-country lp-cups-h">Cups<\/div><button[^>]*><span>Champions League · UEFA<\/span><\/button><button[^>]*><span>Conference League · UEFA<\/span><\/button><button[^>]*><span>Europa League · UEFA<\/span><\/button><div class="lp-country">Brazil · BRA/.test(list),
   list.slice(0, 400));
 eq('then every tracked league by country, once each (cups in their own section)', [items.length - 2, new Set(items).size], [LEAGUES.length, LEAGUES.length]);
 eq('grouped by country with its code: my countries first, then by name', countries.slice(0, 3), ['Brazil · BRA', 'England · ENG', 'Argentina · ARG']);

@@ -117,7 +117,9 @@ check('fixtures.js skips a cup\'s qualifying rounds and warns when a fixture is 
 check('standings.js writes a zone description for a cup only', /\.\.\.\(cup \? \{ description: s\.description \|\| null \} : \{\}\)/.test(src('standings')) && /const cup = isCupRow\(lg\);/.test(src('standings')));
 check('teams.js: a cup\'s clubs from its league-phase table, insert-only, under the cup; no coach requests for them',
   /if \(isCupRow\(lg\)\) \{ rows \+= await cupOnlyClubs\(api, lg\); continue; \}/.test(src('teams')) && /api\.get\('standings', \{ league: lg\.api_league_id/.test(src('teams'))
-  && /ignoreDuplicates: true/.test(src('teams')) && /const coachLeagues = leagues\.filter\(\(l\) => !isCupRow\(l\)\);/.test(src('teams')));
+  && /ignoreDuplicates: true/.test(src('teams')) && /const coachLeagues = leagues\.filter\(\(l\) => !isCupRow\(l\)\);/.test(src('teams'))
+  // C-2: only clubs we do not hold are sent, so rows_written counts the ones created.
+  && /filter\(\(t\) => !held\.has\(t\.id\)\)/.test(src('teams')));
 check('fixture-stats: a club\'s season row from its own league\'s fixtures; no row for a cup-only club', /f\.league_id === homeLeague\.get\(teamId\)/.test(src('fixture-stats'))
   && /if \(!lg \|\| isCupRow\(lg\)\) touched\.delete\(id\);/.test(src('fixture-stats')));
 
@@ -187,6 +189,36 @@ const nameOf = new Map(teams.map((t) => [t.api_team_id, t.name]));
 const who = (text) => tagText(B, text, '', 'en', 'GB').map((h) => nameOf.get(h.api_team_id)).sort();
 eq('competition names tag nobody', [who('Champions League draw: who could face whom'), who('Europa League and Conference League results'), who('UEFA Champions League final in Madrid')], [[], [], []]);
 eq('"Real Madrid in the Champions League" is Real Madrid only', who('Real Madrid in the Champions League'), ['Real Madrid']);
+
+// ── 7. C-2: the Europa League and the Conference League ──
+const UEL = JSON.parse(read('tests/fixtures/api-football/uel-2026.json'));
+const UECL = JSON.parse(read('tests/fixtures/api-football/uecl-2026.json'));
+eq('three cups, in the config, each by its own label', CUPS.map((c) => c.slug + ':' + c.apiId), ['champions_league:2', 'europa_league:3', 'conference_league:848']);
+for (const [slug, data, phase, finalDay] of [['europa_league', UEL, 144, '2027-05-26'], ['conference_league', UECL, 108, '2027-06-02']]) {
+  const c = BY_SLUG[slug];
+  const ls = data.fixtures.filter((f) => /^League Stage/.test(f.round)).map((f) => f.date.slice(0, 10)).sort();
+  check(`${slug}: a cup, tracked, not playable, not tagged, from the league stage, code UEFA`, c.type === 'cup' && c.active && !c.playable && !c.tagNews && c.fromRound === 'League Stage' && c.code === 'UEFA');
+  eq(`${slug}: seasonStart = its first league-stage match day; seasonEnd = its final (UEFA)`, [c.seasonStart, c.seasonEnd], [ls[0], finalDay]);
+  check(`${slug}: season_end never earlier than its last fixture we hold`, c.seasonEnd >= data.fixtures.map((f) => f.date.slice(0, 10)).sort().pop());
+  eq(`${slug}: its league phase only is kept (${phase} fixtures), every round classified`, [data.fixtures.filter((f) => keepRound({ slug }, f.round)).length,
+    data.fixtures.every((f) => CT.stage(f.round) === 'league' || CT.stage(f.round) === null)], [phase, true]);
+  const notHeld = data.standings.filter((r) => !held.has(r.team.id)).length;
+  eq(`${slug}: its cup-only clubs (league-phase clubs we hold in no league)`, notHeld, slug === 'europa_league' ? 17 : 24);
+  eq(`${slug}: zone text from its real descriptions`, [...new Set(data.standings.map((r) => r.description))].map((d) => tctx.mxZone(d)), ['Round of 16', 'Knockout play-off', 'Not in a qualifying place']);
+}
+check('no club is cup-only in two cups (a club plays one European competition)', (() => { const a = U26.standings.league.standings[0].map((r) => r.team.id), b = UEL.standings.map((r) => r.team.id), c = UECL.standings.map((r) => r.team.id);
+  return new Set([...a, ...b, ...c]).size === a.length + b.length + c.length; })());
+const sql40 = read('supabase/migrations/040_cups_europa_conference.sql');
+const body40 = sql40.replace(/^\s*--[^\n]*$/gm, '');
+const rows40 = [...body40.matchAll(/\((\d+),\s*'(\w+)',\s*'([^']+)',\s*'Europe',\s*'UEFA',\s*2026,\s*date '([\d-]+)',\s*date '([\d-]+)',\s*(true|false),\s*(true|false),\s*(true|false),\s*null,\s*1,\s*'cup'\)/g)]
+  .map((m) => [Number(m[1]), m[2], m[3], m[4], m[5], m[6], m[7]]);
+eq('040 inserts the config\'s two cups (API id, slug, name, dates, active, not playable)', rows40,
+  ['europa_league', 'conference_league'].map((s) => { const c = BY_SLUG[s]; return [c.apiId, c.slug, c.name, c.seasonStart, c.seasonEnd, 'true', 'false']; }));
+check('040: data only, re-runnable, switches them on and keeps them cups, never playable', !/\bdelete\b|\bdrop\b|\balter\b|\bcreate\b/i.test(body40)
+  && /on conflict \(api_league_id\) do update[\s\S]*?set active\s*= true,\s*playable\s*= false,\s*type\s*= 'cup'/.test(body40) && /having max\(f\.kickoff_utc\)::date > l\.season_end/.test(sql40));
+check('no cup in 035\'s seed (each cup is its own migration\'s)', !/europa_league|conference_league/.test(read('supabase/migrations/035_leagues_config.sql')));
+const lnb = {}; vm.createContext(lnb); lnb.window = lnb; vm.runInContext(read('public/league-names.js'), lnb);
+eq('the cups\' labels', ['champions_league', 'europa_league', 'conference_league'].map((s) => lnb.LeagueNames.label(s)), ['Champions League · UEFA', 'Europa League · UEFA', 'Conference League · UEFA']);
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);

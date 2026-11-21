@@ -109,6 +109,15 @@ export const LEAGUES = [
   // (2027-01-27) is the end of the league phase only.
   { slug: 'champions_league', apiId: 2, name: 'Champions League', country: 'Europe', code: 'UEFA', season: 2026, seasonStart: '2026-09-08', seasonEnd: '2027-06-05',
     active: true, playable: false, statsCoverage: true, region: null, langs: [], tagNews: false, type: 'cup', fromRound: 'League Stage' },
+  // C-2 (22 Nov 2026; migration 040). Europa League: API-Football 3, a
+  // 36-club league phase of 8 matchdays (16 Sep 2026 – 28 Jan 2027); final
+  // 26 May 2027, Frankfurt (UEFA). Conference League: API-Football 848, a
+  // 36-club league phase of 6 matchdays (15 Oct – 17 Dec 2026); final 2 June
+  // 2027, Istanbul (UEFA). The API's season ends are the league phases'.
+  { slug: 'europa_league', apiId: 3, name: 'Europa League', country: 'Europe', code: 'UEFA', season: 2026, seasonStart: '2026-09-16', seasonEnd: '2027-05-26',
+    active: true, playable: false, statsCoverage: true, region: null, langs: [], tagNews: false, type: 'cup', fromRound: 'League Stage' },
+  { slug: 'conference_league', apiId: 848, name: 'Conference League', country: 'Europe', code: 'UEFA', season: 2026, seasonStart: '2026-10-15', seasonEnd: '2027-06-02',
+    active: true, playable: false, statsCoverage: true, region: null, langs: [], tagNews: false, type: 'cup', fromRound: 'League Stage' },
 ];
 
 /** The cups among them (type 'cup'). */

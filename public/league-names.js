@@ -43,6 +43,8 @@
     { slug: 'serie_c', name: 'Série C', country: 'Brazil', code: 'BRA', region: 'brazil', playable: false, type: 'league' },
     { slug: 'uruguay', name: 'Primera División', country: 'Uruguay', code: 'URU', region: null, playable: false, type: 'league' },
     { slug: 'champions_league', name: 'Champions League', country: 'Europe', code: 'UEFA', region: null, playable: false, type: 'cup' },
+    { slug: 'europa_league', name: 'Europa League', country: 'Europe', code: 'UEFA', region: null, playable: false, type: 'cup' },
+    { slug: 'conference_league', name: 'Conference League', country: 'Europe', code: 'UEFA', region: null, playable: false, type: 'cup' },
   ];
   // END LEAGUES
 

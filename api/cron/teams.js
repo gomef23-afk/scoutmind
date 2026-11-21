@@ -80,7 +80,11 @@ async function cupOnlyClubs(api, lg) {
       if (s.team?.id && s.team?.name && !seen.has(s.team.id)) seen.set(s.team.id, s.team);
     }
   }
-  const rows = [...seen.values()].map((t) => ({
+  // Only the clubs we do not hold yet are sent, so the count says what was
+  // created (C-1's run reported the 36 sent, though 28 were skipped as held).
+  const ids = [...seen.keys()];
+  const held = new Set(ids.length ? (await select('teams', `select=api_team_id&api_team_id=in.(${ids.join(',')})`)).map((r) => r.api_team_id) : []);
+  const rows = [...seen.values()].filter((t) => !held.has(t.id)).map((t) => ({
     api_team_id: t.id,
     league_id: lg.id,
     slug: slugify(t.name),
@@ -88,6 +92,7 @@ async function cupOnlyClubs(api, lg) {
     logo_url: t.logo || null,
     updated_at: new Date().toISOString(),
   }));
+  // Still insert-only: a club created meanwhile is never overwritten.
   return upsert('teams', rows, 'api_team_id', { ignoreDuplicates: true });
 }
 
