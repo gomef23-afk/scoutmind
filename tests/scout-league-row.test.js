@@ -83,10 +83,12 @@ check('the menu stays inside the row\'s gutter', /const left=Math\.max\(gutter,M
 
 // ── 4. Markup and layout ──
 const markup = idx.split('<div class="page" id="page-scout">')[1] || '';
-check('markup: the league row and the More menu share a wrapper; the views row follows; the menu starts hidden (display set in JS)',
-  /<div class="sg-tabs-wrap">\s*<div id="sg-tabs" class="sg-tabs"><\/div>\s*<div id="sg-more-menu" class="sg-more-menu" role="menu" style="display:none;"><\/div>\s*<\/div>\s*<div id="sg-views" class="sg-views"><\/div>\s*<div id="sg-body"><\/div>/.test(markup));
+// 26 Nov 2026: the league row is the only underline-tab row; the views are a
+// segmented control in the layout grid (tests/scout-layout below).
+check('markup: the league row and the More menu share a wrapper; then the layout grid; the menu starts hidden (display set in JS)',
+  /<div class="sg-tabs-wrap">\s*<div id="sg-tabs" class="sg-tabs"><\/div>\s*<div id="sg-more-menu" class="sg-more-menu" role="menu" style="display:none;"><\/div>\s*<\/div>[\s\S]{0,400}<div class="sg-layout">/.test(markup));
 const css = (sel) => (new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(idx) || [])[1] || '';
-check('the views row never scrolls: it wraps', /flex-wrap:wrap/.test(css('.sg-views')) && !/overflow/.test(css('.sg-views')));
+check('the views never scroll: four equal segments on a phone, no overflow scroll', /display:flex;width:100%/.test(css('.sg-seg')) && /flex:1 1 0/.test(css('.sg-seg-btn')) && !/overflow-x/.test(css('.sg-seg')));
 check('the More menu sits outside the scrolling row, positioned under it', /position:absolute/.test(css('.sg-more-menu')) && /top:100%/.test(css('.sg-more-menu')) && /position:relative/.test(css('.sg-tabs-wrap')));
 check('laptop (900px+): the league row wraps instead of scrolling', /@media \(min-width: 900px\)\{[\s\S]*?\.sg-tabs\{flex-wrap:wrap;overflow:visible;\}/.test(idx));
 check('every tab and menu item is at least 44px tall', /min-height:44px/.test(css('.sg-tab')) && /min-height:44px/.test(css('.sg-more-item')));

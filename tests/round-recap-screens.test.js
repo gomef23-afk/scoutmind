@@ -180,8 +180,9 @@ check('index.html loads round-recap.js; precached and stamped (rule 24)', /<scri
 // 26 Nov 2026: no standalone card. The recap is the view of a final round's
 // chip; a slim teaser under the chips for 7 days; the same slim line on Home.
 check('no standalone recap card on the round view (it doubled the round band)', !/sg-recap-card|sgFillRecapCard|rc-more|recap\.open/.test(idx));
-check('under the chips: one slim teaser for 7 days after a round turned final, which selects that chip',
-  /body\.innerHTML='<div class="sg-chips">'\+chips\+'<\/div><div id="sg-recap-teaser"><\/div><div id="sg-round"><\/div>';/.test(idx)
+check('the slim teaser (under the band since 26 Nov) for 7 days after a round turned final, which selects that chip',
+  /<div id="sg-band" class="sg-l-band"><\/div>\s*<div id="sg-recap-teaser" class="sg-l-teaser"><\/div>/.test(idx)
+  && /sgSlots\(chips\);\s*(sgChipIntoView\(\);\s*)?body\.innerHTML='<div id="sg-round"><\/div>';\s*sgFillRecapTeaser\(SG\.leagueId\);/.test(idx)
   && /r\.status==='final'&&RoundRecap\.fresh\(r\.finalized_at,Date\.now\(\)\)/.test(idx)
   && /<button class="rc-teaser" type="button" onclick="sgPickRound\('\+fresh\.id\+'\)"><span>'\+t\('recap\.ready',\{n:fresh\.round_no\}\)/.test(idx));
 check('…and not while that round is the one on screen', /if\(!fresh\|\|fresh\.id===SG\.roundId\) return;/.test(idx));

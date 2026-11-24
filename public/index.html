@@ -93,7 +93,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=4d016329a5"></script>
+<script src="/i18n.js?v=b4c2dd884a"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=21106714cb"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -678,7 +678,8 @@ select,input[type=text],input[type=number],input[type=password],input[type=email
    on the mobile tab bar, so 64 + ~68. */
 body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-title{font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:1.2;}
-.sg-sub{font-size:12px;color:var(--muted);line-height:1.6;margin:2px 0 14px;}
+.sg-sub{font-size:12px;color:var(--muted);line-height:1.6;margin:2px 0 4px;}
+.sg-head{margin-bottom:10px;}
 /* SCOUT LEAGUE ROW (25 Nov 2026): the config's fixed row (scoutRow) + "More",
    then the view row (Round · Rankings · My history), which never scrolls: it
    wraps before anything leaves the screen. Only the league row may scroll
@@ -693,8 +694,24 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-more-item{display:flex;align-items:center;width:100%;min-height:44px;padding:0 12px;border:0;border-left:3px solid transparent;border-radius:6px;background:none;color:var(--ink);font:500 14px/1.2 var(--font-sans);text-align:left;cursor:pointer;white-space:nowrap;}
 .sg-more-item:hover{background:var(--tint);}
 .sg-more-item[aria-checked="true"]{border-left-color:var(--navy-ink);color:var(--navy-ink);font-weight:700;}
-.sg-views{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid var(--border);margin:0 -16px 14px;padding:0 16px;}
-.sg-views .sg-tab{padding:0 10px;}
+/* SCOUT LAYOUT (26 Nov 2026): one grid, the band early on a phone. */
+.sg-layout{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"chips" "band" "views" "teaser" "leagues" "body";margin-top:12px;}
+.sg-l-chips{grid-area:chips;}
+.sg-l-views{grid-area:views;}
+.sg-l-band{grid-area:band;}
+.sg-l-teaser{grid-area:teaser;}
+.sg-l-leagues{grid-area:leagues;}
+.sg-l-body{grid-area:body;min-width:0;}
+.sg-l-chips:empty,.sg-l-band:empty,.sg-l-teaser:empty{display:none;}
+/* The views: a segmented control (as the Matches / Table toggle), never underline tabs. */
+.sg-seg{display:flex;width:100%;margin:0 0 12px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--card);}
+.sg-seg-btn{flex:1 1 0;min-width:0;min-height:40px;padding:0 6px;background:var(--card);color:var(--ink);border:none;border-left:1px solid var(--border);font:600 12px/1.2 var(--font-sans);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sg-seg-btn:first-child{border-left:0;}
+.sg-seg-btn.on{background:var(--navy);color:var(--on-navy);}
+/* Filters inside a view (Rankings' This round · Competition …, Recaps' league): lighter than the segment. */
+.sg-filters .sg-chip{background:transparent;font-size:11px;font-weight:600;padding:0 12px;}
+.sg-filters .sg-chip.active{background:transparent;border-color:var(--navy-ink);color:var(--navy-ink);}
+.sg-leagues-lab{flex:0 0 auto;align-self:center;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-right:2px;}
 /* ROUND RECAP (R-2): title, the navy band (headline figures), the light sheet (lines). */
 .rc-card{margin:0 0 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
 .rc-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:12px 14px 10px;}
@@ -1140,7 +1157,11 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 }
 @media (min-width: 900px){
   .sg-page{padding:24px 24px 32px;}
-  .sg-tabs,.sg-chips,.sg-views{margin-left:0;margin-right:0;padding-left:0;padding-right:0;}
+  .sg-tabs,.sg-chips,.sg-leagues{margin-left:0;margin-right:0;padding-left:0;padding-right:0;}
+  /* Laptop: the round chips and the views share one row; then band, teaser, leagues, content. */
+  .sg-layout{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"chips views" "band band" "teaser teaser" "leagues leagues" "body body";column-gap:12px;}
+  .sg-seg{display:inline-flex;width:auto;margin:0 0 14px;align-self:start;}
+  .sg-seg-btn{flex:0 0 auto;padding:0 14px;}
   .sg-tabs-wrap{margin:0;}
   .sg-more-menu{max-width:none;}
   /* Laptop: the league row never scrolls; a long More name ("Primeira Liga · POR") wraps to a second line. */
@@ -1550,17 +1571,26 @@ if(!_cu){
 <div class="sg-page">
   <div class="sg-head">
     <div class="sg-title" data-i18n="sg.title">Scout Game</div>
-    <div class="sg-sub" data-i18n="sg.sub">Five players and a captain each round. Less-fancied players score more when they deliver. Free, points only.</div>
+    <!-- Shown on the first visit only (sgIntro). -->
+    <div class="sg-sub" id="sg-sub" hidden data-i18n="sg.sub">Five players and a captain each round. Less-fancied players score more when they deliver. Free, points only.</div>
   </div>
-  <!-- My private leagues (025). Signed in only; hidden until the list loads. -->
-  <div id="sg-leagues" class="sg-leagues" style="display:none;"></div>
-  <!-- The league row (the config's scoutRow + More) and, below it, the views. -->
+  <!-- SCOUT LAYOUT (26 Nov 2026). The league row is the only underline-tab row. -->
   <div class="sg-tabs-wrap">
     <div id="sg-tabs" class="sg-tabs"></div>
     <div id="sg-more-menu" class="sg-more-menu" role="menu" style="display:none;"></div>
   </div>
-  <div id="sg-views" class="sg-views"></div>
-  <div id="sg-body"></div>
+  <!-- One grid, two orders. Phone: chips · band · views · teaser · leagues ·
+       content. Laptop: chips | views on one row, then band · teaser · leagues ·
+       content. An empty slot takes no room. -->
+  <div class="sg-layout">
+    <div id="sg-chips" class="sg-chips sg-l-chips"></div>
+    <div id="sg-views" class="sg-seg sg-l-views"></div>
+    <div id="sg-band" class="sg-l-band"></div>
+    <div id="sg-recap-teaser" class="sg-l-teaser"></div>
+    <!-- My private leagues (025): context, below the band. Signed in only; hidden until the list loads. -->
+    <div id="sg-leagues" class="sg-leagues sg-l-leagues" style="display:none;"></div>
+    <div id="sg-body" class="sg-l-body"></div>
+  </div>
 </div>
 <!-- Sticky save bar for the pick screen; display is set only in JS (rule 6). -->
 <div id="sg-submit" class="sg-submit" style="display:none;"></div>
@@ -6683,9 +6713,27 @@ async function sgLoadEntries(){
   for(const e of rows||[]) SG.entries.set(e.round_id,e);
 }
 
+/**
+ * The one-line description under the title: on the first visit only (a UI
+ * flag in localStorage, rule 10), then hidden. Decided once per page load,
+ * so it does not vanish while it is being read.
+ */
+SG.introShow=null;
+function sgIntro(){
+  const el=document.getElementById('sg-sub');
+  if(!el) return;
+  if(SG.introShow===null){
+    let seen=false;
+    try{ seen=localStorage.getItem('sm_sg_intro_seen')==='1'; localStorage.setItem('sm_sg_intro_seen','1'); }catch(e){}
+    SG.introShow=!seen;
+  }
+  el.hidden=!SG.introShow;
+}
+
 async function renderScout(force){
   const body=document.getElementById('sg-body');
   if(!body) return;
+  sgIntro();
   if(!SG.loadedAt) body.innerHTML='<div class="sg-empty">'+t('sg.loadingGame')+'</div>';
   try{
     await sgLoadBase(force);
@@ -6736,7 +6784,8 @@ function sgTabs(){
   if(on&&(on.offsetLeft<el.scrollLeft||on.offsetLeft+on.offsetWidth>el.scrollLeft+el.clientWidth)) el.scrollLeft=on.offsetLeft-16;
   const views=document.getElementById('sg-views');
   if(views){
-    const v=(key,label,fn)=>'<button class="sg-tab'+(SG.view===key?' active':'')+'" aria-pressed="'+(SG.view===key)+'" onclick="'+fn+'()">'+t(label)+'</button>';
+    // A segmented control (26 Nov 2026), not a second row of underline tabs.
+    const v=(key,label,fn)=>'<button class="sg-seg-btn'+(SG.view===key?' on':'')+'" aria-pressed="'+(SG.view===key)+'" onclick="'+fn+'()">'+t(label)+'</button>';
     views.innerHTML=v('league','sg.tab.round','sgShowRound')+v('rankings','sg.tab.rankings','sgShowRankings')+v('history','sg.tab.history','sgShowHistory')
       +v('recaps','sg.tab.recaps','sgShowRecaps');
   }
@@ -6856,7 +6905,7 @@ async function sgRenderRecaps(){
   const chosen=SG.leagueId!=null?SG.rounds.find(r=>r.league_id===SG.leagueId):null;
   const filter=(chosen?'<button class="sg-chip'+(!SG.recapAll?' active':'')+'" onclick="SG.recapAll=false;sgRenderRecaps()">'+sanitize(sgLeagueName(chosen))+'</button>':'')
     +'<button class="sg-chip'+(SG.recapAll||!chosen?' active':'')+'" onclick="SG.recapAll=true;sgRenderRecaps()">'+t('recap.list.all')+'</button>';
-  body.innerHTML='<div class="sg-chips">'+filter+'</div><div id="sg-recap-list"><div class="sg-empty">'+t('sg.loading')+'</div></div>';
+  body.innerHTML='<div class="sg-chips sg-filters">'+filter+'</div><div id="sg-recap-list"><div class="sg-empty">'+t('sg.loading')+'</div></div>';
   let rows=null;
   try{ rows=await sgRpc('recent_round_recaps',{p_league_id:(SG.recapAll||!chosen)?null:SG.leagueId,p_limit:100}); }catch(e){ console.warn('recent_round_recaps:',e.message); }
   const el=document.getElementById('sg-recap-list');
@@ -6886,13 +6935,32 @@ function sgOpenRecapRound(roundId,leagueId){
 /** From the Profile: open the Scout tab on My history. */
 function sgOpenHistory(){ SG.view='history'; showPage('scout'); }
 
+/** The layout's slots above the content (round chips, band, teaser): the round view fills them, every other view empties them. */
+function sgSlots(chips){
+  const set=(id,h)=>{ const el=document.getElementById(id); if(el) el.innerHTML=h; };
+  set('sg-chips',chips||''); set('sg-band',''); set('sg-recap-teaser','');
+}
+/**
+ * The selected round chip in sight (26 Nov 2026): the chips row scrolls
+ * sideways so the chosen round (in play or the next open one) is not off the
+ * edge. The row only, never the page.
+ */
+function sgChipIntoView(){
+  const row=document.getElementById('sg-chips'), on=row&&row.querySelector('.sg-chip.active');
+  if(!on) return;
+  const r=row.getBoundingClientRect(), c=on.getBoundingClientRect(), pad=16;
+  if(c.left<r.left+pad) row.scrollLeft-=(r.left+pad)-c.left;
+  else if(c.right>r.right-pad) row.scrollLeft+=c.right-(r.right-pad);
+}
 function sgRender(){
   const body=document.getElementById('sg-body');
   if(!body) return;
+  if(SG.view!=='league') sgSlots('');
   if(SG.view==='rankings'){ sgSubmitBar(null); sgRenderRankings(); return; }
   if(SG.view==='history'){ sgSubmitBar(null); sgRenderHistory(); return; }
   if(SG.view==='recaps'){ sgSubmitBar(null); sgRenderRecaps(); return; }
   if(SG.leagueId==null){
+    sgSlots('');
     sgSubmitBar(null);
     body.innerHTML='<div class="sg-empty">'+t('sg.noRound')+'</div>';
     return;
@@ -6903,9 +6971,12 @@ function sgRender(){
     return '<button class="sg-chip'+(x.id===SG.roundId?' active':'')+'" onclick="sgPickRound('+x.id+')">'
       +sanitize(sgRoundName(x))+'<span class="sg-chip-tag">'+tag+'</span></button>';
   }).join('');
-  // One slim line under the chips for 7 days after a round turns final: its
-  // recap is the view of that round's chip (R-2, 26 Nov 2026).
-  body.innerHTML='<div class="sg-chips">'+chips+'</div><div id="sg-recap-teaser"></div><div id="sg-round"></div>';
+  // The chips and band go to the layout's slots (26 Nov 2026); the slim
+  // "recap ready" line under the band for 7 days after a round turns final
+  // (its recap is the view of that round's chip, R-2).
+  sgSlots(chips);
+  sgChipIntoView();
+  body.innerHTML='<div id="sg-round"></div>';
   sgFillRecapTeaser(SG.leagueId);
   if(!r){ sgSubmitBar(null); return; }
   if(r.status==='open') sgRenderPick(r);
@@ -6933,8 +7004,9 @@ async function sgRenderPick(r){
   // The band (26 Nov 2026): what to do now. The countdown in gold (as the
   // Home band), my saved picks, my rank in my last round. The round itself is
   // the chip above; a value we do not hold is left out (sgOpenBand).
-  const head='<div id="sg-open-band">'+sgOpenBand(r)+'</div>'
-    +(SG.entries.get(r.id)?'<div class="sg-saved">'+t('sg.saved')+'</div>':'');
+  const band=document.getElementById('sg-band');
+  if(band) band.innerHTML='<div id="sg-open-band">'+sgOpenBand(r)+'</div>';
+  const head=SG.entries.get(r.id)?'<div class="sg-saved">'+t('sg.saved')+'</div>':'';
   // Your five, then the round's matches (tap one to see its players), then the list.
   el.innerHTML=head+'<div id="sg-slots"></div><div id="sg-round-fx"></div><div id="sg-filters"></div><div id="sg-list"><div class="sg-empty">'+t('sg.loadingPlayers')+'</div></div>';
   sgSubmitBar(r);
@@ -7294,8 +7366,9 @@ async function sgRenderPlayed(r){
   // band (goals · best pick · my points) with the recap's lines under it;
   // without a recap, round · my points · my rank (sgPlayedBand).
   const status=t(r.status==='final'?'sg.st.final':sgInPlay(r)?'sg.st.inPlay':'sg.st.ft');
-  el.innerHTML='<div id="sg-played-band">'+(r.status==='final'?sgPlayedBand(r,status,null,null):'')+'</div>'
-    +'<div id="sg-recap-lines"></div>'
+  const band=document.getElementById('sg-band');
+  if(band) band.innerHTML='<div id="sg-played-band">'+(r.status==='final'?sgPlayedBand(r,status,null,null):'')+'</div>';
+  el.innerHTML='<div id="sg-recap-lines"></div>'
     +(r.status==='locked'?'<div class="sg-note">'+t('sg.pointsLater')+'</div>':'')
     +'<div id="sg-mine"><div class="sg-empty">'+t('sg.loading')+'</div></div><div id="sg-fixtures"></div><div id="sg-round-rank"></div>';
   const me=myUserId();
@@ -7627,7 +7700,8 @@ async function sgRenderRankings(){
   if(!body) return;
   FIVE.targets=[];   // the tap targets of the tables drawn below
   const views=['round','comp','overall','torcida','leagues'];
-  body.innerHTML='<div class="sg-chips">'+views.map(v=>'<button class="sg-chip'+(SG.rankView===v?' active':'')+'" onclick="sgRankView(\''+v+'\')">'+t('sg.rv.'+v)+'</button>').join('')+'</div>'
+  // Filters of this view: outlined and smaller than the views segment (26 Nov 2026).
+  body.innerHTML='<div class="sg-chips sg-filters">'+views.map(v=>'<button class="sg-chip'+(SG.rankView===v?' active':'')+'" onclick="sgRankView(\''+v+'\')">'+t('sg.rv.'+v)+'</button>').join('')+'</div>'
     +'<div id="sg-rank-body"><div class="sg-empty">'+t('sg.loading')+'</div></div>';
   const out=document.getElementById('sg-rank-body');
   if(SG.rankView==='leagues'){ glRenderView(out); return; }   // private leagues (025)
@@ -8019,9 +8093,11 @@ function glRankText(x){
 function glRenderStrip(){
   const el=document.getElementById('sg-leagues');
   if(!el) return;
-  if(isGuestNow()||!GL.list){ el.style.display='none'; el.innerHTML=''; return; }
+  // Not in Rankings (26 Nov 2026): its own "Leagues" filter lists the same
+  // leagues, and its filters stay the only pill row on screen.
+  if(isGuestNow()||!GL.list||SG.view==='rankings'){ el.style.display='none'; el.innerHTML=''; return; }
   const open=GL.list.filter(x=>!x.closed_at);
-  el.innerHTML=open.map(x=>'<button class="sg-chip'+(SG.view==='rankings'&&SG.rankView==='leagues'&&GL.id===x.id?' active':'')+'" onclick="glOpen('+Number(x.id)+')">'
+  el.innerHTML='<span class="sg-leagues-lab">'+t('sg.yourLeagues')+'</span>'+open.map(x=>'<button class="sg-chip'+(SG.view==='rankings'&&SG.rankView==='leagues'&&GL.id===x.id?' active':'')+'" onclick="glOpen('+Number(x.id)+')">'
       +sanitize(x.name)+'<span class="sg-chip-tag">'+sanitize(glRankText(x))+'</span></button>').join('')
     +'<button class="sg-chip gl-add" onclick="glOpenCreate()">'+t('gl.create')+'</button>'
     +'<button class="sg-chip gl-add" onclick="glOpenJoin()">'+t('gl.join')+'</button>';

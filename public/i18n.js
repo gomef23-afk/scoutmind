@@ -562,6 +562,7 @@
     'sg.tab.round': 'Round',
     'sg.tab.more': 'More',
     'sg.tab.recaps': 'Recaps',
+    'sg.yourLeagues': 'Your leagues',
     // Round Recap (R-2): public/round-recap.js builds every sentence from these.
     'recap.title': 'Round {n} recap',
     'recap.titleLabel': '{label} recap',
@@ -1702,6 +1703,7 @@
     'sg.tab.round': 'Rodada',
     'sg.tab.more': 'Mais',
     'sg.tab.recaps': 'Resumos',
+    'sg.yourLeagues': 'Suas ligas',
     'recap.title': 'Resumo da rodada {n}',
     'recap.titleLabel': 'Resumo: {label}',
     'recap.ready': 'Resumo da rodada {n} pronto',
