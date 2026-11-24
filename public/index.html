@@ -1159,17 +1159,16 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 @media (min-width: 900px){
   .sg-page{padding:24px 24px 32px;}
   .sg-tabs,.sg-chips,.sg-leagues{margin-left:0;margin-right:0;padding-left:0;padding-right:0;}
-  /* Laptop: the round chips and the views share one wrapping row (.sg-bar),
-     then band, teaser, leagues, content. The chips take their own width and
-     scroll inside the row when it is not enough; when chips + views do not
-     fit on one line the views wrap under them, right-aligned. Nothing ever
-     sits on top of a chip. */
-  .sg-layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "band" "teaser" "leagues" "body";}
-  .sg-bar{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:12px;grid-area:bar;min-width:0;}
-  .sg-bar>.sg-l-chips{flex:0 1 auto;min-width:0;max-width:100%;}
-  .sg-bar>.sg-seg{flex:0 0 auto;margin-left:auto;}
-  .sg-seg{display:inline-flex;width:auto;margin:0 0 14px;}
+  /* Laptop (27 Nov 2026, second pass): the views segment on its own row,
+     left-aligned and compact, right under the league tabs (filled pills, not
+     underline tabs, so the two rows do not read as duplicates); then the
+     round chips (Round view only, with the whole width to themselves), band,
+     teaser, your leagues, content. */
+  .sg-layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"views" "chips" "band" "teaser" "leagues" "body";}
+  .sg-seg{display:inline-flex;width:auto;margin:0 0 14px;justify-self:start;}
   .sg-seg-btn{flex:0 0 auto;padding:0 14px;}
+  /* Your leagues: wraps to a second line instead of scrolling (scroll on a phone only). */
+  .sg-leagues{flex-wrap:wrap;overflow:visible;row-gap:6px;}
   .sg-tabs-wrap{margin:0;}
   .sg-more-menu{max-width:none;}
   /* Laptop: the league row never scrolls; a long More name ("Primeira Liga · POR") wraps to a second line. */
@@ -1588,12 +1587,12 @@ if(!_cu){
     <div id="sg-more-menu" class="sg-more-menu" role="menu" style="display:none;"></div>
   </div>
   <!-- One grid, two orders. Phone: chips · band · views · teaser · leagues ·
-       content. Laptop: chips | views on one row, then band · teaser · leagues ·
-       content. An empty slot takes no room. -->
+       content. Laptop: views · chips · band · teaser · leagues · content.
+       An empty slot takes no room. -->
   <div class="sg-layout">
-    <!-- Laptop: chips and views share a row that wraps, the views going under
-         the chips (right-aligned) when both do not fit; the chips are never
-         covered. Phone: this wrapper steps aside (display:contents). -->
+    <!-- The chips and the views, placed by the grid (display:contents): phone
+         chips first and the views under the band; laptop views first, on
+         their own row, then the chips. -->
     <div class="sg-bar">
       <div id="sg-chips" class="sg-chips sg-l-chips"></div>
       <div id="sg-views" class="sg-seg sg-l-views"></div>

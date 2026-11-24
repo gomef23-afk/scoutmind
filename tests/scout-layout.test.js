@@ -38,19 +38,17 @@ check('the description starts hidden and is shown on the first visit only (a UI 
 // ── the grid, both widths ──
 check('phone: chips · band · views · teaser · leagues · content', /grid-template-areas:"chips" "band" "views" "teaser" "leagues" "body"/.test(css('.sg-layout')));
 check('phone: the bar steps aside, so chips and views take their own places in the grid', /\.sg-bar\{display:contents;\}/.test(idx));
-check('laptop (900px+): the bar (chips + views), then band · teaser · leagues · content', /@media \(min-width: 900px\)\{[\s\S]*?\.sg-layout\{grid-template-columns:minmax\(0,1fr\);grid-template-areas:"bar" "band" "teaser" "leagues" "body";\}/.test(idx));
-// 27 Nov 2026 (1400 px, PT): the chips' column was squeezed beside the views and
-// "Rodada 37/38" read as hidden behind them. The bar is a wrapping flex row:
-// chips at their own width (scrolling inside the row when it is not enough),
-// the views right-aligned after them, or on their own line under the chips.
-// Measured in the harness at 1100, 1280, 1440 in EN and PT: no visible chip
-// intersects the views; with two chips both share one line.
-const lap = (/@media \(min-width: 900px\)\{[\s\S]*?\.sg-bar\{display:flex;[^}]*\}[\s\S]*?\.sg-bar>\.sg-seg\{[^}]*\}/.exec(idx) || [''])[0];
-check('no chip hidden behind the segment: the bar wraps (flex-wrap), it never overlays', /\.sg-bar\{display:flex;flex-wrap:wrap;/.test(lap)
-  && /\.sg-bar>\.sg-l-chips\{flex:0 1 auto;min-width:0;max-width:100%;\}/.test(lap) && /\.sg-bar>\.sg-seg\{flex:0 0 auto;margin-left:auto;\}/.test(lap)
-  && !/position:\s*(absolute|fixed|sticky)/.test(css('.sg-seg') + css('.sg-bar>.sg-seg')) && !/margin[^;]*-\d/.test(css('.sg-bar>.sg-seg') + css('.sg-seg'))
-  && !/grid-template-areas:"chips views"/.test(idx));
+// 27 Nov 2026, second pass: on the laptop the views segment has its own row,
+// left-aligned and compact, under the league tabs; the chips follow with the
+// whole width. (First pass: chips and views shared a row, and the segment
+// either squeezed the chips or sat orphaned on a line of its own.)
+check('laptop (900px+): views · chips · band · teaser · leagues · content', /@media \(min-width: 900px\)\{[\s\S]*?\.sg-layout\{grid-template-columns:minmax\(0,1fr\);grid-template-areas:"views" "chips" "band" "teaser" "leagues" "body";\}/.test(idx));
+check('laptop: the segment is compact and left-aligned (not full width)', /\.sg-seg\{display:inline-flex;width:auto;margin:0 0 14px;justify-self:start;\}/.test(idx));
+check('no chip hidden behind the segment: they never share a row, nothing is laid over the chips', !/grid-template-areas:"chips views"/.test(idx) && !/\.sg-bar\{display:flex/.test(idx)
+  && !/position:\s*(absolute|fixed|sticky)/.test(css('.sg-seg')) && !/margin[^;]*-\d/.test(css('.sg-seg')));
 check('…and the chips row keeps its own sideways scroll', /overflow-x:auto/.test(css('.sg-chips')));
+check('"Your leagues": scrolls on a phone, wraps to a second line on a laptop', /overflow-x:auto/.test(css('.sg-leagues'))
+  && /@media \(min-width: 900px\)\{[\s\S]*?\.sg-leagues\{flex-wrap:wrap;overflow:visible;row-gap:6px;\}/.test(idx));
 check('an empty slot takes no room', /\.sg-l-chips:empty,\.sg-l-band:empty,\.sg-l-teaser:empty\{display:none;\}/.test(idx));
 
 // ── the views: a segmented control ──
