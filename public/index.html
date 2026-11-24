@@ -93,7 +93,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=459b59692b"></script>
+<script src="/i18n.js?v=4d016329a5"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=21106714cb"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -701,10 +701,14 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .rc-title{font-size:15px;font-weight:700;color:var(--ink);}
 .rc-league{font-size:12px;color:var(--muted);}
 .rc-card .sg-band{margin:0;border-radius:0;}
-.rc-more>summary{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;cursor:pointer;list-style:none;font-size:13px;font-weight:600;color:var(--navy-ink);}
-.rc-more>summary::-webkit-details-marker{display:none;}
-.rc-more[open]>summary .ic{transform:rotate(180deg);}
 .rc-sheet{padding:4px 14px 12px;}
+/* Under a final round's band (the round view): the same sheet, as a card of its own. */
+#sg-recap-lines .rc-sheet{margin:10px 0 4px;background:var(--card);border:1px solid var(--border);border-radius:12px;}
+/* The slim line: "Round 35 recap ready · See" under the chips, and the same on Home. */
+.rc-teaser,.hb-recap{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;box-sizing:border-box;min-height:44px;padding:0 4px 0 12px;
+  background:none;border:0;border-left:3px solid var(--navy-ink);color:var(--ink);font:500 13px/1.3 var(--font-sans);text-align:left;cursor:pointer;margin:0 0 10px;}
+.rc-teaser>span:first-child,.hb-recap>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rc-see{flex:0 0 auto;display:inline-flex;align-items:center;gap:2px;color:var(--navy-ink);font-weight:700;}
 .rc-sec .sg-section{margin:12px 0 6px;}
 .rc-lines{list-style:none;margin:0;padding:0;}
 .rc-lines li{font-size:13px;line-height:1.5;color:var(--ink);padding:6px 0;border-top:1px solid var(--border);}
@@ -715,10 +719,9 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .rc-row-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .rc-row-title{font-size:14px;font-weight:600;}
 .rc-row-meta{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-/* Home: one row under the band when my league has a fresh recap. */
-.hb-recap{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 16px 0;min-height:48px;padding:0 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--navy-ink);font:600 14px/1.3 var(--font-sans);text-align:left;cursor:pointer;width:calc(100% - 32px);box-sizing:border-box;}
+/* Home: the same slim line under the band, while my league's recap is fresh. */
+.hb-recap{margin:12px 16px 0;width:calc(100% - 32px);}
 .hb-recap[hidden]{display:none;}
-.hb-recap span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sg-chips{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 14px;padding:0 16px 2px;scrollbar-width:none;}
 .sg-chips::-webkit-scrollbar{display:none;}
 .sg-chips-tight{margin:0;padding:0;flex:1;min-width:0;}
@@ -6801,28 +6804,34 @@ async function sgGetRecap(roundId){
   SG.recaps.set(roundId,rec||null);
   return rec||null;
 }
-/** One recap: title, the navy band (headline figures), then the light sheet with the lines. */
-function sgRecapHtml(rec,leagueName,open){
-  const b=RoundRecap.build(rec,sgRecapCtx());
-  if(!b.title||(!b.band.length&&!b.sections.length)) return '';
+/** A recap's lines, as a light sheet: under a final round's band, and in the Recaps view. */
+function sgRecapSheet(b){
   const sheet=b.sections.map(s=>'<div class="rc-sec"><div class="sg-section">'+sanitize(s.title)+'</div><ul class="rc-lines">'
     +s.lines.map(l=>'<li>'+l+'</li>').join('')+'</ul></div>').join('');
+  return sheet?'<div class="rc-sheet">'+sheet+'</div>':'';
+}
+/** One recap in the Recaps view: title, the navy band (headline figures), the light sheet. */
+function sgRecapHtml(rec,leagueName){
+  const b=RoundRecap.build(rec,sgRecapCtx());
+  if(!b.title||(!b.band.length&&!b.sections.length)) return '';
   return '<article class="rc-card"><div class="rc-head"><span class="rc-title">'+sanitize(b.title)+'</span>'
     +(leagueName?'<span class="rc-league">'+sanitize(leagueName)+'</span>':'')+'</div>'
-    +(b.band.length?sgBand(b.band):'')
-    +(sheet?(open?'<div class="rc-sheet">'+sheet+'</div>'
-      :'<details class="rc-more"><summary>'+t('recap.open')+Icons.svg('chevronDown',16)+'</summary><div class="rc-sheet">'+sheet+'</div></details>'):'')
-    +'</article>';
+    +(b.band.length?sgBand(b.band):'')+sgRecapSheet(b)+'</article>';
 }
-/** The league's newest final round, if it turned final within 7 days and has a recap. */
-async function sgFillRecapCard(leagueId){
-  const fresh=SG.rounds.filter(r=>r.league_id===leagueId&&r.status==='final'&&RoundRecap.fresh(r.finalized_at,Date.now()))
-    .sort((a,b)=>String(b.finalized_at).localeCompare(String(a.finalized_at)))[0];
-  if(!fresh) return;
+/** The league's newest final round that turned final within 7 days. */
+function sgFreshFinal(leagueId){
+  return SG.rounds.filter(r=>r.league_id===leagueId&&r.status==='final'&&RoundRecap.fresh(r.finalized_at,Date.now()))
+    .sort((a,b)=>String(b.finalized_at).localeCompare(String(a.finalized_at)))[0]||null;
+}
+/** "Round 35 recap ready · See" under the chips, unless that round is the one on screen. */
+async function sgFillRecapTeaser(leagueId){
+  const fresh=sgFreshFinal(leagueId);
+  if(!fresh||fresh.id===SG.roundId) return;
   const rec=await sgGetRecap(fresh.id);
-  const el=document.getElementById('sg-recap-card');
-  if(!el||SG.view!=='league'||SG.leagueId!==leagueId||!rec) return;
-  el.innerHTML=sgRecapHtml(rec,sgLeagueName(fresh),false);
+  const el=document.getElementById('sg-recap-teaser');
+  if(!el||!rec||SG.view!=='league'||SG.leagueId!==leagueId||SG.roundId===fresh.id||fresh.round_no==null) return;
+  el.innerHTML='<button class="rc-teaser" type="button" onclick="sgPickRound('+fresh.id+')"><span>'+t('recap.ready',{n:fresh.round_no})+'</span>'
+    +'<span class="rc-see">'+t('recap.see')+Icons.svg('chevronRight',16)+'</span></button>';
 }
 /** Scout → Recaps: the chosen competition's recaps (or all), newest first; a tap opens one. */
 async function sgRenderRecaps(){
@@ -6841,7 +6850,7 @@ async function sgRenderRecaps(){
     const rec=await sgGetRecap(id);
     const el=document.getElementById('sg-recap-full');
     if(!el||SG.view!=='recaps'||!SG.recapOpen||SG.recapOpen.round_id!==id) return;
-    el.innerHTML=rec?sgRecapHtml(rec,SG.recapOpen.league,true):'<div class="sg-empty">'+t('recap.loadFail')+'</div>';
+    el.innerHTML=rec?sgRecapHtml(rec,SG.recapOpen.league):'<div class="sg-empty">'+t('recap.loadFail')+'</div>';
     return;
   }
   const chosen=SG.leagueId!=null?SG.rounds.find(r=>r.league_id===SG.leagueId):null;
@@ -6869,9 +6878,9 @@ function sgOpenRecap(i){
   sgRenderRecaps();
   const top=document.getElementById('sg-body'); if(top) top.scrollIntoView({block:'start'});
 }
-/** From the Home row: Scout → Recaps, that round open. */
-function sgOpenRecapRound(roundId,leagueId,league){
-  SG.view='recaps'; SG.leagueId=leagueId; SG.recapOpen={round_id:roundId,league:league||''};
+/** From the Home row: Scout on that league, its final round's chip selected (the recap is that round's view). */
+function sgOpenRecapRound(roundId,leagueId){
+  SG.view='league'; SG.leagueId=leagueId; SG.roundId=roundId; SG.recapOpen=null;
   showPage('scout');
 }
 /** From the Profile: open the Scout tab on My history. */
@@ -6894,9 +6903,10 @@ function sgRender(){
     return '<button class="sg-chip'+(x.id===SG.roundId?' active':'')+'" onclick="sgPickRound('+x.id+')">'
       +sanitize(sgRoundName(x))+'<span class="sg-chip-tag">'+tag+'</span></button>';
   }).join('');
-  // The recap of this league's last round, for 7 days after it turned final (R-2).
-  body.innerHTML='<div id="sg-recap-card"></div><div class="sg-chips">'+chips+'</div><div id="sg-round"></div>';
-  sgFillRecapCard(SG.leagueId);
+  // One slim line under the chips for 7 days after a round turns final: its
+  // recap is the view of that round's chip (R-2, 26 Nov 2026).
+  body.innerHTML='<div class="sg-chips">'+chips+'</div><div id="sg-recap-teaser"></div><div id="sg-round"></div>';
+  sgFillRecapTeaser(SG.leagueId);
   if(!r){ sgSubmitBar(null); return; }
   if(r.status==='open') sgRenderPick(r);
   else sgRenderPlayed(r);
@@ -6920,18 +6930,15 @@ async function sgRenderPick(r){
     SG.draftRound=r.id;
     SG.filter={q:'',pos:'',club:'',fx:null};
   }
-  // The band (spec v1.2 §7): round, the countdown in gold, my season rank.
-  const head=sgBand([
-      {lab:t('sg.band.round'),big:r.round_no!=null?String(r.round_no):String(r.round_label||'—'),line:sgLeagueName(r)},
-      {lab:t('sg.band.closes'),big:HomeBand.countdownText(new Date(r.deadline_utc).getTime(),Date.now()),gold:true,
-        attr:' id="sg-countdown" data-deadline="'+sanitize(r.deadline_utc)+'"',line:t('sg.band.first',{when:sgWhen(r.deadline_utc)})},
-      sgSeasonSlot(r)
-    ])
+  // The band (26 Nov 2026): what to do now. The countdown in gold (as the
+  // Home band), my saved picks, my rank in my last round. The round itself is
+  // the chip above; a value we do not hold is left out (sgOpenBand).
+  const head='<div id="sg-open-band">'+sgOpenBand(r)+'</div>'
     +(SG.entries.get(r.id)?'<div class="sg-saved">'+t('sg.saved')+'</div>':'');
   // Your five, then the round's matches (tap one to see its players), then the list.
   el.innerHTML=head+'<div id="sg-slots"></div><div id="sg-round-fx"></div><div id="sg-filters"></div><div id="sg-list"><div class="sg-empty">'+t('sg.loadingPlayers')+'</div></div>';
   sgSubmitBar(r);
-  sgLoadSeasonRank(r);
+  sgLoadLastRank(r).then(()=>{ const b=document.getElementById('sg-open-band'); if(b&&SG.roundId===r.id&&SG.view==='league') b.innerHTML=sgOpenBand(r); });
   sgLoadRoundFx(r).then(()=>{ if(SG.roundId===r.id) sgRenderRoundFx(r); });
   if(!SG.pickable.has(r.id)&&!SG.pickErr.has(r.id)){
     try{
@@ -7012,28 +7019,6 @@ function sgBand(slots){
     '<div class="hb-slot"><div class="hb-lab'+(s.live?' live':'')+'">'+sanitize(s.lab)+'</div>'
     +'<div class="hb-big'+(s.gold?' gold':'')+'"'+(s.attr||'')+'>'+sanitize(s.big)+'</div>'
     +(s.line?'<div class="hb-line">'+sanitize(s.line)+'</div>':'')+'</div>').join('')+'</div></div>';
-}
-/** My season rank in this competition: a Map of "league:season" -> {rank,total} | null. */
-SG.seasonRank=new Map();
-function sgSeasonSlot(r){
-  const k=r.league_id+':'+r.season, v=SG.seasonRank.get(k);
-  return {lab:t('sg.band.season'),big:v&&v.rank!=null?tOrd(v.rank):'—',attr:' id="sg-season"',
-    line:isGuestNow()?t('sg.band.signin'):v&&v.total!=null?t('sg.band.seasonPts',{pts:sgPts(v.total)}):t('sg.band.noRank')};
-}
-async function sgLoadSeasonRank(r){
-  const me=myUserId(), k=r.league_id+':'+r.season;
-  if(!me||isGuestNow()||SG.seasonRank.has(k)) return;
-  try{
-    const x=await apiGet('game_competition_standings?select=rank,total&league_id=eq.'+r.league_id+'&season=eq.'+r.season+'&user_id=eq.'+me);
-    SG.seasonRank.set(k,x&&x[0]?{rank:x[0].rank,total:x[0].total}:null);
-  }catch(e){ SG.seasonRank.set(k,null); }
-  // Repaint just that slot, if the round is still on screen.
-  const el=document.getElementById('sg-season');
-  if(el&&SG.roundId===r.id){
-    const s=sgSeasonSlot(r), slot=el.parentNode;
-    el.textContent=s.big;
-    const line=slot.querySelector('.hb-line'); if(line) line.textContent=s.line;
-  }
 }
 
 /** POST a read-only rpc with the reader's session if any, else the anon key. */
@@ -7304,19 +7289,23 @@ async function sgRenderPlayed(r){
   sgSubmitBar(null);
   const e=SG.entries.get(r.id);
   FIVE.targets=[];
-  // The band (spec v1.2 §7): round, my points, my rank. Filled once the
-  // scores are in (sgPlayedBand below); dashes until then, never a guess.
+  // The band (26 Nov 2026). A locked round: my points · round rank · matches
+  // left (sgLiveBand), each only once we hold it. A final round: its recap's
+  // band (goals · best pick · my points) with the recap's lines under it;
+  // without a recap, round · my points · my rank (sgPlayedBand).
   const status=t(r.status==='final'?'sg.st.final':sgInPlay(r)?'sg.st.inPlay':'sg.st.ft');
-  el.innerHTML='<div id="sg-played-band">'+sgPlayedBand(r,status,null,null)+'</div>'
+  el.innerHTML='<div id="sg-played-band">'+(r.status==='final'?sgPlayedBand(r,status,null,null):'')+'</div>'
+    +'<div id="sg-recap-lines"></div>'
     +(r.status==='locked'?'<div class="sg-note">'+t('sg.pointsLater')+'</div>':'')
     +'<div id="sg-mine"><div class="sg-empty">'+t('sg.loading')+'</div></div><div id="sg-fixtures"></div><div id="sg-round-rank"></div>';
   const me=myUserId();
-  const [scores,rank,fixtures,top]=await Promise.all([
+  const [scores,rank,fixtures,top,recap]=await Promise.all([
     e?apiGet('game_pick_scores?select=slot,fixture_id,base_points,breakdown,multiplier,is_captain,contrarian,total&entry_id=eq.'+e.id).catch(()=>[]):[],
     e&&me?apiGet('game_round_rankings?select=rank,participants,total&round_id=eq.'+r.id+'&user_id=eq.'+me).catch(()=>[]):[],
     apiGet('game_round_fixtures?select=fixture_id,fixtures(id,kickoff_utc,status_short,elapsed,home_goals,away_goals,home_team_id,away_team_id)'
       +'&round_id=eq.'+r.id+'&counts=is.true').catch(()=>[]),
-    apiGet('game_round_rankings?select=rank,name,main_club_id,total,user_id&round_id=eq.'+r.id+'&order=rank.asc&limit=10').catch(()=>[])
+    apiGet('game_round_rankings?select=rank,name,main_club_id,total,user_id&round_id=eq.'+r.id+'&order=rank.asc&limit=10').catch(()=>[]),
+    r.status==='final'?sgGetRecap(r.id):null
   ]);
   // Labels from each player's real position, not the slot number (pre-023 entries).
   const pos=e?await sgPositions(r,(e.game_picks||[]).map(p=>p.player_id)):new Map();
@@ -7324,7 +7313,14 @@ async function sgRenderPlayed(r){
   const myRank=(rank||[])[0];
   const mineTotal=sgRenderMine(r,e,scores||[],myRank,pos);
   const pb=document.getElementById('sg-played-band');
-  if(pb) pb.innerHTML=sgPlayedBand(r,status,mineTotal,myRank);
+  const built=recap?RoundRecap.build(recap,sgRecapCtx()):null;
+  if(built&&built.band.length){
+    if(pb) pb.innerHTML=sgBand(built.band);
+    const lines=document.getElementById('sg-recap-lines');
+    if(lines) lines.innerHTML=sgRecapSheet(built);
+  }else if(pb){
+    pb.innerHTML=r.status==='final'?sgPlayedBand(r,status,mineTotal,myRank):sgLiveBand(r,mineTotal,myRank,fixtures);
+  }
   sgRenderFixtures(fixtures||[]);
   const rr=document.getElementById('sg-round-rank');
   if(rr) rr.innerHTML='<div class="sg-section">'+t('sg.topRound')+'</div>'+sgTable(top||[],(rank||[])[0]&&me?Object.assign({user_id:me,name:t('sg.you')},rank[0]):null,'total',null,{roundId:r.id});
@@ -7362,6 +7358,57 @@ async function sgPositions(r,playerIds){
 function sgFormationOrder(picks,pos){
   const rank=p=>{ const g=sgGroup(pos.get(p.player_id)); return g==='G'?0:g==='D'?1:g==='X'?2:3; };
   return picks.slice().sort((a,b)=>rank(a)-rank(b)||a.slot-b.slot);
+}
+
+/**
+ * The open round's band (26 Nov 2026): picks close in (gold countdown) ·
+ * your picks (5/5 saved, else 0/5 "Pick your 5") · your rank in your last
+ * round, only when we hold one (SG.lastRank, sgLoadLastRank).
+ */
+function sgOpenBand(r){
+  const e=SG.entries.get(r.id), n=e&&e.game_picks?e.game_picks.length:0;
+  const last=SG.lastRank.get(r.id);
+  return sgBand([
+    {lab:t('sg.band.closes'),big:HomeBand.countdownText(new Date(r.deadline_utc).getTime(),Date.now()),gold:true,
+      attr:' id="sg-countdown" data-deadline="'+sanitize(r.deadline_utc)+'"',line:t('sg.band.first',{when:sgWhen(r.deadline_utc)})},
+    {lab:t('sg.band.picks'),big:n+'/5',line:t(n>=5?'sg.band.picksSaved':'sg.band.pickYour5')},
+    last?{lab:t('sg.band.lastRank'),big:tOrd(last.rank),line:t('sg.band.lastRankLine',{round:sgRoundName(last.round),n:sgCount(last.participants)})}:null
+  ]);
+}
+/**
+ * My rank in my most recent earlier round of this competition that we hold
+ * (a locked or final round on screen, i.e. its window closed within 14 days).
+ * Cached per open round: null = none to show.
+ */
+SG.lastRank=new Map();
+async function sgLoadLastRank(r){
+  const me=myUserId();
+  if(SG.lastRank.has(r.id)) return;
+  if(!me||isGuestNow()){ SG.lastRank.set(r.id,null); return; }
+  const before=SG.rounds.filter(x=>x.league_id===r.league_id&&x.status!=='open'&&x.deadline_utc<r.deadline_utc&&SG.entries.get(x.id));
+  if(!before.length){ SG.lastRank.set(r.id,null); return; }
+  try{
+    const rows=await apiGet('game_round_rankings?select=round_id,rank,participants&user_id=eq.'+me+'&round_id=in.('+before.map(x=>x.id).join(',')+')');
+    const byId=new Map((rows||[]).map(x=>[x.round_id,x]));
+    const prev=before.slice().sort((a,b)=>String(b.deadline_utc).localeCompare(String(a.deadline_utc))).find(x=>byId.has(x.id)&&byId.get(x.id).rank!=null);
+    SG.lastRank.set(r.id,prev?{round:prev,rank:byId.get(prev.id).rank,participants:byId.get(prev.id).participants}:null);
+  }catch(e){ console.warn('last rank:',e.message); SG.lastRank.set(r.id,null); }
+}
+/**
+ * A locked round's band (26 Nov 2026): your points · round rank · matches
+ * left. Each slot only with the value behind it: no points or rank before
+ * the scores are in, or when I did not play.
+ */
+function sgLiveBand(r,total,rank,fixtures){
+  const DONE=['FT','AET','PEN','PST','CANC','ABD','AWD','WO'];
+  const fx=(fixtures||[]).map(x=>x.fixtures).filter(Boolean);
+  const left=fx.filter(f=>DONE.indexOf(f.status_short)<0).length;
+  const slots=[
+    total!=null?{lab:t('sg.band.points'),big:sgPts(total),line:sgLeagueName(r)}:null,
+    rank&&rank.rank!=null?{lab:t('sg.band.rank'),big:tOrd(rank.rank),line:rank.participants?t('sg.ofN',{n:sgCount(rank.participants)}):''}:null,
+    fx.length?{lab:t('sg.band.matchesLeft'),big:String(left),line:t('sg.ofN',{n:sgCount(fx.length)}),live:left>0&&sgInPlay(r)}:null
+  ].filter(Boolean);
+  return slots.length?sgBand(slots):'';
 }
 
 /** The played round's band: round · my points · my rank (dashes when not in). */
@@ -8370,8 +8417,9 @@ function renderHomeRecap(){
   const x=HBD.recap, lg=HBD.league;
   if(!x||!lg||x.round_no==null){ el.hidden=true; el.innerHTML=''; el.onclick=null; return; }
   const league=LeagueNames.label({slug:lg.slug,name:lg.name});
-  el.innerHTML='<span>'+t('recap.home',{n:x.round_no,league:sanitize(league)})+'</span>'+Icons.svg('chevronRight',18);
-  el.onclick=()=>sgOpenRecapRound(x.round_id,x.league_id,league);
+  el.innerHTML='<span>'+t('recap.home',{n:x.round_no,league:sanitize(league)})+'</span>'
+    +'<span class="rc-see">'+t('recap.see')+Icons.svg('chevronRight',16)+'</span>';
+  el.onclick=()=>sgOpenRecapRound(x.round_id,x.league_id);
   el.hidden=false;
 }
 
