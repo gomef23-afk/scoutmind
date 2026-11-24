@@ -87,6 +87,13 @@ check('the rail is drawn with every view',(fn('sgRender').match(/sgRenderRail\(\
 // ── views of their own ──
 check('Rankings: its own view, with a way back and a title; filters outlined', /body\.innerHTML=sgBackHtml\(\)\+'<div class="sg-view-title">'\+t\('sg\.tab\.rankings'\)\+'<\/div><div class="sg-chips sg-filters">'/.test(fn('sgRenderRankings'))
   && /background:transparent/.test(css('.sg-filters .sg-chip')));
+// 29 Nov 2026: at 390px the five filters scrolled sideways and one was always
+// cut ("s round"). Below 900px: tighter padding and gaps, same 11px text, and
+// the row wraps instead of scrolling. Measured at 390px: 348 of 358px (EN),
+// 346 (PT), one line, nothing clipped. The laptop keeps its row.
+check('Rankings filters on a phone: wrap, never scroll; tighter padding and gaps; the laptop unchanged',
+  /@media \(max-width: 899px\)\{\s*\.sg-chips\.sg-filters\{flex-wrap:wrap;overflow:visible;gap:4px;margin:0 0 14px;padding:0;\}\s*\.sg-chips\.sg-filters \.sg-chip\{padding:0 6px;\}\s*\}/.test(idx)
+  && /font-size:11px/.test(css('.sg-filters .sg-chip')) && /padding:0 12px/.test(css('.sg-filters .sg-chip')));
 check('All rounds and recaps: My history and the recaps merged by round, newest deadline first', /sgRpc\('my_game_history',\{\}\)/.test(fn('sgRenderRounds')) && /sgRpc\('recent_round_recaps',\{p_league_id:null,p_limit:100\}\)/.test(fn('sgRenderRounds'))
   && /sort\(\(a,b\)=>String\(b\.deadline\|\|''\)\.localeCompare\(String\(a\.deadline\|\|''\)\)\)/.test(fn('sgRenderRounds')));
 check('the back control returns to the round', /onclick="sgShowRound\(\)">'\+Icons\.svg\('chevronLeft',18\)\+t\('sg\.back'\)/.test(fn('sgBackHtml')));

@@ -739,6 +739,13 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 /* Filters inside a view (Rankings' This round · Competition …): outlined, small. */
 .sg-filters .sg-chip{background:transparent;font-size:11px;font-weight:600;padding:0 12px;}
 .sg-filters .sg-chip.active{background:transparent;border-color:var(--navy-ink);color:var(--navy-ink);}
+/* Phone (29 Nov 2026): all five Rankings filters fit at 390px in EN and PT
+   (tighter padding and gaps, same 11px text), and the row wraps instead of
+   scrolling, so no filter is ever cut at an edge. The laptop keeps its row. */
+@media (max-width: 899px){
+  .sg-chips.sg-filters{flex-wrap:wrap;overflow:visible;gap:4px;margin:0 0 14px;padding:0;}
+  .sg-chips.sg-filters .sg-chip{padding:0 6px;}
+}
 .sg-leagues-lab{flex:0 0 auto;align-self:center;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-right:2px;}
 /* Phone: Rankings and All rounds are focused views; the rail parts belong to the round. */
 @media (max-width:1099px){ .sg-page:not(.v-league) .sg-rail{display:none;} }
