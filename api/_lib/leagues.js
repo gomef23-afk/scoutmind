@@ -46,7 +46,8 @@
 //                 season end (which stops at the league phase).
 
 export const LEAGUES = [
-  // ── The seven of the Scout Game ──
+  // ── The original seven of the Scout Game (the Championship and the Primeira
+  //    Liga, below, are playable since 041) ──
   { slug: 'serie_a', apiId: 71, name: 'Série A', country: 'Brazil', code: 'BRA', season: 2026, seasonStart: '2026-01-28', seasonEnd: '2026-12-02',
     active: true, playable: true, statsCoverage: null, region: 'brazil', langs: ['pt-BR'], tagNews: true, type: 'league' },
   { slug: 'premier_league', apiId: 39, name: 'Premier League', country: 'England', code: 'ENG', season: 2026, seasonStart: '2026-08-21', seasonEnd: '2027-05-30',
@@ -71,12 +72,17 @@ export const LEAGUES = [
   // Portuguese (pt-PT, never the Brazilian sources) for the Primeira Liga,
   // French and Dutch for Belgium, Turkish for the Süper Lig, English for the
   // Saudi Pro League (our Saudi press is English; Arabic sources are skipped).
+  // 3.2c (041, 24 Nov 2026): the Championship and the Primeira Liga are
+  // playable too (backtest of 23 Nov on the full points table: tiers ordered,
+  // fan round median ~40), keeping the game in seven leagues through December
+  // after Argentina and Série A end. The Eredivisie can follow with the same
+  // one-line migration.
   { slug: 'championship', apiId: 40, name: 'Championship', country: 'England', code: 'ENG', season: 2026, seasonStart: '2026-08-14', seasonEnd: '2027-05-01',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true, type: 'league' },
+    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['en'], tagNews: true, type: 'league' },
   { slug: 'eredivisie', apiId: 88, name: 'Eredivisie', country: 'Netherlands', code: 'NED', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-23',
     active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['nl'], tagNews: true, type: 'league' },
   { slug: 'primeira_liga', apiId: 94, name: 'Primeira Liga', country: 'Portugal', code: 'POR', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-16',
-    active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['pt-PT'], tagNews: true, type: 'league' },
+    active: true, playable: true, statsCoverage: null, region: 'europe', langs: ['pt-PT'], tagNews: true, type: 'league' },
   { slug: 'belgian_pro_league', apiId: 144, name: 'Jupiler Pro League', country: 'Belgium', code: 'BEL', season: 2026, seasonStart: '2026-08-07', seasonEnd: '2027-05-22',
     active: true, playable: false, statsCoverage: null, region: 'europe', langs: ['fr', 'nl'], tagNews: true, type: 'league' },
   { slug: 'scottish_premiership', apiId: 179, name: 'Premiership', country: 'Scotland', code: 'SCO', season: 2026, seasonStart: '2026-07-31', seasonEnd: '2027-04-10',

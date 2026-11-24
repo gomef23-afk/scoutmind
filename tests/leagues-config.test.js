@@ -39,15 +39,39 @@ const LG = LEAGUES.filter((l) => l.type !== 'cup');
 check('19 leagues (Uruguay added 19 Nov 2026), and every entry has a type', LG.length === 19 && LEAGUES.every((l) => ['league', 'cup', 'mixed'].includes(l.type)));
 check('slugs and API ids are unique', new Set(LEAGUES.map((l) => l.slug)).size === LEAGUES.length && new Set(LEAGUES.map((l) => l.apiId)).size === LEAGUES.length);
 check('every league code is three capital letters (a UEFA cup: UEFA)', LG.every((l) => /^[A-Z]{3}$/.test(l.code)) && LEAGUES.filter((l) => l.type === 'cup').every((l) => /^[A-Z]{3,4}$/.test(l.code)), LG.filter((l) => !/^[A-Z]{3}$/.test(l.code)).map((l) => l.slug).join(','));
-eq('the seven playable, and only they', LEAGUES.filter((l) => l.playable).map((l) => l.slug), ['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina']);
+// 3.2c (041, 24 Nov 2026): the Championship and the Primeira Liga joined the original seven.
+eq('the nine playable, and only they', LEAGUES.filter((l) => l.playable).map((l) => l.slug),
+  ['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina', 'championship', 'primeira_liga']);
 check('playable implies active', LEAGUES.every((l) => !l.playable || l.active));
-eq('commit 3: all eleven tracked leagues switched on, none playable', LG.filter((l) => l.active && !l.playable).map((l) => l.slug),
-  ['championship', 'eredivisie', 'primeira_liga', 'belgian_pro_league', 'scottish_premiership', 'super_lig', 'saudi_pro_league', 'mls', 'liga_mx', 'serie_b', 'serie_c', 'uruguay']);
+eq('every tracked league switched on; the ten not in the game', LG.filter((l) => l.active && !l.playable).map((l) => l.slug),
+  ['eredivisie', 'belgian_pro_league', 'scottish_premiership', 'super_lig', 'saudi_pro_league', 'mls', 'liga_mx', 'serie_b', 'serie_c', 'uruguay']);
 // 036 switches on exactly the ten that 035 inserted dormant (Championship was active from 035).
 const sql036 = readFileSync(new URL('../supabase/migrations/036_switch_on_ten_leagues.sql', import.meta.url), 'utf8').replace(/--[^\n]*/g, '');
 const slugs036 = [...((/set active = true[\s\S]*?where slug in \(([^)]*)\)/.exec(sql036) || [])[1] || '').matchAll(/'(\w+)'/g)].map((m) => m[1]);
-eq('036 switches on exactly the config\'s tracked leagues except Championship', slugs036.sort(),
-  LG.filter((l) => l.active && !l.playable && l.slug !== 'championship' && l.slug !== 'uruguay').map((l) => l.slug).sort());
+eq('036 switches on exactly the config\'s tracked leagues except Championship and Uruguay (later)', slugs036.sort(),
+  LG.filter((l) => l.active && l.type === 'league' && !['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina', 'championship', 'uruguay'].includes(l.slug))
+    .map((l) => l.slug).sort());
+// 041 (3.2c): the two switched on in the game, and a round created at most 21 days ahead.
+{
+  const sql041 = read('supabase/migrations/041_playable_championship_primeira.sql');
+  const b041 = sql041.split('-- VERIFY')[0].replace(/--[^\n]*/g, '');
+  const playable041 = [...((/update public\.leagues[\s\S]*?where slug in \(([^)]*)\)/.exec(b041) || [])[1] || '').matchAll(/'(\w+)'/g)].map((m) => m[1]);
+  eq('041: switches exactly the two new playable leagues of the config', playable041.sort(),
+    LEAGUES.filter((l) => l.playable && !['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina'].includes(l.slug)).map((l) => l.slug).sort());
+  check('041: only ever switches ON (active leagues, never a cup), re-runnable, nothing deleted',
+    /set playable\s+= true,[\s\S]*?and active\s+and type = 'league'\s+and not playable;/.test(b041) && !/playable\s*=\s*false|delete from|drop |truncate|alter table|set active/i.test(b041)
+    && /^\s*begin;/m.test(b041) && /^\s*commit;/m.test(b041));
+  const fn041 = (/create or replace function public\.sync_game_rounds\(\)[\s\S]*?\$\$;/.exec(sql041) || [''])[0];
+  const fn035b = (/create or replace function public\.sync_game_rounds\(\)[\s\S]*?\$\$;/.exec(read('supabase/migrations/035_leagues_config.sql')) || [''])[0];
+  check('041: sync_game_rounds is 035\'s, with only the 21-day horizon added',
+    fn041 && nlx(fn041).replace("\n       and r.deadline <= now() + interval '21 days'", '') === nlx(fn035b) && /and r\.deadline <= now\(\) \+ interval '21 days'/.test(fn041));
+  check('041: the next round\'s deadline is still looked up among ALL rounds (r), not only the created ones (w)',
+    /\(select min\(r2\.deadline\) from r r2/.test(fn041));
+  check('041: execution stays with the service role', /revoke all on function public\.sync_game_rounds\(\) from public, anon, authenticated;/.test(b041)
+    && /grant execute on function public\.sync_game_rounds\(\) to service_role;/.test(b041));
+  check('041: verification of the horizon and of no retroactive round', /g\.deadline_utc > now\(\) \+ interval '21 days';\s+-- 0/.test(sql041) && /g\.deadline_utc < now\(\);\s+-- 0/.test(sql041));
+}
+function nlx(s) { return s.replace(/\r\n/g, '\n'); }
 // 037 adds Uruguay (data only): its values are the config's.
 const sql037 = readFileSync(new URL('../supabase/migrations/037_uruguay_primera.sql', import.meta.url), 'utf8').replace(/--[^\n]*/g, '');
 const U = BY_SLUG.uruguay;

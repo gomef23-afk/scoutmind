@@ -38,8 +38,8 @@ eq('every league, with its code', LN.LEAGUES.map((l) => LN.label(l)), [
   // C-1 / C-2: the cups, by their own code.
   'Champions League · UEFA', 'Europa League · UEFA', 'Conference League · UEFA']);
 check('a cup is a cup, a league is not (by slug, by row type)', LN.isCup('champions_league') && !LN.isCup('serie_a') && LN.isCup({ slug: 'x', type: 'cup' }) && !LN.isCup({ slug: 'champions_league', type: 'league' }));
-eq('only the seven are playable', LN.LEAGUES.filter((l) => LN.playable(l)).map((l) => l.slug),
-  ['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina']);
+eq('only the nine are playable (the Championship and the Primeira Liga since 041)', LN.LEAGUES.filter((l) => LN.playable(l)).map((l) => l.slug),
+  ['serie_a', 'premier_league', 'la_liga', 'bundesliga', 'serie_a_it', 'ligue_1', 'argentina', 'championship', 'primeira_liga']);
 eq('look-alikes are told apart by the code', [LN.label('serie_b'), LN.label('scottish_premiership'), LN.label('premier_league')],
   ['Série B · BRA', 'Premiership · SCO', 'Premier League · ENG']);
 eq('an API-Football embed is named right (name + country)', [LN.label({ name: 'Premiership', country: 'Scotland' }), LN.label({ name: 'Liga MX', country: 'Mexico' }),
