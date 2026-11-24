@@ -703,6 +703,7 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-l-leagues{grid-area:leagues;}
 .sg-l-body{grid-area:body;min-width:0;}
 .sg-l-chips:empty,.sg-l-band:empty,.sg-l-teaser:empty{display:none;}
+.sg-bar{display:contents;}
 /* The views: a segmented control (as the Matches / Table toggle), never underline tabs. */
 .sg-seg{display:flex;width:100%;margin:0 0 12px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--card);}
 .sg-seg-btn{flex:1 1 0;min-width:0;min-height:40px;padding:0 6px;background:var(--card);color:var(--ink);border:none;border-left:1px solid var(--border);font:600 12px/1.2 var(--font-sans);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -1158,9 +1159,16 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 @media (min-width: 900px){
   .sg-page{padding:24px 24px 32px;}
   .sg-tabs,.sg-chips,.sg-leagues{margin-left:0;margin-right:0;padding-left:0;padding-right:0;}
-  /* Laptop: the round chips and the views share one row; then band, teaser, leagues, content. */
-  .sg-layout{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"chips views" "band band" "teaser teaser" "leagues leagues" "body body";column-gap:12px;}
-  .sg-seg{display:inline-flex;width:auto;margin:0 0 14px;align-self:start;}
+  /* Laptop: the round chips and the views share one wrapping row (.sg-bar),
+     then band, teaser, leagues, content. The chips take their own width and
+     scroll inside the row when it is not enough; when chips + views do not
+     fit on one line the views wrap under them, right-aligned. Nothing ever
+     sits on top of a chip. */
+  .sg-layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "band" "teaser" "leagues" "body";}
+  .sg-bar{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:12px;grid-area:bar;min-width:0;}
+  .sg-bar>.sg-l-chips{flex:0 1 auto;min-width:0;max-width:100%;}
+  .sg-bar>.sg-seg{flex:0 0 auto;margin-left:auto;}
+  .sg-seg{display:inline-flex;width:auto;margin:0 0 14px;}
   .sg-seg-btn{flex:0 0 auto;padding:0 14px;}
   .sg-tabs-wrap{margin:0;}
   .sg-more-menu{max-width:none;}
@@ -1583,8 +1591,13 @@ if(!_cu){
        content. Laptop: chips | views on one row, then band · teaser · leagues ·
        content. An empty slot takes no room. -->
   <div class="sg-layout">
-    <div id="sg-chips" class="sg-chips sg-l-chips"></div>
-    <div id="sg-views" class="sg-seg sg-l-views"></div>
+    <!-- Laptop: chips and views share a row that wraps, the views going under
+         the chips (right-aligned) when both do not fit; the chips are never
+         covered. Phone: this wrapper steps aside (display:contents). -->
+    <div class="sg-bar">
+      <div id="sg-chips" class="sg-chips sg-l-chips"></div>
+      <div id="sg-views" class="sg-seg sg-l-views"></div>
+    </div>
     <div id="sg-band" class="sg-l-band"></div>
     <div id="sg-recap-teaser" class="sg-l-teaser"></div>
     <!-- My private leagues (025): context, below the band. Signed in only; hidden until the list loads. -->

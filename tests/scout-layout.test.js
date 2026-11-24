@@ -29,7 +29,7 @@ const page = (idx.split('<div class="page" id="page-scout">')[1] || '').split('<
 
 // ── markup ──
 check('order: title, league row, then the layout grid; nothing between the title and the league row', /<div class="sg-head">[\s\S]*?<\/div>\s*<\/div>\s*<!-- SCOUT LAYOUT[\s\S]*?-->\s*<div class="sg-tabs-wrap">/.test(page));
-check('the grid holds the slots: chips, views, band, teaser, your leagues, content', /<div class="sg-layout">\s*<div id="sg-chips" class="sg-chips sg-l-chips"><\/div>\s*<div id="sg-views" class="sg-seg sg-l-views"><\/div>\s*<div id="sg-band" class="sg-l-band"><\/div>\s*<div id="sg-recap-teaser" class="sg-l-teaser"><\/div>[\s\S]*?<div id="sg-leagues" class="sg-leagues sg-l-leagues" style="display:none;"><\/div>\s*<div id="sg-body" class="sg-l-body"><\/div>\s*<\/div>/.test(page));
+check('the grid holds the slots: the bar (chips, views), band, teaser, your leagues, content', /<div class="sg-layout">\s*<!--[\s\S]*?-->\s*<div class="sg-bar">\s*<div id="sg-chips" class="sg-chips sg-l-chips"><\/div>\s*<div id="sg-views" class="sg-seg sg-l-views"><\/div>\s*<\/div>\s*<div id="sg-band" class="sg-l-band"><\/div>\s*<div id="sg-recap-teaser" class="sg-l-teaser"><\/div>[\s\S]*?<div id="sg-leagues" class="sg-leagues sg-l-leagues" style="display:none;"><\/div>\s*<div id="sg-body" class="sg-l-body"><\/div>\s*<\/div>/.test(page));
 check('one underline-tab row: the league row (no other .sg-tabs in the page)', (page.match(/class="sg-tabs"/g) || []).length === 1 && !/class="sg-views"/.test(page));
 check('the description starts hidden and is shown on the first visit only (a UI flag)', /<div class="sg-sub" id="sg-sub" hidden data-i18n="sg\.sub">/.test(page)
   && /seen=localStorage\.getItem\('sm_sg_intro_seen'\)==='1'; localStorage\.setItem\('sm_sg_intro_seen','1'\);/.test(fn('sgIntro')) && /SG\.introShow=!seen;/.test(fn('sgIntro'))
@@ -37,7 +37,20 @@ check('the description starts hidden and is shown on the first visit only (a UI 
 
 // ── the grid, both widths ──
 check('phone: chips · band · views · teaser · leagues · content', /grid-template-areas:"chips" "band" "views" "teaser" "leagues" "body"/.test(css('.sg-layout')));
-check('laptop (900px+): chips | views on one row, then band · teaser · leagues · content', /@media \(min-width: 900px\)\{[\s\S]*?\.sg-layout\{grid-template-columns:minmax\(0,1fr\) auto;grid-template-areas:"chips views" "band band" "teaser teaser" "leagues leagues" "body body";/.test(idx));
+check('phone: the bar steps aside, so chips and views take their own places in the grid', /\.sg-bar\{display:contents;\}/.test(idx));
+check('laptop (900px+): the bar (chips + views), then band · teaser · leagues · content', /@media \(min-width: 900px\)\{[\s\S]*?\.sg-layout\{grid-template-columns:minmax\(0,1fr\);grid-template-areas:"bar" "band" "teaser" "leagues" "body";\}/.test(idx));
+// 27 Nov 2026 (1400 px, PT): the chips' column was squeezed beside the views and
+// "Rodada 37/38" read as hidden behind them. The bar is a wrapping flex row:
+// chips at their own width (scrolling inside the row when it is not enough),
+// the views right-aligned after them, or on their own line under the chips.
+// Measured in the harness at 1100, 1280, 1440 in EN and PT: no visible chip
+// intersects the views; with two chips both share one line.
+const lap = (/@media \(min-width: 900px\)\{[\s\S]*?\.sg-bar\{display:flex;[^}]*\}[\s\S]*?\.sg-bar>\.sg-seg\{[^}]*\}/.exec(idx) || [''])[0];
+check('no chip hidden behind the segment: the bar wraps (flex-wrap), it never overlays', /\.sg-bar\{display:flex;flex-wrap:wrap;/.test(lap)
+  && /\.sg-bar>\.sg-l-chips\{flex:0 1 auto;min-width:0;max-width:100%;\}/.test(lap) && /\.sg-bar>\.sg-seg\{flex:0 0 auto;margin-left:auto;\}/.test(lap)
+  && !/position:\s*(absolute|fixed|sticky)/.test(css('.sg-seg') + css('.sg-bar>.sg-seg')) && !/margin[^;]*-\d/.test(css('.sg-bar>.sg-seg') + css('.sg-seg'))
+  && !/grid-template-areas:"chips views"/.test(idx));
+check('…and the chips row keeps its own sideways scroll', /overflow-x:auto/.test(css('.sg-chips')));
 check('an empty slot takes no room', /\.sg-l-chips:empty,\.sg-l-band:empty,\.sg-l-teaser:empty\{display:none;\}/.test(idx));
 
 // ── the views: a segmented control ──

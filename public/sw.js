@@ -14,7 +14,7 @@
 // changed and VERSION did not (CLAUDE.md rule 24), so an old shell can never
 // outlive a deploy: a new VERSION is a new cache, and activate drops the old.
 
-const VERSION = 'sm-db4cc22c8bde';
+const VERSION = 'sm-991513294017';
 const SHELL = 'scoutmind-shell-' + VERSION;
 const IMAGES = 'scoutmind-img-v1';
 const IMAGE_MAX = 300;
