@@ -93,7 +93,7 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=fb20b2ad7b"></script>
+<script src="/i18n.js?v=459b59692b"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=21106714cb"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
@@ -105,6 +105,8 @@
 <script src="/icons.js?v=012882672d"></script>
 <!-- C-1: cup rounds and knockout ties from the fixtures we hold (tests/cups.test.js). -->
 <script src="/cup-ties.js?v=74e60245b6"></script>
+<!-- R-2: the Round Recap's band and sentences from rpc/round_recap (tests/round-recap-screens.test.js). -->
+<script src="/round-recap.js?v=2ff24fb2a4"></script>
 <style>
 /* The v1.2 tokens (/theme.css) by their own names; the pre-Sequence-2 aliases
    (--bg, --accent, --text…) were renamed and removed in 4b-8. Navy as TEXT or
@@ -693,6 +695,30 @@ body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-more-item[aria-checked="true"]{border-left-color:var(--navy-ink);color:var(--navy-ink);font-weight:700;}
 .sg-views{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid var(--border);margin:0 -16px 14px;padding:0 16px;}
 .sg-views .sg-tab{padding:0 10px;}
+/* ROUND RECAP (R-2): title, the navy band (headline figures), the light sheet (lines). */
+.rc-card{margin:0 0 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.rc-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:12px 14px 10px;}
+.rc-title{font-size:15px;font-weight:700;color:var(--ink);}
+.rc-league{font-size:12px;color:var(--muted);}
+.rc-card .sg-band{margin:0;border-radius:0;}
+.rc-more>summary{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;cursor:pointer;list-style:none;font-size:13px;font-weight:600;color:var(--navy-ink);}
+.rc-more>summary::-webkit-details-marker{display:none;}
+.rc-more[open]>summary .ic{transform:rotate(180deg);}
+.rc-sheet{padding:4px 14px 12px;}
+.rc-sec .sg-section{margin:12px 0 6px;}
+.rc-lines{list-style:none;margin:0;padding:0;}
+.rc-lines li{font-size:13px;line-height:1.5;color:var(--ink);padding:6px 0;border-top:1px solid var(--border);}
+.rc-lines li:first-child{border-top:0;}
+.rc-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.rc-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:56px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--ink);font-family:var(--font-sans);text-align:left;cursor:pointer;}
+.rc-row:hover{border-color:var(--navy-ink);}
+.rc-row-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.rc-row-title{font-size:14px;font-weight:600;}
+.rc-row-meta{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* Home: one row under the band when my league has a fresh recap. */
+.hb-recap{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 16px 0;min-height:48px;padding:0 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--navy-ink);font:600 14px/1.3 var(--font-sans);text-align:left;cursor:pointer;width:calc(100% - 32px);box-sizing:border-box;}
+.hb-recap[hidden]{display:none;}
+.hb-recap span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .sg-chips{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 14px;padding:0 16px 2px;scrollbar-width:none;}
 .sg-chips::-webkit-scrollbar{display:none;}
 .sg-chips-tight{margin:0;padding:0;flex:1;min-width:0;}
@@ -1249,6 +1275,10 @@ if(!_cu){
   <div id="hb-picks"></div>
   <div id="hb-room"></div>
 </div>
+<!-- R-2: my league's round recap, for 7 days after the round turned final. After
+     the sheet (which overlaps the band by its rounded top); directly under the
+     band from 1100px, where the sheet is hidden. Filled by renderHomeRecap(). -->
+<button id="hb-recap" class="hb-recap" type="button" hidden></button>
 <!-- Columns (spec v1.2 §5): ≥1100px left 300 / centre / right 320; 700–1099
      centre + right, with the left column's leagues as a row above them; a
      phone, one column. -->
@@ -6554,7 +6584,7 @@ function sgWhen(iso){
 async function sgLoadBase(force){
   if(!force && SG.loadedAt && Date.now()-SG.loadedAt<60000) return;
   const since=new Date(Date.now()-14*24*3600*1000).toISOString();
-  const q='game_rounds?select=id,league_id,season,round_label,round_no,deadline_utc,closes_utc,status,participants,'
+  const q='game_rounds?select=id,league_id,season,round_label,round_no,deadline_utc,closes_utc,status,participants,finalized_at,'
     +'leagues(slug,name,flag)'
     +'&or=(status.in.(open,locked),and(status.eq.final,closes_utc.gte.'+since+'))'
     +'&order=deadline_utc.asc&limit=200';
@@ -6704,7 +6734,8 @@ function sgTabs(){
   const views=document.getElementById('sg-views');
   if(views){
     const v=(key,label,fn)=>'<button class="sg-tab'+(SG.view===key?' active':'')+'" aria-pressed="'+(SG.view===key)+'" onclick="'+fn+'()">'+t(label)+'</button>';
-    views.innerHTML=v('league','sg.tab.round','sgShowRound')+v('rankings','sg.tab.rankings','sgShowRankings')+v('history','sg.tab.history','sgShowHistory');
+    views.innerHTML=v('league','sg.tab.round','sgShowRound')+v('rankings','sg.tab.rankings','sgShowRankings')+v('history','sg.tab.history','sgShowHistory')
+      +v('recaps','sg.tab.recaps','sgShowRecaps');
   }
   glRenderStrip();
 }
@@ -6748,6 +6779,101 @@ function sgShowRound(){
 }
 function sgShowRankings(){ SG.view='rankings'; sgTabs(); sgRender(); }
 function sgShowHistory(){ SG.view='history'; sgTabs(); sgRender(); }
+function sgShowRecaps(){ SG.view='recaps'; SG.recapOpen=null; sgTabs(); sgRender(); }
+
+// ── ROUND RECAP (R-2, 25 Nov 2026) ── rpc/round_recap (042) through
+// public/round-recap.js: a card on the league's round view for 7 days after a
+// round turns final, the Recaps view (every recap, newest first), the Home row.
+// Before 042 the rpcs answer 404: nothing shows and nothing breaks (rule 21).
+SG.recaps=new Map();          // round id -> rpc answer (null = none)
+SG.recapOpen=null;            // the recap open in the Recaps view
+SG.recapAll=false;            // Recaps view: every competition, not only the chosen one
+function sgRecapCtx(){
+  return {t,tn,tOrd,esc:sanitize,pts:sgPts,
+    num:(v,dg)=>Number(v).toLocaleString(smLocale(),{minimumFractionDigits:dg,maximumFractionDigits:dg}),
+    club:id=>{ const c=CLUB_DATA.get(Number(id)); return c?c.label:null; },
+    tier:sgTierWord, signedIn:!isGuestNow(), deleted:t('sg.deletedUser')};
+}
+async function sgGetRecap(roundId){
+  if(SG.recaps.has(roundId)) return SG.recaps.get(roundId);
+  let rec=null;
+  try{ rec=await sgRpc('round_recap',{p_round_id:roundId}); }catch(e){ console.warn('round_recap:',e.message); }
+  SG.recaps.set(roundId,rec||null);
+  return rec||null;
+}
+/** One recap: title, the navy band (headline figures), then the light sheet with the lines. */
+function sgRecapHtml(rec,leagueName,open){
+  const b=RoundRecap.build(rec,sgRecapCtx());
+  if(!b.title||(!b.band.length&&!b.sections.length)) return '';
+  const sheet=b.sections.map(s=>'<div class="rc-sec"><div class="sg-section">'+sanitize(s.title)+'</div><ul class="rc-lines">'
+    +s.lines.map(l=>'<li>'+l+'</li>').join('')+'</ul></div>').join('');
+  return '<article class="rc-card"><div class="rc-head"><span class="rc-title">'+sanitize(b.title)+'</span>'
+    +(leagueName?'<span class="rc-league">'+sanitize(leagueName)+'</span>':'')+'</div>'
+    +(b.band.length?sgBand(b.band):'')
+    +(sheet?(open?'<div class="rc-sheet">'+sheet+'</div>'
+      :'<details class="rc-more"><summary>'+t('recap.open')+Icons.svg('chevronDown',16)+'</summary><div class="rc-sheet">'+sheet+'</div></details>'):'')
+    +'</article>';
+}
+/** The league's newest final round, if it turned final within 7 days and has a recap. */
+async function sgFillRecapCard(leagueId){
+  const fresh=SG.rounds.filter(r=>r.league_id===leagueId&&r.status==='final'&&RoundRecap.fresh(r.finalized_at,Date.now()))
+    .sort((a,b)=>String(b.finalized_at).localeCompare(String(a.finalized_at)))[0];
+  if(!fresh) return;
+  const rec=await sgGetRecap(fresh.id);
+  const el=document.getElementById('sg-recap-card');
+  if(!el||SG.view!=='league'||SG.leagueId!==leagueId||!rec) return;
+  el.innerHTML=sgRecapHtml(rec,sgLeagueName(fresh),false);
+}
+/** Scout → Recaps: the chosen competition's recaps (or all), newest first; a tap opens one. */
+async function sgRenderRecaps(){
+  const body=document.getElementById('sg-body');
+  if(!body) return;
+  // League names by id, for recaps of a competition with no round on screen (Argentina's past rounds).
+  if(!SG.leagueRows){
+    try{ SG.leagueRows=new Map(((await apiGet('leagues?select=id,slug,name,country,country_code&active=is.true'))||[]).map(l=>[l.id,l])); }
+    catch(e){ SG.leagueRows=new Map(); }
+  }
+  const leagueOf=id=>{ const l=SG.leagueRows.get(id); return l?LeagueNames.label(l):''; };
+  if(SG.recapOpen){
+    const id=SG.recapOpen.round_id;
+    body.innerHTML='<button class="sg-chip" onclick="SG.recapOpen=null;sgRenderRecaps()">'+Icons.svg('chevronLeft',16)+t('recap.list.back')+'</button>'
+      +'<div id="sg-recap-full"><div class="sg-empty">'+t('sg.loading')+'</div></div>';
+    const rec=await sgGetRecap(id);
+    const el=document.getElementById('sg-recap-full');
+    if(!el||SG.view!=='recaps'||!SG.recapOpen||SG.recapOpen.round_id!==id) return;
+    el.innerHTML=rec?sgRecapHtml(rec,SG.recapOpen.league,true):'<div class="sg-empty">'+t('recap.loadFail')+'</div>';
+    return;
+  }
+  const chosen=SG.leagueId!=null?SG.rounds.find(r=>r.league_id===SG.leagueId):null;
+  const filter=(chosen?'<button class="sg-chip'+(!SG.recapAll?' active':'')+'" onclick="SG.recapAll=false;sgRenderRecaps()">'+sanitize(sgLeagueName(chosen))+'</button>':'')
+    +'<button class="sg-chip'+(SG.recapAll||!chosen?' active':'')+'" onclick="SG.recapAll=true;sgRenderRecaps()">'+t('recap.list.all')+'</button>';
+  body.innerHTML='<div class="sg-chips">'+filter+'</div><div id="sg-recap-list"><div class="sg-empty">'+t('sg.loading')+'</div></div>';
+  let rows=null;
+  try{ rows=await sgRpc('recent_round_recaps',{p_league_id:(SG.recapAll||!chosen)?null:SG.leagueId,p_limit:100}); }catch(e){ console.warn('recent_round_recaps:',e.message); }
+  const el=document.getElementById('sg-recap-list');
+  if(!el||SG.view!=='recaps'||SG.recapOpen) return;
+  if(!rows||!rows.length){ el.innerHTML='<div class="sg-empty">'+t(rows?'recap.list.empty':'recap.loadFail')+'</div>'; return; }
+  SG.recapRows=rows;
+  el.innerHTML='<ul class="rc-list">'+rows.map((x,i)=>{
+    const meta=[x.played!=null?tn('recap.nMatches',x.played):'',x.goals!=null?tn('recap.nGoals',x.goals):''].filter(Boolean).join(' · ');
+    const title=x.round_no!=null?t('recap.title',{n:x.round_no}):t('recap.titleLabel',{label:sanitize(x.round_label||'')});
+    return '<li><button class="rc-row" onclick="sgOpenRecap('+i+')"><span class="rc-row-main"><span class="rc-row-title">'+title+'</span>'
+      +'<span class="rc-row-meta">'+sanitize(leagueOf(x.league_id))+(meta?' · '+sanitize(meta):'')+'</span></span>'+Icons.svg('chevronRight',16)+'</button></li>';
+  }).join('')+'</ul>';
+}
+function sgOpenRecap(i){
+  const x=(SG.recapRows||[])[i];
+  if(!x) return;
+  const l=SG.leagueRows&&SG.leagueRows.get(x.league_id);
+  SG.recapOpen={round_id:x.round_id,league:l?LeagueNames.label(l):''};
+  sgRenderRecaps();
+  const top=document.getElementById('sg-body'); if(top) top.scrollIntoView({block:'start'});
+}
+/** From the Home row: Scout → Recaps, that round open. */
+function sgOpenRecapRound(roundId,leagueId,league){
+  SG.view='recaps'; SG.leagueId=leagueId; SG.recapOpen={round_id:roundId,league:league||''};
+  showPage('scout');
+}
 /** From the Profile: open the Scout tab on My history. */
 function sgOpenHistory(){ SG.view='history'; showPage('scout'); }
 
@@ -6756,6 +6882,7 @@ function sgRender(){
   if(!body) return;
   if(SG.view==='rankings'){ sgSubmitBar(null); sgRenderRankings(); return; }
   if(SG.view==='history'){ sgSubmitBar(null); sgRenderHistory(); return; }
+  if(SG.view==='recaps'){ sgSubmitBar(null); sgRenderRecaps(); return; }
   if(SG.leagueId==null){
     sgSubmitBar(null);
     body.innerHTML='<div class="sg-empty">'+t('sg.noRound')+'</div>';
@@ -6767,7 +6894,9 @@ function sgRender(){
     return '<button class="sg-chip'+(x.id===SG.roundId?' active':'')+'" onclick="sgPickRound('+x.id+')">'
       +sanitize(sgRoundName(x))+'<span class="sg-chip-tag">'+tag+'</span></button>';
   }).join('');
-  body.innerHTML='<div class="sg-chips">'+chips+'</div><div id="sg-round"></div>';
+  // The recap of this league's last round, for 7 days after it turned final (R-2).
+  body.innerHTML='<div id="sg-recap-card"></div><div class="sg-chips">'+chips+'</div><div id="sg-round"></div>';
+  sgFillRecapCard(SG.leagueId);
   if(!r){ sgSubmitBar(null); return; }
   if(r.status==='open') sgRenderPick(r);
   else sgRenderPlayed(r);
@@ -8185,6 +8314,13 @@ async function loadHomeBand(force){
     // Commit 3: my private leagues (left column), the table around my club and
     // the room's last messages (right column).
     if(!isGuestNow()) jobs.push(glLoad().catch(()=>{}));
+    // My league's newest recap, if it is fresh (R-2; nothing before 042, rule 21).
+    HBD.recap=null;
+    if(clubId&&HBD.league){
+      jobs.push(sgRpc('recent_round_recaps',{p_league_id:HBD.league.id,p_limit:1})
+        .then(rows=>{ const x=rows&&rows[0]; HBD.recap=x&&RoundRecap.fresh(x.finalized_at,Date.now())?x:null; })
+        .catch(e=>{ console.warn('home recap:',e.message); HBD.recap=null; }));
+    }
     if(clubId&&HBD.league){
       jobs.push(apiGet('standings?select=team_id,rank,points,group_label&league_id=eq.'+HBD.league.id+'&season=eq.'+HBD.league.season+'&order=rank.asc&limit=60')
         .then(rows=>{ HBD.table=rows||[]; }).catch(e=>{ console.warn('home table:',e.message); HBD.table=[]; }));
@@ -8227,9 +8363,22 @@ function hbBig(b){ return HomeBand.bigText(b,hbCtx()); }
 function hbText(x){ return HomeBand.lineText(x,hbCtx()); }
 function hbSlot(s,act){ return HomeBand.slotHtml(s,act,hbCtx()); }
 
+/** The Home row under the band: my league's fresh recap; hidden without one. */
+function renderHomeRecap(){
+  const el=document.getElementById('hb-recap');
+  if(!el) return;
+  const x=HBD.recap, lg=HBD.league;
+  if(!x||!lg||x.round_no==null){ el.hidden=true; el.innerHTML=''; el.onclick=null; return; }
+  const league=LeagueNames.label({slug:lg.slug,name:lg.name});
+  el.innerHTML='<span>'+t('recap.home',{n:x.round_no,league:sanitize(league)})+'</span>'+Icons.svg('chevronRight',18);
+  el.onclick=()=>sgOpenRecapRound(x.round_id,x.league_id,league);
+  el.hidden=false;
+}
+
 function renderHomeBand(){
   const band=document.getElementById('home-band');
   if(!band) return;
+  renderHomeRecap();
   // Me: avatar (opens Profile) or Sign in.
   const meEl=document.getElementById('hb-me');
   // A guest reaches Profile & settings (language, theme) from here too (4b-4),

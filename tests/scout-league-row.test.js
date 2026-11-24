@@ -73,7 +73,7 @@ check('More names the chosen More league, else says More, with a chevron icon (n
 check('More is a menu button (aria-haspopup, aria-expanded, aria-controls) and its items are radio items', /aria-haspopup="menu" aria-expanded="false" aria-controls="sg-more-menu"/.test(tabs)
   && /role="menuitemradio" aria-checked="'\+\(r\.league_id===SG\.leagueId\)\+'"/.test(tabs));
 check('no More tab when there is nothing under it', /if\(row\.more\.length\)\{/.test(tabs));
-check('the views row: Round · Rankings · My history, in its own element', /views\.innerHTML=v\('league','sg\.tab\.round','sgShowRound'\)\+v\('rankings','sg\.tab\.rankings','sgShowRankings'\)\+v\('history','sg\.tab\.history','sgShowHistory'\);/.test(tabs));
+check('the views row: Round · Rankings · My history (· Recaps since R-2), in its own element', /views\.innerHTML=v\('league','sg\.tab\.round','sgShowRound'\)\+v\('rankings','sg\.tab\.rankings','sgShowRankings'\)\+v\('history','sg\.tab\.history','sgShowHistory'\)\s*\+v\('recaps','sg\.tab\.recaps','sgShowRecaps'\);/.test(tabs));
 check('nothing in the row code names a league', !/'(serie_a|premier_league|la_liga|serie_a_it|bundesliga|ligue_1|argentina|championship|primeira_liga)'/.test(tabs + split + def));
 const pick = fnSrc('sgPickLeague');
 check('choosing a league: Rankings stay Rankings (for it), any other view opens its round', /SG\.leagueId=id; SG\.roundId=sgDefaultRound\(id\);\s*if\(SG\.view!=='rankings'\) SG\.view='league';/.test(pick));
