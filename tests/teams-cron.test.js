@@ -21,7 +21,7 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = 'sb_secret_test';
 process.env.CRON_SECRET = 'cron-test-secret';
 process.env.API_FOOTBALL_KEY = 'af_test';
 
-const job = await import('../api/cron/teams.js');
+const job = await import('../api/_cron/teams.js');
 
 // ── A fake world ──
 const TEAMS = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, api_team_id: 1000 + i }));

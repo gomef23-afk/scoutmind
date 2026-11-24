@@ -33,9 +33,9 @@ check('every API-Football call carries a timeout', /signal: AbortSignal\.timeout
 check('a 429 is retried at most once, after at most 1 s', /attempt < 2/.test(af) && /const RETRY_429_MS = 1_000;/.test(af));
 
 // ── 2. No handler keeps its own literal budget ──
-const files = readdirSync(new URL('../api/cron/', import.meta.url)).filter((f) => f.endsWith('.js'));
+const files = readdirSync(new URL('../api/_cron/', import.meta.url)).filter((f) => f.endsWith('.js'));
 for (const f of files) {
-  const src = read('api/cron/' + f);
+  const src = read('api/_cron/' + f);
   const literal = [...src.matchAll(/const (\w*(?:BUDGET|START_BY)\w*)\s*=\s*([\d_]+)\s*;/g)];
   check(`${f}: no budget is a literal number`, literal.length === 0, literal.map((m) => m[0]).join(' | '));
   const budgets = [...src.matchAll(/const (\w*(?:BUDGET|START_BY)\w*)\s*=\s*([^;]+);/g)];
@@ -50,21 +50,21 @@ for (const f of files) {
 }
 
 // ── 3. News: one feed fetch may not outlive the run, and no source starves ──
-const news = read('api/cron/news.js');
+const news = read('api/_cron/news.js');
 const fetchTimeout = Number((/const FETCH_TIMEOUT_MS = ([\d_]+);/.exec(news) || [])[1]?.replace(/_/g, ''));
 const newsBudget = RUN_BUDGET_MS - Number((/WALL_CLOCK_BUDGET_MS = RUN_BUDGET_MS(?: - ([\d_]+))?;/.exec(news) || [])[1]?.replace(/_/g, '') || 0);
 check('news: last feed started + its timeout + closing writes fit', fetchTimeout && newsBudget + fetchTimeout + CLOSING_MS <= RUN_LIMIT_MS, `${newsBudget} + ${fetchTimeout}`);
 check('news: least recently fetched source first, so a tight budget rotates', /order=last_fetched_at\.asc\.nullsfirst,slug/.test(news));
 
 // ── 4. No partial rows into NOT NULL tables (the 23502 of 16 Nov 2026) ──
-const teams = read('api/cron/teams.js');
+const teams = read('api/_cron/teams.js');
 // C-1: a cup's cup-only clubs are created INSERT-ONLY (ignoreDuplicates), never overwriting a club we hold.
 check("teams.js: only refreshTeams upserts teams; a cup's clubs insert-only", (teams.match(/upsert\('teams'/g) || []).length === 2
   && /async function refreshTeams[\s\S]*?upsert\('teams', teamRows/.test(teams)
   && /async function cupOnlyClubs[\s\S]*?upsert\('teams', rows, 'api_team_id', \{ ignoreDuplicates: true \}\)/.test(teams));
 check('teams.js: refreshTeams skips API teams without an id or a name', /filter\(\(r\) => r\.team\?\.id && r\.team\?\.name\)/.test(teams));
 check('teams.js: the coach is a PATCH by teams.id', /await update\('teams', `id=eq\.\$\{Number\(t\.id\)\}`, \{ coach_name:/.test(teams));
-const players = read('api/cron/players.js');
+const players = read('api/_cron/players.js');
 check('players.js: entries without a name are skipped (players.name is NOT NULL)', /if \(!entry\.player\?\.id \|\| !entry\.player\?\.name\) continue;/.test(players));
 const pl = read('api/_lib/players.js');
 check('player-stats creates players with a name fallback', /name: player\.name \|\| `Player \$\{player\.id\}`/.test(pl));
@@ -89,7 +89,7 @@ check('Série C (no stats coverage) costs no fixture-stats requests', requestsPe
 // The two daily jobs that loop over every league are paced (they were not
 // before 18 leagues): budget, cursor, and a no-op once the day is done.
 for (const f of ['fixtures', 'standings']) {
-  const src = read(`api/cron/${f}.js`);
+  const src = read(`api/_cron/${f}.js`);
   check(`${f}.js: time-boxed and resumable (rule 16)`, /export const TIME_BUDGET_MS = RUN_BUDGET_MS;/.test(src) && /dailyPass\('/.test(src) && /stopped_on: stopped \? 'time_budget' : null/.test(src));
 }
 

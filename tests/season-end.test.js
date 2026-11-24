@@ -108,7 +108,7 @@ const { seasonOver, SEASON_GRACE_DAYS } = await import('../api/_lib/cron.js');
 const day = 86_400_000, end = Date.parse('2026-10-25T23:59:59Z');
 check('the daily jobs keep asking for 8 days after season_end, then stop', SEASON_GRACE_DAYS === 8
   && seasonOver({ season_end: '2026-10-25' }, end + 7 * day) === false && seasonOver({ season_end: '2026-10-25' }, end + 8 * day + 1000) === true);
-for (const f of ['fixtures', 'standings']) check(`${f}.js: the daily pass leaves finished seasons out; ?league= still fetches one`, /chosen \|\| all\.filter\(\(l\) => l\.id > pass\.afterId && !seasonOver\(l\)\)/.test(read(`api/cron/${f}.js`)));
+for (const f of ['fixtures', 'standings']) check(`${f}.js: the daily pass leaves finished seasons out; ?league= still fetches one`, /chosen \|\| all\.filter\(\(l\) => l\.id > pass\.afterId && !seasonOver\(l\)\)/.test(read(`api/_cron/${f}.js`)));
 
 // ── Strings ──
 const box = {}; vm.createContext(box); vm.runInContext(read('public/i18n.js').replace(/^\s*if \(typeof document[\s\S]*$/m, ''), Object.assign(box, { window: box, navigator: { languages: ['en'] }, localStorage: { getItem: () => null }, document: { documentElement: {}, querySelectorAll: () => [] } }));

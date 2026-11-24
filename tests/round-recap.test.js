@@ -197,12 +197,12 @@ check('042: recaps paused by default, switched off by hand', /recaps_paused\s+bo
   && /if \(cfg\.recaps_paused !== false\) \{ out\.paused = true; return out; \}/.test(read('api/_lib/recap-job.js')));
 
 // ── 3. player-stats and the backfill endpoint ──
-const ps = read('api/cron/player-stats.js');
+const ps = read('api/_cron/player-stats.js');
 check('player-stats: recaps after the results refresh, before the room posts',
   /refresh_game_results[\s\S]*?if \(recaps\) out\.recaps = await buildDueRecaps\(recaps\);[\s\S]*?rpc\('post_round_messages'\)/.test(ps));
 check('player-stats: one recap a run, inside the window', /gameScores\(ingestedFixtureIds, locks, \{ recaps: \{ max: 1, until: started \+ RUN_BUDGET_MS \} \}\)/.test(ps));
 check('player-stats: scores with SCORED_COLUMNS (one list for the game and the recap)', /select=fixture_id,player_id,\$\{SCORED_COLUMNS\.join\(','\)\}/.test(ps));
-const ep = read('api/cron/recaps.js');
+const ep = read('api/_cron/recaps.js');
 check('/api/cron/recaps: behind the cron secret, the 20 s window, 0 requests', /withCron\('recaps'/.test(ep) && /until: started \+ RUN_BUDGET_MS/.test(ep) && /requests_used: 0/.test(ep));
 
 // ── 4. Migration 042 ──
@@ -225,7 +225,7 @@ check('042: recaps_from set once', /update public\.game_config set recaps_from =
 check('042: re-runnable, nothing deleted or dropped', !/\bdelete from\b|\bdrop (table|function|column)\b|\btruncate\b/i.test(body) && /^begin;/m.test(body) && /^commit;/m.test(body));
 
 // ── 5. Copy ──
-const files = ['api/_lib/round-recap.js', 'api/_lib/recap-job.js', 'api/cron/recaps.js', 'supabase/migrations/042_round_recaps.sql'];
+const files = ['api/_lib/round-recap.js', 'api/_lib/recap-job.js', 'api/_cron/recaps.js', 'supabase/migrations/042_round_recaps.sql'];
 const banned = [['od', 'ds'].join(''), ['b', 'et'].join(''), ['win', ' money'].join(''), ['pri', 'ze'].join('')];
 const hits = [];
 for (const f of files) for (const w of banned) if (new RegExp(`\\b${w}\\b`, 'i').test(read(f))) hits.push(`${f}: ${w}`);

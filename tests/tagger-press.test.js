@@ -147,7 +147,7 @@ const rec = readFileSync(new URL('../tests/fixtures/rss-new/record_pt.xml', impo
 check('an ISO-8859-1 feed reads right by its header or its prolog; UTF-8 stays UTF-8', /2\.ª parte/.test(decodeFeed(rec, 'text/xml; charset=ISO-8859-1'))
   && /2\.ª parte/.test(decodeFeed(rec, 'text/xml')) && !/2\.ª parte/.test(rec.toString('utf8')) && decodeFeed(Buffer.from('<?xml version="1.0"?><a>ç</a>'), '') === '<?xml version="1.0"?><a>ç</a>');
 check('a CDATA section escaped as text is unwrapped', parseFeed('<rss><item><title>&lt;![CDATA[ FC Porto-Paredes ]]&gt;</title><link>https://x.pt/a</link></item></rss>')[0].title === 'FC Porto-Paredes');
-const news = read('api/cron/news.js');
+const news = read('api/_cron/news.js');
 check('news.js decodes each feed by its charset and passes the source\'s country to the tagger',
   /return decodeFeed\(new Uint8Array\(await res\.arrayBuffer\(\)\), res\.headers\.get\('content-type'\) \|\| ''\);/.test(news)
   && /tagText\(index, item\.title, snippet, source\.lang, source\.country\)/.test(news) && /select=id,slug,name,url,lang,country,/.test(news));

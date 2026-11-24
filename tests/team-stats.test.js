@@ -7,7 +7,7 @@
 // Pinned to the pass-accuracy bug found in R7: a fixture whose pass % the API
 // did not publish used to be averaged in as 0%.
 
-import { computeTeamRow } from '../api/cron/fixture-stats.js';
+import { computeTeamRow } from '../api/_cron/fixture-stats.js';
 
 let passed = 0;
 const failures = [];

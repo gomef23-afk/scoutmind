@@ -82,7 +82,7 @@ const body = (s) => strip((/create or replace function public\.ensure_club_room\
 check('035b\'s function is exactly 035\'s corrected one', body(fixA) !== '' && body(fixA) === body(fixB));
 check('035b carries a rolled-back end-to-end check of the trigger path', /begin;\s*\n--\s+insert into public\.teams \(api_team_id, name\) values \(-35, 'Trigger Test FC'\);[\s\S]*rollback;/.test(fixB));
 // The previous run left nothing behind: the trigger raises inside the upsert.
-check('the teams upsert is one statement, so a failed trigger rolls the whole batch back', /rows \+= await upsert\('teams', teamRows, 'api_team_id'\);/.test(readFileSync(new URL('../api/cron/teams.js', import.meta.url), 'utf8')));
+check('the teams upsert is one statement, so a failed trigger rolls the whole batch back', /rows \+= await upsert\('teams', teamRows, 'api_team_id'\);/.test(readFileSync(new URL('../api/_cron/teams.js', import.meta.url), 'utf8')));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed  (${checked} id flows checked)`);

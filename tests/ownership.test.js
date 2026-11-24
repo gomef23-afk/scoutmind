@@ -72,7 +72,7 @@ async function runJob(lockAnswer) {
     return new Response(b === null ? null : JSON.stringify(b), { status: b === null ? 204 : 200, headers: { 'content-type': 'application/json' } });
   };
   try {
-    const { runScoutGame } = await import('../api/cron/player-stats.js');
+    const { runScoutGame } = await import('../api/_cron/player-stats.js');
     return { out: await runScoutGame([]), calls };
   } finally { globalThis.fetch = realFetch; }
 }
@@ -101,7 +101,7 @@ async function runJob(lockAnswer) {
   const { out, calls } = await runJob(() => ({ status: 500, body: { code: 'XX000', message: 'boom' } }));
   check('any other lock error is not swallowed by the fallback', calls.filter((c) => c.path === 'rpc/lock_due_rounds').length === 1 && /lock_due_rounds 500/.test(out.error || ''), out.error);
 }
-const job = read('api/cron/player-stats.js');
+const job = read('api/_cron/player-stats.js');
 check('job: shadow scores go back as whole rows (rule 25) and never stop the real scoring',
   /rows\.push\(\{ \.\.\.s, shadow_base: sc\.base, shadow_total: sc\.total, scored_at: now \}\)/.test(job)
   && /upsert\('game_shadow_picks', rows, 'entry_id,slot'\)/.test(job) && /catch \(e\) \{\s*console\.warn\('\[player-stats\] shadow scores/.test(job));

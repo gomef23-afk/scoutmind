@@ -58,7 +58,7 @@ async function run(world = {}, query = '') {
     }
     return res(null, 201);
   };
-  const mod = await import('../api/cron/fixtures.js?' + Math.random());
+  const mod = await import('../api/_cron/fixtures.js?' + Math.random());
   const out = { code: 0, body: null, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
   await mod.default({ url: '/api/cron/fixtures' + query, headers: { authorization: 'Bearer cron_test' } }, out);
   const req = (apiId) => calls.filter((c) => c.url.includes('api-sports.io') && c.url.includes(`league=${apiId}`));
@@ -98,7 +98,7 @@ check('a league not in the config is left alone', await needsWholeSeason({ id: 9
 
 // ── The stats queues take any finished fixture we hold ──
 for (const f of ['fixture-stats', 'player-stats']) {
-  const src = read(`api/cron/${f}.js`);
+  const src = read(`api/_cron/${f}.js`);
   const q = (/const queueFilter = \[([\s\S]*?)\]\.join\('&'\);/.exec(src) || [])[1] || '';
   check(`${f}: the queue is every finished fixture we hold without stats (no lower date bound, no "added after")`,
     /status_short=in\./.test(q) && /fetched_at=is\.null/.test(q) && /kickoff_utc=lte\./.test(q) && !/kickoff_utc=gte\./.test(q) && !/created_at|activated/.test(q), q.trim());

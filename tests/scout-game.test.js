@@ -163,7 +163,7 @@ eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
       { status: body === null ? 204 : 200, headers: { 'content-type': 'application/json' } });
   };
   try {
-    const { runScoutGame } = await import('../api/cron/player-stats.js');
+    const { runScoutGame } = await import('../api/_cron/player-stats.js');
     const out = await runScoutGame([]);
     eq('job: game steps in order', calls, [
       'PATCH game_config', 'PATCH game_config', 'POST rpc/sync_game_rounds', 'POST rpc/lock_due_rounds',
@@ -202,7 +202,7 @@ eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
 // ── no money language in the game's code ─────────────────────────────────
 {
   const word = ['od', 'ds'].join('');   // spelt this way so this file passes its own check
-  const files = ['api/_lib/scout-game.js', 'api/cron/player-stats.js', 'supabase/migrations/017_scout_game.sql',
+  const files = ['api/_lib/scout-game.js', 'api/_cron/player-stats.js', 'supabase/migrations/017_scout_game.sql',
     'supabase/migrations/018_scout_game_ladder.sql', 'supabase/migrations/019_scout_game_reads.sql',
     'supabase/migrations/020_lineup_rule.sql', 'supabase/migrations/021_pickable_fixture.sql',
     'supabase/migrations/022_base_points_precision.sql', 'scripts/backtest-scout-game.mjs',
@@ -235,7 +235,7 @@ eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
   // minutes is the one column read beside the scoring ones (the recap's top rating needs it).
   eq('SCORED_COLUMNS = exactly the columns basePoints() reads, plus minutes',
     [...SCORED_COLUMNS].filter((c) => c !== 'minutes').sort(), [...readCols].sort());
-  const job = read('api/cron/player-stats.js');
+  const job = read('api/_cron/player-stats.js');
   check('the job scores with SCORED_COLUMNS, never a hand-written list',
     /select=fixture_id,player_id,\$\{SCORED_COLUMNS\.join\(','\)\}/.test(job) && !/'select=fixture_id,player_id,position,minutes/.test(job));
   const recap = read('api/_lib/recap-job.js');
@@ -266,7 +266,7 @@ eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
     return j([]);
   };
   try {
-    const mod = await import('../api/cron/rescore.js');
+    const mod = await import('../api/_cron/rescore.js');
     const out = { code: 0, body: null, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
     await mod.default({ url: '/api/cron/rescore', headers: { authorization: 'Bearer cron_test' } }, out);
     const B = out.body || {};

@@ -144,7 +144,7 @@ async function run(world = {}) {
     if (table === 'player_fixture_stats') return res(written.player_fixture_stats.filter((r) => r.fixture_id === 3 && r.player_id === PICK_PLAYER));
     return res([]);
   };
-  const mod = await import('../api/cron/player-stats.js?' + Math.random());
+  const mod = await import('../api/_cron/player-stats.js?' + Math.random());
   const out = { code: 0, body: null, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
   await mod.default({ url: '/api/cron/player-stats', headers: { authorization: 'Bearer cron_test' } }, out);
   return { out, calls, written };
@@ -203,8 +203,8 @@ check('a failed lock: the run answers 200, ingests everything and reports the er
 check('…and still scores and refreshes', (E.game || {}).rounds_scored === 1 && e.calls.some((c) => /rpc\/refresh_game_results/.test(c.url)));
 
 // ── 3. The code itself ──
-const src = read('api/cron/player-stats.js');
-const mod = await import('../api/cron/player-stats.js?budget');
+const src = read('api/_cron/player-stats.js');
+const mod = await import('../api/_cron/player-stats.js?budget');
 const { RUN_BUDGET_MS } = await import('../api/_lib/cron.js');
 check('the ingest stops GAME_RESERVE_MS before the window ends (rule 16: derived from RUN_BUDGET_MS)',
   mod.INGEST_BUDGET_MS === RUN_BUDGET_MS - mod.GAME_RESERVE_MS && mod.GAME_RESERVE_MS > 0 && /export const INGEST_BUDGET_MS = RUN_BUDGET_MS - [\d_]+;/.test(src)
@@ -215,7 +215,7 @@ check('a refused chunk is written fixture by fixture; a refused fixture is backe
   /catch \(e\) \{\s*console\.warn\(`\[player-stats\] chunk write failed/.test(src) && /await recordAttempt\(item\.fx, 'write_failed'\);/.test(src));
 check('a failed season refresh is reported, never thrown', /refreshErrors\.push\(/.test(src));
 check('a goal mismatch is a warning: the fixture is still marked done (not retried)', /goalMismatches\.push\(fx\.api_fixture_id\);/.test(src) && !/goalCheck\.ok\)\s*(throw|continue)/.test(src));
-const fsrc = read('api/cron/fixture-stats.js');
+const fsrc = read('api/_cron/fixture-stats.js');
 check('fixture-stats: a refused write is backed off, never thrown; one row per team', /await recordAttempt\(fx, 'write_failed'\);/.test(fsrc)
   && /rows\.some\(\(r\) => r\.team_id === localId\)/.test(fsrc) && /write_failures: writeFailures/.test(fsrc));
 

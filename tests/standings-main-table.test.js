@@ -24,7 +24,7 @@ process.env.SUPABASE_URL = 'https://example.supabase.co';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sb_secret_test';
 process.env.API_FOOTBALL_KEY = 'af_test';
 process.env.CRON_SECRET = 'cron_test';
-const { mainTable } = await import('../api/cron/standings.js');
+const { mainTable } = await import('../api/_cron/standings.js');
 
 // A table: label + [api team id, rank] pairs.
 const table = (label, pairs) => pairs.map(([id, rank]) => ({ rank, team: { id, name: 'T' + id }, points: 30 - rank, goalsDiff: 0, group: label, form: 'WDL', all: { played: 10, win: 5, draw: 2, lose: 3, goals: { for: 10, against: 8 } } }));
@@ -61,7 +61,7 @@ async function run(slug, apiName, groups, apiIds) {
     if (method === 'POST') { const t = (/rest\/v1\/(\w+)/.exec(u) || [])[1]; writes[t] = (writes[t] || []).concat(JSON.parse(init.body)); return res(null, 201); }
     return res([]);
   };
-  const mod = await import('../api/cron/standings.js?' + Math.random());
+  const mod = await import('../api/_cron/standings.js?' + Math.random());
   const out = { code: 0, body: null, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
   await mod.default({ url: '/api/cron/standings?league=' + slug, headers: { authorization: 'Bearer cron_test' } }, out);
   return { out, writes };

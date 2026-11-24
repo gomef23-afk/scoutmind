@@ -23,7 +23,7 @@ process.env.RESEND_API_KEY = 're_test';
 process.env.EMAIL_TOKEN_SECRET = 'x'.repeat(44);
 
 const email = await import('../api/_lib/email.js');
-const job = (await import('../api/cron/reminders.js'));
+const job = (await import('../api/_cron/reminders.js'));
 const unsub = (await import('../api/email/unsubscribe.js')).default;
 
 // ── A fake Supabase + Resend ────────────────────────────────────────────
@@ -233,7 +233,7 @@ for (const f of ['reminder_candidates(text)', 'claim_reminders(text, jsonb)', 'm
 }
 check('the data export includes the email log', /'emails', coalesce\(\(select jsonb_agg/.test(sql));
 check('027 deletes nothing', !/\bdelete from\b/i.test(sql));
-check('the new api files send no DELETE (rule 13)', !/method:\s*'DELETE'/.test(read('api/cron/reminders.js') + read('api/email/unsubscribe.js') + read('api/_lib/email.js')));
+check('the new api files send no DELETE (rule 13)', !/method:\s*'DELETE'/.test(read('api/_cron/reminders.js') + read('api/email/unsubscribe.js') + read('api/_lib/email.js')));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);

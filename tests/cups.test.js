@@ -108,7 +108,7 @@ check('039: season stats count league competitions only (player and team rows)',
 check('039 VERIFY checks season_end against the last fixture held', /having max\(f\.kickoff_utc\)::date > l\.season_end/.test(sql));
 
 // ── 4. The jobs ──
-const src = (f) => read('api/cron/' + f + '.js');
+const src = (f) => read('api/_cron/' + f + '.js');
 for (const f of ['fixtures', 'standings']) check(`${f}.js maps every tracked club (a cup's fixtures are between other leagues' clubs)`, /const teams = await teamIdMap\(all\.map\(\(l\) => l\.id\)\);/.test(src(f)));
 check('live.js maps every active league\'s clubs (already) and skips a cup\'s qualifying rounds', /teamIdMap\(leagues\.map\(\(l\) => l\.id\)\)/.test(src('live')) && /keepRound\(byApiId\.get\(r\.league\.id\), r\.league\?\.round\)/.test(src('live')));
 check('penalties are written only once a cup is active (039 ran; rule 21), on every row of the batch', /const withPens = all\.some\(isCupRow\);/.test(src('fixtures')) && /\.\.\.\(withPens \? penalties\(r\) : \{\}\)/.test(src('fixtures'))

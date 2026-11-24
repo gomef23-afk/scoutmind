@@ -31,7 +31,7 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = 'sb_secret_test';
 process.env.CRON_SECRET = 'cron-test-secret';
 process.env.API_FOOTBALL_KEY = 'af_test';
 
-const job = await import('../api/cron/standings.js');
+const job = await import('../api/_cron/standings.js');
 const brazil = JSON.parse(read('tests/fixtures/api-football/standings.json'));
 
 // Synthetic Argentina: clubs 9001..9006 (api ids), A = 9001-9003, B = 9004-9006.
@@ -139,7 +139,7 @@ check('032: RLS on, public read only', /alter table public\.standings_groups ena
   && /for select to anon, authenticated using \(true\)/.test(code) && /revoke all on public\.standings_groups from public, anon, authenticated;/.test(code)
   && /grant select on public\.standings_groups to anon, authenticated;/.test(code) && !/grant (insert|update|delete)[^;]*to (anon|authenticated)/.test(code));
 check('032: carries a verification query', /VERIFICATION/.test(sql) && /argentina_groups_whole/.test(sql));
-check('the job writes the groups in their own try (rule 21)', /try \{\s*groupsWritten = await upsert\('standings_groups'/.test(read('api/cron/standings.js')));
+check('the job writes the groups in their own try (rule 21)', /try \{\s*groupsWritten = await upsert\('standings_groups'/.test(read('api/_cron/standings.js')));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);

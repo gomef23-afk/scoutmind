@@ -101,7 +101,7 @@ check('"in Cardiff" is the city, "Cardiff\'s Bielik" is the club', !ids('Fury wi
 check('the "in <town>" rule leaves the original clubs alone', ids('A night out in Brighton', 'en').some((id) => nameOf.get(id) === 'Brighton') || !old.some((t) => t.name === 'Brighton'));
 
 // ── The job ──
-const news = read('api/cron/news.js');
+const news = read('api/_cron/news.js');
 check('news.js marks each club established or new (ESTABLISHED_SLUGS)', /established: ESTABLISHED_SLUGS\.has\(leagueSlug\.get\(t\.league_id\)\)/.test(news));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);

@@ -25,7 +25,7 @@ const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 process.env.SUPABASE_URL = 'https://example.supabase.co';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'sb_secret_test';
 process.env.API_FOOTBALL_KEY = 'af_test';
-const { clubKey, matchByName } = await import('../api/cron/standings.js');
+const { clubKey, matchByName } = await import('../api/_cron/standings.js');
 
 // ── 1. A standings row without an id ──
 eq('club keys: accents, case and club-form words dropped', ['Club Leon', 'León', 'Club América', 'CF Monterrey', 'Atlético San Luis'].map(clubKey),
@@ -35,7 +35,7 @@ eq('the real case: "Club Leon" (no id) is León, 2289', matchByName('Club Leon',
 eq('no club of that league by that name → null (skipped, as before)', matchByName('Club Tijuana', LIGA_MX), null);
 eq('two clubs reduce to the same key → null (never a guess)', matchByName('Leon', LIGA_MX.concat([{ id: 509, api_team_id: 9, name: 'Club León' }])), null);
 eq('an empty name → null', matchByName('', LIGA_MX), null);
-const src = read('api/cron/standings.js');
+const src = read('api/_cron/standings.js');
 check('the job only falls back for a row with NO id, and only within the league\'s own clubs', /if \(!teamId && apiTeamId == null && s\.team\?\.name\)/.test(src)
   && /select=id,api_team_id,name&league_id=eq\.\$\{Number\(lg\.id\)\}/.test(src));
 check('the clubs are read once per league, and only if needed', /if \(!leagueClubs\)/.test(src));

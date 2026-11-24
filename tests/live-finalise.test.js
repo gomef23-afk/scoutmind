@@ -56,7 +56,7 @@ async function run(world) {
     if (u.includes('/rest/v1/fixtures') && (method === 'PATCH' || method === 'POST')) return json(null, 204);
     return json([]);
   };
-  const mod = await import('../api/cron/live.js?' + Math.random());
+  const mod = await import('../api/_cron/live.js?' + Math.random());
   const res = { code: 0, body: null, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
   await mod.default({ url: '/api/cron/live', headers: { authorization: 'Bearer cron_test' } }, res);
   return { res, calls, mod };
@@ -98,7 +98,7 @@ const done = await run({
   final: { 201: fx(201, 'FT', 90, 3, 2) },
 });
 check('fixtures daily pass complete → the live job still finalises', (done.res.body || {}).finalised === 1);
-check('the live job never reads the fixtures cursor', !done.calls.some((c) => c.method === 'GET' && /ingest_runs/.test(c.url)) && !/dailyPass/.test(read('api/cron/live.js')));
+check('the live job never reads the fixtures cursor', !done.calls.some((c) => c.method === 'GET' && /ingest_runs/.test(c.url)) && !/dailyPass/.test(read('api/_cron/live.js')));
 
 // ── Bounded ──
 const many = await run({ live: [], stale: Array.from({ length: 100 }, (_, i) => ({ id: i, api_fixture_id: 1000 + i, status_short: '2H', kickoff_utc: '2026-11-19T00:30:00Z' })),
@@ -111,7 +111,7 @@ const qs = q ? decodeURIComponent(q.url) : '';
 check('the stale query: our leagues, the last 3 days, quiet 15+ minutes, live statuses or "not started" long after kick-off',
   /league_id=in\.\(1\)/.test(qs) && /kickoff_utc=gte\./.test(qs) && /updated_at=lt\./.test(qs)
   && /status_short\.in\.\(1H,HT,2H,ET,BT,P,LIVE,INT,SUSP\)/.test(qs) && /and\(status_short\.in\.\(NS,TBD\),kickoff_utc\.lt\./.test(qs), qs);
-const src = read('api/cron/live.js');
+const src = read('api/_cron/live.js');
 check('inside the 20 s window (rule 16): every request and write checks RUN_BUDGET_MS', (src.match(/Date\.now\(\) - started > RUN_BUDGET_MS/g) || []).length >= 2);
 
 // ── A failed finalise never costs the live scores ──
