@@ -25,15 +25,19 @@
  */
 /**
  * The player_fixture_stats columns the job reads to score a pick (scoreRounds
- * in api/cron/player-stats.js). Anything else that must agree with the game's
- * points (the Round Recap) reads the same list. NOTE (21 Nov 2026): this is
- * the list the job has always used, and it leaves out tackles, interceptions,
- * shots_total, fouls_drawn, fouls_committed, offsides and pen_committed, which
- * basePoints() scores: those events earn nothing live. Kept as it is until the
- * fix is decided; changing it changes every fan's score.
+ * in api/cron/player-stats.js), exactly the columns basePoints() reads.
+ * Anything else that must agree with the game's points (the Round Recap) reads
+ * the same list. tests/scout-game.test.js derives basePoints()'s columns by
+ * running it and fails if this list differs.
+ *
+ * Until 23 Nov 2026 the job's list left out tackles, interceptions,
+ * shots_total, fouls_drawn, fouls_committed, offsides and pen_committed, so
+ * those events scored nothing live (18 stored picks: 48.4 base points against
+ * 96.4 under the table). /api/cron/rescore recomputed every round with fans.
  */
 export const SCORED_COLUMNS = ['position', 'minutes', 'goals', 'assists', 'clean_sheet', 'goals_conceded', 'saves',
-  'pen_saved', 'shots_on', 'passes_key', 'pen_missed', 'yellow', 'red'];
+  'pen_saved', 'tackles', 'interceptions', 'shots_total', 'shots_on', 'passes_key', 'fouls_drawn', 'fouls_committed',
+  'offsides', 'pen_missed', 'pen_committed', 'yellow', 'red'];
 
 const ALL = (v) => ({ G: v, D: v, M: v, F: v });
 export const POINTS = {

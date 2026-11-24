@@ -19,5 +19,6 @@ export default withCron('recaps', async ({ req }) => {
   const max = Math.max(1, Math.min(Number(url.searchParams.get('max') ?? 500) || 500, 500));
   const r = await buildDueRecaps({ max, until: started + RUN_BUDGET_MS });
   if (r.error) throw new Error(`recaps: ${r.error}`);
+  if (r.paused) return { rows_written: 0, requests_used: 0, ...r, note: 'paused: game_config.recaps_paused is on' };
   return { rows_written: r.built, requests_used: 0, ...r, elapsed_ms: Date.now() - started };
 });

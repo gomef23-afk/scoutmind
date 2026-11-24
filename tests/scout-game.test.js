@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { parseFixture } from '../api/_lib/players.js';
 import {
   basePoints, scorePick, effectiveMultiplier, pickTotal, tierMultiplier, POINTS,
-  TIER_MULTIPLIER, UNRANKED_MULTIPLIER, MAX_MULTIPLIER, CAPTAIN_MODE,
+  TIER_MULTIPLIER, UNRANKED_MULTIPLIER, MAX_MULTIPLIER, CAPTAIN_MODE, SCORED_COLUMNS,
 } from '../api/_lib/scout-game.js';
 
 let passed = 0;
@@ -215,6 +215,68 @@ eq('a positive base is multiplied', pickTotal(4.5, 2), 9);
   const hits = [];
   for (const f of files) for (const w of banned) if (new RegExp(`\\b${w}\\b`, 'i').test(read(f))) hits.push(`${f}: ${w}`);
   eq('no money language in any game file', hits, []);
+}
+
+// ── the job reads every column basePoints() scores (23 Nov 2026) ─────────
+// Until 23 Nov the job's select left out seven scored columns, so tackles,
+// interceptions, shots off target, fouls, offsides and penalties conceded
+// earned nothing live. basePoints() is run on a row that records every field
+// it reads, so a new event in the table fails here until the job reads it.
+{
+  const readCols = new Set();
+  for (const position of ['G', 'D', 'M', 'F']) {
+    for (const red of [1, 0]) {   // a red replaces the yellow: the yellow is read only without one
+      basePoints(new Proxy({ position }, { get(o, k) {
+        if (typeof k === 'string') readCols.add(k);
+        return k === 'position' ? o.position : k === 'clean_sheet' ? true : k === 'red' ? red : 1;
+      } }), 1);
+    }
+  }
+  // minutes is the one column read beside the scoring ones (the recap's top rating needs it).
+  eq('SCORED_COLUMNS = exactly the columns basePoints() reads, plus minutes',
+    [...SCORED_COLUMNS].filter((c) => c !== 'minutes').sort(), [...readCols].sort());
+  const job = read('api/cron/player-stats.js');
+  check('the job scores with SCORED_COLUMNS, never a hand-written list',
+    /select=fixture_id,player_id,\$\{SCORED_COLUMNS\.join\(','\)\}/.test(job) && !/'select=fixture_id,player_id,position,minutes/.test(job));
+  const recap = read('api/_lib/recap-job.js');
+  check('the recap reads the same list', /rating,\$\{SCORED_COLUMNS\.join\(','\)\}/.test(recap));
+  // A full row scores the same through the job's select as through all its fields.
+  const full = { position: 'D', minutes: 90, goals: 0, assists: 1, clean_sheet: true, goals_conceded: 0, saves: 0, pen_saved: 0,
+    tackles: 4, interceptions: 3, shots_total: 2, shots_on: 1, passes_key: 2, fouls_drawn: 2, fouls_committed: 1, offsides: 1,
+    pen_missed: 0, pen_committed: 0, yellow: 1, red: 0, rating: 7.4, duels_won: 9 };
+  const selected = Object.fromEntries(SCORED_COLUMNS.map((c) => [c, full[c]]));
+  eq('a row as the job selects it scores what the whole row scores', basePoints(selected).base, basePoints(full).base);
+}
+
+// ── /api/cron/rescore: every round with fans past its deadline, the job's own scoring ──
+{
+  process.env.SUPABASE_URL = 'https://stub.supabase.co';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'sb_secret_stub';
+  process.env.CRON_SECRET = 'cron_test';
+  const calls = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    const u = decodeURIComponent(String(url));
+    calls.push({ m: init.method || 'GET', u, body: init.body ? JSON.parse(init.body) : null });
+    const j = (b, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { 'content-type': 'application/json' } });
+    if (/ingest_runs/.test(u)) return (init.method === 'POST') ? j([{ id: 1 }], 201) : new Response(null, { status: 204 });
+    if (/game_entries/.test(u)) return j([{ round_id: 9 }, { round_id: 9 }, { round_id: 12 }, { round_id: 30 }]);
+    if (/game_rounds/.test(u)) return j([{ id: 12, status: 'locked', round_label: 'Regular Season - 10', league_id: 4 }, { id: 9, status: 'final', round_label: 'Regular Season - 35', league_id: 1 }]);
+    if (/rpc\/refresh_game_results/.test(u)) return j(4);
+    return j([]);
+  };
+  try {
+    const mod = await import('../api/cron/rescore.js');
+    const out = { code: 0, body: null, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
+    await mod.default({ url: '/api/cron/rescore', headers: { authorization: 'Bearer cron_test' } }, out);
+    const B = out.body || {};
+    check('rescore: answers 200 with the rounds it re-scored', out.code === 200 && B.ok && JSON.stringify(B.rounds.map((r) => r.id)) === '[9,12]', JSON.stringify(B));
+    check('rescore: only rounds with fans, past their deadline (open rounds have nothing scored)',
+      calls.some((c) => /game_rounds\?select=id,status,round_label,league_id&id=in\.\(9,12,30\)&status=neq\.open/.test(c.u)));
+    check('rescore: the job\'s scoring, then the totals, ranks and badges', calls.some((c) => /game_picks\?select=entry_id,slot,round_id,player_id/.test(c.u))
+      && calls.some((c) => /rpc\/refresh_game_results/.test(c.u) && JSON.stringify(c.body.p_round_ids) === '[9,12]'));
+    check('rescore: 0 API-Football requests, nothing deleted', !calls.some((c) => /api-sports/.test(c.u)) && !calls.some((c) => c.m === 'DELETE'));
+  } finally { globalThis.fetch = realFetch; }
 }
 
 for (const f of failures) console.log(`  FAIL  ${f}`);

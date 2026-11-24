@@ -79,8 +79,15 @@ revoke all on public.round_recaps from anon, authenticated;
 -- 2. SETTINGS
 -- ---------------------------------------------------------------------------
 alter table public.game_config
-  add column if not exists recap_posts boolean not null default false,
-  add column if not exists recaps_from timestamptz;
+  add column if not exists recap_posts   boolean not null default false,
+  add column if not exists recaps_from   timestamptz,
+  add column if not exists recaps_paused boolean not null default true;
+
+-- recaps_paused: no recap is built (job or backfill) until it is switched off
+-- by hand, after the 23 Nov re-score, so no recap is frozen on old numbers:
+--   update public.game_config set recaps_paused = false where id;
+comment on column public.game_config.recaps_paused is
+  'Round recaps (042): true = the job and /api/cron/recaps build nothing. Switched off by hand once the scores are final.';
 
 -- The moment recaps began: a round final before it is history (never posted).
 update public.game_config set recaps_from = now() where id and recaps_from is null;
@@ -437,7 +444,11 @@ commit;
 --          has_function_privilege('anon', 'public.round_recap(bigint)', 'EXECUTE') as anon_recap,
 --          has_function_privilege('authenticated', 'public.post_round_messages()', 'EXECUTE') as auth_posts,
 --          (select recap_posts from public.game_config) as posts_on,
---          (select recaps_from is not null from public.game_config) as from_set;   -- false, false, true, false, false, true
+--          (select recaps_from is not null from public.game_config) as from_set,
+--          (select recaps_paused from public.game_config) as paused;   -- false, false, true, false, false, true, true
+--
+-- After the re-score is checked, let the recaps be built:
+--   update public.game_config set recaps_paused = false where id;
 --
 -- After the backfill calls (/api/cron/recaps until pending = 0):
 --   recaps per competition, none waiting to be posted:

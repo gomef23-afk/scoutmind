@@ -458,8 +458,13 @@ async function lockDueRounds() {
   }
 }
 
-/** Score every locked pick of these rounds from scratch. Returns rows written. */
-async function scoreRounds(roundIds) {
+/**
+ * Score every locked pick of these rounds from scratch. Returns rows written.
+ * Exported for /api/cron/rescore (23 Nov 2026), which re-runs it on rounds
+ * already scored: the same rows come back with the new numbers (upsert on
+ * entry, slot, fixture), so nothing needs deleting.
+ */
+export async function scoreRounds(roundIds) {
   const picks = await selectIn('game_picks', 'round_id', roundIds,
     'select=entry_id,slot,round_id,player_id,is_captain,locked_tier,locked_multiplier,locked_contrarian');
   if (!picks.length) return 0;

@@ -32,11 +32,15 @@ async function selectIn(table, column, values, rest) {
 export async function buildDueRecaps({ max = 1, until = Infinity } = {}) {
   const out = { built: 0, incomplete: 0, pending: 0 };
   try {
+    // game_config.recaps_paused (042, on by default): nothing is built until it
+    // is switched off, so no recap is frozen on numbers about to be re-scored
+    // (23 Nov 2026: Série A 35 was scored without seven of the table's events).
+    const cfg = (await select('game_config', 'select=*&limit=1'))[0] || {};
+    if (cfg.recaps_paused !== false) { out.paused = true; return out; }
     const finals = await select('game_rounds',
       'select=id,league_id,season,round_no,round_label,deadline_utc,finalized_at&status=eq.final&order=deadline_utc.desc&limit=2000');
     const done = new Set((await select('round_recaps', 'select=round_id&limit=5000')).map((r) => r.round_id));
     const due = finals.filter((r) => !done.has(r.id));
-    const cfg = (await select('game_config', 'select=*&limit=1'))[0] || {};
     const from = cfg.recaps_from ? Date.parse(cfg.recaps_from) : Infinity;
     for (const r of due) {
       if (out.built >= max || Date.now() > until) break;

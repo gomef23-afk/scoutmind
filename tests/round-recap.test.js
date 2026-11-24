@@ -146,7 +146,7 @@ async function job(world = {}) {
         { id: 7, league_id: 1, season: 2026, round_no: 33, round_label: 'Regular Season - 33', deadline_utc: '2026-11-07T15:00:00Z', finalized_at: null },
         { id: 6, league_id: 1, season: 2026, round_no: 32, round_label: 'Regular Season - 32', deadline_utc: '2026-10-31T15:00:00Z', finalized_at: null }]);
       case 'round_recaps': return res([{ round_id: 6 }]);
-      case 'game_config': return res([{ id: true, recaps_from: '2026-11-21T20:00:00Z', recap_posts: false }]);
+      case 'game_config': return res([{ id: true, recaps_from: '2026-11-21T20:00:00Z', recap_posts: false, recaps_paused: world.paused ?? false }]);
       case 'game_round_fixtures': return res(/round_id=eq\.7/.test(u) ? [{ fixture_id: 99 }] : FX.map((f) => ({ fixture_id: f.id })));
       case 'fixtures': return res(/id=in\.\(99\)/.test(u) ? [{ ...FX[0], id: 99, players_fetched_at: null }] : FX);
       case 'player_fixture_stats': return res(ROWS);
@@ -187,6 +187,14 @@ async function job(world = {}) {
   const { out } = await job({ missing: true });
   check('before 042: reported, never thrown', out.built === 0 && /round_recaps/.test(out.error || ''));
 }
+{
+  // 23 Nov 2026: held until the re-score is checked. Paused (042's default), or the column not there: nothing is read or built.
+  const { out, calls } = await job({ paused: true });
+  check('paused: nothing built, no round read', out.paused === true && out.built === 0
+    && !calls.some((c) => /game_rounds|player_fixture_stats|round_recaps/.test(c.url)) && !calls.some((c) => c.method === 'POST'));
+}
+check('042: recaps paused by default, switched off by hand', /recaps_paused\s+boolean not null default true/.test(read('supabase/migrations/042_round_recaps.sql'))
+  && /if \(cfg\.recaps_paused !== false\) \{ out\.paused = true; return out; \}/.test(read('api/_lib/recap-job.js')));
 
 // ── 3. player-stats and the backfill endpoint ──
 const ps = read('api/cron/player-stats.js');
@@ -209,7 +217,7 @@ check('042: private-league top 3 only for the reader\'s own active memberships',
 check('042: names come from public_profiles when read', /'names', \(select coalesce\(jsonb_object_agg\(p\.id, p\.name\)/.test(body));
 check('042: posts are the job\'s only', /revoke all on function public\.post_round_messages\(\) from public, anon, authenticated;/.test(body) && /grant execute on function public\.post_round_messages\(\) to service_role;/.test(body));
 check('042: a recap post is never pinned', /values \(v_room, null, v_body, false, true\)/.test(body) && !/v_body, true/.test(body));
-check('042: switch off by default; off = 019\'s torcida post, and every final recap marked posted', /recap_posts boolean not null default false/.test(body)
+check('042: switch off by default; off = 019\'s torcida post, and every final recap marked posted', /recap_posts\s+boolean not null default false/.test(body)
   && /if not coalesce\(v_on, false\) then[\s\S]*?' is final\. Top of the ' \|\| t\.name \|\| ' torcida in the Scout Game: '[\s\S]*?set posted_at = now\(\)[\s\S]*?return v_posts;\s*end if;/.test(body));
 check('042: 019\'s post text unchanged', read('supabase/migrations/019_scout_game_reads.sql').includes("' is final. Top of the ' || t.name || ' torcida in the Scout Game: ' || r.top3 || ' pts.'"));
 check('042: Portuguese first, then English, within 500 characters', /v_body := v_pt \|\|[\s\S]*?\|\| ' · ' \|\| v_en/.test(body) && /char_length\(v_body\) > 500/.test(body));
