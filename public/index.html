@@ -93,14 +93,14 @@
 <link href="/vendor/fonts/fonts.css" rel="stylesheet">
 <script src="/club_names.js?v=25627f760c"></script>
 <!-- UI strings, en + pt-BR (Day 6, beta): t(), tn(), tOrd(), applyI18n(). -->
-<script src="/i18n.js?v=fc8ff48179"></script>
+<script src="/i18n.js?v=fb20b2ad7b"></script>
 <!-- The Home band's slot rules (2a): pure functions, tested by tests/home-band.test.js. -->
 <script src="/home-band.js?v=21106714cb"></script>
 <!-- News card and crest tile rules (2b): pure functions, tested by tests/news-card.test.js. -->
 <script src="/news-card.js?v=b8aff44b00"></script>
 <!-- 4b shared pieces: league names with the country code, the one fixture
      row (also on community.html), line icons. -->
-<script src="/league-names.js?v=181fa6a2b5"></script>
+<script src="/league-names.js?v=a115efc680"></script>
 <script src="/fx-row.js?v=2a5a74a713"></script>
 <script src="/icons.js?v=012882672d"></script>
 <!-- C-1: cup rounds and knockout ties from the fixtures we hold (tests/cups.test.js). -->
@@ -677,10 +677,22 @@ select,input[type=text],input[type=number],input[type=password],input[type=email
 body:has(#page-scout.active .sg-page.has-bar){padding-bottom:136px;}
 .sg-title{font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:1.2;}
 .sg-sub{font-size:12px;color:var(--muted);line-height:1.6;margin:2px 0 14px;}
-.sg-tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--border);margin:0 -16px 14px;padding:0 16px;scrollbar-width:none;}
+/* SCOUT LEAGUE ROW (25 Nov 2026): the config's fixed row (scoutRow) + "More",
+   then the view row (Round · Rankings · My history), which never scrolls: it
+   wraps before anything leaves the screen. Only the league row may scroll
+   sideways on a phone; its More menu sits outside it, so nothing clips it. */
+.sg-tabs-wrap{position:relative;margin:0 -16px;}
+.sg-tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--border);margin:0;padding:0 16px;scrollbar-width:none;}
 .sg-tabs::-webkit-scrollbar{display:none;}
-.sg-tab{flex:0 0 auto;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:0 12px;min-height:44px;cursor:pointer;white-space:nowrap;}
+.sg-tab{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:0 12px;min-height:44px;cursor:pointer;white-space:nowrap;}
 .sg-tab.active{color:var(--navy-ink);border-bottom-color:var(--navy-ink);}
+.sg-tab .ic{width:14px;height:14px;}
+.sg-more-menu{position:absolute;top:100%;z-index:60;min-width:220px;max-width:calc(100% - 32px);max-height:min(60vh,420px);overflow-y:auto;background:var(--card);color:var(--ink);border:1px solid var(--border);border-radius:12px;padding:6px;box-shadow:0 12px 32px var(--scrim);}
+.sg-more-item{display:flex;align-items:center;width:100%;min-height:44px;padding:0 12px;border:0;border-left:3px solid transparent;border-radius:6px;background:none;color:var(--ink);font:500 14px/1.2 var(--font-sans);text-align:left;cursor:pointer;white-space:nowrap;}
+.sg-more-item:hover{background:var(--tint);}
+.sg-more-item[aria-checked="true"]{border-left-color:var(--navy-ink);color:var(--navy-ink);font-weight:700;}
+.sg-views{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid var(--border);margin:0 -16px 14px;padding:0 16px;}
+.sg-views .sg-tab{padding:0 10px;}
 .sg-chips{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 14px;padding:0 16px 2px;scrollbar-width:none;}
 .sg-chips::-webkit-scrollbar{display:none;}
 .sg-chips-tight{margin:0;padding:0;flex:1;min-width:0;}
@@ -1099,7 +1111,12 @@ body:has(#page-scout.active .sg-page.has-bar) .sm-toast{bottom:calc(136px + env(
 }
 @media (min-width: 900px){
   .sg-page{padding:24px 24px 32px;}
-  .sg-tabs,.sg-chips{margin-left:0;margin-right:0;padding-left:0;padding-right:0;}
+  .sg-tabs,.sg-chips,.sg-views{margin-left:0;margin-right:0;padding-left:0;padding-right:0;}
+  .sg-tabs-wrap{margin:0;}
+  .sg-more-menu{max-width:none;}
+  /* Laptop: the league row never scrolls; a long More name ("Primeira Liga · POR") wraps to a second line. */
+  .sg-tabs{flex-wrap:wrap;overflow:visible;}
+  .sg-tabs .sg-tab{padding:0 10px;}
   .sg-chips-tight{flex:1;}
   .sg-filter-row{flex-direction:row;align-items:center;}
   .sg-club{width:220px;flex:0 0 220px;}
@@ -1504,7 +1521,12 @@ if(!_cu){
   </div>
   <!-- My private leagues (025). Signed in only; hidden until the list loads. -->
   <div id="sg-leagues" class="sg-leagues" style="display:none;"></div>
-  <div id="sg-tabs" class="sg-tabs"></div>
+  <!-- The league row (the config's scoutRow + More) and, below it, the views. -->
+  <div class="sg-tabs-wrap">
+    <div id="sg-tabs" class="sg-tabs"></div>
+    <div id="sg-more-menu" class="sg-more-menu" role="menu" style="display:none;"></div>
+  </div>
+  <div id="sg-views" class="sg-views"></div>
   <div id="sg-body"></div>
 </div>
 <!-- Sticky save bar for the pick screen; display is set only in JS (rule 6). -->
@@ -6564,7 +6586,8 @@ function sgInPlay(r){ return r.status==='locked'&&(!SG.playing||SG.playing.has(r
  * Competitions worth a tab: an open round, a round with a match still to play,
  * or a locked round I entered (its points are still arriving). A competition
  * whose last round is over and has no next one (Argentina between the Clausura
- * and its knockouts) has none of these and is hidden. My main club's first.
+ * and its knockouts) has none of these and is hidden. In the row's order
+ * (sgLeagueRow): the config's scoutRow, then the rest.
  */
 function sgLeagues(){
   const seen=new Map();
@@ -6572,18 +6595,35 @@ function sgLeagues(){
     if(!(r.status==='open'||sgInPlay(r)||(r.status==='locked'&&SG.entries.get(r.id)))) continue;
     if(!seen.has(r.league_id)) seen.set(r.league_id,r);
   }
-  const main=CLUB_DATA.get(mainClubId());
-  const mine=r=>main&&r.leagues&&r.leagues.slug===main.league?0:1;
-  return [...seen.values()].sort((a,b)=>mine(a)-mine(b));
+  const row=sgLeagueRow([...seen.values()]);
+  return row.main.concat(row.more);
+}
+/**
+ * SCOUT LEAGUE ROW (25 Nov 2026). The fixed row: the leagues the config gives
+ * a scoutRow (api/_lib/leagues.js → LeagueNames.scoutRow), in that order;
+ * every other playable league with a round goes under "More", my leagues
+ * first, then alphabetical (LeagueNames.sort). Nothing here names a league.
+ */
+function sgSlugOf(r){ return r&&r.leagues&&r.leagues.slug||''; }
+function sgLeagueRow(rounds){
+  const main=[],more=[];
+  for(const r of rounds) (LeagueNames.scoutRow(sgSlugOf(r))?main:more).push(r);
+  main.sort((a,b)=>LeagueNames.scoutRow(sgSlugOf(a))-LeagueNames.scoutRow(sgSlugOf(b)));
+  const mainClub=CLUB_DATA.get(mainClubId());
+  const mine=new Set(mainClub&&mainClub.league?[mainClub.league]:[]);
+  const order=LeagueNames.sort(more.map(sgSlugOf),mine);
+  more.sort((a,b)=>order.indexOf(sgSlugOf(a))-order.indexOf(sgSlugOf(b)));
+  return {main,more};
 }
 function sgRoundsFor(leagueId){ return SG.rounds.filter(r=>r.league_id===leagueId); }
 function sgRound(id){ return SG.rounds.find(r=>r.id===id)||null; }
 
+/** My main club's league when it has a round (a More league too, as the Home band does), else the row's first. */
 function sgDefaultLeague(){
   const leagues=sgLeagues();
   if(!leagues.length) return null;
   const main=CLUB_DATA.get(mainClubId());
-  const mine=main&&leagues.find(r=>r.leagues&&r.leagues.slug===main.league);
+  const mine=main&&leagues.find(r=>sgSlugOf(r)===main.league);
   return (mine||leagues[0]).league_id;
 }
 
@@ -6624,8 +6664,9 @@ async function renderScout(force){
     sgSubmitBar(null);
     return;
   }
+  // The league row always shows one league as chosen, whatever the view.
+  if(SG.leagueId==null||!sgLeagues().some(r=>r.league_id===SG.leagueId)) SG.leagueId=sgDefaultLeague();
   if(SG.view==='league'){
-    if(SG.leagueId==null||!sgLeagues().some(r=>r.league_id===SG.leagueId)) SG.leagueId=sgDefaultLeague();
     if(SG.leagueId!=null&&(SG.roundId==null||!sgRoundsFor(SG.leagueId).some(r=>r.id===SG.roundId))){
       SG.roundId=sgDefaultRound(SG.leagueId);
     }
@@ -6635,25 +6676,76 @@ async function renderScout(force){
   sgStartTimer();
 }
 
+/**
+ * Two rows. The league row: the fixed leagues (scoutRow) and "More", which
+ * names the More league while one is chosen ("Championship · ENG" + chevron)
+ * and goes back to "More" when a fixed one is. The view row, always below it
+ * and never scrolled: Round · Rankings · My history.
+ */
 function sgTabs(){
   const el=document.getElementById('sg-tabs');
   if(!el) return;
-  const tabs=sgLeagues().map(r=>{
-    const on=SG.view==='league'&&SG.leagueId===r.league_id;
-    return '<button class="sg-tab'+(on?' active':'')+'" onclick="sgPickLeague('+r.league_id+')">'
-      +sanitize(sgLeagueName(r))+'</button>';
-  });
-  tabs.push('<button class="sg-tab'+(SG.view==='rankings'?' active':'')+'" onclick="sgShowRankings()">'+t('sg.tab.rankings')+'</button>');
-  tabs.push('<button class="sg-tab'+(SG.view==='history'?' active':'')+'" onclick="sgShowHistory()">'+t('sg.tab.history')+'</button>');
+  sgCloseMore();
+  const row=sgLeagueRow([...new Map(sgLeagues().map(r=>[r.league_id,r])).values()]);
+  const tabs=row.main.map(r=>'<button class="sg-tab'+(SG.leagueId===r.league_id?' active':'')+'" aria-pressed="'+(SG.leagueId===r.league_id)+'" onclick="sgPickLeague('+r.league_id+')">'
+    +sanitize(sgLeagueName(r))+'</button>');
+  if(row.more.length){
+    const chosen=row.more.find(r=>r.league_id===SG.leagueId);
+    tabs.push('<button id="sg-more-btn" class="sg-tab'+(chosen?' active':'')+'" aria-haspopup="menu" aria-expanded="false" aria-controls="sg-more-menu" onclick="sgToggleMore(event)">'
+      +'<span>'+sanitize(chosen?sgLeagueName(chosen):t('sg.tab.more'))+'</span>'+Icons.svg('chevronDown',14)+'</button>');
+  }
   el.innerHTML=tabs.join('');
+  const menu=document.getElementById('sg-more-menu');
+  if(menu) menu.innerHTML=row.more.map(r=>'<button class="sg-more-item" role="menuitemradio" aria-checked="'+(r.league_id===SG.leagueId)+'" onclick="sgPickLeague('+r.league_id+')">'
+    +sanitize(sgLeagueName(r))+'</button>').join('');
+  // On a phone the league row may scroll sideways: keep the chosen league in sight.
+  const on=el.querySelector('.sg-tab.active');
+  if(on&&(on.offsetLeft<el.scrollLeft||on.offsetLeft+on.offsetWidth>el.scrollLeft+el.clientWidth)) el.scrollLeft=on.offsetLeft-16;
+  const views=document.getElementById('sg-views');
+  if(views){
+    const v=(key,label,fn)=>'<button class="sg-tab'+(SG.view===key?' active':'')+'" aria-pressed="'+(SG.view===key)+'" onclick="'+fn+'()">'+t(label)+'</button>';
+    views.innerHTML=v('league','sg.tab.round','sgShowRound')+v('rankings','sg.tab.rankings','sgShowRankings')+v('history','sg.tab.history','sgShowHistory');
+  }
   glRenderStrip();
 }
 
+/** The More menu: under its tab (outside the scrolling row, so nothing clips it). */
+function sgToggleMore(ev){
+  if(ev) ev.stopPropagation();
+  const menu=document.getElementById('sg-more-menu'), btn=document.getElementById('sg-more-btn'), row=document.getElementById('sg-tabs');
+  if(!menu||!btn||!row) return;
+  if(menu.style.display==='block'){ sgCloseMore(); return; }
+  menu.style.display='block';
+  // Inside the row's own side gutter (16px on a phone, 0 on a laptop).
+  const wrap=menu.parentNode.clientWidth, gutter=parseFloat(getComputedStyle(row).paddingRight)||0;
+  const left=Math.max(gutter,Math.min(btn.offsetLeft-row.scrollLeft,wrap-menu.offsetWidth-gutter));
+  menu.style.left=left+'px';
+  btn.setAttribute('aria-expanded','true');
+  const first=menu.querySelector('[aria-checked="true"]')||menu.querySelector('.sg-more-item');
+  if(first) first.focus();
+}
+function sgCloseMore(){
+  const menu=document.getElementById('sg-more-menu');
+  if(menu&&menu.style.display==='block') menu.style.display='none';
+  const btn=document.getElementById('sg-more-btn');
+  if(btn) btn.setAttribute('aria-expanded','false');
+}
+document.addEventListener('click',e=>{ const m=document.getElementById('sg-more-menu'); if(m&&m.style.display==='block'&&!m.contains(e.target)) sgCloseMore(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const m=document.getElementById('sg-more-menu'); if(m&&m.style.display==='block'){ sgCloseMore(); const b=document.getElementById('sg-more-btn'); if(b) b.focus(); } } });
+
+/** A league from either row. Rankings stay Rankings (for that league); every other view opens its round. */
 function sgPickLeague(id){
-  SG.view='league'; SG.leagueId=id; SG.roundId=sgDefaultRound(id);
+  SG.leagueId=id; SG.roundId=sgDefaultRound(id);
+  if(SG.view!=='rankings') SG.view='league';
   sgTabs(); sgRender();
 }
 function sgPickRound(id){ SG.roundId=id; sgRender(); }
+function sgShowRound(){
+  SG.view='league';
+  if(SG.leagueId==null) SG.leagueId=sgDefaultLeague();
+  if(SG.leagueId!=null&&(SG.roundId==null||!sgRoundsFor(SG.leagueId).some(r=>r.id===SG.roundId))) SG.roundId=sgDefaultRound(SG.leagueId);
+  sgTabs(); sgRender();
+}
 function sgShowRankings(){ SG.view='rankings'; sgTabs(); sgRender(); }
 function sgShowHistory(){ SG.view='history'; sgTabs(); sgRender(); }
 /** From the Profile: open the Scout tab on My history. */
