@@ -64,7 +64,7 @@ eq('…the fixed row never moves for a fan', runRow('primeira_liga').main, ['ser
 const def = fnSrc('sgDefaultLeague');
 check('a fan opens Scout on their main club\'s league, a More league included', /const mine=main&&leagues\.find\(r=>sgSlugOf\(r\)===main\.league\);/.test(def) && /return \(mine\|\|leagues\[0\]\)\.league_id;/.test(def));
 check('sgLeagues returns the row\'s order (fixed, then More), no main-club-first sort of its own', /const row=sgLeagueRow\(\[\.\.\.seen\.values\(\)\]\);\s*return row\.main\.concat\(row\.more\);/.test(fnSrc('sgLeagues')));
-check('renderScout chooses a league for every view (the row always shows one)', /\/\/ The league row always shows one league as chosen, whatever the view\.\s*if\(SG\.leagueId==null\|\|!sgLeagues\(\)\.some\(r=>r\.league_id===SG\.leagueId\)\) SG\.leagueId=sgDefaultLeague\(\);\s*if\(SG\.view==='league'\)\{/.test(idx));
+check('renderScout chooses a league for every view (the row always shows one)', /\/\/ The league row always shows one league as chosen, whatever the view\.\s*if\(SG\.leagueId==null\|\|!sgLeagues\(\)\.some\(r=>r\.league_id===SG\.leagueId\)\)\{/.test(idx));
 
 // ── 3. The More tab and the views ──
 const tabs = fnSrc('sgTabs');
@@ -73,7 +73,8 @@ check('More names the chosen More league, else says More, with a chevron icon (n
 check('More is a menu button (aria-haspopup, aria-expanded, aria-controls) and its items are radio items', /aria-haspopup="menu" aria-expanded="false" aria-controls="sg-more-menu"/.test(tabs)
   && /role="menuitemradio" aria-checked="'\+\(r\.league_id===SG\.leagueId\)\+'"/.test(tabs));
 check('no More tab when there is nothing under it', /if\(row\.more\.length\)\{/.test(tabs));
-check('the views row: Round · Rankings · My history (· Recaps since R-2), in its own element', /views\.innerHTML=v\('league','sg\.tab\.round','sgShowRound'\)\+v\('rankings','sg\.tab\.rankings','sgShowRankings'\)\+v\('history','sg\.tab\.history','sgShowHistory'\)\s*\+v\('recaps','sg\.tab\.recaps','sgShowRecaps'\);/.test(tabs));
+// 28 Nov 2026: no views row any more (the band's stepper picks the round; Rankings and All rounds open from links).
+check('no views row: no sg-views, no segment buttons', !/id="sg-views"|sg-seg-btn/.test(idx));
 check('nothing in the row code names a league', !/'(serie_a|premier_league|la_liga|serie_a_it|bundesliga|ligue_1|argentina|championship|primeira_liga)'/.test(tabs + split + def));
 const pick = fnSrc('sgPickLeague');
 check('choosing a league: Rankings stay Rankings (for it), any other view opens its round', /SG\.leagueId=id; SG\.roundId=sgDefaultRound\(id\);\s*if\(SG\.view!=='rankings'\) SG\.view='league';/.test(pick));
@@ -85,17 +86,16 @@ check('the menu stays inside the row\'s gutter', /const left=Math\.max\(gutter,M
 const markup = idx.split('<div class="page" id="page-scout">')[1] || '';
 // 26 Nov 2026: the league row is the only underline-tab row; the views are a
 // segmented control in the layout grid (tests/scout-layout below).
-check('markup: the league row and the More menu share a wrapper; then the layout grid; the menu starts hidden (display set in JS)',
-  /<div class="sg-tabs-wrap">\s*<div id="sg-tabs" class="sg-tabs"><\/div>\s*<div id="sg-more-menu" class="sg-more-menu" role="menu" style="display:none;"><\/div>\s*<\/div>[\s\S]{0,400}<div class="sg-layout">/.test(markup));
+check('markup: the league row and the More menu share a wrapper; then the columns; the menu starts hidden (display set in JS)',
+  /<div class="sg-tabs-wrap">\s*<div id="sg-tabs" class="sg-tabs"><\/div>\s*<div id="sg-more-menu" class="sg-more-menu" role="menu" style="display:none;"><\/div>\s*<\/div>[\s\S]{0,400}<div class="sg-cols">/.test(markup));
 const css = (sel) => (new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}').exec(idx) || [])[1] || '';
-check('the views never scroll: four equal segments on a phone, no overflow scroll', /display:flex;width:100%/.test(css('.sg-seg')) && /flex:1 1 0/.test(css('.sg-seg-btn')) && !/overflow-x/.test(css('.sg-seg')));
 check('the More menu sits outside the scrolling row, positioned under it', /position:absolute/.test(css('.sg-more-menu')) && /top:100%/.test(css('.sg-more-menu')) && /position:relative/.test(css('.sg-tabs-wrap')));
 check('laptop (900px+): the league row wraps instead of scrolling', /@media \(min-width: 900px\)\{[\s\S]*?\.sg-tabs\{flex-wrap:wrap;overflow:visible;\}/.test(idx));
 check('every tab and menu item is at least 44px tall', /min-height:44px/.test(css('.sg-tab')) && /min-height:44px/.test(css('.sg-more-item')));
 
 // ── 5. Words ──
 const i18n = read('public/i18n.js');
-eq('EN / PT: Round · Rodada, More · Mais', [/'sg\.tab\.round': 'Round'/.test(i18n), /'sg\.tab\.round': 'Rodada'/.test(i18n), /'sg\.tab\.more': 'More'/.test(i18n), /'sg\.tab\.more': 'Mais'/.test(i18n)], [true, true, true, true]);
+eq('EN / PT: More · Mais', [/'sg\.tab\.more': 'More'/.test(i18n), /'sg\.tab\.more': 'Mais'/.test(i18n)], [true, true]);
 
 for (const f of failures) console.log(`  FAIL  ${f}`);
 console.log(`\n${passed} passed, ${failures.length} failed`);

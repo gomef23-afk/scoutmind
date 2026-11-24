@@ -55,14 +55,15 @@ check('fxRow: my club → the mine class', /class="fx-row mine"/.test(row({ stat
 check('fxRow: opens the match panel', /onclick="openMatch\(5\)"/.test(up));
 
 // ── The Scout Game ──
-// 26 Nov 2026: the round band carries the action; the round itself is the chip.
-check('open round band: the countdown in gold · my picks (5/5 saved, else 0/5 "Pick your 5") · my last round\'s rank only when held',
-  /sgBand\(\[\s*\{lab:t\('sg\.band\.closes'\)[\s\S]*?gold:true[\s\S]*?\{lab:t\('sg\.band\.picks'\),big:n\+'\/5',line:t\(n>=5\?'sg\.band\.picksSaved':'sg\.band\.pickYour5'\)\}[\s\S]*?last\?\{lab:t\('sg\.band\.lastRank'\)[\s\S]*?:null/.test(fn('sgOpenBand'))
+// 28 Nov 2026: the band carries the action; its header is the round stepper.
+check('open round band: the countdown in gold · my picks (5/5 saved, else 0/5 "Pick your 5") · my last or live round (only when held, tappable)',
+  /sgBand\(\[\s*\{lab:t\('sg\.band\.closes'\)[\s\S]*?gold:true[\s\S]*?\{lab:t\('sg\.band\.picks'\),big:n\+'\/5',line:t\(n>=5\?'sg\.band\.picksSaved':'sg\.band\.pickYour5'\)\}[\s\S]*?last\?\{lab:sgRoundName\(last\.round\),big:sgPts\(last\.total\)[\s\S]*?sgStatusWord\(last\.round\)\.toLocaleLowerCase\(smLocale\(\)\)\]\.filter\(Boolean\)\.join\(' · '\)[\s\S]*?go:'sgPickRound\('\+last\.round\.id\+'\)'\}:null\s*\],sgStepHead\(r\)\);/.test(fn('sgOpenBand'))
   && /'<div id="sg-open-band">'\+sgOpenBand\(r\)\+'<\/div>'/.test(fn('sgRenderPick')) && !/sg\.band\.round/.test(fn('sgOpenBand')));
-check('last round\'s rank: my latest earlier round of this competition I played, read from game_round_rankings; none → no slot',
-  /game_round_rankings\?select=round_id,rank,participants&user_id=eq\.'\+me\+'&round_id=in\.\(/.test(fn('sgLoadLastRank')) && /SG\.lastRank\.set\(r\.id,null\)/.test(fn('sgLoadLastRank')));
-check('locked round band: my points · round rank · matches left, each only with its value', /total!=null\?\{lab:t\('sg\.band\.points'\)[\s\S]*?:null,\s*rank&&rank\.rank!=null\?\{lab:t\('sg\.band\.rank'\)[\s\S]*?:null,\s*fx\.length\?\{lab:t\('sg\.band\.matchesLeft'\),big:String\(left\),line:t\('sg\.ofN',\{n:sgCount\(fx\.length\)\}\)/.test(fn('sgLiveBand'))
-  && /return slots\.length\?sgBand\(slots\):'';/.test(fn('sgLiveBand')));
+check('last or live round: my latest earlier round of this competition already scored for me (game_round_rankings with points); none → no slot',
+  /game_round_rankings\?select=round_id,rank,participants,total&user_id=eq\.'\+me\+'&round_id=in\.\(/.test(fn('sgLoadLastRound')) && /SG\.lastRound\.set\(r\.id,null\)/.test(fn('sgLoadLastRound'))
+  && /byId\.get\(x\.id\)\.total!=null/.test(fn('sgLoadLastRound')));
+check('locked round band: my points · round rank · matches left, each only with its value; the stepper always', /total!=null\?\{lab:t\('sg\.band\.points'\)[\s\S]*?:null,\s*rank&&rank\.rank!=null\?\{lab:t\('sg\.band\.rank'\)[\s\S]*?:null,\s*fx\.length\?\{lab:t\('sg\.band\.matchesLeft'\),big:String\(left\),line:t\('sg\.ofN',\{n:sgCount\(fx\.length\)\}\)/.test(fn('sgLiveBand'))
+  && /return sgBand\(slots,sgStepHead\(r\)\);/.test(fn('sgLiveBand')));
 check('matches left = the round\'s counting matches not finished (postponed and cancelled are not left)', /const DONE=\['FT','AET','PEN','PST','CANC','ABD','AWD','WO'\];/.test(fn('sgLiveBand')));
 check('Scout band: a final round without a recap shows my points and my rank, dashes until scored', /sg\.band\.points[\s\S]*?total==null\?'—'[\s\S]*?sg\.band\.rank/.test(fn('sgPlayedBand')));
 check('the countdown ticks in the band\'s compact form', /el\.classList\.contains\('hb-big'\)\?HomeBand\.countdownText/.test(idx));
@@ -126,8 +127,8 @@ check("match panel: no ScoutMind rating; API-Football's rating credited", !/Scou
 const retired = [...idx.matchAll(/\n\.(sg|mo|fx)-[\w-]+[^{]*\{[^}]*(Bebas|DM Mono)[^}]*\}/g)].map((m) => m[0].trim().slice(0, 40));
 check('Scout, match panel and rows: no Bebas Neue or DM Mono left', retired.length === 0, retired.join(' | '));
 const i18n = read('public/i18n.js');
-for (const k of ['sg.band.round', 'sg.band.closes', 'sg.band.picks', 'sg.band.picksSaved', 'sg.band.pickYour5', 'sg.band.lastRank', 'sg.band.lastRankLine',
-  'sg.band.matchesLeft', 'sg.band.points', 'sg.band.rank', 'recap.ready', 'recap.see', 'mo.ev.goal', 'mo.ev.assist', 'mo.ev.yellow', 'mo.ev.red', 'fx.ft', 'fx.loadFail']) {
+for (const k of ['sg.band.round', 'sg.band.closes', 'sg.band.picks', 'sg.band.picksSaved', 'sg.band.pickYour5', 'sg.step.prev', 'sg.step.next',
+  'sg.band.matchesLeft', 'sg.band.points', 'sg.band.rank', 'recap.see', 'mo.ev.goal', 'mo.ev.assist', 'mo.ev.yellow', 'mo.ev.red', 'fx.ft', 'fx.loadFail']) {
   check(`${k} in both languages`, (i18n.match(new RegExp(`'${k.replace(/\./g, '\\.')}':`, 'g')) || []).length === 2);
 }
 

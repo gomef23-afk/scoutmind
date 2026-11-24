@@ -160,7 +160,7 @@ eq('shortName', [RR.shortName('Felipe Valois'), RR.shortName('  ana   maria souz
 
 // ── 6. Every key, both languages ──
 const src = read('public/round-recap.js') + read('public/index.html');
-const used = new Set([...src.matchAll(/'(recap\.[\w.]+)'/g)].map((m) => m[1]).concat(['sg.tab.recaps']));
+const used = new Set([...src.matchAll(/'(recap\.[\w.]+)'/g)].map((m) => m[1]).concat(['sg.recapTag', 'sg.allRounds']));
 const plural = new Set([...src.matchAll(/tn\('(recap\.[\w.]+)'/g)].map((m) => m[1]));
 const missing = [];
 for (const k of used) {
@@ -177,36 +177,30 @@ check('the sentences are templated: round-recap.js has no English words outside 
 const idx = read('public/index.html');
 check('index.html loads round-recap.js; precached and stamped (rule 24)', /<script src="\/round-recap\.js(\?v=[0-9a-f]+)?"><\/script>/.test(idx)
   && read('public/sw.js').includes("'/round-recap.js'") && read('scripts/bump-sw.mjs').includes("'round-recap.js'"));
-// 26 Nov 2026: no standalone card. The recap is the view of a final round's
-// chip; a slim teaser under the chips for 7 days; the same slim line on Home.
-check('no standalone recap card on the round view (it doubled the round band)', !/sg-recap-card|sgFillRecapCard|rc-more|recap\.open/.test(idx));
-check('the slim teaser (under the band since 26 Nov) for 7 days after a round turned final, which selects that chip',
-  /<div id="sg-band" class="sg-l-band"><\/div>\s*<div id="sg-recap-teaser" class="sg-l-teaser"><\/div>/.test(idx)
-  && /sgSlots\(chips\);\s*(sgChipIntoView\(\);\s*)?body\.innerHTML='<div id="sg-round"><\/div>';\s*sgFillRecapTeaser\(SG\.leagueId\);/.test(idx)
-  && /r\.status==='final'&&RoundRecap\.fresh\(r\.finalized_at,Date\.now\(\)\)/.test(idx)
-  && /<button class="rc-teaser" type="button" onclick="sgPickRound\('\+fresh\.id\+'\)"><span>'\+t\('recap\.ready',\{n:fresh\.round_no\}\)/.test(idx));
-check('…and not while that round is the one on screen', /if\(!fresh\|\|fresh\.id===SG\.roundId\) return;/.test(idx));
-check('a final round with a recap: the recap band in place of the round band, the lines under it, expanded',
-  /const built=recap\?RoundRecap\.build\(recap,sgRecapCtx\(\)\):null;\s*if\(built&&built\.band\.length\)\{\s*if\(pb\) pb\.innerHTML=sgBand\(built\.band\);[\s\S]{0,160}lines\.innerHTML=sgRecapSheet\(built\);/.test(idx));
-check('…without one, the played band as before; a locked round gets the live band', /pb\.innerHTML=r\.status==='final'\?sgPlayedBand\(r,status,mineTotal,myRank\):sgLiveBand\(r,mineTotal,myRank,fixtures\);/.test(idx));
-check('the default chip is unchanged (in play with my entry, else the earliest open round)', /const live=rs\.find\(r=>r\.status==='locked'&&SG\.entries\.get\(r\.id\)\);[\s\S]{0,80}const open=rs\.find\(r=>r\.status==='open'\);/.test(idx));
-check('Home: the slim line opens Scout on that league with the final round selected', /function sgOpenRecapRound\(roundId,leagueId\)\{\s*SG\.view='league'; SG\.leagueId=leagueId; SG\.roundId=roundId;/.test(idx)
+// 28 Nov 2026: no card, no chips, no teaser. The recap is the view of a final
+// round in the band (its stepper reaches it); Home's slim line opens that round;
+// All rounds and recaps lists every recap with my rounds.
+check('no standalone card, no teaser, no chips row (the band\'s stepper reaches a final round)', !/sg-recap-card|sgFillRecapCard|rc-more|recap\.open|sg-recap-teaser|sgFillRecapTeaser|rc-teaser|recap\.ready|sgSlots|sgChipIntoView/.test(idx));
+check('a final round with a recap: the recap band (with the stepper) in place of the round band, the lines under it, expanded',
+  /const built=recap\?RoundRecap\.build\(recap,sgRecapCtx\(\)\):null;\s*if\(built&&built\.band\.length\)\{\s*if\(pb\) pb\.innerHTML=sgBand\(built\.band,sgStepHead\(r\)\);[\s\S]{0,160}lines\.innerHTML=sgRecapSheet\(built\);/.test(idx));
+check('…without one, the played band as before; a locked round gets the live band', /pb\.innerHTML=r\.status==='final'\?sgPlayedBand\(r,status,mineTotal,myRank,false,sgStepHead\(r\)\):sgLiveBand\(r,mineTotal,myRank,fixtures\);/.test(idx));
+check('the default round: the next open round, else in play, else the latest final (its recap)', /const open=rs\.find\(r=>r\.status==='open'\);\s*if\(open\) return open\.id;\s*const locked=rs\.filter\(r=>r\.status==='locked'\)\.pop\(\);\s*if\(locked\) return locked\.id;\s*const fin=rs\.filter\(r=>r\.status==='final'\)\.pop\(\);/.test(idx));
+check('a league whose last round turned final within 7 days keeps its tab (the band opens on that recap)', /\|\|\(r\.status==='final'&&RoundRecap\.fresh\(r\.finalized_at,Date\.now\(\)\)\)\)\) continue;/.test(idx));
+check('Home: the slim line opens Scout on that league with the final round in the band', /function sgOpenRecapRound\(roundId,leagueId\)\{\s*SG\.view='league'; SG\.leagueId=leagueId; SG\.roundId=roundId;/.test(idx)
   && /el\.onclick=\(\)=>sgOpenRecapRound\(x\.round_id,x\.league_id\);/.test(idx));
 check('the rounds query carries finalized_at (017: no new column, rule 21)', /game_rounds\?select=id,league_id,season,round_label,round_no,deadline_utc,closes_utc,status,participants,finalized_at,/.test(idx));
-check('the views row ends with Recaps', /v\('history','sg\.tab\.history','sgShowHistory'\)\s*\+v\('recaps','sg\.tab\.recaps','sgShowRecaps'\)/.test(idx));
-check('the Recaps view: chosen competition or all, newest first, a tap opens one, a way back', /sgRpc\('recent_round_recaps',\{p_league_id:\(SG\.recapAll\|\|!chosen\)\?null:SG\.leagueId,p_limit:100\}\)/.test(idx)
-  && /onclick="sgOpenRecap\('\+i\+'\)"/.test(idx) && /t\('recap\.list\.back'\)/.test(idx));
+check('All rounds and recaps: my rounds and every recap in one list, newest first; a round on screen opens in the band, an older one its recap, with a way back',
+  /sgRpc\('my_game_history',\{\}\)/.test(idx) && /sgRpc\('recent_round_recaps',\{p_league_id:null,p_limit:100\}\)/.test(idx)
+  && /if\(sgRound\(x\.id\)\)\{ sgGoPick\(x\.id\); return; \}/.test(idx) && /t\('recap\.list\.back'\)/.test(idx));
 check('before 042 nothing breaks: a failed rpc is a null recap, the list says it could not load', /try\{ rec=await sgRpc\('round_recap',\{p_round_id:roundId\}\); \}catch\(e\)\{ console\.warn\('round_recap:',e\.message\); \}/.test(idx)
-  && /t\(rows\?'recap\.list\.empty':'recap\.loadFail'\)/.test(idx));
+  && /if\(!hist&&!recaps\)\{ el\.innerHTML=isOffline\(\)\?offlineHtml\(\):'<div class="sg-empty">'\+t\('recap\.loadFail'\)/.test(idx));
 check('a card is drawn only when it has something to show', /if\(!b\.title\|\|\(!b\.band\.length&&!b\.sections\.length\)\) return '';/.test(idx));
-check('the Recaps view\'s card: navy band for the figures (sgBand), the light sheet for the lines (shared with the round view)',
+check('an older recap\'s card: navy band for the figures (sgBand), the light sheet for the lines (shared with the round view)',
   /\(b\.band\.length\?sgBand\(b\.band\):''\)\+sgRecapSheet\(b\)/.test(idx));
-check('the slim line: one row, no card box; the same class pair on Home and under the chips', /\.rc-teaser,\.hb-recap\{[^}]*background:none;border:0;border-left:3px solid var\(--navy-ink\)/.test(idx)
-  && /\.rc-teaser,\.hb-recap\{[^}]*min-height:44px/.test(idx));
+check('Home\'s slim line: one row, no card box', /\.hb-recap\{[^}]*background:none;border:0;border-left:3px solid var\(--navy-ink\)/.test(idx) && /\.hb-recap\{[^}]*min-height:44px/.test(idx));
 check('Home: the row comes after the light sheet (which overlaps the band), hidden until a fresh recap',
   /<div id="hb-room"><\/div>\s*<\/div>\s*<!-- R-2:[\s\S]*?-->\s*<button id="hb-recap" class="hb-recap" type="button" hidden><\/button>/.test(idx)
-  && /HBD\.recap=x&&RoundRecap\.fresh\(x\.finalized_at,Date\.now\(\)\)\?x:null;/.test(idx) && /renderHomeRecap\(\);/.test(idx));
-check('the recap\'s styles use tokens only', !/\.rc-[\w-]+\{[^}]*#[0-9a-fA-F]{3,6}/.test(idx) && !/\.hb-recap\{[^}]*#[0-9a-fA-F]{3,6}/.test(idx));
+  && /HBD\.recap=x&&RoundRecap\.fresh\(x\.finalized_at,Date\.now\(\)\)\?x:null;/.test(idx) && /renderHomeRecap\(\);/.test(idx));check('the recap\'s styles use tokens only', !/\.rc-[\w-]+\{[^}]*#[0-9a-fA-F]{3,6}/.test(idx) && !/\.hb-recap\{[^}]*#[0-9a-fA-F]{3,6}/.test(idx));
 check('R-3 stays off: the page posts nothing to rooms', !/recap_posts/.test(idx));
 
 for (const f of failures) console.log(`  FAIL  ${f}`);

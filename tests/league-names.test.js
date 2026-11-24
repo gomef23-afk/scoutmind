@@ -92,7 +92,8 @@ check('Scout, private leagues, match panel, history, Home band, club list: Leagu
   /function sgLeagueName\(r\)\{ const l=r&&r\.leagues; return l\?LeagueNames\.label\(l\):''; \}/.test(idx)
   && /function glComp\(x\)\{ return LeagueNames\.label\(x\.competition\); \}/.test(idx)
   && /'<div class="mo-meta">'\+sanitize\(LeagueNames\.label\(f\.league\)\)/.test(idx)
-  && (idx.match(/const name=LeagueNames\.label\(x\.league\)\+' · '\+sgHistRoundName\(x\);/g) || []).length === 2
+  && (idx.match(/const name=LeagueNames\.label\(x\.league\)\+' · '\+sgHistRoundName\(x\);/g) || []).length === 1   // the Profile's game card
+  && /const name=\(x\.league\?LeagueNames\.label\(x\.league\):leagueOf\(x\.league_id\)\)\+' · '\+sgHistRoundName\(x\);/.test(idx)   // All rounds and recaps (28 Nov 2026)
   && /LeagueNames\.label\(best\.league\)/.test(idx)
   && /const lgName=LeagueNames\.label\(/.test(idx) && /t\('hb\.tableOf',\{league:LeagueNames\.label\(HBD\.league\)\}\)/.test(idx)
   && /const LEAGUE_LABEL=Object\.fromEntries\(LeagueNames\.LEAGUES\.map/.test(idx));
